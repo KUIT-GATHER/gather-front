@@ -3,8 +3,12 @@
 ## 1. 브랜치 규칙
 
 `main` 브랜치에는 직접 push하지 않습니다.
+'main' 브랜치는 최종 배포용 브랜치로만 사용합니다.
 
-모든 작업은 아래 형식의 브랜치에서 진행합니다.
+기본 개발 브랜치는 `develop`입니다.
+모든 기능 작업은 `develop` 브랜치에서 새 브랜치를 생성해 진행합니다.
+
+작업 브랜치는 아래 형식만 사용합니다.
 
 ```bash
 feature/기능명
@@ -89,11 +93,11 @@ chore: eslint 설정 추가
 
 ## 3. 작업 흐름
 
-작업 시작 전 항상 `main`을 최신 상태로 맞춥니다.
+작업 시작 전 항상 `develop`을 최신 상태로 맞춥니다.
 
 ```bash
-git checkout main
-git pull origin main
+git checkout develop
+git pull origin develop
 git checkout -b feature/작업명
 ```
 
@@ -107,6 +111,14 @@ git push origin feature/작업명
 
 그다음 GitHub에서 Pull Request를 생성합니다.
 
+PR 방향은 아래와 같습니다.
+
+```bash
+feature/작업명 → develop
+```
+
+'main'으로 직접 PR을 올리지 않습니다
+
 ---
 
 ## 4. Pull Request 규칙
@@ -115,7 +127,6 @@ PR에는 아래 내용을 작성합니다.
 
 - 작업 내용
 - 변경 사항
-- 확인한 것
 - 스크린샷 또는 화면 녹화
 - 관련 이슈
 
