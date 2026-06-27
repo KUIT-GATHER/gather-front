@@ -34,3 +34,4 @@ npm run preview  # 빌드 결과 미리보기
 
 - [Frontend Structure](./docs/frontend-structure.md)
 - [Conventions](./docs/conventions.md)
+- [AI Agent Instructions](./AGENTS.md)
