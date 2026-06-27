@@ -1,19 +1,36 @@
 # Gather Frontend
 
-Gather 프로젝트의 프론트엔드 레포지토리입니다.
+Gather 서비스의 프론트엔드 프로젝트입니다.
 
-## 기술 스택
+## Tech Stack
 
 - React
 - TypeScript
 - Vite
-- ESLint
+- React Router
+- TanStack Query
+- Tailwind CSS
+- Zustand
+- React Hook Form
+- Zod
 
-
-
-## 실행 방법
+## Getting Started
 
 ```bash
 npm install
 npm run dev
+```
 
+## Scripts
+
+```bash
+npm run dev      # 개발 서버 실행
+npm run build    # 타입 검사 및 프로덕션 빌드
+npm run lint     # ESLint 검사
+npm run preview  # 빌드 결과 미리보기
+```
+
+## Documents
+
+- [Frontend Structure](./docs/frontend-structure.md)
+- [Conventions](./docs/conventions.md)
