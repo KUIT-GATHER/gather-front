@@ -12,7 +12,6 @@ import FormField from "@/shared/ui/FormField";
 
 import PlusIcon from "@/assets/icons/Plus.svg";
 import PencilIcon from "@/assets/icons/Pen.svg";
-import EyeIcon from "@/assets/icons/Eye.svg";
 
 
 export function ComponentTestPage() {
