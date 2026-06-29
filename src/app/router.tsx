@@ -26,6 +26,8 @@ import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
 
+import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
+
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -71,6 +73,8 @@ export const router = createBrowserRouter([
           { path: "/teams/:teamId", element: <TeamDetailPage /> },
 
           { path: "/notifications", element: <NotificationPage /> },
+
+          { path: "/dev/components", element: <ComponentTestPage /> },
         ],
       },
     ],

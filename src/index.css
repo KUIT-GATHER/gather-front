@@ -1,1 +1,50 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 @import "tailwindcss";
+
+@theme {
+  --color-bg: #fafaf8;
+  --color-stroke: #D9D9D9;
+
+  --color-text-black: #0a0a0a;
+  --color-text2: #FAFAF8;
+  --color-text-gray-100: #A4A4A4;
+  --color-text-gray-300: #545454;
+  --color-text-gray-400: #5E5E5D;
+  --color-text-green-500: #314C36;
+  --color-text-green-600: #18BD77;
+
+  --color-button: #00C77B;
+  --color-icon: #2E6136;
+
+  --color-point-green: #90D79D;
+  --color-point-red: #F76073;
+
+  --color-gradient-1-from: #90D79D;
+  --color-gradient-1-to: #7DBC88;
+  --color-gradient-2-from: #FAFAF8;
+  --color-gradient-2-to: #90D79D;
+
+  --text-title-24: 24px;
+  --text-title-24--line-height: 36px;
+  --text-title-24--font-weight: 600;
+
+  --text-title-20: 20px;
+  --text-title-20--line-height: 16px;
+  --text-title-20--font-weight: 600;
+
+  --text-title-18: 18px;
+  --text-title-18--line-height: 28px;
+  --text-title-18--font-weight: 600;
+
+  --text-body-15-semibold: 15px;
+  --text-body-15-semibold--line-height: 20px;
+  --text-body-15-semibold--font-weight: 600;
+
+  --text-body-14-semibold: 14px;
+  --text-body-14-semibold--line-height: 20px;
+  --text-body-14-semibold--font-weight: 600;
+
+  --text-body-14: 14px;
+  --text-body-14--line-height: 20px;
+  --text-body-14--font-weight: 400;
+}
