@@ -28,6 +28,12 @@ import { MyPage } from "@/pages/my/MyPage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
+import { env } from "@/shared/config/env";
+
+const devRoutes = env.IS_DEV
+  ? [{ path: "/dev/components", element: <ComponentTestPage /> }]
+  : [];
+
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -74,7 +80,7 @@ export const router = createBrowserRouter([
 
           { path: "/notifications", element: <NotificationPage /> },
 
-          { path: "/dev/components", element: <ComponentTestPage /> },
+          ...devRoutes,
         ],
       },
     ],
