@@ -5,8 +5,7 @@
   --color-bg: #fafaf8;
   --color-stroke: #d9d9d9;
 
-  --color-text-black: #0a0a0a;
-  --color-text-primary: #0a0a0a;
+  --color-text: #0A0A0A;
   --color-text2: #fafaf8;
   --color-text-gray-100: #a4a4a4;
   --color-text-gray-300: #545454;
@@ -64,6 +63,6 @@
   body {
     min-height: 100dvh;
     background: var(--color-bg);
-    color: var(--color-text-black);
+    color: var(--color-text);
   }
 }
