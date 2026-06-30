@@ -7,7 +7,6 @@ import Modal from "@/shared/ui/Modal";
 import PageContainer from "@/shared/ui/PageContainer";
 import Spinner from "@/shared/ui/Spinner";
 import Select from "@/shared/ui/Select";
-import BottomNav from "@/shared/ui/BottomNav";
 import FormField from "@/shared/ui/FormField";
 
 import PlusIcon from "@/assets/icons/Plus.svg";
@@ -78,8 +77,6 @@ export function ComponentTestPage() {
           <Button onClick={() => setIsOpen(true)}>모달 열기</Button>
         </section>
       </div>
-
-        <BottomNav />
       <Modal
         open={isOpen}
         title="게시글을 삭제하시겠어요?"
