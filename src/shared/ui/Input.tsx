@@ -13,7 +13,7 @@ export default function Input({
       type={type}
       className={cn(
         "box-border h-[48px] rounded-[12px] border border-stroke bg-white px-[16px] py-[12px]",
-        "text-[15px] font-normal leading-normal text-text-primary outline-none",
+        "text-[15px] font-normal leading-normal text-text outline-none",
         "placeholder:text-text-gray-100",
         "focus:border-button",
         className

@@ -27,7 +27,7 @@ export default function FormField({
     <div className={cn("w-full", className)}>
       <label
         htmlFor={htmlFor}
-        className="mb-[12px] block text-[18px] font-normal leading-[28px] text-text-black"
+        className="mb-[12px] block text-[18px] font-normal leading-[28px] text-text"
       >
         {label}
         {required && <span className="text-point-red">*</span>}

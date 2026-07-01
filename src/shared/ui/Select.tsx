@@ -36,7 +36,7 @@ export default function Select({
         className={cn(
           "inline-flex h-[44px] items-center justify-center gap-[8px]",
           "px-[2px] py-[1px]",
-          "text-[14px] font-normal leading-[28px] text-text-black",
+          "text-[14px] font-normal leading-[28px] text-text",
           "whitespace-nowrap"
         )}
       >
@@ -72,7 +72,7 @@ export default function Select({
                   "flex h-[43px] w-full items-center justify-between",
                   "text-left text-[15px] font-normal leading-[28px]",
                   !isLast && "border-b border-stroke",
-                  selected ? "text-point-red" : "text-text-black"
+                  selected ? "text-point-red" : "text-text"
                 )}
               >
                 <span>{option.label}</span>

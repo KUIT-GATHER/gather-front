@@ -26,7 +26,7 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/26 px-[35px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-text/26 px-[35px]">
       <div
         role="dialog"
         aria-modal="true"
@@ -34,12 +34,12 @@ export default function Modal({
       >
         <div className="flex flex-col items-center gap-[20px]">
           <div className="text-center">
-            <p className="text-[18px] font-medium leading-[28px] text-text-black">
+            <p className="text-[18px] font-medium leading-[28px] text-text">
               {title}
             </p>
 
             {children && (
-              <div className="text-[18px] font-normal leading-[28px] text-text-black">
+              <div className="text-[18px] font-normal leading-[28px] text-text">
                 {children}
               </div>
             )}
@@ -49,7 +49,7 @@ export default function Modal({
             <button
               type="button"
               onClick={onCancel}
-              className="h-[48px] flex-1 rounded-[40px] bg-[#DCECDF] text-[18px] font-medium leading-[28px] text-text-black"
+              className="h-[48px] flex-1 rounded-[40px] bg-[#DCECDF] text-[18px] font-medium leading-[28px] text-text"
             >
               {cancelText}
             </button>
