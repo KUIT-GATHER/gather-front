@@ -1,1 +1,68 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 @import "tailwindcss";
+
+@theme {
+  --color-bg: #fafaf8;
+  --color-stroke: #d9d9d9;
+
+  --color-text: #0A0A0A;
+  --color-text2: #fafaf8;
+  --color-text-gray-100: #a4a4a4;
+  --color-text-gray-300: #545454;
+  --color-text-gray-400: #5e5e5d;
+  --color-text-green-500: #314c36;
+  --color-text-green-600: #18bd77;
+
+  --color-button: #00c77b;
+  --color-icon: #2e6136;
+
+  --color-point-green: #90d79d;
+  --color-point-red: #f76073;
+
+  --color-gradient-1-from: #90d79d;
+  --color-gradient-1-to: #7dbc88;
+  --color-gradient-2-from: #fafaf8;
+  --color-gradient-2-to: #90d79d;
+
+  --text-title-24: 24px;
+  --text-title-24--line-height: 36px;
+  --text-title-24--font-weight: 600;
+
+  --text-title-20: 20px;
+  --text-title-20--line-height: 28px;
+  --text-title-20--font-weight: 600;
+
+  --text-title-18: 18px;
+  --text-title-18--line-height: 28px;
+  --text-title-18--font-weight: 600;
+
+  --text-body-15-semibold: 15px;
+  --text-body-15-semibold--line-height: 20px;
+  --text-body-15-semibold--font-weight: 600;
+
+  --text-body-14-semibold: 14px;
+  --text-body-14-semibold--line-height: 20px;
+  --text-body-14-semibold--font-weight: 600;
+
+  --text-body-14: 14px;
+  --text-body-14--line-height: 20px;
+  --text-body-14--font-weight: 400;
+}
+
+@layer base {
+  html {
+    font-family:
+      Pretendard,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+}

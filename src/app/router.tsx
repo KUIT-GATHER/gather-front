@@ -26,6 +26,14 @@ import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
 
+import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
+
+import { env } from "@/shared/config/env";
+
+const devRoutes = env.IS_DEV
+  ? [{ path: "/dev/components", element: <ComponentTestPage /> }]
+  : [];
+
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -71,6 +79,8 @@ export const router = createBrowserRouter([
           { path: "/teams/:teamId", element: <TeamDetailPage /> },
 
           { path: "/notifications", element: <NotificationPage /> },
+
+          ...devRoutes,
         ],
       },
     ],
