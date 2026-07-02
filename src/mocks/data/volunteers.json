@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "title": "한강공원 플로깅",
+      "description": "같이 환경을 지키며 산책해요",
+      "thumbnailUrl": "/images/mock-volunteer-1.png",
+      "region": { "id": 1, "name": "서울" },
+      "category": { "id": 1, "name": "환경" },
+      "date": "2026-07-10",
+      "status": "OPEN",
+      "currentParticipants": 8,
+      "maxParticipants": 20
+    },
+    {
+      "id": 2,
+      "title": "동물보호소 강아지 산책",
+      "description": "유기견 산책 봉사자를 모집합니다",
+      "thumbnailUrl": "/images/mock-volunteer-2.png",
+      "region": { "id": 1, "name": "서울" },
+      "category": { "id": 2, "name": "동물" },
+      "date": "2026-07-12",
+      "status": "OPEN",
+      "currentParticipants": 4,
+      "maxParticipants": 10
+    }
+  ]
+}

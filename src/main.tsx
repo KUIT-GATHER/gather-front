@@ -7,10 +7,26 @@ import { router } from "@/app/router";
 
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <AppProviders>
-      <RouterProvider router={router} />
-    </AppProviders>
-  </StrictMode>,
-);
+async function enableMocking() {
+  const { env } = await import("@/shared/config/env");
+
+  if (!env.ENABLE_MSW) {
+    return;
+  }
+
+  const { worker } = await import("@/mocks/browser");
+
+  return worker.start({
+    onUnhandledRequest: "bypass",
+  });
+}
+
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <AppProviders>
+        <RouterProvider router={router} />
+      </AppProviders>
+    </StrictMode>,
+  );
+});
