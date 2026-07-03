@@ -219,4 +219,57 @@ export const authHandlers = [
       { status: 201 },
     );
   }),
+  http.post("*/api/v1/auth/login", async ({ request }) => {
+    const body = (await request.json()) as {
+      email?: string;
+      password?: string;
+    };
+
+    const email = body.email?.trim().toLowerCase();
+    const password = body.password;
+
+    if (!email || !password) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "이메일과 비밀번호를 입력해 주세요.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (email !== "test@gather.com" || password !== "123456789") {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "INVALID_CREDENTIALS",
+            message: "이메일 또는 비밀번호가 올바르지 않습니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        accessToken: "mock-access-token",
+        refreshToken: "mock-refresh-token",
+        user: {
+          id: 1,
+          email,
+          name: "김가더",
+          nickname: "가더",
+          profileImageUrl: null,
+        },
+      },
+      error: null,
+    });
+  }),
 ];
