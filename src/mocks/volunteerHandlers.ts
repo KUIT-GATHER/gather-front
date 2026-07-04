@@ -26,7 +26,8 @@ export const volunteerHandlers = [
       items = items.filter((volunteer) =>
         [
           volunteer.title,
-          volunteer.description,
+          volunteer.content,
+          volunteer.address,
           volunteer.region.name,
           volunteer.category.name,
         ].some((value) => value.includes(keyword)),
@@ -46,11 +47,13 @@ export const volunteerHandlers = [
     }
 
     if (startDate) {
-      items = items.filter((volunteer) => volunteer.date >= startDate);
+      items = items.filter(
+        (volunteer) => volunteer.act_start_date >= startDate,
+      );
     }
 
     if (endDate) {
-      items = items.filter((volunteer) => volunteer.date <= endDate);
+      items = items.filter((volunteer) => volunteer.act_end_date <= endDate);
     }
 
     return HttpResponse.json({
