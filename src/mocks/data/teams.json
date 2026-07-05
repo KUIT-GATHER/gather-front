@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "volunteer_id": 1,
+      "title": "주말 한강공원 플로깅 같이 가요",
+      "content": "처음 참여하는 분도 환영해요. 같이 한강공원에서 플로깅해요.",
+      "status": "OPEN",
+      "thumbnail_url": "/images/mock-volunteer-1.png",
+
+      "sido_name": "서울",
+      "sigungu_name": "영등포구",
+      "address": "서울 영등포구 여의동로 330",
+
+      "meeting_date": "2026-07-10",
+      "meeting_time": "09:30",
+      "notice_end_date": "2026-07-08",
+
+      "recruit_count": 5,
+      "applicant_count": 3,
+
+      "category": { "id": 1, "name": "환경" },
+      "region": { "id": 1, "name": "서울" },
+
+      "host": {
+        "id": 1,
+        "nickname": "가더"
+      }
+    },
+    {
+      "id": 2,
+      "volunteer_id": 2,
+      "title": "동물보호소 산책 봉사 같이 가요",
+      "content": "유기견 산책 봉사 함께 갈 사람을 찾고 있어요.",
+      "status": "OPEN",
+      "thumbnail_url": "/images/mock-volunteer-2.png",
+
+      "sido_name": "서울",
+      "sigungu_name": "영등포구",
+      "address": "서울 영등포구 여의동로 300",
+
+      "meeting_date": "2026-07-12",
+      "meeting_time": "09:30",
+      "notice_end_date": "2026-07-10",
+
+      "recruit_count": 5,
+      "applicant_count": 2,
+
+      "category": { "id": 5, "name": "복지" },
+      "region": { "id": 1, "name": "서울" },
+
+      "host": {
+        "id": 1,
+        "nickname": "가더"
+      }
+    }
+  ]
+}
