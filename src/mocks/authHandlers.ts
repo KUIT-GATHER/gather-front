@@ -1,5 +1,8 @@
 import { HttpResponse, http } from "msw";
 
+import categories from "./data/categories.json";
+import regions from "./data/regions.json";
+
 type SignupRequest = {
   name?: string;
   birthDate?: string;
@@ -16,6 +19,25 @@ type SignupRequest = {
   privacyPolicyAgreed?: boolean;
   marketingAgreed?: boolean;
 };
+
+const verifiedEmails = new Set<string>();
+
+const validRegionIds = new Set(regions.data.map((region) => region.id));
+const validCategoryIds = new Set(
+  categories.data.map((category) => category.id),
+);
+
+function isValidMockRefreshToken(refreshToken: string) {
+  const match = refreshToken.match(/^(new-)?mock-refresh-token-(\d+)$/);
+
+  if (!match) {
+    return false;
+  }
+
+  const userId = Number(match[2]);
+
+  return users.some((user) => user.id === userId);
+}
 
 type MockUser = {
   id: number;
@@ -96,6 +118,8 @@ export const authHandlers = [
       );
     }
 
+    verifiedEmails.delete(email);
+
     return HttpResponse.json({
       success: true,
       data: {
@@ -145,6 +169,8 @@ export const authHandlers = [
           { status: 400 },
         );
       }
+
+      verifiedEmails.add(email);
 
       return HttpResponse.json({
         success: true,
@@ -249,13 +275,61 @@ export const authHandlers = [
       .replaceAll("-", "")
       .replaceAll(" ", "");
 
+    if (!verifiedEmails.has(email)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "EMAIL_NOT_VERIFIED",
+            message: "이메일 인증이 완료되지 않았습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      body.activityRegionIds.some((regionId) => !validRegionIds.has(regionId))
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "REGION_NOT_FOUND",
+            message: "존재하지 않는 활동 지역입니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      body.interestCategoryIds.some(
+        (categoryId) => !validCategoryIds.has(categoryId),
+      )
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "CATEGORY_NOT_FOUND",
+            message: "존재하지 않는 관심 카테고리입니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
     if (users.some((user) => user.email === email)) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
-            code: "EMAIL_ALREADY_EXISTS",
+            code: "DUPLICATE_EMAIL",
             message: "이미 가입된 이메일입니다.",
           },
         },
@@ -269,8 +343,22 @@ export const authHandlers = [
           success: false,
           data: null,
           error: {
-            code: "PHONE_NUMBER_ALREADY_EXISTS",
+            code: "DUPLICATE_PHONE_NUMBER",
             message: "이미 가입된 전화번호입니다.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    if (users.some((user) => user.nickname === body.nickname)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "DUPLICATE_NICKNAME",
+            message: "이미 사용 중인 닉네임입니다.",
           },
         },
         { status: 409 },
@@ -341,7 +429,7 @@ export const authHandlers = [
           success: false,
           data: null,
           error: {
-            code: "INVALID_CREDENTIALS",
+            code: "INVALID_LOGIN",
             message: "이메일 또는 비밀번호가 올바르지 않습니다.",
           },
         },
@@ -354,16 +442,98 @@ export const authHandlers = [
       data: {
         accessToken: `mock-access-token-${user.id}`,
         refreshToken: `mock-refresh-token-${user.id}`,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          nickname: user.nickname,
-          activityRegionIds: user.activityRegionIds,
-          interestCategoryIds: user.interestCategoryIds,
-          profileImageUrl: null,
-        },
+        tokenType: "Bearer",
       },
+      error: null,
+    });
+  }),
+
+  http.post("*/api/v1/auth/reissue", async ({ request }) => {
+    const body = (await request.json()) as {
+      refreshToken?: string;
+    };
+
+    const refreshToken = body.refreshToken;
+
+    if (!refreshToken) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "refreshToken을 입력해 주세요.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!isValidMockRefreshToken(refreshToken)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "INVALID_TOKEN",
+            message: "유효하지 않은 토큰입니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const userId = refreshToken.split("-").at(-1);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        accessToken: `new-mock-access-token-${userId}`,
+        refreshToken: `new-mock-refresh-token-${userId}`,
+        tokenType: "Bearer",
+      },
+      error: null,
+    });
+  }),
+
+  http.post("*/api/v1/auth/logout", async ({ request }) => {
+    const body = (await request.json()) as {
+      refreshToken?: string;
+    };
+
+    const refreshToken = body.refreshToken;
+
+    if (!refreshToken) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "refreshToken을 입력해 주세요.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!isValidMockRefreshToken(refreshToken)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "INVALID_TOKEN",
+            message: "유효하지 않은 토큰입니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: null,
       error: null,
     });
   }),

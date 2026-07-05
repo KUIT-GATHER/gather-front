@@ -1,10 +1,12 @@
 {
+  "success": true,
   "data": [
-    { "id": 1, "name": "환경" },
-    { "id": 2, "name": "교육" },
-    { "id": 3, "name": "문화" },
-    { "id": 4, "name": "지역 연계" },
-    { "id": 5, "name": "복지" },
-    { "id": 6, "name": "해외" }
-  ]
+    { "id": 1, "code": "ENVIRONMENT", "name": "환경" },
+    { "id": 2, "code": "EDUCATION", "name": "교육" },
+    { "id": 3, "code": "CULTURE", "name": "문화" },
+    { "id": 4, "code": "COMMUNITY", "name": "지역 연계" },
+    { "id": 5, "code": "WELFARE", "name": "복지" },
+    { "id": 6, "code": "OVERSEAS", "name": "해외" }
+  ],
+  "error": null
 }
