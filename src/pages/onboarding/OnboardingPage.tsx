@@ -17,6 +17,10 @@ export function OnboardingPage() {
     navigate("/home", { replace: true });
   };
 
+  const completeOnboarding = () => {
+    navigate("/login", { replace: true });
+  };
+
   return (
     <OnboardingLayout onSkip={exitOnboarding}>
       {step === 1 && (
@@ -35,7 +39,7 @@ export function OnboardingPage() {
         <OnboardingStep4 onNext={() => setStep(5)} />
       )}
 
-      {step === 5 && <OnboardingStep5 onNext={exitOnboarding} />}
+      {step === 5 && <OnboardingStep5 onNext={completeOnboarding} />}
     </OnboardingLayout>
   );
 }
