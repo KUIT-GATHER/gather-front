@@ -37,12 +37,12 @@ export type SignupRequest = {
   password: string;
   passwordConfirm: string;
   nickname: string;
-  introduction?: string;
+  introduction?: string | null;
   activityRegionIds: number[];
   interestCategoryIds: number[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
-  marketingAgreed?: boolean;
+  marketingAgreed: boolean;
 };
 
 export type SignupResponse = {
