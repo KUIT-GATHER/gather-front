@@ -8,15 +8,13 @@ import { OnboardingStep2 } from "@/features/onboarding/steps/OnboardingStep2";
 import { OnboardingStep3 } from "@/features/onboarding/steps/OnboardingStep3";
 import { OnboardingStep4 } from "@/features/onboarding/steps/OnboardingStep4";
 import { OnboardingStep5 } from "@/features/onboarding/steps/OnboardingStep5";
-import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export function OnboardingPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<OnboardingStep>(1);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const exitOnboarding = () => {
-    navigate(isAuthenticated ? "/home" : "/login", { replace: true });
+    navigate("/home", { replace: true });
   };
 
   return (
