@@ -4,10 +4,10 @@ type OnboardingHeaderProps = {
 
 export function OnboardingHeader({ onSkip }: OnboardingHeaderProps) {
   return (
-    <header className="absolute inset-x-0 top-0 z-20 flex h-20 items-start justify-end px-5 pt-[calc(env(safe-area-inset-top)+20px)]">
+    <header className="absolute inset-x-0 top-0 z-20 flex h-[calc(env(safe-area-inset-top)+40px)] items-end justify-end px-6 pb-2">
       <button
         type="button"
-        className="rounded-md px-1 py-1 text-sm text-text-gray-300 transition-colors hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        className="rounded-md px-1 py-1 text-[15px] font-medium leading-[21px] tracking-[-0.15px] text-text-gray-400 transition-colors hover:text-text"
         onClick={onSkip}
       >
         건너뛰기

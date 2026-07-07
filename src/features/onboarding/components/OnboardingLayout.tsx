@@ -11,10 +11,10 @@ export function OnboardingLayout({
   onSkip,
 }: OnboardingLayoutProps) {
   return (
-    <main className="relative flex min-h-dvh w-full overflow-hidden bg-white">
+    <main className="relative flex min-h-dvh w-full overflow-hidden bg-text2">
       <OnboardingHeader onSkip={onSkip} />
 
-      <div className="relative z-10 flex min-h-dvh w-full flex-col px-5 pt-20 pb-[calc(env(safe-area-inset-bottom)+62px)]">
+      <div className="relative z-10 flex min-h-dvh w-full flex-col px-5 pt-[calc(env(safe-area-inset-top)+40px)] pb-[calc(env(safe-area-inset-bottom)+62px)]">
         {children}
       </div>
     </main>
