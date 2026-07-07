@@ -7,7 +7,6 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 export type OnboardingStepProps = {
   onNext: () => void;
-  onStepChange: (step: OnboardingStep) => void;
 };
 
 type OnboardingStepControlsProps = {
@@ -17,27 +16,24 @@ type OnboardingStepControlsProps = {
 export function OnboardingStepControls({
   currentStep,
   onNext,
-  onStepChange,
 }: OnboardingStepControlsProps) {
   const isLastStep = currentStep === 5;
 
   return (
     <>
-      <nav className="mt-14 flex h-2 items-center justify-center gap-2">
+      <nav className="mt-13.5 flex h-2 items-center justify-center gap-2">
         {ONBOARDING_STEPS.map((stepNumber) => {
           const isCurrent = stepNumber === currentStep;
 
           return (
-            <button
+            <span
               key={stepNumber}
-              type="button"
               className={cn(
                 "h-2 rounded-full transition-all duration-300",
                 isCurrent
-                  ? "w-5 bg-point-green"
-                  : "w-2 bg-[#DCEEDF] hover:bg-point-green/60",
+                  ? "w-6 bg-point-green"
+                  : "w-2 bg-[#DCECDF]",
               )}
-              onClick={() => onStepChange(stepNumber)}
             />
           );
         })}
@@ -46,7 +42,7 @@ export function OnboardingStepControls({
       <Button
         fullWidth
         size="large"
-        className="mt-5 h-12 bg-[#56C987] text-base font-normal"
+        className="mt-6 h-12 text-base font-normal"
         onClick={onNext}
       >
         {isLastStep ? "회원가입 하기" : "다음"}

@@ -6,7 +6,6 @@ import { OnboardingMessage } from "@/features/onboarding/components/OnboardingMe
 
 export function OnboardingStep1({
   onNext,
-  onStepChange,
 }: OnboardingStepProps) {
   return (
     <>
@@ -19,11 +18,7 @@ export function OnboardingStep1({
         }
       />
 
-      <OnboardingStepControls
-        currentStep={1}
-        onNext={onNext}
-        onStepChange={onStepChange}
-      />
+      <OnboardingStepControls currentStep={1} onNext={onNext} />
     </>
   );
 }
