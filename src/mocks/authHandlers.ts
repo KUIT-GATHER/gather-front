@@ -12,7 +12,7 @@ type SignupRequest = {
   password?: string;
   passwordConfirm?: string;
   nickname?: string;
-  introduction?: string;
+  introduction?: string | null;
   activityRegionIds?: number[];
   interestCategoryIds?: number[];
   serviceTermsAgreed?: boolean;
@@ -27,16 +27,24 @@ const validCategoryIds = new Set(
   categories.data.map((category) => category.id),
 );
 
-function isValidMockRefreshToken(refreshToken: string) {
-  const match = refreshToken.match(/^(new-)?mock-refresh-token-(\d+)$/);
+const activeRefreshTokens = new Map<number, string>();
 
-  if (!match) {
-    return false;
+function createAccessToken(userId: number) {
+  return `mock-access-token-${userId}-${Date.now()}`;
+}
+
+function createRefreshToken(userId: number) {
+  return `mock-refresh-token-${userId}-${Date.now()}`;
+}
+
+function findUserIdByRefreshToken(refreshToken: string) {
+  for (const [userId, activeRefreshToken] of activeRefreshTokens.entries()) {
+    if (activeRefreshToken === refreshToken) {
+      return userId;
+    }
   }
 
-  const userId = Number(match[2]);
-
-  return users.some((user) => user.id === userId);
+  return null;
 }
 
 type MockUser = {
@@ -48,7 +56,7 @@ type MockUser = {
   email: string;
   password: string;
   nickname: string;
-  introduction?: string;
+  introduction?: string | null;
   activityRegionIds: number[];
   interestCategoryIds: number[];
 };
@@ -60,8 +68,8 @@ const users: MockUser[] = [
     birthDate: "2000-01-01",
     gender: "MALE",
     phoneNumber: "01012345678",
-    email: "test@gather.com",
-    password: "123456789",
+    email: "test@example.com",
+    password: "test1234",
     nickname: "가더",
     introduction: "함께 봉사하는 걸 좋아해요.",
     activityRegionIds: [1],
@@ -195,7 +203,8 @@ export const authHandlers = [
       !body.birthDate ||
       !body.gender ||
       !body.phoneNumber ||
-      !body.nickname
+      !body.nickname ||
+      typeof body.marketingAgreed !== "boolean"
     ) {
       return HttpResponse.json(
         {
@@ -301,7 +310,7 @@ export const authHandlers = [
             message: "존재하지 않는 활동 지역입니다.",
           },
         },
-        { status: 400 },
+        { status: 404 },
       );
     }
 
@@ -319,7 +328,7 @@ export const authHandlers = [
             message: "존재하지 않는 관심 카테고리입니다.",
           },
         },
-        { status: 400 },
+        { status: 404 },
       );
     }
 
@@ -437,11 +446,15 @@ export const authHandlers = [
       );
     }
 
+    const refreshToken = createRefreshToken(user.id);
+
+    activeRefreshTokens.set(user.id, refreshToken);
+
     return HttpResponse.json({
       success: true,
       data: {
-        accessToken: `mock-access-token-${user.id}`,
-        refreshToken: `mock-refresh-token-${user.id}`,
+        accessToken: createAccessToken(user.id),
+        refreshToken,
         tokenType: "Bearer",
       },
       error: null,
@@ -469,27 +482,31 @@ export const authHandlers = [
       );
     }
 
-    if (!isValidMockRefreshToken(refreshToken)) {
+    const userId = findUserIdByRefreshToken(refreshToken);
+
+    if (!userId) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
-            code: "INVALID_TOKEN",
-            message: "유효하지 않은 토큰입니다.",
+            code: "REVOKED_TOKEN",
+            message: "폐기된 토큰입니다.",
           },
         },
         { status: 401 },
       );
     }
 
-    const userId = refreshToken.split("-").at(-1);
+    const nextRefreshToken = createRefreshToken(userId);
+
+    activeRefreshTokens.set(userId, nextRefreshToken);
 
     return HttpResponse.json({
       success: true,
       data: {
-        accessToken: `new-mock-access-token-${userId}`,
-        refreshToken: `new-mock-refresh-token-${userId}`,
+        accessToken: createAccessToken(userId),
+        refreshToken: nextRefreshToken,
         tokenType: "Bearer",
       },
       error: null,
@@ -517,7 +534,9 @@ export const authHandlers = [
       );
     }
 
-    if (!isValidMockRefreshToken(refreshToken)) {
+    const userId = findUserIdByRefreshToken(refreshToken);
+
+    if (!userId) {
       return HttpResponse.json(
         {
           success: false,
@@ -530,6 +549,8 @@ export const authHandlers = [
         { status: 401 },
       );
     }
+
+    activeRefreshTokens.delete(userId);
 
     return HttpResponse.json({
       success: true,
