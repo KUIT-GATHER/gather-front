@@ -1,22 +1,7 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router";
-
 import SplashLeftIcon from "@/assets/icons/SplashLeftIcon.svg";
 import SplashRightIcon from "@/assets/icons/SplashRightIcon.svg";
 
 export function Splash() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      navigate("/onboarding", { replace: true });
-    }, 3000);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [navigate]);
-
   return (
     <main className="flex min-h-dvh flex-col items-center overflow-hidden">
       <section className="relative mt-[261px] h-[127.89px] w-full shrink-0">

@@ -1,3 +1,5 @@
+import { LoginStartScreen } from "@/features/auth/components/LoginStartScreen";
+
 export function LoginPage() {
-  return <div>LoginPage</div>;
+  return <LoginStartScreen />;
 }
