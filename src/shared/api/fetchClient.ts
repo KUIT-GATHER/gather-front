@@ -1,13 +1,13 @@
-import { useAuthStore } from "@/features/auth/store/auth.store";
 import { refreshSessionOnce } from "@/features/auth/lib/refreshSession";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { ApiError } from "@/shared/api/apiError";
 import type { ApiResponse } from "@/shared/api/apiResponse";
 import { env } from "@/shared/config/env";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 
 type FetchClientOptions = RequestInit & {
-  skipAuth?: boolean; // authorization header를 생략할지 여부
-  skipRefresh?: boolean; // access token 재발급을 시도하지 않을지 여부
+  skipAuth?: boolean; // Authorization 헤더를 생략할지 여부
+  withCredentials?: boolean; // Cookie 포함 여부, 기본값 false
 };
 
 function buildUrl(endpoint: string) {
@@ -56,12 +56,14 @@ async function parseApiResponse<T>(response: Response) {
 
 async function request<T>(endpoint: string, options: FetchClientOptions) {
   const requestInit: RequestInit = { ...options };
+  const withCredentials = options.withCredentials ?? false;
 
   delete (requestInit as Partial<FetchClientOptions>).skipAuth;
-  delete (requestInit as Partial<FetchClientOptions>).skipRefresh;
+  delete (requestInit as Partial<FetchClientOptions>).withCredentials;
 
   const response = await fetch(buildUrl(endpoint), {
     ...requestInit,
+    credentials: withCredentials ? "include" : "omit",
     headers: createHeaders(options),
   });
 
@@ -79,23 +81,17 @@ export async function fetchClient<T>(
       error instanceof ApiError &&
       error.status === 401 &&
       error.code === API_ERROR_CODE.EXPIRED_TOKEN &&
-      !options.skipAuth &&
-      !options.skipRefresh;
+      !options.skipAuth;
 
     if (shouldTryRefresh) {
       try {
-        const refreshed = await refreshSessionOnce();
-
-        if (refreshed) {
-          return await request<T>(endpoint, options);
-        }
-
-        useAuthStore.getState().clearAuth();
-        throw error;
+        await refreshSessionOnce();
       } catch {
         useAuthStore.getState().clearAuth();
         throw error;
       }
+
+      return await request<T>(endpoint, options);
     }
 
     const shouldClearAuth =

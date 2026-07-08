@@ -25,24 +25,16 @@ async function parseApiResponse<T>(response: Response) {
 }
 
 async function refreshSession() {
-  const { getRefreshToken, setTokens } = useAuthStore.getState();
-  const refreshToken = getRefreshToken();
-
-  if (!refreshToken) {
-    return false;
-  }
+  const { setAccessToken } = useAuthStore.getState();
 
   const response = await fetch(buildUrl("/api/v1/auth/reissue"), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
+    credentials: "include",
   });
 
   const tokens = await parseApiResponse<TokenResponse>(response);
 
-  setTokens(tokens);
+  setAccessToken(tokens.accessToken);
 
   return true;
 }
