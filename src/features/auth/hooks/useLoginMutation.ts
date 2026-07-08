@@ -4,12 +4,12 @@ import { login } from "@/features/auth/api/auth.api";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export function useLoginMutation() {
-  const setTokens = useAuthStore((state) => state.setTokens);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
   return useMutation({
     mutationFn: login,
     onSuccess: (tokens) => {
-      setTokens(tokens);
+      setAccessToken(tokens.accessToken);
     },
   });
 }

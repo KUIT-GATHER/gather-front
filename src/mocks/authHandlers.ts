@@ -27,6 +27,8 @@ const validCategoryIds = new Set(
   categories.data.map((category) => category.id),
 );
 
+const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+
 const activeRefreshTokens = new Map<number, string>();
 
 function createAccessToken(userId: number) {
@@ -45,6 +47,30 @@ function findUserIdByRefreshToken(refreshToken: string) {
   }
 
   return null;
+}
+
+function getCookie(request: Request, name: string) {
+  const cookie = request.headers.get("Cookie");
+
+  if (!cookie) {
+    return null;
+  }
+
+  return (
+    cookie
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(`${name}=`))
+      ?.split("=")[1] ?? null
+  );
+}
+
+function createRefreshTokenCookie(refreshToken: string) {
+  return `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}; HttpOnly; Path=/api/v1/auth; SameSite=Lax`;
+}
+
+function createExpiredRefreshTokenCookie() {
+  return `${REFRESH_TOKEN_COOKIE_NAME}=; HttpOnly; Path=/api/v1/auth; SameSite=Lax; Max-Age=0`;
 }
 
 type MockUser = {
@@ -450,23 +476,25 @@ export const authHandlers = [
 
     activeRefreshTokens.set(user.id, refreshToken);
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        accessToken: createAccessToken(user.id),
-        refreshToken,
-        tokenType: "Bearer",
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          accessToken: createAccessToken(user.id),
+          tokenType: "Bearer",
+        },
+        error: null,
       },
-      error: null,
-    });
+      {
+        headers: {
+          "Set-Cookie": createRefreshTokenCookie(refreshToken),
+        },
+      },
+    );
   }),
 
   http.post("*/api/v1/auth/reissue", async ({ request }) => {
-    const body = (await request.json()) as {
-      refreshToken?: string;
-    };
-
-    const refreshToken = body.refreshToken;
+    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
     if (!refreshToken) {
       return HttpResponse.json(
@@ -474,11 +502,11 @@ export const authHandlers = [
           success: false,
           data: null,
           error: {
-            code: "VALIDATION_ERROR",
-            message: "refreshToken을 입력해 주세요.",
+            code: "UNAUTHORIZED",
+            message: "인증 정보가 없습니다.",
           },
         },
-        { status: 400 },
+        { status: 401 },
       );
     }
 
@@ -502,60 +530,58 @@ export const authHandlers = [
 
     activeRefreshTokens.set(userId, nextRefreshToken);
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        accessToken: createAccessToken(userId),
-        refreshToken: nextRefreshToken,
-        tokenType: "Bearer",
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          accessToken: createAccessToken(userId),
+          tokenType: "Bearer",
+        },
+        error: null,
       },
-      error: null,
-    });
+      {
+        headers: {
+          "Set-Cookie": createRefreshTokenCookie(nextRefreshToken),
+        },
+      },
+    );
   }),
 
   http.post("*/api/v1/auth/logout", async ({ request }) => {
-    const body = (await request.json()) as {
-      refreshToken?: string;
-    };
-
-    const refreshToken = body.refreshToken;
+    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
     if (!refreshToken) {
       return HttpResponse.json(
         {
-          success: false,
+          success: true,
           data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "refreshToken을 입력해 주세요.",
+          error: null,
+        },
+        {
+          headers: {
+            "Set-Cookie": createExpiredRefreshTokenCookie(),
           },
         },
-        { status: 400 },
       );
     }
 
     const userId = findUserIdByRefreshToken(refreshToken);
 
-    if (!userId) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "INVALID_TOKEN",
-            message: "유효하지 않은 토큰입니다.",
-          },
-        },
-        { status: 401 },
-      );
+    if (userId) {
+      activeRefreshTokens.delete(userId);
     }
 
-    activeRefreshTokens.delete(userId);
-
-    return HttpResponse.json({
-      success: true,
-      data: null,
-      error: null,
-    });
+    return HttpResponse.json(
+      {
+        success: true,
+        data: null,
+        error: null,
+      },
+      {
+        headers: {
+          "Set-Cookie": createExpiredRefreshTokenCookie(),
+        },
+      },
+    );
   }),
 ];

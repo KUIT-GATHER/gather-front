@@ -8,22 +8,14 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const isAuthReady = useAuthStore((state) => state.isAuthReady);
-  const getRefreshToken = useAuthStore((state) => state.getRefreshToken);
+  const authInitialized = useAuthStore((state) => state.authInitialized);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const setAuthReady = useAuthStore((state) => state.setAuthReady);
+  const setAuthInitialized = useAuthStore((state) => state.setAuthInitialized);
 
   useEffect(() => {
     let ignore = false;
 
     async function restoreAuth() {
-      const refreshToken = getRefreshToken();
-
-      if (!refreshToken) {
-        setAuthReady(true);
-        return;
-      }
-
       try {
         await refreshSessionOnce();
       } catch {
@@ -32,7 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } finally {
         if (!ignore) {
-          setAuthReady(true);
+          setAuthInitialized(true);
         }
       }
     }
@@ -42,9 +34,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       ignore = true;
     };
-  }, [clearAuth, getRefreshToken, setAuthReady]);
+  }, [clearAuth, setAuthInitialized]);
 
-  if (!isAuthReady) {
+  if (!authInitialized) {
     return null;
   }
 
