@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 
-import { reissue } from "@/features/auth/api/auth.api";
+import { refreshSessionOnce } from "@/features/auth/lib/refreshSession";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 
 type AuthProviderProps = {
@@ -8,36 +8,23 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const isAuthReady = useAuthStore((state) => state.isAuthReady);
-  const getRefreshToken = useAuthStore((state) => state.getRefreshToken);
-  const setTokens = useAuthStore((state) => state.setTokens);
+  const authInitialized = useAuthStore((state) => state.authInitialized);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const setAuthReady = useAuthStore((state) => state.setAuthReady);
+  const setAuthInitialized = useAuthStore((state) => state.setAuthInitialized);
 
   useEffect(() => {
     let ignore = false;
 
     async function restoreAuth() {
-      const refreshToken = getRefreshToken();
-
-      if (!refreshToken) {
-        setAuthReady(true);
-        return;
-      }
-
       try {
-        const tokens = await reissue({ refreshToken });
-
-        if (!ignore) {
-          setTokens(tokens);
-        }
+        await refreshSessionOnce();
       } catch {
         if (!ignore) {
           clearAuth();
         }
       } finally {
         if (!ignore) {
-          setAuthReady(true);
+          setAuthInitialized(true);
         }
       }
     }
@@ -47,9 +34,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       ignore = true;
     };
-  }, [clearAuth, getRefreshToken, setAuthReady, setTokens]);
+  }, [clearAuth, setAuthInitialized]);
 
-  if (!isAuthReady) {
+  if (!authInitialized) {
     return null;
   }
 

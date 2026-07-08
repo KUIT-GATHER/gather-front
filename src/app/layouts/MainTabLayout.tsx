@@ -32,8 +32,8 @@ const navItems = [
 
 export function MainTabLayout() {
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[402px] bg-bg">
-      <main className="min-h-screen pb-[80px]">
+    <>
+      <main className="pb-[80px]">
         <Outlet />
       </main>
 
@@ -75,6 +75,6 @@ export function MainTabLayout() {
           ))}
         </div>
       </nav>
-    </div>
+    </>
   );
 }
