@@ -1,9 +1,5 @@
-import SplashLeftIcon from "@/assets/icons/SplashLeftIcon.svg";
+import { Splash } from "@/features/onboarding/components/Splash";
 
 export function EntryPage() {
-  return (
-    <main>
-      <img src={SplashLeftIcon} alt="" aria-hidden="true" />
-    </main>
-  );
+  return <Splash />;
 }
