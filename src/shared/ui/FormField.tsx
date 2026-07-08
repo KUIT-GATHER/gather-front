@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import { cn } from "@/shared/lib/cn";
 
 type FormFieldProps = {
@@ -8,7 +9,9 @@ type FormFieldProps = {
   maxLength?: number;
   htmlFor?: string;
   children: ReactNode;
+  error?: string;
   className?: string;
+  labelClassName?: string;
 };
 
 export default function FormField({
@@ -18,7 +21,9 @@ export default function FormField({
   maxLength,
   htmlFor,
   children,
+  error,
   className,
+  labelClassName,
 }: FormFieldProps) {
   const showCounter =
     typeof count === "number" && typeof maxLength === "number";
@@ -27,7 +32,10 @@ export default function FormField({
     <div className={cn("w-full", className)}>
       <label
         htmlFor={htmlFor}
-        className="mb-[12px] block text-[18px] font-normal leading-[28px] text-text"
+        className={cn(
+          "mb-[12px] block text-[18px] font-normal leading-[28px] text-text",
+          labelClassName,
+        )}
       >
         {label}
         {required && <span className="text-point-red">*</span>}
@@ -35,11 +43,17 @@ export default function FormField({
 
       {children}
 
-      {showCounter && (
+      {error ? (
+        <p className="mt-[6px] text-[12px] font-normal leading-[18px] text-point-red">
+          {error}
+        </p>
+      ) : null}
+
+      {showCounter && !error ? (
         <p className="mt-[8px] text-right text-[12px] font-normal leading-[18px] text-text-gray-100">
           {count}/{maxLength}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

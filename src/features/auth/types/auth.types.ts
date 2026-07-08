@@ -37,12 +37,12 @@ export type SignupRequest = {
   password: string;
   passwordConfirm: string;
   nickname: string;
-  introduction?: string;
+  introduction?: string | null;
   activityRegionIds: number[];
   interestCategoryIds: number[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
-  marketingAgreed?: boolean;
+  marketingAgreed: boolean;
 };
 
 export type SignupResponse = {
@@ -59,14 +59,5 @@ export type LoginRequest = {
 
 export type TokenResponse = {
   accessToken: string;
-  refreshToken: string;
   tokenType: "Bearer";
-};
-
-export type ReissueRequest = {
-  refreshToken: string;
-};
-
-export type LogoutRequest = {
-  refreshToken: string;
 };

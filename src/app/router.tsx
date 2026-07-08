@@ -9,6 +9,7 @@ import { EntryPage } from "@/pages/entry/EntryPage";
 
 import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
+import { EmailLoginPage } from "@/pages/auth/EmailLoginPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import { TermsPage } from "@/pages/auth/TermsPage";
 
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/onboarding", element: <OnboardingPage /> },
           { path: "/login", element: <LoginPage /> },
+          { path: "/login/email", element: <EmailLoginPage /> },
           { path: "/signup", element: <SignupPage /> },
           { path: "/terms", element: <TermsPage /> },
         ],

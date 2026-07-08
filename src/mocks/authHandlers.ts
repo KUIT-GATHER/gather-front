@@ -12,7 +12,7 @@ type SignupRequest = {
   password?: string;
   passwordConfirm?: string;
   nickname?: string;
-  introduction?: string;
+  introduction?: string | null;
   activityRegionIds?: number[];
   interestCategoryIds?: number[];
   serviceTermsAgreed?: boolean;
@@ -27,16 +27,50 @@ const validCategoryIds = new Set(
   categories.data.map((category) => category.id),
 );
 
-function isValidMockRefreshToken(refreshToken: string) {
-  const match = refreshToken.match(/^(new-)?mock-refresh-token-(\d+)$/);
+const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
-  if (!match) {
-    return false;
+const activeRefreshTokens = new Map<number, string>();
+
+function createAccessToken(userId: number) {
+  return `mock-access-token-${userId}-${Date.now()}`;
+}
+
+function createRefreshToken(userId: number) {
+  return `mock-refresh-token-${userId}-${Date.now()}`;
+}
+
+function findUserIdByRefreshToken(refreshToken: string) {
+  for (const [userId, activeRefreshToken] of activeRefreshTokens.entries()) {
+    if (activeRefreshToken === refreshToken) {
+      return userId;
+    }
   }
 
-  const userId = Number(match[2]);
+  return null;
+}
 
-  return users.some((user) => user.id === userId);
+function getCookie(request: Request, name: string) {
+  const cookie = request.headers.get("Cookie");
+
+  if (!cookie) {
+    return null;
+  }
+
+  return (
+    cookie
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(`${name}=`))
+      ?.split("=")[1] ?? null
+  );
+}
+
+function createRefreshTokenCookie(refreshToken: string) {
+  return `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}; HttpOnly; Path=/api/v1/auth; SameSite=Lax`;
+}
+
+function createExpiredRefreshTokenCookie() {
+  return `${REFRESH_TOKEN_COOKIE_NAME}=; HttpOnly; Path=/api/v1/auth; SameSite=Lax; Max-Age=0`;
 }
 
 type MockUser = {
@@ -48,7 +82,7 @@ type MockUser = {
   email: string;
   password: string;
   nickname: string;
-  introduction?: string;
+  introduction?: string | null;
   activityRegionIds: number[];
   interestCategoryIds: number[];
 };
@@ -60,8 +94,8 @@ const users: MockUser[] = [
     birthDate: "2000-01-01",
     gender: "MALE",
     phoneNumber: "01012345678",
-    email: "test@gather.com",
-    password: "123456789",
+    email: "test@example.com",
+    password: "test1234",
     nickname: "가더",
     introduction: "함께 봉사하는 걸 좋아해요.",
     activityRegionIds: [1],
@@ -195,7 +229,8 @@ export const authHandlers = [
       !body.birthDate ||
       !body.gender ||
       !body.phoneNumber ||
-      !body.nickname
+      !body.nickname ||
+      typeof body.marketingAgreed !== "boolean"
     ) {
       return HttpResponse.json(
         {
@@ -301,7 +336,7 @@ export const authHandlers = [
             message: "존재하지 않는 활동 지역입니다.",
           },
         },
-        { status: 400 },
+        { status: 404 },
       );
     }
 
@@ -319,7 +354,7 @@ export const authHandlers = [
             message: "존재하지 않는 관심 카테고리입니다.",
           },
         },
-        { status: 400 },
+        { status: 404 },
       );
     }
 
@@ -437,23 +472,29 @@ export const authHandlers = [
       );
     }
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        accessToken: `mock-access-token-${user.id}`,
-        refreshToken: `mock-refresh-token-${user.id}`,
-        tokenType: "Bearer",
+    const refreshToken = createRefreshToken(user.id);
+
+    activeRefreshTokens.set(user.id, refreshToken);
+
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          accessToken: createAccessToken(user.id),
+          tokenType: "Bearer",
+        },
+        error: null,
       },
-      error: null,
-    });
+      {
+        headers: {
+          "Set-Cookie": createRefreshTokenCookie(refreshToken),
+        },
+      },
+    );
   }),
 
   http.post("*/api/v1/auth/reissue", async ({ request }) => {
-    const body = (await request.json()) as {
-      refreshToken?: string;
-    };
-
-    const refreshToken = body.refreshToken;
+    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
     if (!refreshToken) {
       return HttpResponse.json(
@@ -461,80 +502,86 @@ export const authHandlers = [
           success: false,
           data: null,
           error: {
-            code: "VALIDATION_ERROR",
-            message: "refreshToken을 입력해 주세요.",
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!isValidMockRefreshToken(refreshToken)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "INVALID_TOKEN",
-            message: "유효하지 않은 토큰입니다.",
+            code: "UNAUTHORIZED",
+            message: "인증 정보가 없습니다.",
           },
         },
         { status: 401 },
       );
     }
 
-    const userId = refreshToken.split("-").at(-1);
+    const userId = findUserIdByRefreshToken(refreshToken);
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        accessToken: `new-mock-access-token-${userId}`,
-        refreshToken: `new-mock-refresh-token-${userId}`,
-        tokenType: "Bearer",
+    if (!userId) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "REVOKED_TOKEN",
+            message: "폐기된 토큰입니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const nextRefreshToken = createRefreshToken(userId);
+
+    activeRefreshTokens.set(userId, nextRefreshToken);
+
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          accessToken: createAccessToken(userId),
+          tokenType: "Bearer",
+        },
+        error: null,
       },
-      error: null,
-    });
+      {
+        headers: {
+          "Set-Cookie": createRefreshTokenCookie(nextRefreshToken),
+        },
+      },
+    );
   }),
 
   http.post("*/api/v1/auth/logout", async ({ request }) => {
-    const body = (await request.json()) as {
-      refreshToken?: string;
-    };
-
-    const refreshToken = body.refreshToken;
+    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
 
     if (!refreshToken) {
       return HttpResponse.json(
         {
-          success: false,
+          success: true,
           data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "refreshToken을 입력해 주세요.",
-          },
+          error: null,
         },
-        { status: 400 },
-      );
-    }
-
-    if (!isValidMockRefreshToken(refreshToken)) {
-      return HttpResponse.json(
         {
-          success: false,
-          data: null,
-          error: {
-            code: "INVALID_TOKEN",
-            message: "유효하지 않은 토큰입니다.",
+          headers: {
+            "Set-Cookie": createExpiredRefreshTokenCookie(),
           },
         },
-        { status: 401 },
       );
     }
 
-    return HttpResponse.json({
-      success: true,
-      data: null,
-      error: null,
-    });
+    const userId = findUserIdByRefreshToken(refreshToken);
+
+    if (userId) {
+      activeRefreshTokens.delete(userId);
+    }
+
+    return HttpResponse.json(
+      {
+        success: true,
+        data: null,
+        error: null,
+      },
+      {
+        headers: {
+          "Set-Cookie": createExpiredRefreshTokenCookie(),
+        },
+      },
+    );
   }),
 ];

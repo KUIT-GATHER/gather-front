@@ -13,7 +13,7 @@ export default function PageContainer({
   return (
     <main
       className={cn(
-        "mx-auto min-h-screen w-full max-w-[402px] bg-bg px-[22px]",
+        "px-[22px]",
         className
       )}
     >
