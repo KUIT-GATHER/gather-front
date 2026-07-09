@@ -22,7 +22,7 @@ export function EmailLoginScreen() {
 
       <EmailLoginForm
         className="mt-[54px]"
-        onSuccess={() => navigate("/home", { replace: true })}
+        onLoginSuccess={() => navigate("/home", { replace: true })}
         onSignupClick={() => navigate("/signup")}
       />
     </main>

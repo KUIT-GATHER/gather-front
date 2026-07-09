@@ -17,7 +17,7 @@ import Input from "@/shared/ui/Input";
 
 type EmailLoginFormProps = {
   className?: string;
-  onSuccess: () => void;
+  onLoginSuccess: () => void;
   onSignupClick: () => void;
 };
 
@@ -47,7 +47,7 @@ function getLoginErrorMessage(error: unknown) {
 
 export function EmailLoginForm({
   className,
-  onSuccess,
+  onLoginSuccess,
   onSignupClick,
 }: EmailLoginFormProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -72,7 +72,7 @@ export function EmailLoginForm({
     clearErrors("root");
 
     loginMutation.mutate(values, {
-      onSuccess,
+      onSuccess: onLoginSuccess,
       onError: (error) => {
         setError("root", {
           message: getLoginErrorMessage(error),
@@ -96,7 +96,7 @@ export function EmailLoginForm({
             id="email"
             type="email"
             placeholder="이메일을 입력해 주세요."
-            autoComplete="email"
+            autoComplete="email" // 브라우저 자동완성 기능을 위해 추가
             invalid={Boolean(errors.email)}
             aria-invalid={Boolean(errors.email)}
             {...register("email", {
@@ -116,9 +116,9 @@ export function EmailLoginForm({
               id="password"
               type={isPasswordVisible ? "text" : "password"}
               placeholder="비밀번호를 입력해 주세요."
-              autoComplete="current-password"
+              autoComplete="current-password" 
               className="pr-12"
-              invalid={Boolean(errors.password)}
+              invalid={Boolean(errors.password)} // 에러가 있는 경우 Input 컴포넌트에 invalid prop을 전달
               aria-invalid={Boolean(errors.password)}
               {...register("password", {
                 onChange: () => clearErrors("root"),
