@@ -32,6 +32,8 @@ import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 import { NotFoundPage } from "@/pages/errors/NotFoundPage";
 import { RootRouteErrorBoundary } from "@/pages/errors/RootRouteErrorBoundary";
 
+import { RequireAuth } from "@/features/auth/guards/RequireAuth";
+
 import { env } from "@/shared/config/env";
 
 const devRoutes = env.IS_DEV
@@ -64,28 +66,45 @@ export const router = createBrowserRouter([
         element: <MainTabLayout />,
         children: [
           { path: "/home", element: <HomePage /> },
-          { path: "/teams", element: <TeamPage /> },
-          { path: "/my", element: <MyPage /> },
+
+          {
+            element: <RequireAuth />,
+            children: [
+              { path: "/teams", element: <TeamPage /> },
+              { path: "/my", element: <MyPage /> },
+            ],
+          },
         ],
       },
 
       {
         element: <PlainLayout />,
         children: [
+          // 공개
           { path: "/volunteers", element: <VolunteerListPage /> },
           { path: "/volunteers/search", element: <VolunteerSearchPage /> },
-          { path: "/volunteers/:volunteerId", element: <VolunteerDetailPage /> },
-
           {
-            path: "/volunteers/:volunteerId/teams/new",
-            element: <TeamCreatePage />,
+            path: "/volunteers/:volunteerId",
+            element: <VolunteerDetailPage />,
           },
-
           { path: "/teams/search", element: <TeamSearchPage /> },
-          { path: "/teams/new", element: <TeamCreatePage /> },
           { path: "/teams/:teamId", element: <TeamDetailPage /> },
 
-          { path: "/notifications", element: <NotificationPage /> },
+          // 보호
+          {
+            element: <RequireAuth />,
+            children: [
+              {
+                path: "/volunteers/:volunteerId/teams/new",
+                element: <TeamCreatePage />,
+              },
+              { path: "/teams/new", element: <TeamCreatePage /> },
+              {
+                path: "/notifications",
+                element: <NotificationPage />,
+              },
+            ],
+          },
 
           ...devRoutes,
         ],
@@ -94,7 +113,7 @@ export const router = createBrowserRouter([
       {
         path: "*",
         element: <NotFoundPage />,
-      }
+      },
     ],
   },
 ]);
