@@ -29,6 +29,9 @@ import { MyPage } from "@/pages/my/MyPage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
+import { NotFoundPage } from "@/pages/errors/NotFoundPage";
+import { RootRouteErrorBoundary } from "@/pages/errors/RootRouteErrorBoundary";
+
 import { env } from "@/shared/config/env";
 
 const devRoutes = env.IS_DEV
@@ -38,6 +41,8 @@ const devRoutes = env.IS_DEV
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    ErrorBoundary: RootRouteErrorBoundary,
+
     children: [
       {
         path: "/",
@@ -85,6 +90,11 @@ export const router = createBrowserRouter([
           ...devRoutes,
         ],
       },
+
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      }
     ],
   },
 ]);
