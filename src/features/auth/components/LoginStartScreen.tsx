@@ -1,9 +1,10 @@
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 import { AuthLogo } from "@/features/auth/components/AuthLogo";
 import Button from "@/shared/ui/Button";
 
 export function LoginStartScreen() {
+  const location = useLocation();
   const navigate = useNavigate();
 
   return (
@@ -26,7 +27,11 @@ export function LoginStartScreen() {
           fullWidth
           type="button"
           className="h-[54px] border border-button bg-[#EAF8EF] text-[16px] font-semibold text-text-gray-300 hover:bg-[#DFF4E7]"
-          onClick={() => navigate("/login/email")}
+          onClick={() => {
+            navigate("/login/email", {
+              state: location.state,
+            });
+          }}
         >
           이메일로 시작하기
         </Button>
