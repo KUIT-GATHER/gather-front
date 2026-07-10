@@ -1,3 +1,5 @@
+import PageContainer from "@/shared/ui/PageContainer";
+
 export function VolunteerDetailPage() {
-  return <div>VolunteerDetailPage</div>;
+  return <PageContainer size="narrow">VolunteerDetailPage</PageContainer>;
 }

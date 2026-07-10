@@ -16,7 +16,7 @@ export function AuthLogo({ size = "large", className }: AuthLogoProps) {
       <div
         className={cn(
           "relative",
-          isLarge ? "h-[128px] w-[230px]" : "h-[112px] w-[200px]",
+          isLarge ? "h-32 w-57.5" : "h-28 w-50",
         )}
       >
         <img
@@ -26,8 +26,8 @@ export function AuthLogo({ size = "large", className }: AuthLogoProps) {
           className={cn(
             "absolute z-20 h-auto",
             isLarge
-              ? "top-0 left-[22px] w-[130px]"
-              : "top-0 left-[18px] w-[116px]",
+              ? "top-0 left-5.5 w-32.5"
+              : "top-0 left-4.5 w-29",
           )}
         />
         <img
@@ -37,8 +37,8 @@ export function AuthLogo({ size = "large", className }: AuthLogoProps) {
           className={cn(
             "absolute z-10 h-auto",
             isLarge
-              ? "top-[22px] right-[18px] w-[107px]"
-              : "top-[20px] right-[14px] w-[96px]",
+              ? "top-5.5 right-4.5 w-26.75"
+              : "top-5 right-3.5 w-24",
           )}
         />
       </div>

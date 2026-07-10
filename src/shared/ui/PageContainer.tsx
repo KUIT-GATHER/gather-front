@@ -1,23 +1,34 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef } from "react";
+
 import { cn } from "@/shared/lib/cn";
 
-type PageContainerProps = {
-  children: ReactNode;
-  className?: string;
+type PageContainerSize = "narrow" | "wide";
+
+type PageContainerProps = ComponentPropsWithoutRef<"div"> & {
+  size?: PageContainerSize;
+};
+
+const sizeClasses: Record<PageContainerSize, string> = {
+  narrow: "max-w-[402px]",
+  wide: "max-w-6xl",
 };
 
 export default function PageContainer({
+  size = "narrow",
   children,
   className,
+  ...props
 }: PageContainerProps) {
   return (
-    <main
+    <div
       className={cn(
-        "px-[22px]",
-        className
+        "mx-auto w-full px-5.5",
+        sizeClasses[size],
+        className,
       )}
+      {...props}
     >
       {children}
-    </main>
+    </div>
   );
 }

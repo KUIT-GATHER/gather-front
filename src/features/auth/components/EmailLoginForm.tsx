@@ -90,7 +90,7 @@ export function EmailLoginForm({
           htmlFor="email"
           label="이메일"
           error={errors.email?.message}
-          labelClassName="mb-2 text-[16px] font-semibold leading-[22px]"
+          labelClassName="mb-2 text-base font-semibold leading-5.5"
         >
           <Input
             id="email"
@@ -109,7 +109,7 @@ export function EmailLoginForm({
           htmlFor="password"
           label="비밀번호"
           error={errors.password?.message}
-          labelClassName="mb-2 text-[16px] font-semibold leading-[22px]"
+          labelClassName="mb-2 text-base font-semibold leading-5.5"
         >
           <div className="relative">
             <Input
@@ -144,7 +144,7 @@ export function EmailLoginForm({
       </div>
 
       {errors.root?.message ? (
-        <p className="mt-3 text-center text-[13px] leading-[18px] text-point-red">
+        <p className="mt-3 text-center text-[13px] leading-4.5 text-point-red">
           {errors.root.message}
         </p>
       ) : null}
@@ -153,12 +153,12 @@ export function EmailLoginForm({
         fullWidth
         type="submit"
         disabled={!isValid || loginMutation.isPending}
-        className="mt-[42px] h-[54px] text-[18px] font-semibold"
+        className="mt-10.5 h-13.5 text-lg font-semibold"
       >
         {loginMutation.isPending ? "로그인 중..." : "로그인"}
       </Button>
 
-      <p className="mt-[28px] text-center text-[14px] leading-[20px] text-text-gray-100">
+      <p className="mt-7 text-center text-sm leading-5 text-text-gray-100">
         계정이 없으신가요?{" "}
         <button
           type="button"

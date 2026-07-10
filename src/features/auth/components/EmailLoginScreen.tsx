@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 
 import { AuthLogo } from "@/features/auth/components/AuthLogo";
 import { EmailLoginForm } from "@/features/auth/components/EmailLoginForm";
+import PageContainer from "@/shared/ui/PageContainer";
 
 type LoginLocationState = {
   from?: string;
@@ -21,7 +22,7 @@ export function EmailLoginScreen() {
       : "/home";
 
   return (
-    <main className="min-h-dvh bg-bg px-6 pt-[calc(env(safe-area-inset-top)+56px)]">
+    <PageContainer size="narrow" className="min-h-dvh px-6 pt-[calc(env(safe-area-inset-top)+56px)]">
       <button
         type="button"
         aria-label="뒤로가기"
@@ -31,15 +32,15 @@ export function EmailLoginScreen() {
         <ChevronLeft className="h-7 w-7 text-text" />
       </button>
 
-      <AuthLogo size="medium" className="mt-[86px]" />
+      <AuthLogo size="medium" className="mt-21.5" />
 
       <EmailLoginForm
-        className="mt-[54px]"
+        className="mt-13.5"
         onLoginSuccess={() => {
           navigate(redirectTo, { replace: true });
         }}
         onSignupClick={() => navigate("/signup")}
       />
-    </main>
+    </PageContainer>
   );
 }

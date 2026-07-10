@@ -23,7 +23,7 @@ export function EmptyState({
   return (
     <section
       className={cn(
-        "flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface px-6 py-10 text-center",
+        "flex min-h-55 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface px-6 py-10 text-center",
         className,
       )}
     >
@@ -36,7 +36,7 @@ export function EmptyState({
       <h3 className="text-title-18 text-foreground">{title}</h3>
 
       {description ? (
-        <p className="mt-2 max-w-[280px] text-body-14 text-muted-foreground">
+        <p className="mt-2 max-w-70 text-body-14 text-muted-foreground">
           {description}
         </p>
       ) : null}

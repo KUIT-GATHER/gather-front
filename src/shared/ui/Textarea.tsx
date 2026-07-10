@@ -10,7 +10,7 @@ export default function Textarea({
   return (
     <textarea
       className={cn(
-        "box-border h-[200px] w-full resize-none rounded-[12px] border border-stroke bg-white px-[16px] py-[12px]",
+        "box-border h-50 w-full resize-none rounded-xl border border-stroke bg-white px-4 py-3",
         "text-body-14 text-text outline-none",
         "placeholder:text-text-gray-100",
         "focus:border-button",
