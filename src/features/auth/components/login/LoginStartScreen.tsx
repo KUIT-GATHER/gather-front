@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 
-import { AuthLogo } from "@/features/auth/components/AuthLogo";
+import { AuthLogo } from "@/features/auth/components/login/AuthLogo";
 import Button from "@/shared/ui/Button";
 import PageContainer from "@/shared/ui/PageContainer";
 

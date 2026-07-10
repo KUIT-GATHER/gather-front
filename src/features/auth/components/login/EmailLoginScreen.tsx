@@ -1,8 +1,8 @@
 import { ChevronLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
-import { AuthLogo } from "@/features/auth/components/AuthLogo";
-import { EmailLoginForm } from "@/features/auth/components/EmailLoginForm";
+import { AuthLogo } from "@/features/auth/components/login/AuthLogo";
+import { EmailLoginForm } from "@/features/auth/components/login/EmailLoginForm";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 
