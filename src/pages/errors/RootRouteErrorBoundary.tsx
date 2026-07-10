@@ -23,6 +23,7 @@ export function RootRouteErrorBoundary() {
   const description = isNotFoundResponse
     ? "요청한 페이지가 삭제되었거나 주소가 변경되었을 수 있어요."
     : isJavaScriptError
+    
       ? "잠시 후 다시 시도해 주세요."
       : "예상하지 못한 오류가 발생했어요. 잠시 후 다시 시도해 주세요.";
 

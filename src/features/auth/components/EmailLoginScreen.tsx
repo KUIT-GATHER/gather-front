@@ -8,7 +8,16 @@ import PageContainer from "@/shared/ui/PageContainer";
 
 type LoginLocationState = {
   from?: string;
+  email?: string;
 };
+
+function isValidEmail(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length <= 255 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  );
+}
 
 export function EmailLoginScreen() {
   const location = useLocation();
@@ -21,6 +30,10 @@ export function EmailLoginScreen() {
     !state.from.startsWith("//")
       ? state.from
       : "/home";
+  const stateEmail = state?.email;
+  const defaultEmail = isValidEmail(stateEmail)
+    ? stateEmail.trim().toLowerCase()
+    : "";
 
   return (
     <PageContainer
@@ -41,6 +54,7 @@ export function EmailLoginScreen() {
 
         <EmailLoginForm
           className="mt-[clamp(1.5rem,6.2dvh,3.375rem)]"
+          defaultEmail={defaultEmail}
           onLoginSuccess={() => {
             navigate(redirectTo, { replace: true });
           }}

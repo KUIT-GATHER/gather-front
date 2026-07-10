@@ -19,6 +19,7 @@ type EmailLoginFormProps = {
   className?: string;
   onLoginSuccess: () => void;
   onSignupClick: () => void;
+  defaultEmail?: string;
 };
 
 function getLoginErrorMessage(error: unknown) {
@@ -49,6 +50,7 @@ export function EmailLoginForm({
   className,
   onLoginSuccess,
   onSignupClick,
+  defaultEmail = "",
 }: EmailLoginFormProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const loginMutation = useLoginMutation();
@@ -63,7 +65,7 @@ export function EmailLoginForm({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
     defaultValues: {
-      email: "",
+      email: defaultEmail,
       password: "",
     },
   });

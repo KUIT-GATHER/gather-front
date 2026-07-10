@@ -1,6 +1,6 @@
 
-import PageContainer from "@/shared/ui/PageContainer";
+import { SignupFlow } from "@/features/auth/components/signup/SignupFlow";
 
 export function SignupPage() {
-  return <PageContainer size="narrow">SignupPage</PageContainer>;
+  return <SignupFlow />;
 }
