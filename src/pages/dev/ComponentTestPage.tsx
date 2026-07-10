@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { CircleAlert } from "lucide-react";
+import { Bell, ChevronLeft, CircleAlert, Search, Settings } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
+import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
+import PageHeader from "@/shared/ui/PageHeader";
 import Textarea from "@/shared/ui/Textarea";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -96,6 +98,71 @@ export function ComponentTestPage() {
         <FormField label="내용" required count={content.length} maxLength={300} htmlFor="review-content">
             <Textarea id="review-content" placeholder="내용을 입력하세요" value={content} maxLength={300} onChange={(e) => setContent(e.target.value)} />
         </FormField>
+
+        {/* IconButton */}
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">IconButton</h2>
+
+          <div className="flex items-center gap-3">
+            <IconButton label="검색" icon={<Search />} />
+            <IconButton
+              label="알림"
+              icon={<Bell />}
+              variant="surface"
+            />
+            <IconButton
+              disabled
+              label="설정"
+              icon={<Settings />}
+            />
+          </div>
+        </section>
+
+        {/* PageHeader */}
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">PageHeader</h2>
+
+          <div className="flex flex-col gap-4">
+            <PageHeader title="모임" />
+            <PageHeader
+              title="이메일 로그인"
+              onBack={() => {}}
+            />
+            <PageHeader
+              title="알림"
+              rightAction={<IconButton label="검색" icon={<Search />} />}
+            />
+            <PageHeader
+              title="아주 긴 페이지 제목이 들어와도 가운데에서 말줄임 처리됩니다"
+              leftAction={
+                <IconButton
+                  label="이전"
+                  icon={<ChevronLeft />}
+                />
+              }
+              rightAction={
+                <IconButton
+                  label="설정"
+                  icon={<Settings />}
+                  variant="surface"
+                />
+              }
+            />
+            <div className="h-36 overflow-y-auto border border-stroke">
+              <PageHeader
+                sticky
+                title="sticky PageHeader"
+                onBack={() => {}}
+                rightAction={<IconButton label="검색" icon={<Search />} />}
+              />
+              <div className="flex flex-col gap-3 p-4 text-body-14 text-text-gray-300">
+                <p>스크롤 영역 안에서 상단에 고정되는 예제입니다.</p>
+                <p>PageContainer의 폭 책임을 가져가지 않고 헤더만 렌더링합니다.</p>
+                <p>safe-area top padding은 헤더 내부에서 처리됩니다.</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Textarea */}
         <section className="flex flex-col gap-5">

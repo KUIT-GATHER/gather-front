@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 
 import { AuthLogo } from "@/features/auth/components/AuthLogo";
 import { EmailLoginForm } from "@/features/auth/components/EmailLoginForm";
+import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 
 type LoginLocationState = {
@@ -26,14 +27,11 @@ export function EmailLoginScreen() {
       size="narrow"
       className="flex min-h-dvh flex-col overflow-y-auto px-6 pt-[calc(env(safe-area-inset-top)+clamp(1.25rem,6dvh,3.5rem))] pb-[calc(env(safe-area-inset-bottom)+2rem)]"
     >
-      <button
-        type="button"
-        aria-label="뒤로가기"
-        className="flex h-8 w-8 items-center justify-center"
+      <IconButton
+        label="뒤로가기"
+        icon={<ChevronLeft className="h-7 w-7 text-text" />}
         onClick={() => navigate("/login")}
-      >
-        <ChevronLeft className="h-7 w-7 text-text" />
-      </button>
+      />
 
       <div className="flex flex-1 flex-col">
         <AuthLogo
