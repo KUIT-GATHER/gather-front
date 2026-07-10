@@ -22,6 +22,11 @@ export function ComponentTestPage() {
   >(null);
   const [isConfirmPending, setIsConfirmPending] = useState(false);
   const [sort, setSort] = useState("all");
+  const [selectedSort, setSelectedSort] = useState("latest");
+  const [placeholderSort, setPlaceholderSort] = useState("");
+  const [invalidSort, setInvalidSort] = useState("all");
+  const [manySort, setManySort] = useState("option-1");
+  const [longLabelSort, setLongLabelSort] = useState("long-1");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -36,6 +41,35 @@ export function ComponentTestPage() {
       closeDialog();
     }, 1500);
   };
+
+  const sortOptions = [
+    { label: "전체", value: "all" },
+    { label: "최신순 ✨", value: "latest" },
+    { label: "인기순 🔥", value: "popular" },
+    { label: "마감임박 ⏰", value: "deadline" },
+    { label: "공고기반", value: "official" },
+    { label: "자유모임", value: "free" },
+  ];
+
+  const manyOptions = Array.from({ length: 16 }, (_, index) => ({
+    label: `옵션 ${index + 1}`,
+    value: `option-${index + 1}`,
+  }));
+
+  const longLabelOptions = [
+    {
+      label: "전체 봉사 모임과 신청 가능한 모집 공고를 함께 보기",
+      value: "long-1",
+    },
+    {
+      label: "이번 주 안에 모집이 마감되는 장기 봉사 모임만 보기",
+      value: "long-2",
+    },
+    {
+      label: "내가 관심 지역으로 설정한 곳에서 진행되는 활동 보기",
+      value: "long-3",
+    },
+  ];
 
   return (
     <PageContainer size="narrow" className="min-h-screen bg-white px-5.5 py-12">
@@ -124,18 +158,54 @@ export function ComponentTestPage() {
         <section className="flex flex-col gap-5">
           <h2 className="text-xl font-bold text-[#0A0A0A]">Select</h2>
 
-          <Select
-            value={sort}
-            onChange={setSort}
-            options={[
-              { label: "전체", value: "all" },
-              { label: "최신순 ✨", value: "latest" },
-              { label: "인기순 🔥", value: "popular" },
-              { label: "마감임박 ⏰", value: "deadline" },
-              { label: "공고기반", value: "official" },
-              { label: "자유모임", value: "free" },
-            ]}
-          />
+          <div className="flex flex-col items-start gap-4">
+            <Select
+              ariaLabel="기본 정렬"
+              value={sort}
+              onChange={setSort}
+              options={sortOptions}
+            />
+            <Select
+              ariaLabel="선택된 정렬"
+              value={selectedSort}
+              onChange={setSelectedSort}
+              options={sortOptions}
+            />
+            <Select
+              ariaLabel="placeholder 정렬"
+              value={placeholderSort}
+              onChange={setPlaceholderSort}
+              placeholder="정렬 선택"
+              options={sortOptions}
+            />
+            <Select
+              ariaLabel="비활성화 정렬"
+              disabled
+              value={sort}
+              onChange={setSort}
+              options={sortOptions}
+            />
+            <Select
+              ariaLabel="오류 정렬"
+              invalid
+              value={invalidSort}
+              onChange={setInvalidSort}
+              options={sortOptions}
+            />
+            <Select
+              ariaLabel="옵션이 많은 정렬"
+              value={manySort}
+              onChange={setManySort}
+              options={manyOptions}
+            />
+            <Select
+              ariaLabel="긴 라벨 정렬"
+              value={longLabelSort}
+              onChange={setLongLabelSort}
+              options={longLabelOptions}
+              className="max-w-72"
+            />
+          </div>
         </section>
 
         {/* Spinner */}
