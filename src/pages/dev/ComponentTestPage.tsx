@@ -6,7 +6,9 @@ import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
+import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
+import Skeleton from "@/shared/ui/Skeleton";
 import Textarea from "@/shared/ui/Textarea";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -186,9 +188,19 @@ export function ComponentTestPage() {
               description="관심 있는 봉사활동의 모임을 만들어 보세요."
             />
             <EmptyState
+              title="검색 결과가 없어요"
+              description="다른 검색어를 입력하거나 필터를 다시 설정해 주세요."
+              icon={<Search className="size-6" />}
+            />
+            <EmptyState
               title="참여한 모임이 없어요"
               actionLabel="모임 둘러보기"
               onAction={() => {}}
+            />
+            <EmptyState
+              title="아직 표시할 항목이 없어요"
+              description="조건에 맞는 데이터가 정상적으로 조회되었지만 표시할 항목이 없는 작은 영역 예제입니다."
+              className="min-h-36 py-6"
             />
           </div>
         </section>
@@ -204,6 +216,12 @@ export function ComponentTestPage() {
           <ErrorState
             title="페이지를 불러오지 못했어요"
             primaryAction={{ label: "다시 시도", onClick: () => {} }}
+          />
+          <ErrorState
+            title="목록을 다시 불러오지 못했어요"
+            description="네트워크 상태를 확인한 뒤 다시 시도해 주세요."
+            primaryAction={{ label: "다시 시도", onClick: () => {} }}
+            className="rounded-2xl border border-stroke px-5 py-8"
           />
           <ErrorState
             title="페이지를 찾을 수 없어요"
@@ -275,11 +293,41 @@ export function ComponentTestPage() {
           </div>
         </section>
 
-        {/* Spinner */}
+        {/* LoadingState / Skeleton */}
         <section className="flex flex-col gap-5">
-          <h2 className="text-xl font-bold text-[#0A0A0A]">Spinner</h2>
+          <h2 className="text-xl font-bold text-[#0A0A0A]">
+            LoadingState / Skeleton
+          </h2>
 
-          <Spinner />
+          <div className="flex items-center gap-4">
+            <Spinner size="small" />
+            <Spinner />
+          </div>
+
+          <LoadingState />
+
+          <LoadingState label="목록을 불러오는 중">
+            <div className="flex w-full flex-col gap-3" aria-hidden="true">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-52" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+          </LoadingState>
+
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="size-12 rounded-full" />
+            <div className="rounded-2xl border border-stroke bg-white p-4">
+              <div className="flex gap-3">
+                <Skeleton className="size-12 rounded-full" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ConfirmDialog */}
