@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Button from "@/shared/ui/Button";
+import { EmptyState } from "@/shared/ui/EmptyState";
 import Input from "@/shared/ui/Input";
 import Textarea from "@/shared/ui/Textarea";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
@@ -44,6 +45,35 @@ export function ComponentTestPage() {
         <FormField label="내용" required count={content.length} maxLength={300} htmlFor="review-content">
             <Textarea id="review-content" placeholder="내용을 입력하세요" value={content} maxLength={300} onChange={(e) => setContent(e.target.value)} />
         </FormField>
+
+        {/* Textarea */}
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">Textarea</h2>
+
+          <div className="flex flex-col gap-3">
+            <Textarea placeholder="내용을 입력하세요" />
+            <Textarea invalid placeholder="내용을 입력하세요" />
+            <Textarea disabled placeholder="내용을 입력하세요" />
+          </div>
+        </section>
+
+        {/* EmptyState */}
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">EmptyState</h2>
+
+          <div className="flex flex-col gap-3">
+            <EmptyState title="표시할 내용이 없어요" />
+            <EmptyState
+              title="아직 모임이 없어요"
+              description="관심 있는 봉사활동의 모임을 만들어 보세요."
+            />
+            <EmptyState
+              title="참여한 모임이 없어요"
+              actionLabel="모임 둘러보기"
+              onAction={() => {}}
+            />
+          </div>
+        </section>
 
         {/* Select */}
         <section className="flex flex-col gap-5">
