@@ -17,10 +17,25 @@ import PencilIcon from "@/assets/icons/Pen.svg";
 
 
 export function ComponentTestPage() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [activeDialog, setActiveDialog] = useState<
+    "primary" | "dark" | "danger" | "pending" | "noDescription" | "long" | null
+  >(null);
+  const [isConfirmPending, setIsConfirmPending] = useState(false);
   const [sort, setSort] = useState("all");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  const closeDialog = () => {
+    setActiveDialog(null);
+    setIsConfirmPending(false);
+  };
+
+  const handlePendingConfirm = () => {
+    setIsConfirmPending(true);
+    window.setTimeout(() => {
+      closeDialog();
+    }, 1500);
+  };
 
   return (
     <PageContainer size="narrow" className="min-h-screen bg-white px-5.5 py-12">
@@ -136,19 +151,96 @@ export function ComponentTestPage() {
             ConfirmDialog
           </h2>
 
-          <Button onClick={() => setIsOpen(true)}>모달 열기</Button>
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => setActiveDialog("primary")}>
+              primary ConfirmDialog
+            </Button>
+            <Button
+              variant="dark"
+              onClick={() => setActiveDialog("dark")}
+            >
+              dark ConfirmDialog
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => setActiveDialog("danger")}
+            >
+              danger ConfirmDialog
+            </Button>
+            <Button onClick={() => setActiveDialog("pending")}>
+              pending ConfirmDialog
+            </Button>
+            <Button onClick={() => setActiveDialog("noDescription")}>
+              설명 없는 ConfirmDialog
+            </Button>
+            <Button onClick={() => setActiveDialog("long")}>
+              긴 제목과 설명
+            </Button>
+          </div>
         </section>
       </div>
       <ConfirmDialog
-        open={isOpen}
+        open={activeDialog === "primary"}
         title="게시글을 삭제하시겠어요?"
         cancelText="취소"
         confirmText="확인"
         confirmVariant="primary"
-        onCancel={() => setIsOpen(false)}
-        onConfirm={() => setIsOpen(false)}
+        onCancel={closeDialog}
+        onConfirm={closeDialog}
       >
         삭제된 게시글은 복구할 수 없습니다.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={activeDialog === "dark"}
+        title="설정을 변경하시겠어요?"
+        cancelText="취소"
+        confirmText="변경"
+        confirmVariant="dark"
+        onCancel={closeDialog}
+        onConfirm={closeDialog}
+      >
+        변경된 설정은 즉시 적용됩니다.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={activeDialog === "danger"}
+        title="팀을 해산하시겠어요?"
+        cancelText="취소"
+        confirmText="해산"
+        confirmVariant="danger"
+        onCancel={closeDialog}
+        onConfirm={closeDialog}
+      >
+        해산한 팀은 다시 복구할 수 없습니다.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={activeDialog === "pending"}
+        title="신청을 취소하시겠어요?"
+        cancelText="취소"
+        confirmText="신청 취소"
+        confirmVariant="danger"
+        isPending={isConfirmPending}
+        onCancel={closeDialog}
+        onConfirm={handlePendingConfirm}
+      >
+        처리 중에는 창을 닫을 수 없습니다.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={activeDialog === "noDescription"}
+        title="변경사항을 저장하시겠어요?"
+        confirmText="저장"
+        onCancel={closeDialog}
+        onConfirm={closeDialog}
+      />
+      <ConfirmDialog
+        open={activeDialog === "long"}
+        title="선택한 모든 봉사 모임 정보를 삭제하고 관련 신청 내역을 함께 정리하시겠어요?"
+        cancelText="아니요"
+        confirmText="삭제"
+        confirmVariant="danger"
+        onCancel={closeDialog}
+        onConfirm={closeDialog}
+      >
+        삭제가 완료되면 이 화면에서 다시 확인할 수 없으며, 참여자에게 표시되는 일부 정보도 함께 사라질 수 있습니다.
       </ConfirmDialog>
     </PageContainer>
   );
