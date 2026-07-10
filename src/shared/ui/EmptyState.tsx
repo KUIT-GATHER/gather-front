@@ -28,7 +28,10 @@ export function EmptyState({
       )}
     >
       {icon ? (
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-text/8 text-text">
+        <div
+          className="mb-4 flex size-12 items-center justify-center rounded-full bg-text/8 text-text"
+          aria-hidden="true"
+        >
           {icon}
         </div>
       ) : null}
