@@ -4,20 +4,19 @@ import { cn } from "@/shared/lib/cn";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
 
-const stepMeta = {
+import type { SignupStep } from "@/features/auth/constants/signupFlow.constants";
+
+const stepMeta: Record<SignupStep, { label: string; value: number }> = {
   basic: { label: "1 /4 기본 정보", value: 25 },
   account: { label: "2 /4 계정 정보", value: 50 },
   profile: { label: "3 /4 프로필 생성", value: 75 },
   terms: { label: "4 /4 서비스 약관", value: 100 },
 };
 
-export type SignupStep = keyof typeof stepMeta;
-
 type SignupShellProps = {
   step: SignupStep;
   onBack: () => void;
   children: ReactNode;
-  footer?: ReactNode;
   className?: string;
 };
 
@@ -25,7 +24,6 @@ export function SignupShell({
   step,
   onBack,
   children,
-  footer,
   className,
 }: SignupShellProps) {
   const meta = stepMeta[step];
@@ -59,12 +57,6 @@ export function SignupShell({
       </p>
 
       <div className="flex min-h-0 flex-1 flex-col pt-9">{children}</div>
-
-      {footer ? (
-        <div className="sticky bottom-0 z-10 mt-auto bg-bg pt-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
-          {footer}
-        </div>
-      ) : null}
     </PageContainer>
   );
 }
