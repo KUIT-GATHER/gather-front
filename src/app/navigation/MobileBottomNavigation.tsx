@@ -34,13 +34,12 @@ export function MobileBottomNavigation() {
     <nav
       className={cn(
         "fixed bottom-0 left-1/2 z-30",
-        "flex h-20 w-full max-w-[402px] -translate-x-1/2 items-center justify-center",
+        "w-full max-w-app -translate-x-1/2",
         "border-t border-[#ECECEC] bg-white",
-        "px-10.75 pt-4.25 pb-5.75",
       )}
       aria-label="하단 내비게이션"
     >
-      <div className="flex items-center gap-23">
+      <div className="grid h-20 grid-cols-3 items-center">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -68,6 +67,8 @@ export function MobileBottomNavigation() {
           </NavLink>
         ))}
       </div>
+
+      <div className="h-[env(safe-area-inset-bottom)]" aria-hidden="true" />
     </nav>
   );
 }
