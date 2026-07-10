@@ -3,7 +3,7 @@ import { useState } from "react";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Textarea from "@/shared/ui/Textarea";
-import Modal from "@/shared/ui/Modal";
+import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import PageContainer from "@/shared/ui/PageContainer";
 import Spinner from "@/shared/ui/Spinner";
 import Select from "@/shared/ui/Select";
@@ -20,22 +20,22 @@ export function ComponentTestPage() {
   const [content, setContent] = useState("");
 
   return (
-    <PageContainer className="min-h-screen bg-white px-[22px] py-[48px]">
-      <div className="flex flex-col gap-[56px]">
+    <PageContainer size="narrow" className="min-h-screen bg-white px-5.5 py-12">
+      <div className="flex flex-col gap-14">
 
         {/* Button */}
-        <section className="flex flex-col gap-[20px]">
-          <h2 className="text-[20px] font-bold text-[#0A0A0A]">Button</h2>
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">Button</h2>
 
-          <div className="flex flex-col gap-[12px]">
+          <div className="flex flex-col gap-3">
             <Button variant="dangerOutline">팀 해산하기</Button>
             <Button variant="danger">팀 해산하기</Button>
             <Button>수정 완료</Button>
             <Button variant="dark">설정하기</Button>
-            <Button size="pill" leftIcon={<img src={PencilIcon} alt="" className="h-[24px] w-[24px]" />}>글 작성</Button>
-            <Button variant="dark" size="pill" leftIcon={<img src={PencilIcon} alt="" className="h-[24px] w-[24px]" />}>글 작성</Button>
-            <Button size="pill" leftIcon={<img src={PlusIcon} alt="" className="h-[24px] w-[24px]" />}>모임 만들기</Button>
-            <Button variant="dark" size="pill" leftIcon={<img src={PlusIcon} alt="" className="h-[24px] w-[24px]" />}>모임 만들기</Button>
+            <Button size="pill" leftIcon={<img src={PencilIcon} alt="" className="h-6 w-6" />}>글 작성</Button>
+            <Button variant="dark" size="pill" leftIcon={<img src={PencilIcon} alt="" className="h-6 w-6" />}>글 작성</Button>
+            <Button size="pill" leftIcon={<img src={PlusIcon} alt="" className="h-6 w-6" />}>모임 만들기</Button>
+            <Button variant="dark" size="pill" leftIcon={<img src={PlusIcon} alt="" className="h-6 w-6" />}>모임 만들기</Button>
           </div>
         </section>
         <FormField label="제목" required count={title.length} maxLength={20} htmlFor="review-title">
@@ -46,8 +46,8 @@ export function ComponentTestPage() {
         </FormField>
 
         {/* Select */}
-        <section className="flex flex-col gap-[20px]">
-          <h2 className="text-[20px] font-bold text-[#0A0A0A]">Select</h2>
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">Select</h2>
 
           <Select
             value={sort}
@@ -64,20 +64,22 @@ export function ComponentTestPage() {
         </section>
 
         {/* Spinner */}
-        <section className="flex flex-col gap-[20px]">
-          <h2 className="text-[20px] font-bold text-[#0A0A0A]">Spinner</h2>
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">Spinner</h2>
 
           <Spinner />
         </section>
 
-        {/* Modal */}
-        <section className="flex flex-col gap-[20px] pb-[80px]">
-          <h2 className="text-[20px] font-bold text-[#0A0A0A]">Modal</h2>
+        {/* ConfirmDialog */}
+        <section className="flex flex-col gap-5 pb-20">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">
+            ConfirmDialog
+          </h2>
 
           <Button onClick={() => setIsOpen(true)}>모달 열기</Button>
         </section>
       </div>
-      <Modal
+      <ConfirmDialog
         open={isOpen}
         title="게시글을 삭제하시겠어요?"
         cancelText="취소"
@@ -87,7 +89,7 @@ export function ComponentTestPage() {
         onConfirm={() => setIsOpen(false)}
       >
         삭제된 게시글은 복구할 수 없습니다.
-      </Modal>
+      </ConfirmDialog>
     </PageContainer>
   );
 }

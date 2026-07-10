@@ -20,7 +20,7 @@ export default function Input({
       type={type}
       aria-invalid={ariaInvalid ?? invalid}
       className={cn(
-        "box-border h-[48px] w-full rounded-[12px] border border-stroke bg-white px-[16px] py-[12px]",
+        "box-border h-12 w-full rounded-xl border border-stroke bg-white px-4 py-3",
         "text-[15px] font-normal leading-normal text-text outline-none",
         "placeholder:text-text-gray-100",
         "focus:border-button",
