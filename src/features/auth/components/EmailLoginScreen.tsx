@@ -22,7 +22,10 @@ export function EmailLoginScreen() {
       : "/home";
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh px-6 pt-[calc(env(safe-area-inset-top)+56px)]">
+    <PageContainer
+      size="narrow"
+      className="flex min-h-dvh flex-col overflow-y-auto px-6 pt-[calc(env(safe-area-inset-top)+clamp(1.25rem,6dvh,3.5rem))] pb-[calc(env(safe-area-inset-bottom)+2rem)]"
+    >
       <button
         type="button"
         aria-label="뒤로가기"
@@ -32,15 +35,20 @@ export function EmailLoginScreen() {
         <ChevronLeft className="h-7 w-7 text-text" />
       </button>
 
-      <AuthLogo size="medium" className="mt-21.5" />
+      <div className="flex flex-1 flex-col">
+        <AuthLogo
+          size="medium"
+          className="mt-[clamp(1.5rem,9.8dvh,5.375rem)]"
+        />
 
-      <EmailLoginForm
-        className="mt-13.5"
-        onLoginSuccess={() => {
-          navigate(redirectTo, { replace: true });
-        }}
-        onSignupClick={() => navigate("/signup")}
-      />
+        <EmailLoginForm
+          className="mt-[clamp(1.5rem,6.2dvh,3.375rem)]"
+          onLoginSuccess={() => {
+            navigate(redirectTo, { replace: true });
+          }}
+          onSignupClick={() => navigate("/signup")}
+        />
+      </div>
     </PageContainer>
   );
 }

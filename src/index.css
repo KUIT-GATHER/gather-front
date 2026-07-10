@@ -13,6 +13,7 @@
 @theme {
   --font-mimi: "1973MimiWorld", sans-serif;
 
+  --container-app: 25.125rem;
   --color-bg: #fafaf8;
   --color-stroke: #d9d9d9;
 

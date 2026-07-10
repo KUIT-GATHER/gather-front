@@ -5,7 +5,7 @@ import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation"
 export function MainTabLayout() {
   return (
     <>
-      <main className="pb-20">
+      <main className="pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <Outlet />
       </main>
 

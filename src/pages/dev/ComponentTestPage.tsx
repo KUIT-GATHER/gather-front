@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { CircleAlert } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
+import { EmptyState } from "@/shared/ui/EmptyState";
+import { ErrorState } from "@/shared/ui/ErrorState";
 import Input from "@/shared/ui/Input";
 import Textarea from "@/shared/ui/Textarea";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
@@ -44,6 +47,63 @@ export function ComponentTestPage() {
         <FormField label="내용" required count={content.length} maxLength={300} htmlFor="review-content">
             <Textarea id="review-content" placeholder="내용을 입력하세요" value={content} maxLength={300} onChange={(e) => setContent(e.target.value)} />
         </FormField>
+
+        {/* Textarea */}
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">Textarea</h2>
+
+          <div className="flex flex-col gap-3">
+            <Textarea placeholder="내용을 입력하세요" />
+            <Textarea invalid placeholder="내용을 입력하세요" />
+            <Textarea disabled placeholder="내용을 입력하세요" />
+          </div>
+        </section>
+
+        {/* EmptyState */}
+        <section className="flex flex-col gap-5">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">EmptyState</h2>
+
+          <div className="flex flex-col gap-3">
+            <EmptyState title="표시할 내용이 없어요" />
+            <EmptyState
+              title="아직 모임이 없어요"
+              description="관심 있는 봉사활동의 모임을 만들어 보세요."
+            />
+            <EmptyState
+              title="참여한 모임이 없어요"
+              actionLabel="모임 둘러보기"
+              onAction={() => {}}
+            />
+          </div>
+        </section>
+
+        {/* ErrorState */}
+        <section className="flex flex-col gap-10">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">ErrorState</h2>
+
+          <ErrorState
+            title="문제가 발생했어요"
+            description="잠시 후 다시 시도해 주세요."
+          />
+          <ErrorState
+            title="페이지를 불러오지 못했어요"
+            primaryAction={{ label: "다시 시도", onClick: () => {} }}
+          />
+          <ErrorState
+            title="페이지를 찾을 수 없어요"
+            primaryAction={{ label: "홈으로 이동", onClick: () => {} }}
+            secondaryAction={{ label: "이전 페이지", onClick: () => {} }}
+          />
+          <ErrorState
+            title="요청한 모임 정보를 지금은 정상적으로 불러올 수 없어요"
+            description="네트워크 연결 상태를 확인한 뒤 잠시 후 다시 시도해 주세요. 문제가 계속되면 홈으로 이동해 다른 메뉴를 이용해 주세요."
+          />
+          <ErrorState
+            title="문제가 발생했어요"
+            description="잠시 후 다시 시도해 주세요."
+            icon={<CircleAlert className="size-7" />}
+          />
+        </section>
 
         {/* Select */}
         <section className="flex flex-col gap-5">

@@ -9,7 +9,7 @@ type PageContainerProps = ComponentPropsWithoutRef<"div"> & {
 };
 
 const sizeClasses: Record<PageContainerSize, string> = {
-  narrow: "max-w-[402px]",
+  narrow: "max-w-app",
   wide: "max-w-6xl",
 };
 
