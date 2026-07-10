@@ -38,7 +38,7 @@ export type SignupRequest = {
   passwordConfirm: string;
   nickname: string;
   introduction?: string | null;
-  activityRegionIds: number[];
+  activityRegionId: number;
   interestCategoryIds: number[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
@@ -55,4 +55,18 @@ export type SignupResponse = {
 export type TokenResponse = {
   accessToken: string;
   tokenType: "Bearer";
+};
+
+export type SignupRegion = {
+  id: number;
+  name: string;
+  level: number;
+  code: string;
+  parentId: number | null;
+};
+
+export type SignupCategory = {
+  id: number;
+  code: string;
+  name: string;
 };

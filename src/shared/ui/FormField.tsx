@@ -8,6 +8,9 @@ type FormFieldProps = {
   count?: number;
   maxLength?: number;
   htmlFor?: string;
+  errorId?: string;
+  descriptionId?: string;
+  description?: ReactNode;
   children: ReactNode;
   error?: string;
   className?: string;
@@ -20,6 +23,9 @@ export default function FormField({
   count,
   maxLength,
   htmlFor,
+  errorId,
+  descriptionId,
+  description,
   children,
   error,
   className,
@@ -43,8 +49,20 @@ export default function FormField({
 
       {children}
 
+      {description ? (
+        <p
+          id={descriptionId}
+          className="mt-1.5 text-xs font-normal leading-4.5 text-text-gray-100"
+        >
+          {description}
+        </p>
+      ) : null}
+
       {error ? (
-        <p className="mt-1.5 text-xs font-normal leading-4.5 text-point-red">
+        <p
+          id={errorId}
+          className="mt-1.5 text-xs font-normal leading-4.5 text-point-red"
+        >
           {error}
         </p>
       ) : null}
