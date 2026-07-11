@@ -4,9 +4,14 @@ import {
 } from "@/features/onboarding/components/OnboardingStepControls";
 import { OnboardingMessage } from "@/features/onboarding/components/OnboardingMessage";
 
+type OnboardingStep5Props = OnboardingStepProps & {
+  onSignup: () => void;
+};
+
 export function OnboardingStep5({
   onNext,
-}: OnboardingStepProps) {
+  onSignup,
+}: OnboardingStep5Props) {
   return (
     <>
       <div className="flex-1" />
@@ -21,7 +26,14 @@ export function OnboardingStep5({
         description="나에게 맞는 첫 봉사를 찾아드릴게요!"
       />
 
-      <OnboardingStepControls currentStep={5} onNext={onNext} />
+      <OnboardingStepControls
+        currentStep={5}
+        onNext={onNext}
+        secondaryAction={{
+          label: "회원가입 하기",
+          onClick: onSignup,
+        }}
+      />
     </>
   );
 }
