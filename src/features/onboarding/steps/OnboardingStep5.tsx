@@ -12,10 +12,13 @@ export function OnboardingStep5({
       <div className="flex-1" />
 
       <OnboardingMessage
-        title={"Gather와 함께 시작해요"}
-        description={
-          "나에게 맞는 첫 봉사를 찾아드릴게요!"
+        title={
+          <>
+            <span className="font-mimi font-normal">Gather</span>
+            {"와 함께 시작해요"}
+          </>
         }
+        description="나에게 맞는 첫 봉사를 찾아드릴게요!"
       />
 
       <OnboardingStepControls currentStep={5} onNext={onNext} />

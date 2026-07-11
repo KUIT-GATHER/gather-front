@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { OnboardingLayout } from "@/features/onboarding/components/OnboardingLayout";
+import { OnboardingPuzzleScene } from "@/features/onboarding/components/OnboardingPuzzleScene";
 import type { OnboardingStep } from "@/features/onboarding/components/OnboardingStepControls";
 import { OnboardingStep1 } from "@/features/onboarding/steps/OnboardingStep1";
 import { OnboardingStep2 } from "@/features/onboarding/steps/OnboardingStep2";
@@ -23,21 +24,15 @@ export function OnboardingPage() {
 
   return (
     <OnboardingLayout onSkip={exitOnboarding}>
-      {step === 1 && (
-        <OnboardingStep1 onNext={() => setStep(2)} />
-      )}
+      <OnboardingPuzzleScene step={step} />
 
-      {step === 2 && (
-        <OnboardingStep2 onNext={() => setStep(3)} />
-      )}
+      {step === 1 && <OnboardingStep1 onNext={() => setStep(2)} />}
 
-      {step === 3 && (
-        <OnboardingStep3 onNext={() => setStep(4)} />
-      )}
+      {step === 2 && <OnboardingStep2 onNext={() => setStep(3)} />}
 
-      {step === 4 && (
-        <OnboardingStep4 onNext={() => setStep(5)} />
-      )}
+      {step === 3 && <OnboardingStep3 onNext={() => setStep(4)} />}
+
+      {step === 4 && <OnboardingStep4 onNext={() => setStep(5)} />}
 
       {step === 5 && <OnboardingStep5 onNext={completeOnboarding} />}
     </OnboardingLayout>
