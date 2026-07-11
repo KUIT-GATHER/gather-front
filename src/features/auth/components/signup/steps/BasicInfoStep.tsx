@@ -40,15 +40,16 @@ export function BasicInfoStep({
     formState: { errors },
   } = useFormContext<SignupFormValues>();
   const phoneMutation = usePhoneAvailabilityMutation();
-  const gender = useWatch({ control, name: "gender" });
   const phoneNumber = useWatch({ control, name: "phoneNumber" });
+  const isPhoneNumberValid =
+    signupPhoneNumberSchema.safeParse(phoneNumber).success;
   const isPhoneVerified =
     phoneNumber.length > 0 && phoneNumber === verifiedPhoneNumber;
 
-  const handleCheckPhone = () => {
+  const handleCheckPhone = () => { // 전화번호 중복 확인 버튼 클릭 시 실행되는 함수
     clearErrors("phoneNumber");
 
-    if (!signupPhoneNumberSchema.safeParse(phoneNumber).success) {
+    if (!isPhoneNumberValid) {
       setError("phoneNumber", {
         message: "전화번호는 10~11자리 숫자로 입력해 주세요.",
       });
@@ -153,7 +154,7 @@ export function BasicInfoStep({
                     ["MALE", "남"],
                     ["FEMALE", "여"],
                   ].map(([value, label]) => {
-                    const checked = gender === value;
+                    const checked = field.value === value;
 
                     return (
                       <button
@@ -225,14 +226,18 @@ export function BasicInfoStep({
             <Button
               type="button"
               size="medium"
-              variant="dark"
               disabled={
                 phoneMutation.isPending ||
-                !signupPhoneNumberSchema.safeParse(phoneNumber).success ||
+                !isPhoneNumberValid ||
                 isPhoneVerified
               }
               onClick={handleCheckPhone}
-              className="h-12 shrink-0 rounded-xl bg-[#BFBFBF] px-5 text-[15px] font-medium text-text"
+              className={cn(
+                "h-12 shrink-0 rounded-xl px-5 text-[15px] font-medium",
+                isPhoneNumberValid && !isPhoneVerified
+                  ? "bg-button text-white"
+                  : "bg-[#BFBFBF] text-text",
+              )}
             >
               {phoneMutation.isPending
                 ? "확인 중"

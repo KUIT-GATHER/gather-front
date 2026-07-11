@@ -51,7 +51,7 @@ export function TermsStep({
       shouldDirty: true,
       shouldValidate: true,
     });
-    clearErrors(name);
+
     onClearSubmitError();
   };
 
