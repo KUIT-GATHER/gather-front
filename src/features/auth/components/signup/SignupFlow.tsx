@@ -26,10 +26,7 @@ export function SignupFlow() {
     setVerifiedEmail,
     clearSubmitError,
     handleBack,
-    goNextFromBasic,
-    goNextFromAccount,
-    goNextFromProfile,
-    submitSignup,
+    handleFormSubmit,
     confirmExit,
   } = useSignupFlow();
 
@@ -39,37 +36,34 @@ export function SignupFlow() {
 
   return (
     <FormProvider {...methods}>
-      <SignupShell step={step} onBack={handleBack}>
-        {step === "basic" ? (
-          <BasicInfoStep
-            verifiedPhoneNumber={verifiedPhoneNumber}
-            onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
-            onNext={goNextFromBasic}
-          />
-        ) : null}
+      <form noValidate onSubmit={handleFormSubmit}>
+        <SignupShell step={step} onBack={handleBack}>
+          {step === "basic" ? (
+            <BasicInfoStep
+              verifiedPhoneNumber={verifiedPhoneNumber}
+              onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
+            />
+          ) : null}
 
-        {step === "account" ? (
-          <AccountInfoStep
-            verifiedEmail={verifiedEmail}
-            onVerifiedEmailChange={setVerifiedEmail}
-            onNext={goNextFromAccount}
-          />
-        ) : null}
+          {step === "account" ? (
+            <AccountInfoStep
+              verifiedEmail={verifiedEmail}
+              onVerifiedEmailChange={setVerifiedEmail}
+            />
+          ) : null}
 
-        {step === "profile" ? (
-          <ProfileStep onNext={goNextFromProfile} />
-        ) : null}
+          {step === "profile" ? <ProfileStep /> : null}
 
-        {step === "terms" ? (
-          <TermsStep
-            isPending={isSignupPending}
-            submitError={submitError}
-            onSubmit={submitSignup}
-            onClearSubmitError={clearSubmitError}
-            onOpenDetail={setDetailType}
-          />
-        ) : null}
-      </SignupShell>
+          {step === "terms" ? (
+            <TermsStep
+              isPending={isSignupPending}
+              submitError={submitError}
+              onClearSubmitError={clearSubmitError}
+              onOpenDetail={setDetailType}
+            />
+          ) : null}
+        </SignupShell>
+      </form>
 
       <ConfirmDialog
         open={showExitDialog}

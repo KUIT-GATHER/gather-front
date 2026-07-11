@@ -27,13 +27,11 @@ import {
 type AccountInfoStepProps = {
   verifiedEmail: string | null;
   onVerifiedEmailChange: (value: string | null) => void;
-  onNext: () => void;
 };
 
 export function AccountInfoStep({
   verifiedEmail,
   onVerifiedEmailChange,
-  onNext,
 }: AccountInfoStepProps) {
   const {
     control,
@@ -295,7 +293,6 @@ export function AccountInfoStep({
           sendMutation.isPending ||
           confirmMutation.isPending
         }
-        onClick={onNext}
       >
         다음
       </SignupStepButton>

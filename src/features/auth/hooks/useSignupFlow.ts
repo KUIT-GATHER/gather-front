@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useEffect, useRef, useState, type FormEventHandler } from "react";
+import { useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { useNavigate } from "react-router";
 
 import {
-  ALL_SIGNUP_FIELDS,
   SIGNUP_STEP_FIELDS,
   SIGNUP_STEP_ORDER,
   type SignupStep,
@@ -17,26 +16,50 @@ import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
 import {
   signupDefaultValues,
   signupSchema,
+  type SignupStepField,
   type SignupFormValues,
 } from "@/features/auth/schemas/signup.schema";
+
+function findFirstErrorStep(
+  errors: FieldErrors<SignupFormValues>,
+): SignupStep | null {
+  return (
+    SIGNUP_STEP_ORDER.find((targetStep) =>
+      SIGNUP_STEP_FIELDS[targetStep].some((field) => Boolean(errors[field])),
+    ) ?? null
+  );
+}
+
+function findFirstErrorField(
+  errors: FieldErrors<SignupFormValues>,
+  targetStep: SignupStep,
+) {
+  return SIGNUP_STEP_FIELDS[targetStep].find((field) =>
+    Boolean(errors[field]),
+  );
+}
 
 export function useSignupFlow() {
   const navigate = useNavigate();
   const methods = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
-    mode: "onChange",
+    mode: "onTouched",
+    reValidateMode: "onChange",
     shouldUnregister: false,
     defaultValues: signupDefaultValues,
   });
+
   const signupMutation = useSignupMutation();
   const [step, setStep] = useState<SignupStep>("basic");
   const [detailType, setDetailType] = useState<TermsDocumentType | null>(null);
+
   const [showExitDialog, setShowExitDialog] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null); // 특정 필드에 대한 에러가 아닌, 전체 폼 제출 시 발생하는 에러를 저장하는 상태
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
-  );
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  ); // 사용자가 인증을 완료한 전화번호를 저장하는 상태
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null); // 사용자가 인증을 완료한 이메일을 저장하는 상태
+
   const watchedPhoneNumber = useWatch({
     control: methods.control,
     name: "phoneNumber",
@@ -45,12 +68,28 @@ export function useSignupFlow() {
     control: methods.control,
     name: "email",
   });
+
   const previousPhoneNumberRef = useRef(watchedPhoneNumber);
   const previousEmailRef = useRef(watchedEmail);
+  const [pendingFocusField, setPendingFocusField] =
+    useState<SignupStepField | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step, detailType]);
+
+  useEffect(() => {
+    if (!pendingFocusField) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      methods.setFocus(pendingFocusField);
+      setPendingFocusField(null);
+    });
+
+    return () => window.clearTimeout(timeoutId);
+  }, [methods, pendingFocusField, step]);
 
   useEffect(() => {
     if (previousPhoneNumberRef.current === watchedPhoneNumber) {
@@ -140,17 +179,10 @@ export function useSignupFlow() {
     }
   };
 
-  const submitSignup = async () => {
+  const onValidSubmit = (values: SignupFormValues) => {
     setSubmitError(null);
-    const valid = await methods.trigger([...ALL_SIGNUP_FIELDS], {
-      shouldFocus: true,
-    });
 
-    if (!valid) {
-      return;
-    }
-
-    if (methods.getValues("phoneNumber") !== verifiedPhoneNumber) {
+    if (values.phoneNumber !== verifiedPhoneNumber) {
       setStep("basic");
       methods.setError("phoneNumber", {
         message: "전화번호 중복 확인을 완료해 주세요.",
@@ -158,7 +190,7 @@ export function useSignupFlow() {
       return;
     }
 
-    if (normalizeEmail(methods.getValues("email")) !== verifiedEmail) {
+    if (normalizeEmail(values.email) !== verifiedEmail) {
       setStep("account");
       methods.setError("email", {
         message: "이메일 인증을 완료해 주세요.",
@@ -166,7 +198,7 @@ export function useSignupFlow() {
       return;
     }
 
-    signupMutation.mutate(toSignupRequest(methods.getValues()), {
+    signupMutation.mutate(toSignupRequest(values), {
       onSuccess: (data) => {
         resetSignupFlow();
         navigate("/login/email", {
@@ -185,6 +217,42 @@ export function useSignupFlow() {
         });
       },
     });
+  };
+
+  const onInvalidSubmit = (errors: FieldErrors<SignupFormValues>) => {
+    const errorStep = findFirstErrorStep(errors);
+
+    if (!errorStep) {
+      return;
+    }
+
+    setPendingFocusField(findFirstErrorField(errors, errorStep) ?? null);
+    setStep(errorStep);
+  };
+
+  const submitSignup = methods.handleSubmit(onValidSubmit, onInvalidSubmit);
+
+  const handleFormSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+
+    if (signupMutation.isPending) {
+      return;
+    }
+
+    switch (step) {
+      case "basic":
+        void goNextFromBasic();
+        return;
+      case "account":
+        void goNextFromAccount();
+        return;
+      case "profile":
+        void goNextFromProfile();
+        return;
+      case "terms":
+        setSubmitError(null);
+        void submitSignup();
+    }
   };
 
   const confirmExit = () => {
@@ -208,10 +276,7 @@ export function useSignupFlow() {
     setVerifiedEmail,
     clearSubmitError: () => setSubmitError(null),
     handleBack,
-    goNextFromBasic,
-    goNextFromAccount,
-    goNextFromProfile,
-    submitSignup,
+    handleFormSubmit,
     confirmExit,
   };
 }

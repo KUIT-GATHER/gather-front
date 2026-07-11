@@ -14,7 +14,7 @@ import { CategorySelector } from "./CategorySelector";
 import { RegionSelector } from "./RegionSelector";
 import { SignupStepButton } from "./SignupFormParts";
 
-export function ProfileStep({ onNext }: { onNext: () => void }) {
+export function ProfileStep() {
   const {
     control,
     register,
@@ -101,7 +101,6 @@ export function ProfileStep({ onNext }: { onNext: () => void }) {
 
       <SignupStepButton
         disabled={regionsQuery.isLoading || categoriesQuery.isLoading}
-        onClick={onNext}
       >
         다음
       </SignupStepButton>

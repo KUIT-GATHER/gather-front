@@ -9,7 +9,6 @@ import { SignupRootError, SignupStepButton } from "./SignupFormParts";
 type TermsStepProps = {
   isPending: boolean;
   submitError: string | null;
-  onSubmit: () => void;
   onClearSubmitError: () => void;
   onOpenDetail: (type: TermsDocumentType) => void;
 };
@@ -17,7 +16,6 @@ type TermsStepProps = {
 export function TermsStep({
   isPending,
   submitError,
-  onSubmit,
   onClearSubmitError,
   onOpenDetail,
 }: TermsStepProps) {
@@ -128,7 +126,6 @@ export function TermsStep({
       <SignupStepButton
         disabled={!serviceTermsAgreed || !privacyPolicyAgreed}
         isPending={isPending}
-        onClick={onSubmit}
       >
         {isPending ? "가입 중" : "완료"}
       </SignupStepButton>

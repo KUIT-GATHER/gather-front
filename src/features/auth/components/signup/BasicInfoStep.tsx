@@ -23,13 +23,11 @@ import { SignupStepButton } from "./SignupFormParts";
 type BasicInfoStepProps = {
   verifiedPhoneNumber: string | null;
   onVerifiedPhoneNumberChange: (value: string | null) => void;
-  onNext: () => void;
 };
 
 export function BasicInfoStep({
   verifiedPhoneNumber,
   onVerifiedPhoneNumberChange,
-  onNext,
 }: BasicInfoStepProps) {
   const {
     control,
@@ -243,10 +241,7 @@ export function BasicInfoStep({
 
       <div className="mt-auto" />
 
-      <SignupStepButton
-        disabled={!isPhoneVerified || phoneMutation.isPending}
-        onClick={onNext}
-      >
+      <SignupStepButton disabled={!isPhoneVerified || phoneMutation.isPending}>
         다음
       </SignupStepButton>
     </div>
