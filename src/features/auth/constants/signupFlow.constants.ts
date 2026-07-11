@@ -24,27 +24,3 @@ export const SIGNUP_STEP_FIELDS: Record<
   profile: profileFields,
   terms: termsFields,
 };
-
-export const ALL_SIGNUP_FIELDS = SIGNUP_STEP_ORDER.flatMap(
-  (step) => SIGNUP_STEP_FIELDS[step],
-);
-
-export type TermsDocumentType = "service" | "privacy" | "marketing";
-
-export const TERMS_DOCUMENTS: Record<
-  TermsDocumentType,
-  { title: string; placeholder: string }
-> = {
-  service: {
-    title: "서비스 이용약관",
-    placeholder: "승인된 서비스 이용약관 본문이 필요합니다.",
-  },
-  privacy: {
-    title: "개인정보 수집 및 이용 동의",
-    placeholder: "승인된 개인정보 수집 및 이용 동의 본문이 필요합니다.",
-  },
-  marketing: {
-    title: "맞춤형 봉사/이벤트 알림 수신 동의",
-    placeholder: "승인된 알림 수신 동의 본문이 필요합니다.",
-  },
-};

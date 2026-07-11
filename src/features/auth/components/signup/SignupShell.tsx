@@ -56,7 +56,7 @@ export function SignupShell({
         {meta.label}
       </p>
 
-      <div className="flex min-h-0 flex-1 flex-col pt-9">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col pb-10 pt-9">{children}</div>
     </PageContainer>
   );
 }

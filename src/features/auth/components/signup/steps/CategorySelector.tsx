@@ -25,7 +25,6 @@ export function CategorySelector({
   const {
     control,
     setValue,
-    clearErrors,
     formState: { errors },
   } = useFormContext<SignupFormValues>();
   const selectedIds = useWatch({ control, name: "interestCategoryIds" });
@@ -75,7 +74,6 @@ export function CategorySelector({
                   shouldDirty: true,
                   shouldValidate: true,
                 });
-                clearErrors("interestCategoryIds");
               }}
             >
               <img

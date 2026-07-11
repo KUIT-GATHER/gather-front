@@ -10,7 +10,10 @@ import {
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
 import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import {
+  signupEmailSchema,
+  type SignupFormValues,
+} from "@/features/auth/schemas/signup.schema";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import { cn } from "@/shared/lib/cn";
@@ -22,18 +25,16 @@ import {
   PasswordField,
   SignupRootError,
   SignupStepButton,
-} from "./SignupFormParts";
+} from "../SignupFormParts";
 
 type AccountInfoStepProps = {
   verifiedEmail: string | null;
   onVerifiedEmailChange: (value: string | null) => void;
-  onNext: () => void;
 };
 
 export function AccountInfoStep({
   verifiedEmail,
   onVerifiedEmailChange,
-  onNext,
 }: AccountInfoStepProps) {
   const {
     control,
@@ -55,8 +56,7 @@ export function AccountInfoStep({
     name: "emailVerificationCode",
   });
   const email = normalizeEmail(watchedEmail);
-  const isEmailValid =
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 255;
+  const isEmailValid = signupEmailSchema.safeParse(email).success;
   const isEmailVerified = email.length > 0 && email === verifiedEmail;
 
   const handleSend = () => {
@@ -295,7 +295,6 @@ export function AccountInfoStep({
           sendMutation.isPending ||
           confirmMutation.isPending
         }
-        onClick={onNext}
       >
         다음
       </SignupStepButton>

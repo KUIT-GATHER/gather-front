@@ -1,23 +1,21 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import type { TermsDocumentType } from "@/features/auth/constants/signupFlow.constants";
+import type { LegalDocumentType } from "@/features/legal";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { cn } from "@/shared/lib/cn";
 
-import { SignupRootError, SignupStepButton } from "./SignupFormParts";
+import { SignupRootError, SignupStepButton } from "../SignupFormParts";
 
 type TermsStepProps = {
   isPending: boolean;
   submitError: string | null;
-  onSubmit: () => void;
   onClearSubmitError: () => void;
-  onOpenDetail: (type: TermsDocumentType) => void;
+  onOpenDetail: (type: LegalDocumentType) => void;
 };
 
 export function TermsStep({
   isPending,
   submitError,
-  onSubmit,
   onClearSubmitError,
   onOpenDetail,
 }: TermsStepProps) {
@@ -53,7 +51,7 @@ export function TermsStep({
       shouldDirty: true,
       shouldValidate: true,
     });
-    clearErrors(name);
+
     onClearSubmitError();
   };
 
@@ -128,7 +126,6 @@ export function TermsStep({
       <SignupStepButton
         disabled={!serviceTermsAgreed || !privacyPolicyAgreed}
         isPending={isPending}
-        onClick={onSubmit}
       >
         {isPending ? "가입 중" : "완료"}
       </SignupStepButton>

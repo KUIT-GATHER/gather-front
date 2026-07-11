@@ -44,6 +44,7 @@ export default function FormField({
         )}
       >
         {label}
+        {" "}
         {required && <span className="text-point-red">*</span>}
       </label>
 

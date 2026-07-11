@@ -44,32 +44,61 @@ export const signupDefaultValues: SignupFormValues = {
 const koreanOnlyRegex = /^[가-힣]+$/;
 const englishOnlyRegex = /^[A-Za-z]+$/;
 
-function isValidNameLength(value: string) {
-  if (koreanOnlyRegex.test(value)) {
-    return value.length <= 7;
-  }
+function createKoreanOrEnglishTextSchema(label: "이름" | "닉네임") {
+  return z.string().superRefine((value, context) => {
+    if (value.length === 0) {
+      context.addIssue({
+        code: "custom",
+        message: `${label}을 입력해 주세요.`,
+      });
+      return;
+    }
 
-  if (englishOnlyRegex.test(value)) {
-    return value.length <= 12;
-  }
+    if (koreanOnlyRegex.test(value)) {
+      if (value.length < 2 || value.length > 10) {
+        context.addIssue({
+          code: "custom",
+          message: `${label}은 한글 2~10자로 입력해 주세요.`,
+        });
+      }
+      return;
+    }
 
-  return value.length <= 12;
+    if (englishOnlyRegex.test(value)) {
+      if (value.length < 2 || value.length > 20) {
+        context.addIssue({
+          code: "custom",
+          message: `${label}은 영문 2~20자로 입력해 주세요.`,
+        });
+      }
+      return;
+    }
+
+    context.addIssue({
+      code: "custom",
+      message: `${label}은 공백 없이 한글 2~10자 또는 영문 2~20자로 입력해 주세요.`,
+    });
+  });
 }
 
 function hasUniqueNumbers(values: number[]) {
   return new Set(values).size === values.length;
 }
 
+export const signupPhoneNumberSchema = z.string().regex(/^\d{10,11}$/, {
+  error: "전화번호는 10~11자리 숫자로 입력해 주세요.",
+});
+
+export const signupEmailSchema = z
+  .string()
+  .trim()
+  .min(1, { error: "이메일을 입력해 주세요." })
+  .max(255, { error: "이메일은 최대 255자까지 입력할 수 있습니다." })
+  .pipe(z.email({ error: "올바른 이메일 형식이 아닙니다." }));
+
 export const signupSchema = z
   .object({
-    name: z
-      .string()
-      .trim()
-      .min(1, { error: "이름을 입력해 주세요." })
-      .max(12, { error: "한글 최대 7자, 영문·혼합 최대 12자" })
-      .refine(isValidNameLength, {
-        error: "한글 최대 7자, 영문·혼합 최대 12자",
-      }),
+    name: createKoreanOrEnglishTextSchema("이름"),
 
     birthDate: z
       .string()
@@ -87,18 +116,9 @@ export const signupSchema = z
         error: "성별을 선택해 주세요.",
       }),
 
-    phoneNumber: z
-      .string()
-      .regex(/^\d{10,11}$/, {
-        error: "전화번호는 10~11자리 숫자로 입력해 주세요.",
-      }),
+    phoneNumber: signupPhoneNumberSchema,
 
-    email: z
-      .string()
-      .trim()
-      .min(1, { error: "이메일을 입력해 주세요." })
-      .max(255, { error: "이메일은 최대 255자까지 입력할 수 있습니다." })
-      .pipe(z.email({ error: "올바른 이메일 형식이 아닙니다." })),
+    email: signupEmailSchema,
 
     emailVerificationCode: z
       .string()
@@ -114,11 +134,7 @@ export const signupSchema = z
       .min(6, { error: "비밀번호 확인은 6자 이상이어야 합니다." })
       .max(12, { error: "비밀번호 확인은 12자 이하이어야 합니다." }),
 
-    nickname: z
-      .string()
-      .trim()
-      .min(2, { error: "닉네임은 2자 이상이어야 합니다." })
-      .max(8, { error: "닉네임은 8자 이하이어야 합니다." }),
+    nickname: createKoreanOrEnglishTextSchema("닉네임"),
 
     introduction: z
       .string()
