@@ -12,7 +12,7 @@ import Input from "@/shared/ui/Input";
 
 import { CategorySelector } from "./CategorySelector";
 import { RegionSelector } from "./RegionSelector";
-import { SignupStepButton } from "./SignupFormParts";
+import { SignupStepButton } from "../SignupFormParts";
 
 export function ProfileStep() {
   const {
@@ -22,6 +22,11 @@ export function ProfileStep() {
   } = useFormContext<SignupFormValues>();
   const { regionsQuery, categoriesQuery } = useSignupOptionsQuery();
   const introduction = useWatch({ control, name: "introduction" });
+  const isSignupOptionUnavailable =
+    regionsQuery.isLoading ||
+    regionsQuery.isError ||
+    categoriesQuery.isLoading ||
+    categoriesQuery.isError;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -50,6 +55,7 @@ export function ProfileStep() {
         >
           <Input
             id="nickname"
+            maxLength={20}
             placeholder="활동하며 사용할 닉네임을 입력해 주세요"
             invalid={Boolean(errors.nickname)}
             aria-describedby={getSignupFieldDescribedBy(
@@ -99,9 +105,7 @@ export function ProfileStep() {
 
       <div className="mt-8" />
 
-      <SignupStepButton
-        disabled={regionsQuery.isLoading || categoriesQuery.isLoading}
-      >
+      <SignupStepButton disabled={isSignupOptionUnavailable}>
         다음
       </SignupStepButton>
     </div>

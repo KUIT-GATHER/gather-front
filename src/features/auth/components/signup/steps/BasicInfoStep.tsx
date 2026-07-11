@@ -12,13 +12,16 @@ import {
   normalizeBirthDate,
   normalizePhoneNumber,
 } from "@/features/auth/lib/signupFormatters";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import {
+  signupPhoneNumberSchema,
+  type SignupFormValues,
+} from "@/features/auth/schemas/signup.schema";
 import { cn } from "@/shared/lib/cn";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 
-import { SignupStepButton } from "./SignupFormParts";
+import { SignupStepButton } from "../SignupFormParts";
 
 type BasicInfoStepProps = {
   verifiedPhoneNumber: string | null;
@@ -32,7 +35,6 @@ export function BasicInfoStep({
   const {
     control,
     register,
-    setValue,
     setError,
     clearErrors,
     formState: { errors },
@@ -46,7 +48,7 @@ export function BasicInfoStep({
   const handleCheckPhone = () => {
     clearErrors("phoneNumber");
 
-    if (!/^\d{10,11}$/.test(phoneNumber)) {
+    if (!signupPhoneNumberSchema.safeParse(phoneNumber).success) {
       setError("phoneNumber", {
         message: "전화번호는 10~11자리 숫자로 입력해 주세요.",
       });
@@ -91,6 +93,7 @@ export function BasicInfoStep({
         >
           <Input
             id="name"
+            maxLength={20}
             placeholder="이름을 입력해 주세요"
             invalid={Boolean(errors.name)}
             aria-describedby={getSignupFieldDescribedBy(
@@ -194,28 +197,30 @@ export function BasicInfoStep({
           labelClassName="mb-3 text-[15px] font-semibold leading-5"
         >
           <div className="flex gap-3">
-            <Input
-              id="phoneNumber"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="010-0000-0000"
-              value={formatPhoneNumber(phoneNumber)}
-              invalid={Boolean(errors.phoneNumber)}
-              aria-describedby={getSignupFieldDescribedBy(
-                "phoneNumber",
-                Boolean(errors.phoneNumber),
+            <Controller
+              control={control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <Input
+                  id="phoneNumber"
+                  ref={field.ref}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="010-0000-0000"
+                  value={formatPhoneNumber(field.value)}
+                  invalid={Boolean(errors.phoneNumber)}
+                  aria-describedby={getSignupFieldDescribedBy(
+                    "phoneNumber",
+                    Boolean(errors.phoneNumber),
+                  )}
+                  onChange={(event) => {
+                    clearErrors("phoneNumber");
+                    field.onChange(normalizePhoneNumber(event.target.value));
+                  }}
+                />
               )}
-              onChange={(event) => {
-                clearErrors("phoneNumber");
-                setValue(
-                  "phoneNumber",
-                  normalizePhoneNumber(event.target.value),
-                  {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  },
-                );
-              }}
             />
             <Button
               type="button"
@@ -223,7 +228,7 @@ export function BasicInfoStep({
               variant="dark"
               disabled={
                 phoneMutation.isPending ||
-                !/^\d{10,11}$/.test(phoneNumber) ||
+                !signupPhoneNumberSchema.safeParse(phoneNumber).success ||
                 isPhoneVerified
               }
               onClick={handleCheckPhone}

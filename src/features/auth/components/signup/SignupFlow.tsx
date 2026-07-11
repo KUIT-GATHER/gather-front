@@ -3,12 +3,12 @@ import { FormProvider } from "react-hook-form";
 import { useSignupFlow } from "@/features/auth/hooks/useSignupFlow";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
-import { AccountInfoStep } from "./AccountInfoStep";
-import { BasicInfoStep } from "./BasicInfoStep";
-import { ProfileStep } from "./ProfileStep";
 import { SignupShell } from "./SignupShell";
 import { SignupTermsDetail } from "./SignupTermsDetail";
-import { TermsStep } from "./TermsStep";
+import { AccountInfoStep } from "./steps/AccountInfoStep";
+import { BasicInfoStep } from "./steps/BasicInfoStep";
+import { ProfileStep } from "./steps/ProfileStep";
+import { TermsStep } from "./steps/TermsStep";
 
 export function SignupFlow() {
   const {

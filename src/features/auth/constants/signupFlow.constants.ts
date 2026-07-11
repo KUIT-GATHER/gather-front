@@ -25,10 +25,6 @@ export const SIGNUP_STEP_FIELDS: Record<
   terms: termsFields,
 };
 
-export const ALL_SIGNUP_FIELDS = SIGNUP_STEP_ORDER.flatMap(
-  (step) => SIGNUP_STEP_FIELDS[step],
-);
-
 export type TermsDocumentType = "service" | "privacy" | "marketing";
 
 export const TERMS_DOCUMENTS: Record<

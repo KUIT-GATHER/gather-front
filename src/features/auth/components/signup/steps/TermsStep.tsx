@@ -4,7 +4,7 @@ import type { TermsDocumentType } from "@/features/auth/constants/signupFlow.con
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { cn } from "@/shared/lib/cn";
 
-import { SignupRootError, SignupStepButton } from "./SignupFormParts";
+import { SignupRootError, SignupStepButton } from "../SignupFormParts";
 
 type TermsStepProps = {
   isPending: boolean;

@@ -20,6 +20,18 @@ import {
   type SignupFormValues,
 } from "@/features/auth/schemas/signup.schema";
 
+const FOCUSABLE_SIGNUP_FIELDS = new Set<SignupStepField>([
+  "name",
+  "birthDate",
+  "phoneNumber",
+  "email",
+  "emailVerificationCode",
+  "password",
+  "passwordConfirm",
+  "nickname",
+  "introduction",
+]);
+
 function findFirstErrorStep(
   errors: FieldErrors<SignupFormValues>,
 ): SignupStep | null {
@@ -39,6 +51,10 @@ function findFirstErrorField(
   );
 }
 
+function getFocusableSignupField(field: SignupStepField | undefined) {
+  return field && FOCUSABLE_SIGNUP_FIELDS.has(field) ? field : null;
+}
+
 export function useSignupFlow() {
   const navigate = useNavigate();
   const methods = useForm<SignupFormValues>({
@@ -54,11 +70,11 @@ export function useSignupFlow() {
   const [detailType, setDetailType] = useState<TermsDocumentType | null>(null);
 
   const [showExitDialog, setShowExitDialog] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null); // 특정 필드에 대한 에러가 아닌, 전체 폼 제출 시 발생하는 에러를 저장하는 상태
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
-  ); // 사용자가 인증을 완료한 전화번호를 저장하는 상태
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null); // 사용자가 인증을 완료한 이메일을 저장하는 상태
+  );
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
 
   const watchedPhoneNumber = useWatch({
     control: methods.control,
@@ -117,6 +133,18 @@ export function useSignupFlow() {
     setVerifiedEmail(null);
     setVerifiedPhoneNumber(null);
     setSubmitError(null);
+    setPendingFocusField(null);
+  };
+
+  const moveToFieldError = (
+    targetStep: SignupStep,
+    field: SignupStepField,
+    message: string,
+  ) => {
+    setSubmitError(null);
+    methods.setError(field, { message });
+    setPendingFocusField(getFocusableSignupField(field));
+    setStep(targetStep);
   };
 
   const handleBack = () => {
@@ -180,21 +208,21 @@ export function useSignupFlow() {
   };
 
   const onValidSubmit = (values: SignupFormValues) => {
-    setSubmitError(null);
-
     if (values.phoneNumber !== verifiedPhoneNumber) {
-      setStep("basic");
-      methods.setError("phoneNumber", {
-        message: "전화번호 중복 확인을 완료해 주세요.",
-      });
+      moveToFieldError(
+        "basic",
+        "phoneNumber",
+        "전화번호 중복 확인을 완료해 주세요.",
+      );
       return;
     }
 
     if (normalizeEmail(values.email) !== verifiedEmail) {
-      setStep("account");
-      methods.setError("email", {
-        message: "이메일 인증을 완료해 주세요.",
-      });
+      moveToFieldError(
+        "account",
+        "email",
+        "이메일 인증을 완료해 주세요.",
+      );
       return;
     }
 
@@ -226,7 +254,9 @@ export function useSignupFlow() {
       return;
     }
 
-    setPendingFocusField(findFirstErrorField(errors, errorStep) ?? null);
+    setPendingFocusField(
+      getFocusableSignupField(findFirstErrorField(errors, errorStep)),
+    );
     setStep(errorStep);
   };
 
@@ -252,6 +282,7 @@ export function useSignupFlow() {
       case "terms":
         setSubmitError(null);
         void submitSignup();
+        return;
     }
   };
 
