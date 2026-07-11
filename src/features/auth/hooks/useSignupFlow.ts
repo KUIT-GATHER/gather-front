@@ -7,8 +7,8 @@ import {
   SIGNUP_STEP_FIELDS,
   SIGNUP_STEP_ORDER,
   type SignupStep,
-  type TermsDocumentType,
 } from "@/features/auth/constants/signupFlow.constants";
+import type { LegalDocumentType } from "@/features/legal";
 import { useSignupMutation } from "@/features/auth/hooks/useSignupMutation";
 import { applySignupError } from "@/features/auth/lib/applySignupError";
 import { toSignupRequest } from "@/features/auth/lib/signup.mapper";
@@ -67,7 +67,7 @@ export function useSignupFlow() {
 
   const signupMutation = useSignupMutation();
   const [step, setStep] = useState<SignupStep>("basic");
-  const [detailType, setDetailType] = useState<TermsDocumentType | null>(null);
+  const [detailType, setDetailType] = useState<LegalDocumentType | null>(null);
 
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);

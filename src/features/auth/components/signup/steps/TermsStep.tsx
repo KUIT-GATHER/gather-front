@@ -1,6 +1,6 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import type { TermsDocumentType } from "@/features/auth/constants/signupFlow.constants";
+import type { LegalDocumentType } from "@/features/legal";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { cn } from "@/shared/lib/cn";
 
@@ -10,7 +10,7 @@ type TermsStepProps = {
   isPending: boolean;
   submitError: string | null;
   onClearSubmitError: () => void;
-  onOpenDetail: (type: TermsDocumentType) => void;
+  onOpenDetail: (type: LegalDocumentType) => void;
 };
 
 export function TermsStep({
