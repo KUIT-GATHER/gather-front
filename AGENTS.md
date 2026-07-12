@@ -1,311 +1,89 @@
 # AGENTS.md
 
-## Project
+## 참고 문서
 
-Gather Frontend는 Vite + React + TypeScript 기반 프론트엔드 프로젝트입니다.
+작업 전 [README](./README.md), [협업 규칙](./CONTRIBUTING.md), [아키텍처](./docs/architecture.md)를 확인합니다.
 
-주요 기술 스택은 다음과 같습니다.
+코드가 문서와 다르면 현재 코드를 기준으로 판단하고, 발견한 불일치는 작업 결과에 기록합니다.
 
-* React
-* TypeScript
-* Vite
-* React Router
-* TanStack Query
-* Tailwind CSS
-* Zustand
-* React Hook Form
-* Zod
+## 핵심 기술
 
-## Commands
+React, TypeScript, Vite, React Router, TanStack Query, Zustand, Tailwind CSS, React Hook Form, Zod를 사용합니다.
 
-작업 전후로 아래 명령어를 사용합니다.
+## 명령
+
+의존성 설치와 로컬 실행에는 다음 명령을 사용합니다.
 
 ```bash
 npm install
 npm run dev
+```
+
+변경 후에는 반드시 다음 명령을 실행합니다.
+
+```bash
+npm run format:check
 npm run lint
 npm run build
 ```
 
-PR을 올리기 전에는 반드시 아래 명령어를 실행합니다.
-
-```bash
-npm run lint
-npm run build
-```
-
-## Architecture
-
-기본 구조는 아래 기준을 따릅니다.
-
-```txt
-src/
-  app/
-    layouts/
-    providers.tsx
-    router.tsx
-  pages/
-  features/
-  shared/
-  assets/
-  mocks/
-```
-
-각 폴더의 역할은 다음과 같습니다.
-
-* `src/app`: 앱 전체 라우터, 레이아웃, 전역 Provider를 관리합니다.
-* `src/pages`: 라우터가 직접 참조하는 페이지 컴포넌트를 관리합니다.
-* `src/features`: 기능별 실제 구현 코드를 관리합니다.
-* `src/shared`: 여러 기능에서 재사용되는 공통 코드를 관리합니다.
-* `src/assets`: 코드에서 import해서 사용하는 이미지와 아이콘을 관리합니다.
-* `src/mocks`: MSW mock API와 mock 데이터를 관리합니다.
-
-## Page and Feature Rules
-
-페이지 컴포넌트는 최대한 얇게 유지합니다.
-
-페이지에서는 복잡한 UI, API 요청, 비즈니스 로직을 직접 작성하지 않습니다. 실제 구현은 `features` 또는 `shared`로 분리합니다.
-
-권장 흐름은 다음과 같습니다.
-
-```txt
-pages
-→ features/*/components
-→ features/*/hooks
-→ features/*/api
-→ shared/api
-```
-
-예시:
-
-```txt
-src/pages/volunteers/VolunteerListPage.tsx
-→ src/features/volunteer/components/VolunteerList.tsx
-→ src/features/volunteer/hooks/useVolunteerList.ts
-→ src/features/volunteer/api/volunteerApi.ts
-```
-
-## Feature Folder Rules
-
-feature 내부에서는 필요한 폴더만 사용합니다.
-
-```txt
-features/auth/
-  api/
-  components/
-  hooks/
-  schemas/
-  store/
-  types/
-```
-
-역할은 다음과 같습니다.
-
-* `api`: 해당 기능의 API 요청 함수
-* `components`: 해당 기능에서만 사용하는 UI 컴포넌트
-* `hooks`: React Query hook 또는 custom hook
-* `schemas`: Zod 기반 form validation schema
-* `store`: 해당 기능 전용 Zustand store
-* `types`: 해당 기능 전용 TypeScript 타입
-* `constants`: 해당 기능 전용 상수
-
-사용하지 않는 폴더를 억지로 만들 필요는 없습니다.
-
-## Shared Folder Rules
-
-`shared`는 여러 feature에서 재사용되는 코드만 둡니다.
-
-```txt
-shared/
-  api/
-  config/
-  constants/
-  hooks/
-  lib/
-  types/
-  ui/
-```
-
-역할은 다음과 같습니다.
-
-* `shared/ui`: Button, Input, Modal, Spinner, EmptyState 같은 공통 UI 컴포넌트
-* `shared/api`: 공통 API client와 공통 API error 처리
-* `shared/config`: env 등 앱 설정값
-* `shared/constants`: 여러 기능에서 쓰는 공통 상수
-* `shared/hooks`: 여러 기능에서 재사용되는 custom hook
-* `shared/lib`: `cn`, 날짜 포맷 함수 같은 공통 유틸
-* `shared/types`: 공통 API 응답 타입, 페이지네이션 타입 등
-
-feature 전용 코드는 `shared`에 두지 않습니다.
-
-## Import Rules
-
-`src` 내부 import는 `@/` alias를 사용합니다.
-
-```ts
-import { cn } from "@/shared/lib/cn";
-import { env } from "@/shared/config/env";
-```
-
-상대경로가 더 자연스러운 같은 폴더 내부 파일은 `./`를 사용할 수 있습니다.
-
-```ts
-import { TeamCard } from "./TeamCard";
-```
-
-## Environment Variables
-
-환경변수 파일은 프로젝트 루트에 둡니다.
-
-```txt
-.env.local
-.env.example
-```
-
-실제 값이 들어간 `.env.local`은 GitHub에 올리지 않습니다.
-
-예시 파일인 `.env.example`만 GitHub에 올립니다.
-
-환경변수는 컴포넌트나 feature에서 직접 `import.meta.env`로 접근하지 않습니다.
-
-반드시 아래 파일을 통해 접근합니다.
-
-```txt
-src/shared/config/env.ts
-```
-
-사용 예시:
-
-```ts
-import { env } from "@/shared/config/env";
-
-const apiUrl = env.API_BASE_URL;
-```
-
-## Styling Rules
-
-스타일링은 Tailwind CSS를 기본으로 사용합니다.
-
-공통 UI는 `shared/ui` 컴포넌트를 우선 사용합니다.
-
-Button, Input, Modal, Spinner, EmptyState 같은 공통 UI를 feature 내부에서 중복 구현하지 않습니다.
-
-조건부 className 조합에는 `cn` 유틸을 사용합니다.
-
-```ts
-import { cn } from "@/shared/lib/cn";
-```
-
-전역 스타일은 `src/index.css`에 최소한으로 작성합니다.
-
-## API Rules
-
-API 요청 함수는 각 feature의 `api` 폴더에 둡니다.
-
-```txt
-features/auth/api/authApi.ts
-features/volunteer/api/volunteerApi.ts
-features/team/api/teamApi.ts
-```
-
-React Query hook은 각 feature의 `hooks` 폴더에 둡니다.
-
-```txt
-features/volunteer/hooks/useVolunteerList.ts
-features/team/hooks/useTeamDetail.ts
-```
-
-UI 컴포넌트에서 fetch를 직접 호출하지 않습니다.
-
-## Form Rules
-
-폼은 React Hook Form과 Zod를 사용합니다.
-
-Zod schema는 각 feature의 `schemas` 폴더에 둡니다.
-
-```txt
-features/auth/schemas/loginSchema.ts
-features/team/schemas/teamCreateSchema.ts
-```
-
-폼 검증 로직을 컴포넌트 내부에 길게 작성하지 않습니다.
-
-## Mock Rules
-
-MSW를 사용하는 경우 mock 관련 파일은 `src/mocks` 아래에 둡니다.
-
-UI 컴포넌트에서 mock 데이터를 직접 import하지 않습니다.
-
-mock 데이터도 실제 API 응답처럼 feature api와 hook을 통해 사용합니다.
-
-권장 흐름:
-
-```txt
-UI
-→ feature hook
-→ feature api
-→ shared api client
-→ MSW handler
-```
-
-## Routing Rules
-
-라우트 정의는 아래 파일에서 관리합니다.
-
-```txt
-src/app/router.tsx
-```
-
-라우트 그룹별 레이아웃은 아래 폴더에서 관리합니다.
-
-```txt
-src/app/layouts/
-```
-
-feature 내부에서 별도의 라우트 트리를 만들지 않습니다.
-
-## Git Rules
-
-기본 개발 브랜치는 `develop`입니다.
-
-작업은 항상 `develop`에서 새 브랜치를 만들어 진행합니다.
-
-```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/작업명
-```
-
-PR 대상 브랜치는 `develop`입니다.
-
-커밋 메시지는 한글로 작성합니다.
-
-예시:
-
-```txt
-feat: 로그인 화면 구현
-fix: 팀 생성 validation 오류 수정
-chore: 환경변수 설정 추가
-docs: AI 작업 지침 추가
-```
-
-## Do Not
-
-다음 작업은 피합니다.
+검사가 실패하면 실패 원인과 이번 변경의 관련 여부를 구분해 보고합니다.
+
+## 코드 배치
+
+* `src/app`에는 router, layout, 전역 Provider를 둡니다.
+* `src/pages`에는 라우터가 직접 렌더링하는 얇은 페이지 컴포넌트를 둡니다.
+* 실제 UI와 도메인 로직은 `src/features/{feature}`에 둡니다.
+* 여러 feature에서 재사용하는 인프라, UI, 설정, 유틸은 `src/shared`에 둡니다.
+* 사용하지 않는 feature 하위 폴더나 미래 기능용 placeholder를 미리 만들지 않습니다.
+* 현재 기능에만 필요한 코드를 재사용 가능성만으로 `shared`에 이동하지 않습니다.
+
+## 공용 UI와 디자인 시스템
+
+* 새로운 UI 컴포넌트를 만들기 전에 `src/shared/ui`에 사용할 수 있는 컴포넌트가 있는지 확인합니다.
+* Button, Input, Dialog 같은 공용 UI primitive를 feature 내부에 중복 구현하지 않습니다.
+* 특정 feature의 데이터나 비즈니스 규칙에 의존하는 컴포넌트는 공용 UI가 아니라 해당 feature에 둡니다.
+* 여러 feature에서 재사용되고 비즈니스 도메인에 의존하지 않는 컴포넌트만 `shared/ui`로 분리합니다.
+* 특정 페이지 하나를 위해 공용 컴포넌트에 페이지 전용 boolean props나 스타일 props를 계속 추가하지 않습니다.
+* 기존 `variant`, `size`, `className` 조합으로 해결할 수 있는지 먼저 확인하고, 새로운 variant는 반복 가능한 디자인 규칙일 때만 추가합니다.
+* 공용 컴포넌트의 조건부 className 조합에는 프로젝트의 `cn` 유틸을 사용합니다.
+* 색상, 간격, radius, typography는 기존 Tailwind 유틸과 프로젝트에 정의된 디자인 토큰을 우선 사용합니다.
+* 기존 디자인 토큰으로 표현할 수 있는 값을 임의의 색상 코드나 arbitrary value로 중복 추가하지 않습니다.
+* 공용 UI를 수정할 때는 해당 컴포넌트의 기존 사용처에 미치는 영향을 함께 확인합니다.
+* Figma 요구사항과 기존 공용 UI가 다르면 공용 컴포넌트를 바로 변경하지 않고, 재사용 가능한 variant인지 feature 전용 조합인지 먼저 판단합니다.
+* label 연결, 키보드 조작, focus, disabled 상태 등 기존 접근성 동작을 훼손하지 않습니다.
+
+## 서버 상태와 API
+
+* UI 컴포넌트에서 API 요청을 직접 호출하지 않습니다.
+* feature API 함수는 `src/features/{feature}/api`에 둡니다.
+* 서버 상태는 TanStack Query를 우선 사용합니다.
+* 서버 상태 hook은 `src/features/{feature}/hooks`에 둡니다.
+* feature query key와 query options는 `src/features/{feature}/api/{feature}.queries.ts`에 둡니다.
+* query hook은 가능한 한 query options를 재사용하는 얇은 wrapper로 유지합니다.
+* mock 데이터를 UI에서 직접 import하지 않고 feature API와 `shared/api/fetchClient.ts` 요청 흐름을 사용합니다.
+
+## 환경 변수와 인증
+
+* 환경 변수는 컴포넌트나 feature에서 직접 `import.meta.env`로 읽지 않습니다.
+* 환경 변수는 `src/shared/config/env.ts`를 통해 접근합니다.
+* 실제 값이 있는 `.env.local`은 커밋하지 않습니다.
+* 환경변수 예시가 변경되면 `.env.example`을 함께 수정합니다.
+* 인증 세션을 종료할 때 기존 `clearAuthSession()`을 우회해 인증 store만 초기화하지 않습니다.
+* 인증 상태와 사용자별 Query Cache가 함께 정리되어야 합니다.
+
+## 라우팅
+
+* 라우트 정의는 `src/app/router.tsx`에서 관리합니다.
+* 인증이 필요한 라우트에는 기존 `RequireAuth`를 사용합니다.
+* 공개 페이지 렌더링을 전역 인증 초기화로 차단하지 않습니다.
+* feature 내부에 별도의 독립 라우트 구성을 만들지 않습니다.
+
+## 주의사항
 
 * `develop` 또는 `main`에 직접 push하지 않습니다.
-* 페이지 컴포넌트에 API 요청과 복잡한 비즈니스 로직을 직접 작성하지 않습니다.
-* feature 전용 코드를 `shared`에 넣지 않습니다.
-* 공통 UI 컴포넌트를 feature 내부에 중복 구현하지 않습니다.
-* `import.meta.env`를 여러 파일에서 직접 사용하지 않습니다.
-* mock 데이터를 UI에서 직접 import하지 않습니다.
-* 사용하지 않는 거대한 추상화나 과한 폴더 구조를 만들지 않습니다.
-
-## Reference Documents
-
-자세한 구조와 팀 규칙은 아래 문서를 참고합니다.
-
-```txt
-docs/frontend-structure.md
-docs/conventions.md
-```
+* 현재 작업과 무관한 코드, 설정, 포맷을 대규모로 변경하지 않습니다.
+* 사용자나 다른 작업자가 만든 변경사항을 임의로 되돌리지 않습니다.
+* 기능 변화가 없는 리팩토링과 기능 변경을 한 작업에 불필요하게 섞지 않습니다.
+* 새 패키지를 추가하기 전에 기존 의존성으로 해결할 수 있는지 확인합니다.
+* 코드에서 확인되지 않은 미래 구조나 추상화를 미리 추가하지 않습니다.
