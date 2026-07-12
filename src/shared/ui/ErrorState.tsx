@@ -62,11 +62,7 @@ export function ErrorState({
           ) : null}
 
           {secondaryAction ? (
-            <Button
-              fullWidth
-              variant="dark"
-              onClick={secondaryAction.onClick}
-            >
+            <Button fullWidth variant="dark" onClick={secondaryAction.onClick}>
               {secondaryAction.label}
             </Button>
           ) : null}

@@ -190,7 +190,9 @@ export function AccountInfoStep({
             <Button
               type="button"
               size="medium"
-              disabled={sendMutation.isPending || isEmailVerified || !isEmailValid}
+              disabled={
+                sendMutation.isPending || isEmailVerified || !isEmailValid
+              }
               onClick={handleSend}
               className={cn(
                 "h-12 shrink-0 rounded-xl px-5 text-[15px] font-medium",

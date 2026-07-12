@@ -50,22 +50,14 @@ export function applySignupError({
 
     case API_ERROR_CODE.DUPLICATE_PHONE_NUMBER: {
       setVerifiedPhoneNumber(null);
-      moveToFieldError(
-        "basic",
-        "phoneNumber",
-        "이미 가입된 전화번호입니다.",
-      );
+      moveToFieldError("basic", "phoneNumber", "이미 가입된 전화번호입니다.");
 
       return;
     }
 
     case API_ERROR_CODE.EMAIL_NOT_VERIFIED: {
       setVerifiedEmail(null);
-      moveToFieldError(
-        "account",
-        "email",
-        "이메일 인증을 다시 완료해 주세요.",
-      );
+      moveToFieldError("account", "email", "이메일 인증을 다시 완료해 주세요.");
 
       return;
     }

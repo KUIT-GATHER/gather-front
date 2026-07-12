@@ -1,7 +1,4 @@
-import type {
-  LegalDocument,
-  LegalDocumentBlock,
-} from "../legal.types";
+import type { LegalDocument, LegalDocumentBlock } from "../legal.types";
 
 type LegalDocumentContentProps = {
   document: LegalDocument;

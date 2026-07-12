@@ -3,7 +3,11 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
-import { findLevel1RegionId, getChildRegions, getLevel1Regions } from "@/features/region/lib/region.utils";
+import {
+  findLevel1RegionId,
+  getChildRegions,
+  getLevel1Regions,
+} from "@/features/region/lib/region.utils";
 import type { Region } from "@/features/region/types/region.types";
 import { cn } from "@/shared/lib/cn";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -38,15 +42,10 @@ export function RegionSelector({
    * 사용자가 상위 지역만 선택하고 아직 세부 지역을 선택하지 않은 상태를
    * 화면에 유지하기 위한 UI 전용 상태입니다.
    */
-  const [
-    manuallySelectedLevel1RegionId,
-    setManuallySelectedLevel1RegionId,
-  ] = useState<number | null>(null);
+  const [manuallySelectedLevel1RegionId, setManuallySelectedLevel1RegionId] =
+    useState<number | null>(null);
 
-  const level1Regions = useMemo(
-    () => getLevel1Regions(regions),
-    [regions],
-  );
+  const level1Regions = useMemo(() => getLevel1Regions(regions), [regions]);
 
   /**
    * 이미 세부 지역이 폼에 저장되어 있다면 해당 지역의 parentId를 통해
