@@ -1,9 +1,9 @@
-import CommunityPuzzleIcon from "@/assets/icons/CommunityPuzzleIcon.svg";
-import CulturePuzzleIcon from "@/assets/icons/CulturePuzzleIcon.svg";
-import EducationPuzzleIcon from "@/assets/icons/EducationPuzzleIcon.svg";
-import EnvironmentPuzzleIcon from "@/assets/icons/EnvironmentPuzzleIcon.svg";
-import GlobalPuzzleIcon from "@/assets/icons/GlobalPuzzleIcon.svg";
-import WelfarePuzzleIcon from "@/assets/icons/WelfarePuzzleIcon.svg";
+import CommunityPuzzleIcon from "@/features/category/assets/puzzles/community.svg";
+import CulturePuzzleIcon from "@/features/category/assets/puzzles/culture.svg";
+import EducationPuzzleIcon from "@/features/category/assets/puzzles/education.svg";
+import EnvironmentPuzzleIcon from "@/features/category/assets/puzzles/environment.svg";
+import GlobalPuzzleIcon from "@/features/category/assets/puzzles/global.svg";
+import WelfarePuzzleIcon from "@/features/category/assets/puzzles/welfare.svg";
 
 const categoryIconByCode: Record<string, string> = {
   "0100": WelfarePuzzleIcon,
