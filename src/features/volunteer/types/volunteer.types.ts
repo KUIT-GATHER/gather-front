@@ -77,6 +77,17 @@ export type VolunteerPostingPage = {
   size: number;
 };
 
+export type VolunteerPostingListParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
+  regionId?: number;
+  status?: VolunteerPostingStatus;
+  noticeStartDate?: string;
+  noticeEndDate?: string;
+  keyword?: string;
+};
+
 export type VolunteerPostingDetailParams = {
   postingId: number;
 };
