@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
+
 type OnboardingMessageProps = {
-  title: string;
+  title: ReactNode;
   description: string;
 };
 

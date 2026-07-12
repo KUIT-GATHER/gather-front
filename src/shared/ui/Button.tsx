@@ -2,7 +2,12 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
 
-type ButtonVariant = "primary" | "dark" | "danger" | "dangerOutline";
+type ButtonVariant =
+  | "primary"
+  | "primaryOutline"
+  | "dark"
+  | "danger"
+  | "dangerOutline";
 type ButtonSize = "large" | "medium" | "pill" | "next";
 
 export type ButtonProps = ComponentPropsWithRef<"button"> & {
@@ -15,6 +20,9 @@ export type ButtonProps = ComponentPropsWithRef<"button"> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-button text-text2 hover:brightness-95",
+
+  primaryOutline:
+    "border border-button bg-transparent text-text-gray-400 hover:bg-button/8",
 
   dark: "bg-icon text-text2 hover:brightness-95",
 

@@ -11,11 +11,16 @@ export type OnboardingStepProps = {
 
 type OnboardingStepControlsProps = {
   currentStep: OnboardingStep;
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
 } & OnboardingStepProps;
 
 export function OnboardingStepControls({
   currentStep,
   onNext,
+  secondaryAction,
 }: OnboardingStepControlsProps) {
   const isLastStep = currentStep === 5;
 
@@ -39,14 +44,28 @@ export function OnboardingStepControls({
         })}
       </nav>
 
-      <Button
-        fullWidth
-        size="large"
-        className="mt-6 h-12 text-base font-normal"
-        onClick={onNext}
-      >
-        {isLastStep ? "회원가입 하기" : "다음"}
-      </Button>
+      <div className="mt-6 flex flex-col gap-3">
+        <Button
+          fullWidth
+          size="large"
+          className="h-12 text-base font-normal"
+          onClick={onNext}
+        >
+          {isLastStep ? "이미 계정이 있어요" : "다음"}
+        </Button>
+
+        {secondaryAction ? (
+          <Button
+            fullWidth
+            variant="primaryOutline"
+            size="large"
+            className="h-12 bg-white text-base font-normal text-text-gray-300 hover:bg-button/5"
+            onClick={secondaryAction.onClick}
+          >
+            {secondaryAction.label}
+          </Button>
+        ) : null}
+      </div>
     </>
   );
 }
