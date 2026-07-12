@@ -46,9 +46,7 @@ function findFirstErrorField(
   errors: FieldErrors<SignupFormValues>,
   targetStep: SignupStep,
 ) {
-  return SIGNUP_STEP_FIELDS[targetStep].find((field) =>
-    Boolean(errors[field]),
-  );
+  return SIGNUP_STEP_FIELDS[targetStep].find((field) => Boolean(errors[field]));
 }
 
 function getFocusableSignupField(field: SignupStepField | undefined) {
@@ -218,11 +216,7 @@ export function useSignupFlow() {
     }
 
     if (normalizeEmail(values.email) !== verifiedEmail) {
-      moveToFieldError(
-        "account",
-        "email",
-        "이메일 인증을 완료해 주세요.",
-      );
+      moveToFieldError("account", "email", "이메일 인증을 완료해 주세요.");
       return;
     }
 

@@ -4,11 +4,7 @@ import { cn } from "@/shared/lib/cn";
 
 type SkeletonProps = ComponentPropsWithRef<"div">;
 
-export default function Skeleton({
-  ref,
-  className,
-  ...props
-}: SkeletonProps) {
+export default function Skeleton({ ref, className, ...props }: SkeletonProps) {
   return (
     <div
       ref={ref}

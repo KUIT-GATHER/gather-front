@@ -118,7 +118,7 @@ export function EmailLoginForm({
               id="password"
               type={isPasswordVisible ? "text" : "password"}
               placeholder="비밀번호를 입력해 주세요."
-              autoComplete="current-password" 
+              autoComplete="current-password"
               className="pr-12"
               invalid={Boolean(errors.password)} // 에러가 있는 경우 Input 컴포넌트에 invalid prop을 전달
               aria-invalid={Boolean(errors.password)}

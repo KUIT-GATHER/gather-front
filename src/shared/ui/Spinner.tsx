@@ -22,10 +22,7 @@ export default function Spinner({
 }: SpinnerProps) {
   return (
     <div
-      className={cn(
-        "flex items-center justify-center gap-1.5",
-        className,
-      )}
+      className={cn("flex items-center justify-center gap-1.5", className)}
       role={ariaHidden ? undefined : "status"}
       aria-label={ariaHidden ? undefined : label}
       aria-hidden={ariaHidden || undefined}

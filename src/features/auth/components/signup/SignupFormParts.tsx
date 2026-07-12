@@ -34,11 +34,7 @@ export function SignupStepButton({
   );
 }
 
-export function SignupRootError({
-  message,
-}: {
-  message?: string | null;
-}) {
+export function SignupRootError({ message }: { message?: string | null }) {
   if (!message) {
     return null;
   }

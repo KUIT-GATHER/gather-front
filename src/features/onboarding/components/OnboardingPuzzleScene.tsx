@@ -96,9 +96,7 @@ const completeLayer: SceneLayer = {
   className: "top-[65%] z-20 ml-4.5 w-[min(45vw,180px)]",
 };
 
-export function OnboardingPuzzleScene({
-  step,
-}: OnboardingPuzzleSceneProps) {
+export function OnboardingPuzzleScene({ step }: OnboardingPuzzleSceneProps) {
   const layers =
     step === 5
       ? [completeLayer]

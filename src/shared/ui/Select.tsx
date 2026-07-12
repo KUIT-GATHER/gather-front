@@ -57,11 +57,7 @@ export default function Select({
         )}
       >
         <RadixSelect.Icon asChild>
-          <img
-            src={SortIcon}
-            alt=""
-            className="h-3.75 w-3.75 shrink-0"
-          />
+          <img src={SortIcon} alt="" className="h-3.75 w-3.75 shrink-0" />
         </RadixSelect.Icon>
 
         <RadixSelect.Value placeholder={placeholder} />

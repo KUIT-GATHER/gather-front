@@ -8,10 +8,7 @@ type OnboardingStep5Props = OnboardingStepProps & {
   onSignup: () => void;
 };
 
-export function OnboardingStep5({
-  onNext,
-  onSignup,
-}: OnboardingStep5Props) {
+export function OnboardingStep5({ onNext, onSignup }: OnboardingStep5Props) {
   return (
     <>
       <div className="flex-1" />

@@ -4,12 +4,12 @@
 
 Gather Frontend는 다음 계층을 중심으로 구성합니다.
 
-* `app`: Router, layout, 전역 Provider
-* `pages`: 라우터가 직접 렌더링하는 페이지
-* `features`: 기능과 도메인별 구현
-* `shared`: 여러 영역에서 재사용하는 UI와 공통 인프라
-* `mocks`: MSW handler와 mock 데이터
-* `assets`: 코드에서 import하는 정적 자산
+- `app`: Router, layout, 전역 Provider
+- `pages`: 라우터가 직접 렌더링하는 페이지
+- `features`: 기능과 도메인별 구현
+- `shared`: 여러 영역에서 재사용하는 UI와 공통 인프라
+- `mocks`: MSW handler와 mock 데이터
+- `assets`: 코드에서 import하는 정적 자산
 
 실제 파일 구조와 라우트 구성은 코드를 source of truth로 사용합니다.
 

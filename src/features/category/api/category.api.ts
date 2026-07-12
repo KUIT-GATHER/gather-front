@@ -10,4 +10,3 @@ const publicOptions = {
 export function getCategories() {
   return fetchClient<Category[]>("/api/v1/categories", publicOptions);
 }
-

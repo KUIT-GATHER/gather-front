@@ -1,8 +1,4 @@
-import {
-  MutationCache,
-  QueryCache,
-  QueryClient,
-} from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "@/shared/api/apiError";
 
@@ -65,12 +61,7 @@ export function createQueryClient() {
     }),
 
     mutationCache: new MutationCache({
-      onError: (
-        error,
-        _variables,
-        _onMutateResult,
-        mutation,
-      ) => {
+      onError: (error, _variables, _onMutateResult, mutation) => {
         const errorMode = mutation.options.meta?.errorMode ?? "log";
 
         if (errorMode === "silent") {

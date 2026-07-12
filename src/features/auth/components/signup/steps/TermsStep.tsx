@@ -41,10 +41,7 @@ export function TermsStep({
     serviceTermsAgreed && privacyPolicyAgreed && marketingAgreed;
 
   const setAgreement = (
-    name:
-      | "serviceTermsAgreed"
-      | "privacyPolicyAgreed"
-      | "marketingAgreed",
+    name: "serviceTermsAgreed" | "privacyPolicyAgreed" | "marketingAgreed",
     checked: boolean,
   ) => {
     setValue(name, checked, {
@@ -91,17 +88,13 @@ export function TermsStep({
         <AgreementRow
           checked={serviceTermsAgreed}
           label="[필수] 서비스 이용약관 동의"
-          onChange={(checked) =>
-            setAgreement("serviceTermsAgreed", checked)
-          }
+          onChange={(checked) => setAgreement("serviceTermsAgreed", checked)}
           onView={() => onOpenDetail("service")}
         />
         <AgreementRow
           checked={privacyPolicyAgreed}
           label="[필수] 개인정보 수집 및 이용 동의"
-          onChange={(checked) =>
-            setAgreement("privacyPolicyAgreed", checked)
-          }
+          onChange={(checked) => setAgreement("privacyPolicyAgreed", checked)}
           onView={() => onOpenDetail("privacy")}
         />
         <AgreementRow

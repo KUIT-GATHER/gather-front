@@ -9,7 +9,7 @@ export interface AppQueryMeta extends Record<string, unknown> {
    *
    * silent:
    * - 전역에서 별도의 오류 처리를 하지 않음
-   * 
+   *
    *
    * log:
    * - 공통 로깅 함수로 오류를 전달
