@@ -1,12 +1,13 @@
 import { Camera, UserRound } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
 
-import { useSignupOptionsQuery } from "@/features/auth/hooks/useSignupOptionsQuery";
 import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import { useCategoriesQuery } from "@/features/category/hooks/useCategoriesQuery";
+import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 
@@ -20,7 +21,8 @@ export function ProfileStep() {
     register,
     formState: { errors },
   } = useFormContext<SignupFormValues>();
-  const { regionsQuery, categoriesQuery } = useSignupOptionsQuery();
+  const regionsQuery = useRegionsQuery();
+  const categoriesQuery = useCategoriesQuery();
   const introduction = useWatch({ control, name: "introduction" });
   const isSignupOptionUnavailable =
     regionsQuery.isLoading ||

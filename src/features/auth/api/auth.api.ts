@@ -9,8 +9,6 @@ import type {
   SendEmailVerificationResponse,
   SignupRequest,
   SignupResponse,
-  SignupCategory,
-  SignupRegion,
   TokenResponse,
 } from "@/features/auth/types/auth.types";
 
@@ -67,14 +65,6 @@ export function signup(payload: SignupRequest) {
     method: "POST",
     body: JSON.stringify(payload),
   });
-}
-
-export function getSignupRegions() {
-  return fetchClient<SignupRegion[]>("/api/v1/regions", publicOptions);
-}
-
-export function getSignupCategories() {
-  return fetchClient<SignupCategory[]>("/api/v1/categories", publicOptions);
 }
 
 export function login(payload: LoginRequest) {

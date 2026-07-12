@@ -2,7 +2,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import { getSignupCategoryIcon } from "@/features/auth/constants/signupCategoryIcons";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
-import type { SignupCategory } from "@/features/auth/types/auth.types";
+import type { Category } from "@/features/category/types/category.types";
 import { cn } from "@/shared/lib/cn";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -10,7 +10,7 @@ import LoadingState from "@/shared/ui/LoadingState";
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
 
 type CategorySelectorProps = {
-  categories: SignupCategory[];
+  categories: Category[];
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
