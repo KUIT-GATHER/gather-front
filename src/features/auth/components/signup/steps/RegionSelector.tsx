@@ -3,13 +3,14 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
-import type { SignupRegion } from "@/features/auth/types/auth.types";
+import { findLevel1RegionId, getChildRegions, getLevel1Regions } from "@/features/region/lib/region.utils";
+import type { Region } from "@/features/region/types/region.types";
 import { cn } from "@/shared/lib/cn";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 
 type RegionSelectorProps = {
-  regions: SignupRegion[];
+  regions: Region[];
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
@@ -43,10 +44,7 @@ export function RegionSelector({
   ] = useState<number | null>(null);
 
   const level1Regions = useMemo(
-    () =>
-      regions.filter(
-        (region) => region.level === 1 && region.parentId === null,
-      ),
+    () => getLevel1Regions(regions),
     [regions],
   );
 
@@ -56,25 +54,10 @@ export function RegionSelector({
    *
    * activityRegionId가 상위 지역 ID인 데이터 구조까지 함께 대응합니다.
    */
-  const level1RegionIdFromForm = useMemo(() => {
-    if (activityRegionId === null) {
-      return null;
-    }
-
-    const selectedRegion = regions.find(
-      (region) => region.id === activityRegionId,
-    );
-
-    if (!selectedRegion) {
-      return null;
-    }
-
-    if (selectedRegion.level === 1) {
-      return selectedRegion.id;
-    }
-
-    return selectedRegion.parentId;
-  }, [activityRegionId, regions]);
+  const level1RegionIdFromForm = useMemo(
+    () => findLevel1RegionId(regions, activityRegionId),
+    [activityRegionId, regions],
+  );
 
   /**
    * 세부 지역이 선택된 상태에서는 폼 값을 기준으로 상위 지역을 결정합니다.
@@ -86,12 +69,7 @@ export function RegionSelector({
       : manuallySelectedLevel1RegionId;
 
   const level2Regions = useMemo(
-    () =>
-      regions.filter(
-        (region) =>
-          region.level === 2 &&
-          region.parentId === selectedLevel1RegionId,
-      ),
+    () => getChildRegions(regions, selectedLevel1RegionId),
     [regions, selectedLevel1RegionId],
   );
 
@@ -113,7 +91,7 @@ export function RegionSelector({
     clearErrors("activityRegionId");
   };
 
-  const handleLevel2RegionSelect = (region: SignupRegion) => {
+  const handleLevel2RegionSelect = (region: Region) => {
     /**
      * 세부 지역을 직접 선택했으므로 해당 상위 지역도 함께 유지합니다.
      */
