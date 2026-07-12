@@ -9,7 +9,6 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const authInitialized = useAuthStore((state) => state.authInitialized);
   const setAuthInitialized = useAuthStore((state) => state.setAuthInitialized);
 
   useEffect(() => {
@@ -35,10 +34,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       ignore = true;
     };
   }, [setAuthInitialized]);
-
-  if (!authInitialized) {
-    return null;
-  }
 
   return children;
 }
