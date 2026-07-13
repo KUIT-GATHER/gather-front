@@ -1,15 +1,15 @@
-import OnboardingStep1Bg1 from "@/assets/icons/onboarding/onboarding-step1-bg-1.svg";
-import OnboardingStep1Bg2 from "@/assets/icons/onboarding/onboarding-step1-bg-2.svg";
-import OnboardingStep1Center from "@/assets/icons/onboarding/onboarding-step1-center.svg";
-import OnboardingStep2Bg1 from "@/assets/icons/onboarding/onboarding-step2-bg-1.svg";
-import OnboardingStep2Bg2 from "@/assets/icons/onboarding/onboarding-step2-bg-2.svg";
-import OnboardingStep2Center from "@/assets/icons/onboarding/onboarding-step2-center.svg";
-import OnboardingStep3Bg1 from "@/assets/icons/onboarding/onboarding-step3-bg-1.svg";
-import OnboardingStep3Bg2 from "@/assets/icons/onboarding/onboarding-step3-bg-2.svg";
-import OnboardingStep3Center from "@/assets/icons/onboarding/onboarding-step3-center.svg";
-import OnboardingStep4Bg1 from "@/assets/icons/onboarding/onboarding-step4-bg-1.svg";
-import OnboardingStep4Center from "@/assets/icons/onboarding/onboarding-step4-center.svg";
-import OnboardingStep5 from "@/assets/icons/onboarding/onboarding-step5.svg";
+import OnboardingStep1Bg1 from "@/assets/onboarding/onboarding-step1-bg-1.svg";
+import OnboardingStep1Bg2 from "@/assets/onboarding/onboarding-step1-bg-2.svg";
+import OnboardingStep1Center from "@/assets/onboarding/onboarding-step1-center.svg";
+import OnboardingStep2Bg1 from "@/assets/onboarding/onboarding-step2-bg-1.svg";
+import OnboardingStep2Bg2 from "@/assets/onboarding/onboarding-step2-bg-2.svg";
+import OnboardingStep2Center from "@/assets/onboarding/onboarding-step2-center.svg";
+import OnboardingStep3Bg1 from "@/assets/onboarding/onboarding-step3-bg-1.svg";
+import OnboardingStep3Bg2 from "@/assets/onboarding/onboarding-step3-bg-2.svg";
+import OnboardingStep3Center from "@/assets/onboarding/onboarding-step3-center.svg";
+import OnboardingStep4Bg1 from "@/assets/onboarding/onboarding-step4-bg-1.svg";
+import OnboardingStep4Center from "@/assets/onboarding/onboarding-step4-center.svg";
+import OnboardingStep5 from "@/assets/onboarding/onboarding-step5.svg";
 import type { OnboardingStep } from "@/features/onboarding/components/OnboardingStepControls";
 import { cn } from "@/shared/lib/cn";
 
