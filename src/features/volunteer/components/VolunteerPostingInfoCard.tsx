@@ -6,9 +6,11 @@ import MemberIcon from "@/assets/volunteer/member.svg";
 import PortalOrgIcon from "@/assets/volunteer/portalorg.svg";
 import VolunteerOrgIcon from "@/assets/volunteer/volunteerorg.svg";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
+import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingInfoCardProps = {
   posting: VolunteerPosting;
+  className?: string;
 };
 
 type InfoRow = {
@@ -44,18 +46,23 @@ function getLocation(posting: VolunteerPosting) {
 
 function DetailRow({ icon, label, value }: InfoRow) {
   return (
-    <div className="grid grid-cols-[1.5rem_4.75rem_1fr] items-start gap-2 text-body-14">
+    <div className="grid grid-cols-[1.5rem_auto_1fr] items-start gap-2">
       <span className="flex size-6 items-center justify-center">
         <img src={icon} alt="" className="max-h-5 max-w-5" />
       </span>
-      <dt className="pt-0.5 font-medium text-text-gray-300">{label}</dt>
-      <dd className="pt-0.5 text-right font-medium text-text">{value}</dd>
+      <dt className="whitespace-nowrap pt-0.5 text-[15px] leading-normal font-normal text-text-gray-400">
+        {label}
+      </dt>
+      <dd className="pt-0.5 text-right text-[15px] leading-normal font-normal text-text">
+        {value}
+      </dd>
     </div>
   );
 }
 
 export function VolunteerPostingInfoCard({
   posting,
+  className,
 }: VolunteerPostingInfoCardProps) {
   const rows: InfoRow[] = [
     {
@@ -96,8 +103,13 @@ export function VolunteerPostingInfoCard({
   ];
 
   return (
-    <section className="rounded-lg border border-stroke bg-white p-4">
-      <dl className="flex flex-col gap-3">
+    <section
+      className={cn(
+        "rounded-xl border border-stroke bg-white px-3 py-4",
+        className,
+      )}
+    >
+      <dl className="flex flex-col gap-2">
         {rows.map((row) => (
           <DetailRow key={row.label} {...row} />
         ))}

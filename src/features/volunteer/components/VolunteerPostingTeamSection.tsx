@@ -1,9 +1,17 @@
-import { ChevronRight, Plus, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router";
+
+import ActivatingPeopleIcon from "@/assets/volunteer/activatingpeople.svg";
+import RightArrowIcon from "@/assets/volunteer/rightarrow.svg";
+import TeamPlusIcon from "@/assets/volunteer/teamplus.svg";
+import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingTeamSectionProps = {
   postingId: number;
+  className?: string;
 };
+
+const dashedBorderSvg =
+  "url(\"data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='99%25' height='99%25' x='0.5%25' y='0.5%25' rx='12' ry='12' fill='none' stroke='%2390D79D' stroke-width='1' stroke-dasharray='10 8'/%3E%3C/svg%3E\")";
 
 function TeamCard() {
   return (
@@ -16,32 +24,31 @@ function TeamCard() {
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-body-15-semibold text-text">
+        <span className="block truncate font-['Inter'] text-[16px] leading-[22px] font-medium text-text">
           한강공원 플로깅팀
         </span>
-        <span className="mt-1 flex items-center gap-1 text-body-14 text-text-gray-300">
-          <UsersRound aria-hidden="true" className="size-4 text-icon" />
+        <span className="mt-1 flex items-center gap-1 font-['Inter'] text-[15px] leading-[22px] font-normal text-text-gray-400">
+          <img src={ActivatingPeopleIcon} alt="" className="size-4" />
           12명 활동중
         </span>
       </span>
 
-      <ChevronRight
-        aria-hidden="true"
-        className="size-7 shrink-0 text-text-gray-300"
-        strokeWidth={3}
-      />
+      <img src={RightArrowIcon} alt="" className="h-5.5 w-3 shrink-0" />
     </button>
   );
 }
 
 export function VolunteerPostingTeamSection({
   postingId,
+  className,
 }: VolunteerPostingTeamSectionProps) {
   const navigate = useNavigate();
 
   return (
-    <section className="-mx-5.5 border-t-8 border-stroke/35 px-5.5 pt-5">
-      <h2 className="text-body-15-semibold text-text">함께하는 팀</h2>
+    <section className={cn("pt-1", className)}>
+      <h2 className="text-[18px] leading-4 font-semibold text-[#000]">
+        함께하는 팀
+      </h2>
 
       <div className="mt-4">
         <TeamCard />
@@ -49,10 +56,15 @@ export function VolunteerPostingTeamSection({
 
       <button
         type="button"
-        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-point-green bg-white text-body-15-semibold text-button transition hover:bg-button/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#F8FBF8] text-body-15-semibold text-button transition hover:bg-button/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        style={{
+          backgroundImage: dashedBorderSvg,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "100% 100%",
+        }}
         onClick={() => navigate(`/volunteers/${postingId}/teams/new`)}
       >
-        <Plus aria-hidden="true" className="size-5" />
+        <img src={TeamPlusIcon} alt="" className="size-3.5" />
         이 봉사로 팀 만들기
       </button>
     </section>

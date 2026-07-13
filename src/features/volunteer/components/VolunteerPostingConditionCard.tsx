@@ -1,7 +1,9 @@
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
+import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingConditionCardProps = {
   posting: VolunteerPosting;
+  className?: string;
 };
 
 function getParticipationConditions(posting: VolunteerPosting) {
@@ -18,11 +20,14 @@ function getParticipationConditions(posting: VolunteerPosting) {
 
 export function VolunteerPostingConditionCard({
   posting,
+  className,
 }: VolunteerPostingConditionCardProps) {
   return (
-    <section className="rounded-lg border border-stroke bg-white p-4">
-      <h2 className="text-body-15-semibold text-text">참여 조건</h2>
-      <p className="mt-2 text-body-14 text-text">
+    <section
+      className={cn("rounded-lg border border-stroke bg-white p-4", className)}
+    >
+      <h2 className="text-title-18 text-text">참여 조건</h2>
+      <p className="mt-2 text-[15px] leading-[21.125px] font-normal text-text">
         · {getParticipationConditions(posting)}
       </p>
     </section>

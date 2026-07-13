@@ -2,18 +2,28 @@ import { useNavigate } from "react-router";
 
 import { VolunteerPostingApplyBar } from "@/features/volunteer/components/VolunteerPostingApplyBar";
 import { VolunteerPostingConditionCard } from "@/features/volunteer/components/VolunteerPostingConditionCard";
+import { VolunteerPostingHeader } from "@/features/volunteer/components/VolunteerPostingHeader";
 import { VolunteerPostingHero } from "@/features/volunteer/components/VolunteerPostingHero";
 import { VolunteerPostingInfoCard } from "@/features/volunteer/components/VolunteerPostingInfoCard";
 import { VolunteerPostingTeamSection } from "@/features/volunteer/components/VolunteerPostingTeamSection";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
+import { cn } from "@/shared/lib/cn";
 import LoadingState from "@/shared/ui/LoadingState";
-import PageHeader from "@/shared/ui/PageHeader";
 
 type VolunteerPostingDetailProps = {
   postingId: number;
 };
+
+function VolunteerPostingDivider({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn("-mx-5.5 h-1.5 bg-[#ECECEC]", className)}
+      aria-hidden="true"
+    />
+  );
+}
 
 export function VolunteerPostingDetail({
   postingId,
@@ -24,7 +34,7 @@ export function VolunteerPostingDetail({
   if (postingQuery.isLoading) {
     return (
       <>
-        <PageHeader title="봉사 공고" onBack={() => navigate(-1)} />
+        <VolunteerPostingHeader onBack={() => navigate(-1)} />
         <LoadingState
           label="봉사 공고를 불러오는 중"
           className="min-h-[calc(100dvh-7rem)]"
@@ -36,7 +46,7 @@ export function VolunteerPostingDetail({
   if (postingQuery.isError) {
     return (
       <>
-        <PageHeader title="봉사 공고" onBack={() => navigate(-1)} />
+        <VolunteerPostingHeader onBack={() => navigate(-1)} />
         <ErrorState
           className="min-h-[calc(100dvh-7rem)] justify-center"
           title="봉사 공고를 불러오지 못했어요"
@@ -61,7 +71,7 @@ export function VolunteerPostingDetail({
   if (!posting) {
     return (
       <>
-        <PageHeader title="봉사 공고" onBack={() => navigate(-1)} />
+        <VolunteerPostingHeader onBack={() => navigate(-1)} />
         <EmptyState
           className="mt-10"
           title="봉사 공고가 없어요"
@@ -75,13 +85,19 @@ export function VolunteerPostingDetail({
 
   return (
     <article className="pb-[calc(env(safe-area-inset-bottom)+7.25rem)]">
-      <PageHeader title={posting.title} onBack={() => navigate(-1)} sticky />
+      <VolunteerPostingHeader
+        title={posting.title}
+        onBack={() => navigate(-1)}
+        sticky
+      />
 
-      <div className="flex flex-col gap-3 pt-3">
+      <div className="pt-1">
         <VolunteerPostingHero posting={posting} />
-        <VolunteerPostingInfoCard posting={posting} />
-        <VolunteerPostingConditionCard posting={posting} />
-        <VolunteerPostingTeamSection postingId={posting.id} />
+        <VolunteerPostingDivider className="mt-5" />
+        <VolunteerPostingInfoCard posting={posting} className="mt-5" />
+        <VolunteerPostingConditionCard posting={posting} className="mt-4" />
+        <VolunteerPostingDivider className="mt-5" />
+        <VolunteerPostingTeamSection postingId={posting.id} className="mt-5" />
       </div>
 
       <VolunteerPostingApplyBar />
