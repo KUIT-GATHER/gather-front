@@ -21,13 +21,12 @@
 
 ## 확인한 것
 
+해당하는 항목만 체크해주세요.
+
 - [ ] 로컬 실행 확인
 - [ ] npm run lint 통과
 - [ ] npm run build 통과
-- [ ] 모바일 화면 확인
-- [ ] loading 상태 확인
-- [ ] error 상태 확인
-- [ ] empty 상태 확인
+- [ ] npm run format:check 통과
 
 ## 관련 이슈
 

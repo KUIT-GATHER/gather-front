@@ -1,3 +1,5 @@
+import PageContainer from "@/shared/ui/PageContainer";
+
 export function TermsPage() {
-  return <div>TermsPage</div>;
+  return <PageContainer size="narrow">TermsPage</PageContainer>;
 }

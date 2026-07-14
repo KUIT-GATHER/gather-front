@@ -1,3 +1,5 @@
+import PageContainer from "@/shared/ui/PageContainer";
+
 export function VolunteerSearchPage() {
-  return <div>VolunteerSearchPage</div>;
+  return <PageContainer size="narrow">VolunteerSearchPage</PageContainer>;
 }

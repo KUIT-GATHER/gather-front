@@ -38,7 +38,7 @@ export type SignupRequest = {
   passwordConfirm: string;
   nickname: string;
   introduction?: string | null;
-  activityRegionIds: number[];
+  activityRegionId: number;
   interestCategoryIds: number[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
@@ -50,11 +50,6 @@ export type SignupResponse = {
   email: string;
   name: string;
   nickname: string;
-};
-
-export type LoginRequest = {
-  email: string;
-  password: string;
 };
 
 export type TokenResponse = {

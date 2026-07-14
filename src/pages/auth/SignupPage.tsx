@@ -1,4 +1,5 @@
+import { SignupFlow } from "@/features/auth/components/signup/SignupFlow";
 
 export function SignupPage() {
-  return <div>SignupPage</div>;
+  return <SignupFlow />;
 }

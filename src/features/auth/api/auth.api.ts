@@ -3,7 +3,6 @@ import { fetchClient } from "@/shared/api/fetchClient";
 import type {
   ConfirmEmailVerificationRequest,
   ConfirmEmailVerificationResponse,
-  LoginRequest,
   PhoneAvailabilityRequest,
   PhoneAvailabilityResponse,
   SendEmailVerificationRequest,
@@ -12,6 +11,8 @@ import type {
   SignupResponse,
   TokenResponse,
 } from "@/features/auth/types/auth.types";
+
+import type { LoginRequest } from "@/features/auth/schemas/login.schema";
 
 const publicOptions = {
   skipAuth: true,

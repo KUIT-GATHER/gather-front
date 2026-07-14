@@ -1,3 +1,5 @@
+import PageContainer from "@/shared/ui/PageContainer";
+
 export function TeamSearchPage() {
-  return <div>TeamSearchPage</div>;
+  return <PageContainer size="narrow">TeamSearchPage</PageContainer>;
 }
