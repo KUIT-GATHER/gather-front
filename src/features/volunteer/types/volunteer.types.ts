@@ -1,7 +1,4 @@
-export type VolunteerPostingStatus =
-  | "RECRUITING"
-  | "CLOSED"
-  | "COMPLETED";
+export type VolunteerPostingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 
 export type VolunteerPostingLocation = {
   locationSeq: number;
@@ -77,16 +74,32 @@ export type VolunteerPostingPage = {
   size: number;
 };
 
-export type VolunteerPostingListParams = {
+type VolunteerPostingRegionFilter =
+  | {
+      regionId?: never;
+      regionGroupId?: never;
+    }
+  | {
+      regionId: number;
+      regionGroupId?: never;
+    }
+  | {
+      regionId?: never;
+      regionGroupId: number;
+    };
+
+type VolunteerPostingBaseParams = {
   page?: number;
   size?: number;
   sort?: string[];
-  regionId?: number;
   status?: VolunteerPostingStatus;
   noticeStartDate?: string;
   noticeEndDate?: string;
   keyword?: string;
 };
+
+export type VolunteerPostingListParams = VolunteerPostingBaseParams &
+  VolunteerPostingRegionFilter;
 
 export type VolunteerPostingBookmark = {
   postingId: number;

@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 
 import postings from "./data/postings.json";
+import regions from "./data/regions.json";
 import volunteers from "./data/volunteers.json";
 
 function getNumberParams(url: URL, key: string) {
@@ -11,6 +12,46 @@ function getNumberParams(url: URL, key: string) {
     .filter(Number.isFinite);
 }
 
+function getOptionalNumberParam(url: URL, key: string) {
+  const rawValue = url.searchParams.get(key);
+
+  if (rawValue === null || rawValue.trim() === "") {
+    return undefined;
+  }
+
+  const parsedValue = Number(rawValue);
+
+  return Number.isFinite(parsedValue) ? parsedValue : undefined;
+}
+
+function getRegionIdsIncludingChildren(regionIds: Iterable<number>) {
+  const includedRegionIds = new Set(regionIds);
+  const pendingParentIds = [...includedRegionIds];
+
+  while (pendingParentIds.length > 0) {
+    const parentId = pendingParentIds.pop();
+
+    for (const region of regions.data) {
+      if (region.parentId === parentId && !includedRegionIds.has(region.id)) {
+        includedRegionIds.add(region.id);
+        pendingParentIds.push(region.id);
+      }
+    }
+  }
+
+  return includedRegionIds;
+}
+
+function getRegionIdsByGroup(regionGroupId: number) {
+  const level1RegionIds = regions.data
+    .filter(
+      (region) => region.level === 1 && region.regionGroupId === regionGroupId,
+    )
+    .map((region) => region.id);
+
+  return getRegionIdsIncludingChildren(level1RegionIds);
+}
+
 export const volunteerHandlers = [
   http.get("*/api/v1/postings", ({ request }) => {
     const url = new URL(request.url);
@@ -18,12 +59,27 @@ export const volunteerHandlers = [
     const page = Number(url.searchParams.get("page") ?? 0);
     const size = Number(url.searchParams.get("size") ?? 20);
     const keyword = url.searchParams.get("keyword")?.trim();
-    const regionId = Number(url.searchParams.get("regionId"));
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
     const status = url.searchParams.get("status");
     const noticeStartDate = url.searchParams.get("noticeStartDate");
     const noticeEndDate = url.searchParams.get("noticeEndDate");
 
     let items = postings.data;
+
+    if (regionId !== undefined && regionGroupId !== undefined) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
 
     if (keyword) {
       items = items.filter((posting) =>
@@ -37,8 +93,20 @@ export const volunteerHandlers = [
       );
     }
 
-    if (Number.isFinite(regionId)) {
-      items = items.filter((posting) => posting.regionId === regionId);
+    if (regionId !== undefined) {
+      const includedRegionIds = getRegionIdsIncludingChildren([regionId]);
+
+      items = items.filter((posting) =>
+        includedRegionIds.has(posting.regionId),
+      );
+    }
+
+    if (regionGroupId !== undefined) {
+      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
+
+      items = items.filter((posting) =>
+        includedRegionIds.has(posting.regionId),
+      );
     }
 
     if (status) {
@@ -52,43 +120,43 @@ export const volunteerHandlers = [
     }
 
     if (noticeEndDate) {
-      items = items.filter(
-        (posting) => posting.noticeEndDate <= noticeEndDate,
-      );
+      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
     }
 
     const startIndex = page * size;
-    const content = items.slice(startIndex, startIndex + size).map(
-      ({
-        id,
-        title,
-        status,
-        recruitOrg,
-        actStartDate,
-        actEndDate,
-        actPlace,
-        recruitCount,
-        applicantCount,
-        regionId,
-        regionName,
-        categoryId,
-        categoryName,
-      }) => ({
-        id,
-        title,
-        status,
-        recruitOrg,
-        actStartDate,
-        actEndDate,
-        actPlace,
-        recruitCount,
-        applicantCount,
-        regionId,
-        regionName,
-        categoryId,
-        categoryName,
-      }),
-    );
+    const content = items
+      .slice(startIndex, startIndex + size)
+      .map(
+        ({
+          id,
+          title,
+          status,
+          recruitOrg,
+          actStartDate,
+          actEndDate,
+          actPlace,
+          recruitCount,
+          applicantCount,
+          regionId,
+          regionName,
+          categoryId,
+          categoryName,
+        }) => ({
+          id,
+          title,
+          status,
+          recruitOrg,
+          actStartDate,
+          actEndDate,
+          actPlace,
+          recruitCount,
+          applicantCount,
+          regionId,
+          regionName,
+          categoryId,
+          categoryName,
+        }),
+      );
 
     return HttpResponse.json({
       success: true,

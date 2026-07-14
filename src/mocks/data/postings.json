@@ -25,8 +25,8 @@
       "managerFax": "02-1234-5679",
       "managerEmail": "green@example.com",
       "managerAddress": "서울 영등포구 여의동로 330",
-      "regionId": 1,
-      "regionName": "서울",
+      "regionId": 41,
+      "regionName": "강남구",
       "categoryId": 1,
       "categoryName": "환경",
       "locations": [
@@ -65,8 +65,8 @@
       "managerFax": "02-2222-3334",
       "managerEmail": "animal@example.com",
       "managerAddress": "서울 마포구 월드컵로 240",
-      "regionId": 1,
-      "regionName": "서울",
+      "regionId": 32,
+      "regionName": "마포구",
       "categoryId": 4,
       "categoryName": "지역사회",
       "locations": [
