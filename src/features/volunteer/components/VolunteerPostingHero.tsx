@@ -1,12 +1,10 @@
+import defaultHeroImage from "@/assets/icons/Temp-volunteer-posting.svg";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
 import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingHeroProps = {
   posting: VolunteerPosting;
 };
-
-const DEFAULT_HERO_IMAGE =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80";
 
 function Tag({
   children,
@@ -30,9 +28,9 @@ function Tag({
 export function VolunteerPostingHero({ posting }: VolunteerPostingHeroProps) {
   return (
     <section>
-      <div className="overflow-hidden rounded-lg bg-stroke">
+      <div className="overflow-hidden rounded-lg">
         <img
-          src={DEFAULT_HERO_IMAGE}
+          src={defaultHeroImage}
           alt=""
           className="aspect-[344/175] w-full object-cover"
         />

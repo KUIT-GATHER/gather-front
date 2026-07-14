@@ -1,10 +1,14 @@
 import ArrowIcon from "@/assets/icons/Arrow.svg";
+import FilledHeartIcon from "@/assets/icons/Filledheart.svg";
+import UnfilledHeartIcon from "@/assets/icons/Unfilledheart.svg";
 import { cn } from "@/shared/lib/cn";
-import { Heart } from "lucide-react";
 
 type VolunteerPostingHeaderProps = {
   title?: string;
   onBack: () => void;
+  isBookmarked?: boolean;
+  isBookmarkPending?: boolean;
+  onBookmarkToggle?: () => void;
   sticky?: boolean;
   className?: string;
 };
@@ -12,6 +16,9 @@ type VolunteerPostingHeaderProps = {
 export function VolunteerPostingHeader({
   title = "봉사 공고",
   onBack,
+  isBookmarked = false,
+  isBookmarkPending = false,
+  onBookmarkToggle,
   sticky = false,
   className,
 }: VolunteerPostingHeaderProps) {
@@ -44,10 +51,18 @@ export function VolunteerPostingHeader({
 
         <button
           type="button"
-          aria-label="관심 봉사로 저장"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-point-red transition hover:bg-point-red/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/30"
+          aria-label={isBookmarked ? "관심 봉사에서 삭제" : "관심 봉사로 저장"}
+          aria-pressed={isBookmarked}
+          disabled={isBookmarkPending}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-point-red/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/30 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={onBookmarkToggle}
         >
-          <Heart aria-hidden="true" className="size-5 fill-current" />
+          <img
+            src={isBookmarked ? FilledHeartIcon : UnfilledHeartIcon}
+            alt=""
+            aria-hidden="true"
+            className="size-5"
+          />
         </button>
       </div>
     </header>

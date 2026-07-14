@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { VolunteerPostingApplyBar } from "@/features/volunteer/components/VolunteerPostingApplyBar";
@@ -6,6 +7,7 @@ import { VolunteerPostingHeader } from "@/features/volunteer/components/Voluntee
 import { VolunteerPostingHero } from "@/features/volunteer/components/VolunteerPostingHero";
 import { VolunteerPostingInfoCard } from "@/features/volunteer/components/VolunteerPostingInfoCard";
 import { VolunteerPostingTeamSection } from "@/features/volunteer/components/VolunteerPostingTeamSection";
+import { useVolunteerPostingBookmarkMutation } from "@/features/volunteer/hooks/useVolunteerPostingBookmarkMutation";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -30,6 +32,23 @@ export function VolunteerPostingDetail({
 }: VolunteerPostingDetailProps) {
   const navigate = useNavigate();
   const postingQuery = useVolunteerPostingDetail(postingId);
+  const bookmarkMutation = useVolunteerPostingBookmarkMutation(postingId);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const handleBookmarkToggle = () => {
+    const nextIsBookmarked = !isBookmarked;
+
+    setIsBookmarked(nextIsBookmarked);
+
+    bookmarkMutation.mutate(nextIsBookmarked, {
+      onSuccess: (bookmark) => {
+        setIsBookmarked(bookmark.bookmarked);
+      },
+      onError: () => {
+        setIsBookmarked(!nextIsBookmarked);
+      },
+    });
+  };
 
   if (postingQuery.isLoading) {
     return (
@@ -88,6 +107,9 @@ export function VolunteerPostingDetail({
       <VolunteerPostingHeader
         title={posting.title}
         onBack={() => navigate(-1)}
+        isBookmarked={isBookmarked}
+        isBookmarkPending={bookmarkMutation.isPending}
+        onBookmarkToggle={handleBookmarkToggle}
         sticky
       />
 
