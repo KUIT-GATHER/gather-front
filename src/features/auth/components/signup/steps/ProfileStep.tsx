@@ -8,6 +8,7 @@ import {
 } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { useCategoriesQuery } from "@/features/category/hooks/useCategoriesQuery";
+import { useRegionGroupsQuery } from "@/features/region/hooks/useRegionGroupsQuery";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
@@ -23,13 +24,18 @@ export function ProfileStep() {
     formState: { errors },
   } = useFormContext<SignupFormValues>();
   const regionsQuery = useRegionsQuery();
+  const regionGroupsQuery = useRegionGroupsQuery();
   const categoriesQuery = useCategoriesQuery();
   const introduction = useWatch({ control, name: "introduction" });
   const isSignupOptionUnavailable =
     regionsQuery.isLoading ||
     regionsQuery.isError ||
+    regionGroupsQuery.isLoading ||
+    regionGroupsQuery.isError ||
     categoriesQuery.isLoading ||
     categoriesQuery.isError;
+  const isRegionLoading = regionsQuery.isLoading || regionGroupsQuery.isLoading;
+  const isRegionError = regionsQuery.isError || regionGroupsQuery.isError;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -91,9 +97,15 @@ export function ProfileStep() {
 
         <RegionSelector
           regions={regionsQuery.data ?? []}
-          isLoading={regionsQuery.isLoading}
-          isError={regionsQuery.isError}
-          onRetry={() => void regionsQuery.refetch()}
+          regionGroups={regionGroupsQuery.data ?? []}
+          isLoading={isRegionLoading}
+          isError={isRegionError}
+          onRetry={() => {
+            void Promise.all([
+              regionsQuery.refetch(),
+              regionGroupsQuery.refetch(),
+            ]);
+          }}
         />
 
         <CategorySelector

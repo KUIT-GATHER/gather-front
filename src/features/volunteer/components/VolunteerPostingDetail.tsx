@@ -145,17 +145,11 @@ export function VolunteerPostingDetail({
             <DetailRow label="장소" value={posting.actPlace} />
             <DetailRow
               label="날짜"
-              value={formatDateRange(
-                posting.actStartDate,
-                posting.actEndDate,
-              )}
+              value={formatDateRange(posting.actStartDate, posting.actEndDate)}
             />
             <DetailRow
               label="시간"
-              value={formatTimeRange(
-                posting.actStartTime,
-                posting.actEndTime,
-              )}
+              value={formatTimeRange(posting.actStartTime, posting.actEndTime)}
             />
             <DetailRow
               label="참여 인원"

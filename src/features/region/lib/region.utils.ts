@@ -1,25 +1,34 @@
-import type { Region } from "../types/region.types";
+import { REGION_LEVEL, type Region } from "../types/region.types";
 
-export function getLevel1Regions(regions: Region[]) {
-  return regions.filter(
-    (region) => region.level === 1 && region.parentId === null,
-  );
-}
-
-export function getChildRegions(
+export function getLevel2RegionsByGroup(
   regions: Region[],
-  parentRegionId: number | null,
+  regionGroupId: number | null,
 ) {
-  if (parentRegionId === null) {
+  if (regionGroupId === null) {
     return [];
   }
 
-  return regions.filter(
-    (region) => region.level === 2 && region.parentId === parentRegionId,
+  const level1RegionIds = new Set(
+    regions
+      .filter(
+        (region) =>
+          region.level === REGION_LEVEL.SIDO &&
+          region.regionGroupId === regionGroupId,
+      )
+      .map((region) => region.id),
   );
+
+  return regions
+    .filter(
+      (region) =>
+        region.level === REGION_LEVEL.SIGUNGU &&
+        region.parentId !== null &&
+        level1RegionIds.has(region.parentId),
+    )
+    .sort((left, right) => left.id - right.id);
 }
 
-export function findLevel1RegionId(
+export function findRegionGroupIdBySelectedRegion(
   regions: Region[],
   selectedRegionId: number | null,
 ) {
@@ -35,7 +44,18 @@ export function findLevel1RegionId(
     return null;
   }
 
-  return selectedRegion.level === 1
-    ? selectedRegion.id
-    : selectedRegion.parentId;
+  if (
+    selectedRegion.level !== REGION_LEVEL.SIGUNGU ||
+    selectedRegion.parentId === null
+  ) {
+    return null;
+  }
+
+  const level1Region = regions.find(
+    (region) => region.id === selectedRegion.parentId,
+  );
+
+  return level1Region?.level === REGION_LEVEL.SIDO
+    ? level1Region.regionGroupId
+    : null;
 }

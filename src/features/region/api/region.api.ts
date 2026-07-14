@@ -1,6 +1,6 @@
 import { fetchClient } from "@/shared/api/fetchClient";
 
-import type { Region } from "../types/region.types";
+import type { Region, RegionGroup } from "../types/region.types";
 
 const publicOptions = {
   skipAuth: true,
@@ -9,4 +9,8 @@ const publicOptions = {
 
 export function getRegions() {
   return fetchClient<Region[]>("/api/v1/regions", publicOptions);
+}
+
+export function getRegionGroups() {
+  return fetchClient<RegionGroup[]>("/api/v1/regions/groups", publicOptions);
 }
