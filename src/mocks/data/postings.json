@@ -1,0 +1,84 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "title": "한강공원 플로깅 봉사",
+      "status": "RECRUITING",
+      "content": "한강공원 산책로를 걸으며 쓰레기를 줍는 환경 정화 봉사입니다.",
+      "recruitOrg": "서울환경센터",
+      "registerOrg": "서울환경센터",
+      "actStartDate": "2026-07-20",
+      "actEndDate": "2026-07-20",
+      "actStartTime": "10:00",
+      "actEndTime": "13:00",
+      "noticeStartDate": "2026-07-01",
+      "noticeEndDate": "2026-07-18",
+      "actWkdy": "월",
+      "recruitCount": 20,
+      "applicantCount": 8,
+      "isAdult": true,
+      "isTeen": false,
+      "isGroup": true,
+      "actPlace": "여의도 한강공원",
+      "managerName": "김가은",
+      "managerTel": "02-1234-5678",
+      "managerFax": "02-1234-5679",
+      "managerEmail": "green@example.com",
+      "managerAddress": "서울 영등포구 여의동로 330",
+      "regionId": 1,
+      "regionName": "서울",
+      "categoryId": 1,
+      "categoryName": "환경",
+      "locations": [
+        {
+          "locationSeq": 1,
+          "address": "서울 영등포구 여의동로 330",
+          "latitude": 37.5284,
+          "longitude": 126.9326
+        }
+      ],
+      "createdAt": "2026-07-01T09:00:00",
+      "updatedAt": "2026-07-10T09:00:00"
+    },
+    {
+      "id": 2,
+      "title": "유기견 보호소 산책 봉사",
+      "status": "CLOSED",
+      "content": "보호소 유기견의 산책과 견사 정리를 돕는 봉사입니다.",
+      "recruitOrg": "동물보호센터",
+      "registerOrg": "동물보호센터",
+      "actStartDate": "2026-07-24",
+      "actEndDate": "2026-07-24",
+      "actStartTime": "14:00",
+      "actEndTime": "17:00",
+      "noticeStartDate": "2026-07-03",
+      "noticeEndDate": "2026-07-15",
+      "actWkdy": "금",
+      "recruitCount": 12,
+      "applicantCount": 12,
+      "isAdult": true,
+      "isTeen": true,
+      "isGroup": false,
+      "actPlace": "서울 유기동물 보호소",
+      "managerName": "박도윤",
+      "managerTel": "02-2222-3333",
+      "managerFax": "02-2222-3334",
+      "managerEmail": "animal@example.com",
+      "managerAddress": "서울 마포구 월드컵로 240",
+      "regionId": 1,
+      "regionName": "서울",
+      "categoryId": 4,
+      "categoryName": "지역사회",
+      "locations": [
+        {
+          "locationSeq": 1,
+          "address": "서울 마포구 월드컵로 240",
+          "latitude": 37.5663,
+          "longitude": 126.9015
+        }
+      ],
+      "createdAt": "2026-07-03T09:00:00",
+      "updatedAt": "2026-07-11T09:00:00"
+    }
+  ]
+}
