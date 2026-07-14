@@ -88,10 +88,6 @@ export type VolunteerPostingListParams = {
   keyword?: string;
 };
 
-export type VolunteerPostingDetailParams = {
-  postingId: number;
-};
-
 export type VolunteerPostingBookmark = {
   postingId: number;
   bookmarked: boolean;
