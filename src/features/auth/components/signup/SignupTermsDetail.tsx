@@ -11,10 +11,7 @@ type SignupTermsDetailProps = {
   onBack: () => void;
 };
 
-export function SignupTermsDetail({
-  type,
-  onBack,
-}: SignupTermsDetailProps) {
+export function SignupTermsDetail({ type, onBack }: SignupTermsDetailProps) {
   const document = SIGNUP_LEGAL_DOCUMENTS[type];
 
   return (

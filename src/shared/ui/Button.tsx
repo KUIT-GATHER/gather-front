@@ -26,8 +26,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 
   dark: "bg-icon text-text2 hover:brightness-95",
 
-  danger:
-    "border border-point-red bg-point-red text-text2 hover:brightness-95",
+  danger: "border border-point-red bg-point-red text-text2 hover:brightness-95",
 
   dangerOutline:
     "border border-point-red bg-point-red/8 text-point-red hover:bg-point-red/12",
@@ -39,10 +38,7 @@ const sizeClasses: Record<ButtonSize, string> = {
     "text-lg font-semibold leading-[140%]",
   ),
 
-  medium: cn(
-    "h-11 rounded-xl px-5 py-2",
-    "text-lg font-medium leading-normal",
-  ),
+  medium: cn("h-11 rounded-xl px-5 py-2", "text-lg font-medium leading-normal"),
 
   pill: cn(
     "h-12 rounded-full px-5 py-3",
@@ -72,9 +68,7 @@ export default function Button({
 }: ButtonProps) {
   const resolvedSize =
     size ??
-    (variant === "danger" || variant === "dangerOutline"
-      ? "medium"
-      : "large");
+    (variant === "danger" || variant === "dangerOutline" ? "medium" : "large");
 
   return (
     <button

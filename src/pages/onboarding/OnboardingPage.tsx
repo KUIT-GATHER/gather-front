@@ -39,10 +39,7 @@ export function OnboardingPage() {
       {step === 4 && <OnboardingStep4 onNext={() => setStep(5)} />}
 
       {step === 5 && (
-        <OnboardingStep5
-          onNext={completeOnboarding}
-          onSignup={startSignup}
-        />
+        <OnboardingStep5 onNext={completeOnboarding} onSignup={startSignup} />
       )}
     </OnboardingLayout>
   );

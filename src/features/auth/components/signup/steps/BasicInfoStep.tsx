@@ -46,7 +46,8 @@ export function BasicInfoStep({
   const isPhoneVerified =
     phoneNumber.length > 0 && phoneNumber === verifiedPhoneNumber;
 
-  const handleCheckPhone = () => { // 전화번호 중복 확인 버튼 클릭 시 실행되는 함수
+  const handleCheckPhone = () => {
+    // 전화번호 중복 확인 버튼 클릭 시 실행되는 함수
     clearErrors("phoneNumber");
 
     if (!isPhoneNumberValid) {

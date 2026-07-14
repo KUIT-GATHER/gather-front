@@ -19,7 +19,6 @@ import FormField from "@/shared/ui/FormField";
 import PlusIcon from "@/assets/icons/Plus.svg";
 import PencilIcon from "@/assets/icons/Pen.svg";
 
-
 export function ComponentTestPage() {
   const [activeDialog, setActiveDialog] = useState<
     "primary" | "dark" | "danger" | "pending" | "noDescription" | "long" | null
@@ -78,7 +77,6 @@ export function ComponentTestPage() {
   return (
     <PageContainer size="narrow" className="min-h-screen bg-white px-5.5 py-12">
       <div className="flex flex-col gap-14">
-
         {/* Button */}
         <section className="flex flex-col gap-5">
           <h2 className="text-xl font-bold text-[#0A0A0A]">Button</h2>
@@ -88,17 +86,63 @@ export function ComponentTestPage() {
             <Button variant="danger">팀 해산하기</Button>
             <Button>수정 완료</Button>
             <Button variant="dark">설정하기</Button>
-            <Button size="pill" leftIcon={<img src={PencilIcon} alt="" className="h-6 w-6" />}>글 작성</Button>
-            <Button variant="dark" size="pill" leftIcon={<img src={PencilIcon} alt="" className="h-6 w-6" />}>글 작성</Button>
-            <Button size="pill" leftIcon={<img src={PlusIcon} alt="" className="h-6 w-6" />}>모임 만들기</Button>
-            <Button variant="dark" size="pill" leftIcon={<img src={PlusIcon} alt="" className="h-6 w-6" />}>모임 만들기</Button>
+            <Button
+              size="pill"
+              leftIcon={<img src={PencilIcon} alt="" className="h-6 w-6" />}
+            >
+              글 작성
+            </Button>
+            <Button
+              variant="dark"
+              size="pill"
+              leftIcon={<img src={PencilIcon} alt="" className="h-6 w-6" />}
+            >
+              글 작성
+            </Button>
+            <Button
+              size="pill"
+              leftIcon={<img src={PlusIcon} alt="" className="h-6 w-6" />}
+            >
+              모임 만들기
+            </Button>
+            <Button
+              variant="dark"
+              size="pill"
+              leftIcon={<img src={PlusIcon} alt="" className="h-6 w-6" />}
+            >
+              모임 만들기
+            </Button>
           </div>
         </section>
-        <FormField label="제목" required count={title.length} maxLength={20} htmlFor="review-title">
-            <Input id="review-title" placeholder="제목을 입력하세요" value={title} maxLength={20} onChange={(e) => setTitle(e.target.value)} />
+        <FormField
+          label="제목"
+          required
+          count={title.length}
+          maxLength={20}
+          htmlFor="review-title"
+        >
+          <Input
+            id="review-title"
+            placeholder="제목을 입력하세요"
+            value={title}
+            maxLength={20}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </FormField>
-        <FormField label="내용" required count={content.length} maxLength={300} htmlFor="review-content">
-            <Textarea id="review-content" placeholder="내용을 입력하세요" value={content} maxLength={300} onChange={(e) => setContent(e.target.value)} />
+        <FormField
+          label="내용"
+          required
+          count={content.length}
+          maxLength={300}
+          htmlFor="review-content"
+        >
+          <Textarea
+            id="review-content"
+            placeholder="내용을 입력하세요"
+            value={content}
+            maxLength={300}
+            onChange={(e) => setContent(e.target.value)}
+          />
         </FormField>
 
         {/* IconButton */}
@@ -107,16 +151,8 @@ export function ComponentTestPage() {
 
           <div className="flex items-center gap-3">
             <IconButton label="검색" icon={<Search />} />
-            <IconButton
-              label="알림"
-              icon={<Bell />}
-              variant="surface"
-            />
-            <IconButton
-              disabled
-              label="설정"
-              icon={<Settings />}
-            />
+            <IconButton label="알림" icon={<Bell />} variant="surface" />
+            <IconButton disabled label="설정" icon={<Settings />} />
           </div>
         </section>
 
@@ -126,22 +162,14 @@ export function ComponentTestPage() {
 
           <div className="flex flex-col gap-4">
             <PageHeader title="모임" />
-            <PageHeader
-              title="이메일 로그인"
-              onBack={() => {}}
-            />
+            <PageHeader title="이메일 로그인" onBack={() => {}} />
             <PageHeader
               title="알림"
               rightAction={<IconButton label="검색" icon={<Search />} />}
             />
             <PageHeader
               title="아주 긴 페이지 제목이 들어와도 가운데에서 말줄임 처리됩니다"
-              leftAction={
-                <IconButton
-                  label="이전"
-                  icon={<ChevronLeft />}
-                />
-              }
+              leftAction={<IconButton label="이전" icon={<ChevronLeft />} />}
               rightAction={
                 <IconButton
                   label="설정"
@@ -159,7 +187,9 @@ export function ComponentTestPage() {
               />
               <div className="flex flex-col gap-3 p-4 text-body-14 text-text-gray-300">
                 <p>스크롤 영역 안에서 상단에 고정되는 예제입니다.</p>
-                <p>PageContainer의 폭 책임을 가져가지 않고 헤더만 렌더링합니다.</p>
+                <p>
+                  PageContainer의 폭 책임을 가져가지 않고 헤더만 렌더링합니다.
+                </p>
                 <p>safe-area top padding은 헤더 내부에서 처리됩니다.</p>
               </div>
             </div>
@@ -332,24 +362,16 @@ export function ComponentTestPage() {
 
         {/* ConfirmDialog */}
         <section className="flex flex-col gap-5 pb-20">
-          <h2 className="text-xl font-bold text-[#0A0A0A]">
-            ConfirmDialog
-          </h2>
+          <h2 className="text-xl font-bold text-[#0A0A0A]">ConfirmDialog</h2>
 
           <div className="flex flex-col gap-3">
             <Button onClick={() => setActiveDialog("primary")}>
               primary ConfirmDialog
             </Button>
-            <Button
-              variant="dark"
-              onClick={() => setActiveDialog("dark")}
-            >
+            <Button variant="dark" onClick={() => setActiveDialog("dark")}>
               dark ConfirmDialog
             </Button>
-            <Button
-              variant="danger"
-              onClick={() => setActiveDialog("danger")}
-            >
+            <Button variant="danger" onClick={() => setActiveDialog("danger")}>
               danger ConfirmDialog
             </Button>
             <Button onClick={() => setActiveDialog("pending")}>
@@ -425,7 +447,8 @@ export function ComponentTestPage() {
         onCancel={closeDialog}
         onConfirm={closeDialog}
       >
-        삭제가 완료되면 이 화면에서 다시 확인할 수 없으며, 참여자에게 표시되는 일부 정보도 함께 사라질 수 있습니다.
+        삭제가 완료되면 이 화면에서 다시 확인할 수 없으며, 참여자에게 표시되는
+        일부 정보도 함께 사라질 수 있습니다.
       </ConfirmDialog>
     </PageContainer>
   );

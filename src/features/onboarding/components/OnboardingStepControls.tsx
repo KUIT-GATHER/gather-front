@@ -35,9 +35,7 @@ export function OnboardingStepControls({
               key={stepNumber}
               className={cn(
                 "h-2 rounded-full transition-all duration-300",
-                isCurrent
-                  ? "w-6 bg-point-green"
-                  : "w-2 bg-[#DCECDF]",
+                isCurrent ? "w-6 bg-point-green" : "w-2 bg-[#DCECDF]",
               )}
             />
           );

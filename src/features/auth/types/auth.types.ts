@@ -56,17 +56,3 @@ export type TokenResponse = {
   accessToken: string;
   tokenType: "Bearer";
 };
-
-export type SignupRegion = {
-  id: number;
-  name: string;
-  level: number;
-  code: string;
-  parentId: number | null;
-};
-
-export type SignupCategory = {
-  id: number;
-  code: string;
-  name: string;
-};

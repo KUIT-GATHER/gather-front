@@ -1,12 +1,15 @@
-import { Camera, UserRound } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
 
-import { useSignupOptionsQuery } from "@/features/auth/hooks/useSignupOptionsQuery";
+import CameraIcon from "@/assets/icons/Camera.svg";
+import ProfileIcon from "@/assets/icons/Profile.svg";
 import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import { useCategoriesQuery } from "@/features/category/hooks/useCategoriesQuery";
+import { useRegionGroupsQuery } from "@/features/region/hooks/useRegionGroupsQuery";
+import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 
@@ -20,26 +23,30 @@ export function ProfileStep() {
     register,
     formState: { errors },
   } = useFormContext<SignupFormValues>();
-  const { regionsQuery, categoriesQuery } = useSignupOptionsQuery();
+  const regionsQuery = useRegionsQuery();
+  const regionGroupsQuery = useRegionGroupsQuery();
+  const categoriesQuery = useCategoriesQuery();
   const introduction = useWatch({ control, name: "introduction" });
   const isSignupOptionUnavailable =
     regionsQuery.isLoading ||
     regionsQuery.isError ||
+    regionGroupsQuery.isLoading ||
+    regionGroupsQuery.isError ||
     categoriesQuery.isLoading ||
     categoriesQuery.isError;
+  const isRegionLoading = regionsQuery.isLoading || regionGroupsQuery.isLoading;
+  const isRegionError = regionsQuery.isError || regionGroupsQuery.isError;
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex justify-center">
-        <div className="relative">
-          <div className="flex size-29 items-center justify-center rounded-full border border-stroke bg-white text-text-gray-100">
-            <UserRound className="size-18" strokeWidth={1.2} />
-          </div>
+        <div className="relative size-29">
+          <img src={ProfileIcon} alt="" className="size-full" />
           <span
             aria-hidden="true"
             className="absolute right-0 bottom-1 flex size-8 items-center justify-center rounded-full bg-white text-text-gray-300 shadow"
           >
-            <Camera className="size-5" />
+            <img src={CameraIcon} alt="" className="size-6" />
           </span>
         </div>
       </div>
@@ -90,9 +97,15 @@ export function ProfileStep() {
 
         <RegionSelector
           regions={regionsQuery.data ?? []}
-          isLoading={regionsQuery.isLoading}
-          isError={regionsQuery.isError}
-          onRetry={() => void regionsQuery.refetch()}
+          regionGroups={regionGroupsQuery.data ?? []}
+          isLoading={isRegionLoading}
+          isError={isRegionError}
+          onRetry={() => {
+            void Promise.all([
+              regionsQuery.refetch(),
+              regionGroupsQuery.refetch(),
+            ]);
+          }}
         />
 
         <CategorySelector

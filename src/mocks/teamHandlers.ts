@@ -84,11 +84,9 @@ export const teamHandlers = [
     });
   }),
 
-  http.get("*/api/v1/volunteers/:volunteerId/teams", ({ params }) => {
-    const volunteerId = Number(params.volunteerId);
-    const items = teams.data.filter(
-      (team) => team.volunteer_id === volunteerId,
-    );
+  http.get("*/api/v1/postings/:postingId/teams", ({ params }) => {
+    const postingId = Number(params.postingId);
+    const items = teams.data.filter((team) => team.posting_id === postingId);
 
     return HttpResponse.json({
       success: true,

@@ -1,32 +1,294 @@
 {
   "success": true,
   "data": [
-    { "id": 101, "name": "서울", "level": 1, "code": "11", "parentId": null },
-    { "id": 102, "name": "경기", "level": 1, "code": "41", "parentId": null },
-    { "id": 103, "name": "인천", "level": 1, "code": "28", "parentId": null },
-    { "id": 104, "name": "강원", "level": 1, "code": "51", "parentId": null },
-    { "id": 105, "name": "경상", "level": 1, "code": "GYEONGSANG", "parentId": null },
-    { "id": 106, "name": "전라", "level": 1, "code": "JEOLLA", "parentId": null },
-    { "id": 107, "name": "충청", "level": 1, "code": "CHUNGCHEONG", "parentId": null },
-    { "id": 108, "name": "제주", "level": 1, "code": "50", "parentId": null },
-    { "id": 201, "name": "강남구", "level": 2, "code": "11-001", "parentId": 101 },
-    { "id": 202, "name": "마포구", "level": 2, "code": "11-002", "parentId": 101 },
-    { "id": 203, "name": "송파구", "level": 2, "code": "11-003", "parentId": 101 },
-    { "id": 211, "name": "수원시", "level": 2, "code": "41-001", "parentId": 102 },
-    { "id": 212, "name": "성남시", "level": 2, "code": "41-002", "parentId": 102 },
-    { "id": 213, "name": "고양시", "level": 2, "code": "41-003", "parentId": 102 },
-    { "id": 221, "name": "미추홀구", "level": 2, "code": "28-001", "parentId": 103 },
-    { "id": 222, "name": "연수구", "level": 2, "code": "28-002", "parentId": 103 },
-    { "id": 231, "name": "춘천시", "level": 2, "code": "51-001", "parentId": 104 },
-    { "id": 232, "name": "원주시", "level": 2, "code": "51-002", "parentId": 104 },
-    { "id": 241, "name": "창원시", "level": 2, "code": "GS-001", "parentId": 105 },
-    { "id": 242, "name": "포항시", "level": 2, "code": "GS-002", "parentId": 105 },
-    { "id": 251, "name": "전주시", "level": 2, "code": "JL-001", "parentId": 106 },
-    { "id": 252, "name": "목포시", "level": 2, "code": "JL-002", "parentId": 106 },
-    { "id": 261, "name": "청주시", "level": 2, "code": "CC-001", "parentId": 107 },
-    { "id": 262, "name": "천안시", "level": 2, "code": "CC-002", "parentId": 107 },
-    { "id": 271, "name": "제주시", "level": 2, "code": "50-001", "parentId": 108 },
-    { "id": 272, "name": "서귀포시", "level": 2, "code": "50-002", "parentId": 108 }
+    {
+      "id": 1,
+      "name": "세종특별자치시",
+      "level": 1,
+      "code": "5690000",
+      "parentId": null,
+      "regionGroupId": 9
+    },
+    {
+      "id": 2,
+      "name": "서울특별시",
+      "level": 1,
+      "code": "6110000",
+      "parentId": null,
+      "regionGroupId": 1
+    },
+    {
+      "id": 3,
+      "name": "부산광역시",
+      "level": 1,
+      "code": "6260000",
+      "parentId": null,
+      "regionGroupId": 2
+    },
+    {
+      "id": 4,
+      "name": "대구광역시",
+      "level": 1,
+      "code": "6270000",
+      "parentId": null,
+      "regionGroupId": 7
+    },
+    {
+      "id": 5,
+      "name": "인천광역시",
+      "level": 1,
+      "code": "6280000",
+      "parentId": null,
+      "regionGroupId": 3
+    },
+    {
+      "id": 6,
+      "name": "광주광역시",
+      "level": 1,
+      "code": "6290000",
+      "parentId": null,
+      "regionGroupId": 8
+    },
+    {
+      "id": 7,
+      "name": "대전광역시",
+      "level": 1,
+      "code": "6300000",
+      "parentId": null,
+      "regionGroupId": 9
+    },
+    {
+      "id": 8,
+      "name": "울산광역시",
+      "level": 1,
+      "code": "6310000",
+      "parentId": null,
+      "regionGroupId": 7
+    },
+    {
+      "id": 9,
+      "name": "경기도",
+      "level": 1,
+      "code": "6410000",
+      "parentId": null,
+      "regionGroupId": 4
+    },
+    {
+      "id": 10,
+      "name": "강원도",
+      "level": 1,
+      "code": "6420000",
+      "parentId": null,
+      "regionGroupId": 5
+    },
+    {
+      "id": 11,
+      "name": "충청북도",
+      "level": 1,
+      "code": "6430000",
+      "parentId": null,
+      "regionGroupId": 9
+    },
+    {
+      "id": 12,
+      "name": "충청남도",
+      "level": 1,
+      "code": "6440000",
+      "parentId": null,
+      "regionGroupId": 9
+    },
+    {
+      "id": 13,
+      "name": "전라북도",
+      "level": 1,
+      "code": "6450000",
+      "parentId": null,
+      "regionGroupId": 8
+    },
+    {
+      "id": 14,
+      "name": "전라남도",
+      "level": 1,
+      "code": "6460000",
+      "parentId": null,
+      "regionGroupId": 8
+    },
+    {
+      "id": 15,
+      "name": "경상북도",
+      "level": 1,
+      "code": "6470000",
+      "parentId": null,
+      "regionGroupId": 7
+    },
+    {
+      "id": 16,
+      "name": "경상남도",
+      "level": 1,
+      "code": "6480000",
+      "parentId": null,
+      "regionGroupId": 7
+    },
+    {
+      "id": 17,
+      "name": "제주특별자치도",
+      "level": 1,
+      "code": "6500000",
+      "parentId": null,
+      "regionGroupId": 6
+    },
+    {
+      "id": 18,
+      "name": "세종특별자치시",
+      "level": 2,
+      "code": "5690001",
+      "parentId": 1,
+      "regionGroupId": null
+    },
+    {
+      "id": 32,
+      "name": "마포구",
+      "level": 2,
+      "code": "3130000",
+      "parentId": 2,
+      "regionGroupId": null
+    },
+    {
+      "id": 41,
+      "name": "강남구",
+      "level": 2,
+      "code": "3220000",
+      "parentId": 2,
+      "regionGroupId": null
+    },
+    {
+      "id": 52,
+      "name": "해운대구",
+      "level": 2,
+      "code": "3330000",
+      "parentId": 3,
+      "regionGroupId": null
+    },
+    {
+      "id": 65,
+      "name": "수성구",
+      "level": 2,
+      "code": "3460000",
+      "parentId": 4,
+      "regionGroupId": null
+    },
+    {
+      "id": 71,
+      "name": "연수구",
+      "level": 2,
+      "code": "3520000",
+      "parentId": 5,
+      "regionGroupId": null
+    },
+    {
+      "id": 81,
+      "name": "광산구",
+      "level": 2,
+      "code": "3630000",
+      "parentId": 6,
+      "regionGroupId": null
+    },
+    {
+      "id": 85,
+      "name": "유성구",
+      "level": 2,
+      "code": "3670000",
+      "parentId": 7,
+      "regionGroupId": null
+    },
+    {
+      "id": 91,
+      "name": "울주군",
+      "level": 2,
+      "code": "3730000",
+      "parentId": 8,
+      "regionGroupId": null
+    },
+    {
+      "id": 92,
+      "name": "수원시",
+      "level": 2,
+      "code": "3740000",
+      "parentId": 9,
+      "regionGroupId": null
+    },
+    {
+      "id": 123,
+      "name": "춘천시",
+      "level": 2,
+      "code": "4180000",
+      "parentId": 10,
+      "regionGroupId": null
+    },
+    {
+      "id": 141,
+      "name": "청주시",
+      "level": 2,
+      "code": "4310000",
+      "parentId": 11,
+      "regionGroupId": null
+    },
+    {
+      "id": 152,
+      "name": "천안시",
+      "level": 2,
+      "code": "4410000",
+      "parentId": 12,
+      "regionGroupId": null
+    },
+    {
+      "id": 167,
+      "name": "전주시",
+      "level": 2,
+      "code": "4510000",
+      "parentId": 13,
+      "regionGroupId": null
+    },
+    {
+      "id": 181,
+      "name": "목포시",
+      "level": 2,
+      "code": "4610000",
+      "parentId": 14,
+      "regionGroupId": null
+    },
+    {
+      "id": 203,
+      "name": "포항시",
+      "level": 2,
+      "code": "4710000",
+      "parentId": 15,
+      "regionGroupId": null
+    },
+    {
+      "id": 226,
+      "name": "창원시",
+      "level": 2,
+      "code": "4810000",
+      "parentId": 16,
+      "regionGroupId": null
+    },
+    {
+      "id": 244,
+      "name": "제주시",
+      "level": 2,
+      "code": "5010000",
+      "parentId": 17,
+      "regionGroupId": null
+    },
+    {
+      "id": 500,
+      "name": "역삼동",
+      "level": 4,
+      "code": "3220001",
+      "parentId": 41,
+      "regionGroupId": null
+    }
   ],
   "error": null
 }
