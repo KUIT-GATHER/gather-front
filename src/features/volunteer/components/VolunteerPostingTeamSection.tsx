@@ -23,9 +23,7 @@ function TeamCard({
   onNavigate: () => void;
 }) {
   return (
-    <div
-      className="flex w-full items-center gap-3 rounded-lg border border-stroke bg-white px-4 py-3 text-left transition hover:bg-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-    >
+    <div className="flex w-full items-center gap-3 rounded-lg border border-stroke bg-white px-4 py-3 text-left transition hover:bg-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40">
       <span className="flex size-13 shrink-0 items-center justify-center rounded-lg bg-button/5 text-body-14-semibold text-button">
         {team.categoryName}
       </span>
@@ -88,8 +86,8 @@ export function VolunteerPostingTeamSection({
         }}
         onClick={() => navigate(`/volunteers/${postingId}/teams/new`)}
       >
-        <img src={TeamPlusIcon} alt="" className="size-3.5" />
-        이 봉사로 팀 만들기
+        <img src={TeamPlusIcon} alt="" className="size-3.5" />이 봉사로 팀
+        만들기
       </button>
     </section>
   );
