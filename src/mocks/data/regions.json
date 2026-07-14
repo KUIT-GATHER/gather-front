@@ -5,28 +5,154 @@
     { "id": 102, "name": "경기", "level": 1, "code": "41", "parentId": null },
     { "id": 103, "name": "인천", "level": 1, "code": "28", "parentId": null },
     { "id": 104, "name": "강원", "level": 1, "code": "51", "parentId": null },
-    { "id": 105, "name": "경상", "level": 1, "code": "GYEONGSANG", "parentId": null },
-    { "id": 106, "name": "전라", "level": 1, "code": "JEOLLA", "parentId": null },
-    { "id": 107, "name": "충청", "level": 1, "code": "CHUNGCHEONG", "parentId": null },
+    {
+      "id": 105,
+      "name": "경상",
+      "level": 1,
+      "code": "GYEONGSANG",
+      "parentId": null
+    },
+    {
+      "id": 106,
+      "name": "전라",
+      "level": 1,
+      "code": "JEOLLA",
+      "parentId": null
+    },
+    {
+      "id": 107,
+      "name": "충청",
+      "level": 1,
+      "code": "CHUNGCHEONG",
+      "parentId": null
+    },
     { "id": 108, "name": "제주", "level": 1, "code": "50", "parentId": null },
-    { "id": 201, "name": "강남구", "level": 2, "code": "11-001", "parentId": 101 },
-    { "id": 202, "name": "마포구", "level": 2, "code": "11-002", "parentId": 101 },
-    { "id": 203, "name": "송파구", "level": 2, "code": "11-003", "parentId": 101 },
-    { "id": 211, "name": "수원시", "level": 2, "code": "41-001", "parentId": 102 },
-    { "id": 212, "name": "성남시", "level": 2, "code": "41-002", "parentId": 102 },
-    { "id": 213, "name": "고양시", "level": 2, "code": "41-003", "parentId": 102 },
-    { "id": 221, "name": "미추홀구", "level": 2, "code": "28-001", "parentId": 103 },
-    { "id": 222, "name": "연수구", "level": 2, "code": "28-002", "parentId": 103 },
-    { "id": 231, "name": "춘천시", "level": 2, "code": "51-001", "parentId": 104 },
-    { "id": 232, "name": "원주시", "level": 2, "code": "51-002", "parentId": 104 },
-    { "id": 241, "name": "창원시", "level": 2, "code": "GS-001", "parentId": 105 },
-    { "id": 242, "name": "포항시", "level": 2, "code": "GS-002", "parentId": 105 },
-    { "id": 251, "name": "전주시", "level": 2, "code": "JL-001", "parentId": 106 },
-    { "id": 252, "name": "목포시", "level": 2, "code": "JL-002", "parentId": 106 },
-    { "id": 261, "name": "청주시", "level": 2, "code": "CC-001", "parentId": 107 },
-    { "id": 262, "name": "천안시", "level": 2, "code": "CC-002", "parentId": 107 },
-    { "id": 271, "name": "제주시", "level": 2, "code": "50-001", "parentId": 108 },
-    { "id": 272, "name": "서귀포시", "level": 2, "code": "50-002", "parentId": 108 }
+    {
+      "id": 201,
+      "name": "강남구",
+      "level": 2,
+      "code": "11-001",
+      "parentId": 101
+    },
+    {
+      "id": 202,
+      "name": "마포구",
+      "level": 2,
+      "code": "11-002",
+      "parentId": 101
+    },
+    {
+      "id": 203,
+      "name": "송파구",
+      "level": 2,
+      "code": "11-003",
+      "parentId": 101
+    },
+    {
+      "id": 211,
+      "name": "수원시",
+      "level": 2,
+      "code": "41-001",
+      "parentId": 102
+    },
+    {
+      "id": 212,
+      "name": "성남시",
+      "level": 2,
+      "code": "41-002",
+      "parentId": 102
+    },
+    {
+      "id": 213,
+      "name": "고양시",
+      "level": 2,
+      "code": "41-003",
+      "parentId": 102
+    },
+    {
+      "id": 221,
+      "name": "미추홀구",
+      "level": 2,
+      "code": "28-001",
+      "parentId": 103
+    },
+    {
+      "id": 222,
+      "name": "연수구",
+      "level": 2,
+      "code": "28-002",
+      "parentId": 103
+    },
+    {
+      "id": 231,
+      "name": "춘천시",
+      "level": 2,
+      "code": "51-001",
+      "parentId": 104
+    },
+    {
+      "id": 232,
+      "name": "원주시",
+      "level": 2,
+      "code": "51-002",
+      "parentId": 104
+    },
+    {
+      "id": 241,
+      "name": "창원시",
+      "level": 2,
+      "code": "GS-001",
+      "parentId": 105
+    },
+    {
+      "id": 242,
+      "name": "포항시",
+      "level": 2,
+      "code": "GS-002",
+      "parentId": 105
+    },
+    {
+      "id": 251,
+      "name": "전주시",
+      "level": 2,
+      "code": "JL-001",
+      "parentId": 106
+    },
+    {
+      "id": 252,
+      "name": "목포시",
+      "level": 2,
+      "code": "JL-002",
+      "parentId": 106
+    },
+    {
+      "id": 261,
+      "name": "청주시",
+      "level": 2,
+      "code": "CC-001",
+      "parentId": 107
+    },
+    {
+      "id": 262,
+      "name": "천안시",
+      "level": 2,
+      "code": "CC-002",
+      "parentId": 107
+    },
+    {
+      "id": 271,
+      "name": "제주시",
+      "level": 2,
+      "code": "50-001",
+      "parentId": 108
+    },
+    {
+      "id": 272,
+      "name": "서귀포시",
+      "level": 2,
+      "code": "50-002",
+      "parentId": 108
+    }
   ],
   "error": null
 }

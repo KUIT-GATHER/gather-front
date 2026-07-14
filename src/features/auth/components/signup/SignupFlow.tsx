@@ -3,12 +3,12 @@ import { FormProvider } from "react-hook-form";
 import { useSignupFlow } from "@/features/auth/hooks/useSignupFlow";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
-import { AccountInfoStep } from "./AccountInfoStep";
-import { BasicInfoStep } from "./BasicInfoStep";
-import { ProfileStep } from "./ProfileStep";
 import { SignupShell } from "./SignupShell";
 import { SignupTermsDetail } from "./SignupTermsDetail";
-import { TermsStep } from "./TermsStep";
+import { AccountInfoStep } from "./steps/AccountInfoStep";
+import { BasicInfoStep } from "./steps/BasicInfoStep";
+import { ProfileStep } from "./steps/ProfileStep";
+import { TermsStep } from "./steps/TermsStep";
 
 export function SignupFlow() {
   const {
@@ -26,10 +26,7 @@ export function SignupFlow() {
     setVerifiedEmail,
     clearSubmitError,
     handleBack,
-    goNextFromBasic,
-    goNextFromAccount,
-    goNextFromProfile,
-    submitSignup,
+    handleFormSubmit,
     confirmExit,
   } = useSignupFlow();
 
@@ -39,37 +36,34 @@ export function SignupFlow() {
 
   return (
     <FormProvider {...methods}>
-      <SignupShell step={step} onBack={handleBack}>
-        {step === "basic" ? (
-          <BasicInfoStep
-            verifiedPhoneNumber={verifiedPhoneNumber}
-            onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
-            onNext={goNextFromBasic}
-          />
-        ) : null}
+      <form noValidate onSubmit={handleFormSubmit}>
+        <SignupShell step={step} onBack={handleBack}>
+          {step === "basic" ? (
+            <BasicInfoStep
+              verifiedPhoneNumber={verifiedPhoneNumber}
+              onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
+            />
+          ) : null}
 
-        {step === "account" ? (
-          <AccountInfoStep
-            verifiedEmail={verifiedEmail}
-            onVerifiedEmailChange={setVerifiedEmail}
-            onNext={goNextFromAccount}
-          />
-        ) : null}
+          {step === "account" ? (
+            <AccountInfoStep
+              verifiedEmail={verifiedEmail}
+              onVerifiedEmailChange={setVerifiedEmail}
+            />
+          ) : null}
 
-        {step === "profile" ? (
-          <ProfileStep onNext={goNextFromProfile} />
-        ) : null}
+          {step === "profile" ? <ProfileStep /> : null}
 
-        {step === "terms" ? (
-          <TermsStep
-            isPending={isSignupPending}
-            submitError={submitError}
-            onSubmit={submitSignup}
-            onClearSubmitError={clearSubmitError}
-            onOpenDetail={setDetailType}
-          />
-        ) : null}
-      </SignupShell>
+          {step === "terms" ? (
+            <TermsStep
+              isPending={isSignupPending}
+              submitError={submitError}
+              onClearSubmitError={clearSubmitError}
+              onOpenDetail={setDetailType}
+            />
+          ) : null}
+        </SignupShell>
+      </form>
 
       <ConfirmDialog
         open={showExitDialog}

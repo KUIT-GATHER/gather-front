@@ -43,8 +43,7 @@ export default function FormField({
           labelClassName,
         )}
       >
-        {label}
-        {required && <span className="text-point-red">*</span>}
+        {label} {required && <span className="text-point-red">*</span>}
       </label>
 
       {children}

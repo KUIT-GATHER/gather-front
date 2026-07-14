@@ -12,43 +12,45 @@ import {
   normalizeBirthDate,
   normalizePhoneNumber,
 } from "@/features/auth/lib/signupFormatters";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import {
+  signupPhoneNumberSchema,
+  type SignupFormValues,
+} from "@/features/auth/schemas/signup.schema";
 import { cn } from "@/shared/lib/cn";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 
-import { SignupStepButton } from "./SignupFormParts";
+import { SignupStepButton } from "../SignupFormParts";
 
 type BasicInfoStepProps = {
   verifiedPhoneNumber: string | null;
   onVerifiedPhoneNumberChange: (value: string | null) => void;
-  onNext: () => void;
 };
 
 export function BasicInfoStep({
   verifiedPhoneNumber,
   onVerifiedPhoneNumberChange,
-  onNext,
 }: BasicInfoStepProps) {
   const {
     control,
     register,
-    setValue,
     setError,
     clearErrors,
     formState: { errors },
   } = useFormContext<SignupFormValues>();
   const phoneMutation = usePhoneAvailabilityMutation();
-  const gender = useWatch({ control, name: "gender" });
   const phoneNumber = useWatch({ control, name: "phoneNumber" });
+  const isPhoneNumberValid =
+    signupPhoneNumberSchema.safeParse(phoneNumber).success;
   const isPhoneVerified =
     phoneNumber.length > 0 && phoneNumber === verifiedPhoneNumber;
 
   const handleCheckPhone = () => {
+    // 전화번호 중복 확인 버튼 클릭 시 실행되는 함수
     clearErrors("phoneNumber");
 
-    if (!/^\d{10,11}$/.test(phoneNumber)) {
+    if (!isPhoneNumberValid) {
       setError("phoneNumber", {
         message: "전화번호는 10~11자리 숫자로 입력해 주세요.",
       });
@@ -93,6 +95,7 @@ export function BasicInfoStep({
         >
           <Input
             id="name"
+            maxLength={20}
             placeholder="이름을 입력해 주세요"
             invalid={Boolean(errors.name)}
             aria-describedby={getSignupFieldDescribedBy(
@@ -152,7 +155,7 @@ export function BasicInfoStep({
                     ["MALE", "남"],
                     ["FEMALE", "여"],
                   ].map(([value, label]) => {
-                    const checked = gender === value;
+                    const checked = field.value === value;
 
                     return (
                       <button
@@ -196,40 +199,46 @@ export function BasicInfoStep({
           labelClassName="mb-3 text-[15px] font-semibold leading-5"
         >
           <div className="flex gap-3">
-            <Input
-              id="phoneNumber"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="010-0000-0000"
-              value={formatPhoneNumber(phoneNumber)}
-              invalid={Boolean(errors.phoneNumber)}
-              aria-describedby={getSignupFieldDescribedBy(
-                "phoneNumber",
-                Boolean(errors.phoneNumber),
+            <Controller
+              control={control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <Input
+                  id="phoneNumber"
+                  ref={field.ref}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="010-0000-0000"
+                  value={formatPhoneNumber(field.value)}
+                  invalid={Boolean(errors.phoneNumber)}
+                  aria-describedby={getSignupFieldDescribedBy(
+                    "phoneNumber",
+                    Boolean(errors.phoneNumber),
+                  )}
+                  onChange={(event) => {
+                    clearErrors("phoneNumber");
+                    field.onChange(normalizePhoneNumber(event.target.value));
+                  }}
+                />
               )}
-              onChange={(event) => {
-                clearErrors("phoneNumber");
-                setValue(
-                  "phoneNumber",
-                  normalizePhoneNumber(event.target.value),
-                  {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  },
-                );
-              }}
             />
             <Button
               type="button"
               size="medium"
-              variant="dark"
               disabled={
                 phoneMutation.isPending ||
-                !/^\d{10,11}$/.test(phoneNumber) ||
+                !isPhoneNumberValid ||
                 isPhoneVerified
               }
               onClick={handleCheckPhone}
-              className="h-12 shrink-0 rounded-xl bg-[#BFBFBF] px-5 text-[15px] font-medium text-text"
+              className={cn(
+                "h-12 shrink-0 rounded-xl px-5 text-[15px] font-medium",
+                isPhoneNumberValid && !isPhoneVerified
+                  ? "bg-button text-white"
+                  : "bg-[#BFBFBF] text-text",
+              )}
             >
               {phoneMutation.isPending
                 ? "확인 중"
@@ -243,10 +252,7 @@ export function BasicInfoStep({
 
       <div className="mt-auto" />
 
-      <SignupStepButton
-        disabled={!isPhoneVerified || phoneMutation.isPending}
-        onClick={onNext}
-      >
+      <SignupStepButton disabled={!isPhoneVerified || phoneMutation.isPending}>
         다음
       </SignupStepButton>
     </div>

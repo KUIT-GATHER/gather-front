@@ -5,7 +5,10 @@ import PageContainer from "@/shared/ui/PageContainer";
 export function Splash() {
   return (
     <main>
-      <PageContainer size="narrow" className="flex min-h-dvh flex-col items-center overflow-hidden px-0">
+      <PageContainer
+        size="narrow"
+        className="flex min-h-dvh flex-col items-center overflow-hidden px-0"
+      >
         <section className="relative mt-65.25 h-[127.89px] w-full shrink-0">
           <img
             src={SplashLeftIcon}
