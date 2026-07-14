@@ -1,8 +1,8 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import { getSignupCategoryIcon } from "@/features/auth/constants/signupCategoryIcons";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
-import type { SignupCategory } from "@/features/auth/types/auth.types";
+import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
+import type { Category } from "@/features/category/types/category.types";
 import { cn } from "@/shared/lib/cn";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -10,7 +10,7 @@ import LoadingState from "@/shared/ui/LoadingState";
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
 
 type CategorySelectorProps = {
-  categories: SignupCategory[];
+  categories: Category[];
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
@@ -25,7 +25,6 @@ export function CategorySelector({
   const {
     control,
     setValue,
-    clearErrors,
     formState: { errors },
   } = useFormContext<SignupFormValues>();
   const selectedIds = useWatch({ control, name: "interestCategoryIds" });
@@ -62,9 +61,8 @@ export function CategorySelector({
               type="button"
               aria-pressed={selected}
               className={cn(
-                "relative flex min-h-28 flex-col items-center justify-center rounded-xl p-1 transition",
+                "relative flex min-h-28 items-center justify-center rounded-xl p-1 transition",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
-                selected && "bg-[#DCECDF]/70 ring-2 ring-button/60",
               )}
               onClick={() => {
                 const nextIds = selected
@@ -75,16 +73,19 @@ export function CategorySelector({
                   shouldDirty: true,
                   shouldValidate: true,
                 });
-                clearErrors("interestCategoryIds");
               }}
             >
-              <img
-                src={getSignupCategoryIcon(category.code)}
-                alt=""
-                className="h-20 w-20"
-              />
-              <span className="absolute inset-x-2 top-1/2 -translate-y-1/2 text-center text-[13px] font-medium leading-4 text-text">
-                {category.name}
+              <span className="relative block size-[105px]">
+                <CategoryPuzzle
+                  code={category.code}
+                  selected={selected}
+                  className="size-full"
+                />
+                <span className="pointer-events-none absolute inset-0 grid place-items-center px-2">
+                  <span className="max-w-[78px] break-keep text-center text-[13px] font-medium leading-4 text-text">
+                    {category.name}
+                  </span>
+                </span>
               </span>
             </button>
           );

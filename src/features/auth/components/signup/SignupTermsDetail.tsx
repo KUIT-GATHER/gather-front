@@ -1,34 +1,38 @@
-import { SignupShell } from "./SignupShell";
 import {
-  TERMS_DOCUMENTS,
-  type TermsDocumentType,
-} from "@/features/auth/constants/signupFlow.constants";
+  LegalDocumentContent,
+  SIGNUP_LEGAL_DOCUMENTS,
+  type LegalDocumentType,
+} from "@/features/legal";
+import PageContainer from "@/shared/ui/PageContainer";
+import PageHeader from "@/shared/ui/PageHeader";
 
 type SignupTermsDetailProps = {
-  type: TermsDocumentType;
+  type: LegalDocumentType;
   onBack: () => void;
 };
 
-export function SignupTermsDetail({
-  type,
-  onBack,
-}: SignupTermsDetailProps) {
-  const document = TERMS_DOCUMENTS[type];
+export function SignupTermsDetail({ type, onBack }: SignupTermsDetailProps) {
+  const document = SIGNUP_LEGAL_DOCUMENTS[type];
 
   return (
-    <div className="min-h-dvh bg-bg">
-      <SignupShell step="terms" onBack={onBack}>
-        <article className="pb-8">
-          <h2 className="text-xl font-semibold text-text">{document.title}</h2>
-          <div className="mt-4 h-1.25 rounded-full bg-button" />
-          <section className="mt-6 space-y-4 text-base leading-7 text-text">
-            <p>{document.placeholder}</p>
-            <p className="text-sm text-text-gray-100">
-              TODO: 승인된 약관 원문을 이 위치에 연결해 주세요.
-            </p>
-          </section>
-        </article>
-      </SignupShell>
-    </div>
+    <PageContainer
+      size="narrow"
+      className="min-h-dvh bg-bg pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
+    >
+      <PageHeader
+        title={document.headerTitle}
+        titleAlign="left"
+        onBack={onBack}
+        className="bg-bg"
+      />
+      <div className="mt-1 h-1.25 w-full rounded-full bg-button" />
+
+      <article className="pt-12">
+        <h2 className="text-2xl font-semibold leading-8 text-text">
+          {document.title}
+        </h2>
+        <LegalDocumentContent document={document} />
+      </article>
+    </PageContainer>
   );
 }

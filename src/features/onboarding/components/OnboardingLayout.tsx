@@ -8,12 +8,12 @@ type OnboardingLayoutProps = {
   onSkip: () => void;
 };
 
-export function OnboardingLayout({
-  children,
-  onSkip,
-}: OnboardingLayoutProps) {
+export function OnboardingLayout({ children, onSkip }: OnboardingLayoutProps) {
   return (
-    <PageContainer size="narrow" className="relative flex min-h-dvh overflow-hidden bg-text2 px-0">
+    <PageContainer
+      size="narrow"
+      className="relative flex min-h-dvh overflow-hidden bg-text2 px-0"
+    >
       <OnboardingHeader onSkip={onSkip} />
 
       <div className="relative z-10 flex min-h-dvh w-full flex-col px-5 pt-[calc(env(safe-area-inset-top)+40px)] pb-[calc(env(safe-area-inset-bottom)+36px)]">

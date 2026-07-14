@@ -49,6 +49,10 @@ function appendQueryParam(
 }
 
 function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
+  if (params.regionId !== undefined && params.regionGroupId !== undefined) {
+    throw new Error("regionId and regionGroupId cannot be used together.");
+  }
+
   const searchParams = new URLSearchParams();
   const page = params.page ?? 0;
   const size = params.size ?? 20;
@@ -61,6 +65,7 @@ function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
   });
 
   setQueryParam(searchParams, "regionId", params.regionId);
+  setQueryParam(searchParams, "regionGroupId", params.regionGroupId);
   setQueryParam(searchParams, "status", params.status);
   setQueryParam(searchParams, "noticeStartDate", params.noticeStartDate);
   setQueryParam(searchParams, "noticeEndDate", params.noticeEndDate);

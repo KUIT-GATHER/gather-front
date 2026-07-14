@@ -4,9 +4,7 @@ import {
 } from "@/features/onboarding/components/OnboardingStepControls";
 import { OnboardingMessage } from "@/features/onboarding/components/OnboardingMessage";
 
-export function OnboardingStep3({
-  onNext,
-}: OnboardingStepProps) {
+export function OnboardingStep3({ onNext }: OnboardingStepProps) {
   return (
     <>
       <div className="flex-1" />

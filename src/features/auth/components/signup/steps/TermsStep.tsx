@@ -1,23 +1,21 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import type { TermsDocumentType } from "@/features/auth/constants/signupFlow.constants";
+import type { LegalDocumentType } from "@/features/legal";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { cn } from "@/shared/lib/cn";
 
-import { SignupRootError, SignupStepButton } from "./SignupFormParts";
+import { SignupRootError, SignupStepButton } from "../SignupFormParts";
 
 type TermsStepProps = {
   isPending: boolean;
   submitError: string | null;
-  onSubmit: () => void;
   onClearSubmitError: () => void;
-  onOpenDetail: (type: TermsDocumentType) => void;
+  onOpenDetail: (type: LegalDocumentType) => void;
 };
 
 export function TermsStep({
   isPending,
   submitError,
-  onSubmit,
   onClearSubmitError,
   onOpenDetail,
 }: TermsStepProps) {
@@ -43,17 +41,14 @@ export function TermsStep({
     serviceTermsAgreed && privacyPolicyAgreed && marketingAgreed;
 
   const setAgreement = (
-    name:
-      | "serviceTermsAgreed"
-      | "privacyPolicyAgreed"
-      | "marketingAgreed",
+    name: "serviceTermsAgreed" | "privacyPolicyAgreed" | "marketingAgreed",
     checked: boolean,
   ) => {
     setValue(name, checked, {
       shouldDirty: true,
       shouldValidate: true,
     });
-    clearErrors(name);
+
     onClearSubmitError();
   };
 
@@ -93,17 +88,13 @@ export function TermsStep({
         <AgreementRow
           checked={serviceTermsAgreed}
           label="[필수] 서비스 이용약관 동의"
-          onChange={(checked) =>
-            setAgreement("serviceTermsAgreed", checked)
-          }
+          onChange={(checked) => setAgreement("serviceTermsAgreed", checked)}
           onView={() => onOpenDetail("service")}
         />
         <AgreementRow
           checked={privacyPolicyAgreed}
           label="[필수] 개인정보 수집 및 이용 동의"
-          onChange={(checked) =>
-            setAgreement("privacyPolicyAgreed", checked)
-          }
+          onChange={(checked) => setAgreement("privacyPolicyAgreed", checked)}
           onView={() => onOpenDetail("privacy")}
         />
         <AgreementRow
@@ -128,7 +119,6 @@ export function TermsStep({
       <SignupStepButton
         disabled={!serviceTermsAgreed || !privacyPolicyAgreed}
         isPending={isPending}
-        onClick={onSubmit}
       >
         {isPending ? "가입 중" : "완료"}
       </SignupStepButton>

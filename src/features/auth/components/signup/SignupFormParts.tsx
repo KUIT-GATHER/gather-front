@@ -16,19 +16,16 @@ export function SignupStepButton({
   children,
   disabled,
   isPending,
-  onClick,
 }: {
   children: string;
   disabled?: boolean;
   isPending?: boolean;
-  onClick: () => void;
 }) {
   return (
     <Button
       fullWidth
-      type="button"
+      type="submit"
       disabled={disabled || isPending}
-      onClick={onClick}
       className="mx-auto h-12 max-w-[19.6875rem] text-base font-semibold"
       leftIcon={isPending ? <Spinner size="small" /> : undefined}
     >
@@ -37,11 +34,7 @@ export function SignupStepButton({
   );
 }
 
-export function SignupRootError({
-  message,
-}: {
-  message?: string | null;
-}) {
+export function SignupRootError({ message }: { message?: string | null }) {
   if (!message) {
     return null;
   }

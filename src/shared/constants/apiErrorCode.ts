@@ -31,5 +31,4 @@ export const API_ERROR_CODE = {
   REVOKED_TOKEN: "REVOKED_TOKEN",
 } as const;
 
-export type ApiErrorCode =
-  (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
+export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
