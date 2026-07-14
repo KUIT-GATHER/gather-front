@@ -2,7 +2,7 @@
   "data": [
     {
       "id": 1,
-      "volunteer_id": 1,
+      "posting_id": 1,
       "title": "주말 한강공원 플로깅 같이 가요",
       "content": "처음 참여하는 분도 환영해요. 같이 한강공원에서 플로깅해요.",
       "status": "OPEN",
@@ -29,7 +29,7 @@
     },
     {
       "id": 2,
-      "volunteer_id": 2,
+      "posting_id": 2,
       "title": "동물보호소 산책 봉사 같이 가요",
       "content": "유기견 산책 봉사 함께 갈 사람을 찾고 있어요.",
       "status": "OPEN",
