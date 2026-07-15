@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { VolunteerPostingApplyBar } from "@/features/volunteer/components/VolunteerPostingApplyBar";
+import { VolunteerPostingApplicationDialog } from "@/features/volunteer/components/VolunteerPostingApplicationDialog";
 import { VolunteerPostingConditionCard } from "@/features/volunteer/components/VolunteerPostingConditionCard";
 import { VolunteerPostingHeader } from "@/features/volunteer/components/VolunteerPostingHeader";
 import { VolunteerPostingHero } from "@/features/volunteer/components/VolunteerPostingHero";
@@ -9,6 +10,7 @@ import { VolunteerPostingInfoCard } from "@/features/volunteer/components/Volunt
 import { VolunteerPostingTeamSection } from "@/features/volunteer/components/VolunteerPostingTeamSection";
 import { useVolunteerPostingBookmarkMutation } from "@/features/volunteer/hooks/useVolunteerPostingBookmarkMutation";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
+import type { VolunteerPostingApplicationLink } from "@/features/volunteer/types/volunteerApplication.types";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import { cn } from "@/shared/lib/cn";
@@ -17,6 +19,19 @@ import LoadingState from "@/shared/ui/LoadingState";
 type VolunteerPostingDetailProps = {
   postingId: number;
 };
+
+const TEMP_APPLICATION_LINKS: VolunteerPostingApplicationLink[] = [
+  {
+    id: "1365",
+    label: "1365 자원봉사포털 신청",
+    url: "https://www.1365.go.kr/vols/main.do",
+  },
+  {
+    id: "vms",
+    label: "사회복지 자원봉사 인증 관리 시스템 신청",
+    url: "https://www.vms.or.kr/main.do",
+  },
+];
 
 function VolunteerPostingDivider({ className }: { className?: string }) {
   return (
@@ -34,6 +49,14 @@ export function VolunteerPostingDetail({
   const postingQuery = useVolunteerPostingDetail(postingId);
   const bookmarkMutation = useVolunteerPostingBookmarkMutation(postingId);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
+  const [selectedApplicationLink, setSelectedApplicationLink] =
+    useState<VolunteerPostingApplicationLink | null>(null);
+
+  const closeApplicationDialog = () => {
+    setIsApplicationDialogOpen(false);
+    setSelectedApplicationLink(null);
+  };
 
   const handleBookmarkToggle = () => {
     const nextIsBookmarked = !isBookmarked;
@@ -48,6 +71,22 @@ export function VolunteerPostingDetail({
         setIsBookmarked(!nextIsBookmarked);
       },
     });
+  };
+
+  const handleApplicationDialogOpenChange = (nextOpen: boolean) => {
+    setIsApplicationDialogOpen(nextOpen);
+
+    if (!nextOpen) {
+      setSelectedApplicationLink(null);
+    }
+  };
+
+  const handleApply = () => {
+    if (!selectedApplicationLink) {
+      return;
+    }
+
+    window.location.assign(selectedApplicationLink.url);
   };
 
   if (postingQuery.isLoading) {
@@ -122,7 +161,19 @@ export function VolunteerPostingDetail({
         <VolunteerPostingTeamSection postingId={posting.id} className="mt-5" />
       </div>
 
-      <VolunteerPostingApplyBar />
+      <VolunteerPostingApplyBar
+        onApplyClick={() => setIsApplicationDialogOpen(true)}
+      />
+      <VolunteerPostingApplicationDialog
+        open={isApplicationDialogOpen}
+        posting={posting}
+        links={TEMP_APPLICATION_LINKS}
+        selectedLink={selectedApplicationLink}
+        onOpenChange={handleApplicationDialogOpenChange}
+        onSelectLink={setSelectedApplicationLink}
+        onCancel={closeApplicationDialog}
+        onApply={handleApply}
+      />
     </article>
   );
 }
