@@ -4,6 +4,14 @@ import postings from "./data/postings.json";
 import regions from "./data/regions.json";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
+const POSTING_CATEGORIES = [
+  "ENVIRONMENT",
+  "EDUCATION",
+  "CULTURE",
+  "COMMUNITY",
+  "WELFARE",
+  "OVERSEAS",
+] as const;
 const SORTABLE_POSTING_FIELDS = [
   "id",
   "title",
@@ -23,6 +31,29 @@ type PostingSort = {
   field: PostingSortField;
   direction: "asc" | "desc";
 };
+
+const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
+  const id = index + 3;
+
+  return {
+    ...postings.data[0],
+    id,
+    title: `봉사공고 무한스크롤 테스트 ${id}`,
+    status: "RECRUITING",
+    recruitOrg: `테스트 모집기관 ${id}`,
+    actStartDate: `2026-08-${String((index % 20) + 1).padStart(2, "0")}`,
+    actEndDate: `2026-08-${String((index % 20) + 1).padStart(2, "0")}`,
+    noticeStartDate: `2026-07-${String((index % 20) + 1).padStart(2, "0")}`,
+    noticeEndDate: `2026-07-${String((index % 20) + 8).padStart(2, "0")}`,
+    recruitCount: 10 + (index % 5),
+    applicantCount: (index * 3) % 11,
+    category: POSTING_CATEGORIES[index % POSTING_CATEGORIES.length],
+    createdAt: `2026-07-${String((index % 20) + 1).padStart(2, "0")}T09:00:00`,
+    updatedAt: `2026-07-${String((index % 20) + 1).padStart(2, "0")}T10:00:00`,
+  };
+});
+
+const mockPostings = [...postings.data, ...additionalMockPostings];
 
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
@@ -126,7 +157,7 @@ export const postingHandlers = [
     const noticeEndDate = url.searchParams.get("noticeEndDate");
     const sorts = parseSorts(url);
 
-    let items = postings.data;
+    let items = mockPostings;
 
     if (regionId !== undefined && regionGroupId !== undefined) {
       return HttpResponse.json(
@@ -257,7 +288,7 @@ export const postingHandlers = [
 
   http.get("*/api/v1/postings/:postingId", ({ params }) => {
     const postingId = Number(params.postingId);
-    const posting = postings.data.find((item) => item.id === postingId);
+    const posting = mockPostings.find((item) => item.id === postingId);
 
     if (!posting) {
       return HttpResponse.json(

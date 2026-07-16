@@ -99,3 +99,9 @@ type VolunteerPostingBaseParams = {
 
 export type VolunteerPostingListParams = VolunteerPostingBaseParams &
   VolunteerPostingRegionFilter;
+
+export type VolunteerPostingInfiniteParams = Omit<
+  VolunteerPostingBaseParams,
+  "page"
+> &
+  VolunteerPostingRegionFilter;
