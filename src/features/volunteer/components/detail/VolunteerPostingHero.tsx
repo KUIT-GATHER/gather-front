@@ -1,4 +1,5 @@
-import defaultHeroImage from "@/assets/icons/Temp-volunteer-posting.svg";
+import { CategoryBadge } from "@/features/category/components/CategoryBadge";
+import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
 import { cn } from "@/shared/lib/cn";
 
@@ -30,21 +31,23 @@ export function VolunteerPostingHero({ posting }: VolunteerPostingHeroProps) {
     <section>
       <div className="overflow-hidden rounded-lg">
         <img
-          src={defaultHeroImage}
+          src={getVolunteerPostingImage(posting.category)}
           alt=""
           className="aspect-[344/175] w-full object-cover"
         />
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5">
-        <Tag className="bg-[#FFF4D9] text-[#C58A00]">
-          {posting.categoryName}
-        </Tag>
-        <Tag className="bg-point-green/20 text-icon">{posting.regionName}</Tag>
+        <CategoryBadge category={posting.category} />
+        {posting.regionName ? (
+          <Tag className="bg-point-green/20 text-icon">
+            {posting.regionName}
+          </Tag>
+        ) : null}
       </div>
 
       <p className="mt-2 whitespace-pre-line text-[15px] leading-[28px] font-medium text-text">
-        {posting.content}
+        {posting.content ?? "상세 설명이 제공되지 않았어요."}
       </p>
     </section>
   );

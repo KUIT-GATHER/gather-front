@@ -1,51 +1,57 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 
 import filterIcon from "@/assets/icons/Filter.svg";
 import searchIcon from "@/assets/icons/Search.svg";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
-import Select from "@/shared/ui/Select";
+import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
+import { EmptyState } from "@/shared/ui/EmptyState";
+import { ErrorState } from "@/shared/ui/ErrorState";
+import LoadingState from "@/shared/ui/LoadingState";
 
-import {
-  isTeamListSort,
-  teamListSortOptions,
-} from "../constants/teamList.constants";
-import { teamListMock } from "../mocks/teamList.mock";
-import type { TeamListSort } from "../types/teamList.types";
+import type { MeetingListParams, MeetingStatus } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
+
+function toPositiveNumber(value: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const number = Number(value);
+
+  return Number.isInteger(number) && number > 0 ? number : undefined;
+}
+
+function toMeetingStatus(value: string | null): MeetingStatus | undefined {
+  return value === "RECRUITING" || value === "CLOSED" || value === "COMPLETED"
+    ? value
+    : undefined;
+}
+
+function toPostingCategory(value: string | null) {
+  return value &&
+    POSTING_CATEGORIES.includes(value as (typeof POSTING_CATEGORIES)[number])
+    ? (value as (typeof POSTING_CATEGORIES)[number])
+    : undefined;
+}
 
 export function TeamListScreen() {
   const navigate = useNavigate();
-  const [sortType, setSortType] = useState<TeamListSort>("latest");
-
-  const sortedTeams = useMemo(() => {
-    const copiedTeams = [...teamListMock];
-
-    switch (sortType) {
-      case "latest":
-        return copiedTeams.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
-      case "popular":
-        return copiedTeams.sort((a, b) => b.popularity - a.popularity);
-      case "deadline":
-        return copiedTeams.sort((a, b) => {
-          const aDeadline = a.deadlineAt
-            ? new Date(a.deadlineAt).getTime()
-            : Number.POSITIVE_INFINITY;
-          const bDeadline = b.deadlineAt
-            ? new Date(b.deadlineAt).getTime()
-            : Number.POSITIVE_INFINITY;
-
-          return aDeadline - bDeadline;
-        });
-      case "default":
-        return copiedTeams;
-    }
-  }, [sortType]);
+  const [searchParams] = useSearchParams();
+  const queryParams = useMemo<MeetingListParams>(
+    () => ({
+      keyword: searchParams.get("keyword")?.trim() || undefined,
+      regionId: toPositiveNumber(searchParams.get("regionId")),
+      category: toPostingCategory(searchParams.get("category")),
+      status: toMeetingStatus(searchParams.get("status")),
+    }),
+    [searchParams],
+  );
+  const meetingsQuery = useMeetingsQuery(queryParams);
+  const meetings = meetingsQuery.data;
 
   return (
     <PageContainer size="narrow" className="min-h-dvh pb-8">
@@ -74,32 +80,46 @@ export function TeamListScreen() {
 
       <div className="mt-6 flex items-center justify-between pb-3">
         <p className="text-xs text-gray-700">
-          전체 {teamListMock.length}개 활동
+          전체 {meetings?.length ?? 0}개 활동
         </p>
-        <Select
-          ariaLabel="모임 정렬"
-          value={sortType}
-          onChange={(value) => {
-            if (isTeamListSort(value)) {
-              setSortType(value);
-            }
-          }}
-          options={teamListSortOptions}
-        />
       </div>
 
-      <div>
+      {meetingsQuery.isLoading ? (
+        <LoadingState label="모임을 불러오는 중" className="min-h-55" />
+      ) : null}
+
+      {meetingsQuery.isError ? (
+        <ErrorState
+          title="모임을 불러오지 못했어요"
+          description="잠시 후 다시 시도해 주세요."
+          primaryAction={{
+            label: "다시 시도",
+            onClick: () => {
+              void meetingsQuery.refetch();
+            },
+          }}
+        />
+      ) : null}
+
+      {meetings && meetings.length === 0 ? (
+        <EmptyState
+          title="조건에 맞는 모임이 없어요"
+          description="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
+        />
+      ) : null}
+
+      {meetings && meetings.length > 0 ? (
         <ul className="flex flex-col gap-3">
-          {sortedTeams.map((team) => (
-            <li key={team.id}>
+          {meetings.map((team) => (
+            <li key={team.meetingId}>
               <TeamCard
                 team={team}
-                onClick={() => navigate(`/teams/${team.id}`)}
+                onClick={() => navigate(`/teams/${team.meetingId}`)}
               />
             </li>
           ))}
         </ul>
-      </div>
+      ) : null}
     </PageContainer>
   );
 }

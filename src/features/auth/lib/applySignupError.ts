@@ -105,7 +105,7 @@ export function applySignupError({
     case API_ERROR_CODE.INVALID_INTEREST_CATEGORY_COUNT: {
       moveToFieldError(
         "profile",
-        "interestCategoryIds",
+        "interestCategories",
         "관심 카테고리를 1개 이상 선택해 주세요.",
       );
 
@@ -115,7 +115,7 @@ export function applySignupError({
     case API_ERROR_CODE.CATEGORY_NOT_FOUND: {
       moveToFieldError(
         "profile",
-        "interestCategoryIds",
+        "interestCategories",
         "관심 카테고리를 다시 선택해 주세요.",
       );
 

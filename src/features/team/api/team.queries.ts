@@ -1,17 +1,28 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { getPostingTeams } from "@/features/team/api/team.api";
+import { getMeeting, getMeetings } from "@/features/team/api/team.api";
+
+import type { MeetingListParams } from "../types/team.types";
 
 export const teamKeys = {
-  all: ["teams"] as const,
-  postingTeams: (postingId: number) =>
-    [...teamKeys.all, "posting", postingId] as const,
+  all: ["meetings"] as const,
+  lists: () => [...teamKeys.all, "list"] as const,
+  list: (params: MeetingListParams = {}) =>
+    [...teamKeys.lists(), params] as const,
+  details: () => [...teamKeys.all, "detail"] as const,
+  detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
 };
 
 export const teamQueries = {
-  postingTeams: (postingId: number) =>
+  list: (params: MeetingListParams = {}) =>
     queryOptions({
-      queryKey: teamKeys.postingTeams(postingId),
-      queryFn: () => getPostingTeams(postingId),
+      queryKey: teamKeys.list(params),
+      queryFn: () => getMeetings(params),
+    }),
+
+  detail: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.detail(meetingId),
+      queryFn: () => getMeeting(meetingId),
     }),
 };

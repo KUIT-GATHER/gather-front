@@ -7,7 +7,6 @@ import {
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
-import { useCategoriesQuery } from "@/features/category/hooks/useCategoriesQuery";
 import { useRegionGroupsQuery } from "@/features/region/hooks/useRegionGroupsQuery";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import FormField from "@/shared/ui/FormField";
@@ -25,15 +24,12 @@ export function ProfileStep() {
   } = useFormContext<SignupFormValues>();
   const regionsQuery = useRegionsQuery();
   const regionGroupsQuery = useRegionGroupsQuery();
-  const categoriesQuery = useCategoriesQuery();
   const introduction = useWatch({ control, name: "introduction" });
   const isSignupOptionUnavailable =
     regionsQuery.isLoading ||
     regionsQuery.isError ||
     regionGroupsQuery.isLoading ||
-    regionGroupsQuery.isError ||
-    categoriesQuery.isLoading ||
-    categoriesQuery.isError;
+    regionGroupsQuery.isError;
   const isRegionLoading = regionsQuery.isLoading || regionGroupsQuery.isLoading;
   const isRegionError = regionsQuery.isError || regionGroupsQuery.isError;
 
@@ -108,12 +104,7 @@ export function ProfileStep() {
           }}
         />
 
-        <CategorySelector
-          categories={categoriesQuery.data ?? []}
-          isLoading={categoriesQuery.isLoading}
-          isError={categoriesQuery.isError}
-          onRetry={() => void categoriesQuery.refetch()}
-        />
+        <CategorySelector />
       </div>
 
       <div className="mt-8" />

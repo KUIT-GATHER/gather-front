@@ -1,58 +1,112 @@
 {
   "data": [
     {
-      "id": 1,
-      "posting_id": 1,
-      "title": "주말 한강공원 플로깅 같이 가요",
-      "content": "처음 참여하는 분도 환영해요. 같이 한강공원에서 플로깅해요.",
-      "status": "OPEN",
-      "thumbnail_url": "/images/mock-volunteer-1.png",
-
-      "sido_name": "서울",
-      "sigungu_name": "영등포구",
-      "address": "서울 영등포구 여의동로 330",
-
-      "meeting_date": "2026-07-10",
-      "meeting_time": "09:30",
-      "notice_end_date": "2026-07-08",
-
-      "recruit_count": 5,
-      "applicant_count": 3,
-
-      "category": { "id": 1, "name": "환경" },
-      "region": { "id": 1, "name": "서울" },
-
-      "host": {
-        "id": 1,
-        "nickname": "가더"
-      }
+      "meetingId": 1,
+      "name": "주말 한강공원 플로깅 같이 가요",
+      "description": "처음 참여하는 분도 환영해요. 같이 한강공원에서 플로깅해요.",
+      "currentMemberCount": 3,
+      "maxMember": 5,
+      "regionId": 41,
+      "regionName": "영등포구",
+      "category": "ENVIRONMENT",
+      "status": "RECRUITING",
+      "deadline": "2026-07-18T18:00:00",
+      "activityStartAt": "2026-07-20T09:30:00",
+      "activityEndAt": "2026-07-20T13:00:00",
+      "hostId": 1,
+      "volunteerPostingId": 1,
+      "participationCondition": null,
+      "memo": null
     },
     {
-      "id": 2,
-      "posting_id": 2,
-      "title": "동물보호소 산책 봉사 같이 가요",
-      "content": "유기견 산책 봉사 함께 갈 사람을 찾고 있어요.",
-      "status": "OPEN",
-      "thumbnail_url": "/images/mock-volunteer-2.png",
-
-      "sido_name": "서울",
-      "sigungu_name": "영등포구",
-      "address": "서울 영등포구 여의동로 300",
-
-      "meeting_date": "2026-07-12",
-      "meeting_time": "09:30",
-      "notice_end_date": "2026-07-10",
-
-      "recruit_count": 5,
-      "applicant_count": 2,
-
-      "category": { "id": 5, "name": "복지" },
-      "region": { "id": 1, "name": "서울" },
-
-      "host": {
-        "id": 1,
-        "nickname": "가더"
-      }
+      "meetingId": 2,
+      "name": "동네 도서관 아동 독서 봉사",
+      "description": "아이들과 책을 읽고 독후 활동을 함께해요.",
+      "currentMemberCount": 2,
+      "maxMember": 6,
+      "regionId": 32,
+      "regionName": "마포구",
+      "category": "EDUCATION",
+      "status": "RECRUITING",
+      "deadline": "2026-07-21T18:00:00",
+      "activityStartAt": "2026-07-24T13:00:00",
+      "activityEndAt": "2026-07-24T16:00:00",
+      "hostId": 2,
+      "volunteerPostingId": null,
+      "participationCondition": "청소년 참여 가능",
+      "memo": null
+    },
+    {
+      "meetingId": 3,
+      "name": "지역 벽화 그리기",
+      "description": null,
+      "currentMemberCount": 5,
+      "maxMember": 8,
+      "regionId": 32,
+      "regionName": "마포구",
+      "category": "CULTURE",
+      "status": "RECRUITING",
+      "deadline": "2026-07-25T18:00:00",
+      "activityStartAt": "2026-07-27T10:00:00",
+      "activityEndAt": "2026-07-27T15:00:00",
+      "hostId": 3,
+      "volunteerPostingId": null,
+      "participationCondition": null,
+      "memo": "물감은 모임에서 준비합니다."
+    },
+    {
+      "meetingId": 4,
+      "name": "우리 동네 안부 확인 봉사",
+      "description": "취약 이웃에게 안부 전화를 드릴 분을 찾습니다.",
+      "currentMemberCount": 4,
+      "maxMember": 5,
+      "regionId": 41,
+      "regionName": "영등포구",
+      "category": "COMMUNITY",
+      "status": "CLOSED",
+      "deadline": "2026-07-15T18:00:00",
+      "activityStartAt": "2026-07-18T10:00:00",
+      "activityEndAt": "2026-07-18T12:00:00",
+      "hostId": 4,
+      "volunteerPostingId": null,
+      "participationCondition": null,
+      "memo": null
+    },
+    {
+      "meetingId": 5,
+      "name": "어르신 도시락 배달 동행",
+      "description": "도시락 전달과 말벗 봉사를 함께합니다.",
+      "currentMemberCount": 3,
+      "maxMember": 7,
+      "regionId": 41,
+      "regionName": "영등포구",
+      "category": "WELFARE",
+      "status": "RECRUITING",
+      "deadline": "2026-07-28T18:00:00",
+      "activityStartAt": "2026-07-30T11:00:00",
+      "activityEndAt": "2026-07-30T14:00:00",
+      "hostId": 5,
+      "volunteerPostingId": null,
+      "participationCondition": "성인만 참여 가능",
+      "memo": null
+    },
+    {
+      "meetingId": 6,
+      "name": "해외 아동 영어 편지 번역",
+      "description": "해외 봉사단과 함께 편지를 번역해요.",
+      "currentMemberCount": 1,
+      "maxMember": 4,
+      "regionId": 32,
+      "regionName": "마포구",
+      "category": "OVERSEAS",
+      "status": "COMPLETED",
+      "deadline": "2026-07-10T18:00:00",
+      "activityStartAt": "2026-07-12T14:00:00",
+      "activityEndAt": "2026-07-12T17:00:00",
+      "hostId": 6,
+      "volunteerPostingId": null,
+      "participationCondition": null,
+      "memo": null
     }
   ]
 }
