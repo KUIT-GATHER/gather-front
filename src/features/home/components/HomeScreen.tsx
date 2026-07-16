@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import alarmIcon from "@/assets/icons/Alarm.svg";
@@ -6,7 +7,9 @@ import filterIcon from "@/assets/icons/Filter.svg";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
+import { VolunteerPostingFilterSheet } from "@/features/volunteer/components/filter/VolunteerPostingFilterSheet";
 import { useVolunteerPostingsQuery } from "@/features/volunteer/hooks/useVolunteerPostingsQuery";
+import { updateVolunteerPostingSearchParams } from "@/features/volunteer/lib/volunteerPostingSearchParams";
 import IconButton from "@/shared/ui/IconButton";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -58,6 +61,7 @@ function HomeSectionState({
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const postingsQuery = useVolunteerPostingsQuery({
     page: 0,
     size: 5,
@@ -76,11 +80,11 @@ export function HomeScreen() {
 
         <div className="flex items-center gap-4">
           <IconButton
-            disabled
             label="필터 열기"
             icon={<img src={filterIcon} alt="" />}
             size="medium"
-            className="-m-3 disabled:opacity-100"
+            className="-m-3"
+            onClick={() => setIsFilterOpen(true)}
           />
 
           <div className="relative">
@@ -178,6 +182,20 @@ export function HomeScreen() {
           </div>
         </section>
       </div>
+      {isFilterOpen ? (
+        <VolunteerPostingFilterSheet
+          open
+          onOpenChange={setIsFilterOpen}
+          filter={{}}
+          onApply={(filter) => {
+            const query = updateVolunteerPostingSearchParams(
+              new URLSearchParams(),
+              filter,
+            ).toString();
+            navigate(query ? `/volunteers?${query}` : "/volunteers");
+          }}
+        />
+      ) : null}
     </PageContainer>
   );
 }

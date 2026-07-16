@@ -155,6 +155,7 @@ export const postingHandlers = [
     const status = url.searchParams.get("status");
     const noticeStartDate = url.searchParams.get("noticeStartDate");
     const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const category = url.searchParams.get("category");
     const sorts = parseSorts(url);
 
     let items = mockPostings;
@@ -201,12 +202,35 @@ export const postingHandlers = [
       );
     }
 
+    if (
+      category &&
+      !POSTING_CATEGORIES.includes(
+        category as (typeof POSTING_CATEGORIES)[number],
+      )
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
     if (keyword) {
       items = items.filter((posting) =>
         [posting.title, posting.recruitOrg].some((value) =>
           value.includes(keyword),
         ),
       );
+    }
+
+    if (category) {
+      items = items.filter((posting) => posting.category === category);
     }
 
     if (regionId !== undefined) {

@@ -26,16 +26,18 @@ export function VolunteerPostingCard({
       <button
         type="button"
         onClick={onClick}
-        className="w-40 shrink-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        className="w-34 shrink-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
       >
         <img
           src={imageSrc}
           alt=""
-          className="aspect-square w-40 rounded-xl border border-stroke bg-[#F8FBF8] object-cover p-5"
+          className="aspect-square w-34 rounded-xl border border-stroke bg-bg object-cover p-5"
         />
-        <h3 className="mt-2 truncate text-[15px] font-bold">{posting.title}</h3>
+        <h3 className="mt-2 truncate text-body-15-semibold text-text">
+          {posting.title}
+        </h3>
         {location || activityDate ? (
-          <p className="mt-1 truncate text-sm text-gray-500">
+          <p className="mt-1 truncate text-sm text-text-gray-300">
             {[location, activityDate].filter(Boolean).join(" · ")}
           </p>
         ) : null}
@@ -47,23 +49,25 @@ export function VolunteerPostingCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full gap-4 rounded-xl border border-gray-200 p-3 text-left"
+      className="flex w-full gap-3 rounded-xl border border-stroke bg-white p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
     >
       <img
         src={imageSrc}
         alt=""
-        className="h-[104px] w-[88px] shrink-0 rounded-lg border border-stroke bg-[#F8FBF8] object-cover p-3"
+        className="size-22 shrink-0 rounded-lg border border-stroke bg-bg object-cover p-3"
       />
 
       <div className="min-w-0 flex-1 py-0.5">
-        <h2 className="truncate text-base font-bold">{posting.title}</h2>
+        <h2 className="truncate text-body-15-semibold text-text">
+          {posting.title}
+        </h2>
         {posting.recruitOrg ? (
-          <p className="mt-1 truncate text-sm text-gray-500">
+          <p className="mt-1 truncate text-sm text-text-gray-300">
             {posting.recruitOrg}
           </p>
         ) : null}
         {location || activityDate ? (
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 line-clamp-2 text-sm text-text-gray-300">
             {[location, activityDate].filter(Boolean).join(" · ")}
           </p>
         ) : null}

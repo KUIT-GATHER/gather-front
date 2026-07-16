@@ -1,41 +1,218 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router";
 
+import { VOLUNTEER_POSTING_SEARCH_RECOMMENDATIONS } from "@/features/volunteer/constants/volunteerPostingSearch.constants";
+import {
+  isVolunteerPostingListSort,
+  volunteerPostingListSortOptions,
+} from "@/features/volunteer/constants/volunteerPostingList.constants";
+import { useRecentVolunteerSearches } from "@/features/volunteer/hooks/useRecentVolunteerSearches";
+import {
+  getVolunteerPostingSort,
+  toVolunteerPostingQueryParams,
+  updateVolunteerPostingSearchParams,
+} from "@/features/volunteer/lib/volunteerPostingSearchParams";
+import IconButton from "@/shared/ui/IconButton";
+import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
-import Input from "@/shared/ui/Input";
+import Select from "@/shared/ui/Select";
 
-export function VolunteerPostingSearchScreen() {
-  const navigate = useNavigate();
-  const [keyword, setKeyword] = useState("");
+import { VolunteerPostingResults } from "./VolunteerPostingResults";
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const searchParams = new URLSearchParams();
+const SEARCH_PATTERN = /^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\s]+$/;
 
-    if (keyword.trim()) {
-      searchParams.set("keyword", keyword.trim());
+function getSearchError(value: string) {
+  const keyword = value.trim();
+  if (!keyword) return "검색어를 입력해 주세요.";
+  if (keyword.length > 10) return "검색어는 최대 10자까지 입력할 수 있어요.";
+  if (!SEARCH_PATTERN.test(keyword))
+    return "한글, 영문, 숫자, 공백만 사용할 수 있어요.";
+  return undefined;
+}
+
+type VolunteerPostingSearchFormProps = {
+  initialKeyword: string;
+  onSubmit: (keyword: string) => void;
+};
+
+function VolunteerPostingSearchForm({
+  initialKeyword,
+  onSubmit,
+}: VolunteerPostingSearchFormProps) {
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [error, setError] = useState<string>();
+
+  const submit = () => {
+    const nextError = getSearchError(keyword);
+    if (nextError) {
+      setError(nextError);
+      return;
     }
 
-    const query = searchParams.toString();
-    navigate(query ? `/volunteers?${query}` : "/volunteers");
+    onSubmit(keyword.trim());
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh">
-      <PageHeader title="봉사 공고 검색" onBack={() => navigate(-1)} />
-      <form className="mt-5" onSubmit={handleSubmit}>
+    <>
+      <form
+        className="mt-5 flex items-center gap-2 rounded-full bg-stroke/55 px-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+      >
         <label htmlFor="volunteer-keyword" className="sr-only">
           봉사 공고 검색어
         </label>
         <Input
           id="volunteer-keyword"
           value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          placeholder="공고 제목 또는 모집 기관명 검색"
-          autoFocus
+          onChange={(event) => {
+            setKeyword(event.target.value);
+            if (error) setError(undefined);
+          }}
+          placeholder="공고 제목 또는 모집기관명"
+          className="border-0 bg-transparent px-3 focus:border-0"
+          aria-describedby={error ? "volunteer-search-error" : undefined}
+          autoFocus={!initialKeyword}
         />
+        <IconButton label="검색" icon={<Search />} type="submit" />
       </form>
+      {error ? (
+        <p id="volunteer-search-error" className="mt-2 text-sm text-point-red">
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+export function VolunteerPostingSearchScreen() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const keywordFromUrl = searchParams.get("keyword")?.trim() ?? "";
+  const { recentSearches, addRecentSearch, clearRecentSearches } =
+    useRecentVolunteerSearches();
+  const sort = getVolunteerPostingSort(searchParams);
+  const queryParams = useMemo(
+    () => toVolunteerPostingQueryParams(searchParams, sort),
+    [searchParams, sort],
+  );
+
+  const submitSearch = (normalized: string) => {
+    addRecentSearch(normalized);
+    setSearchParams(
+      updateVolunteerPostingSearchParams(
+        new URLSearchParams(),
+        {},
+        { keyword: normalized, sort: "latest" },
+      ),
+    );
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
+  return (
+    <PageContainer size="narrow" className="min-h-dvh pb-8">
+      <PageHeader title="봉사 찾기" onBack={() => navigate(-1)} />
+      <VolunteerPostingSearchForm
+        key={keywordFromUrl}
+        initialKeyword={keywordFromUrl}
+        onSubmit={submitSearch}
+      />
+
+      {keywordFromUrl ? (
+        <section className="mt-6">
+          <h2 className="text-title-20 text-text">
+            ‘{keywordFromUrl}’ 검색 결과
+          </h2>
+          <VolunteerPostingResults
+            params={queryParams}
+            emptyTitle="검색 결과가 없어요"
+            emptyDescription="다른 검색어로 다시 찾아보세요."
+            onSelect={(postingId) => navigate(`/volunteers/${postingId}`)}
+            renderMeta={(totalElements) => (
+              <div className="flex items-center justify-between py-4">
+                <p className="text-body-14 text-text-gray-300">
+                  전체 {totalElements}개 활동
+                </p>
+                <Select
+                  ariaLabel="검색 결과 정렬"
+                  value={sort}
+                  options={volunteerPostingListSortOptions}
+                  onChange={(value) => {
+                    if (!isVolunteerPostingListSort(value)) return;
+                    setSearchParams(
+                      updateVolunteerPostingSearchParams(
+                        new URLSearchParams(),
+                        {},
+                        { keyword: keywordFromUrl, sort: value },
+                      ),
+                    );
+                    window.scrollTo({ top: 0, behavior: "auto" });
+                  }}
+                />
+              </div>
+            )}
+          />
+        </section>
+      ) : (
+        <section className="mt-14">
+          <h2 className="whitespace-pre-line text-title-24 text-text">
+            어떤 봉사를{`\n`}찾고 계시나요?
+          </h2>
+          <div className="mt-9">
+            <div className="flex items-center justify-between">
+              <h3 className="text-body-15-semibold text-text">최근 검색어</h3>
+              {recentSearches.length > 0 ? (
+                <button
+                  type="button"
+                  className="text-sm text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                  onClick={clearRecentSearches}
+                >
+                  전체 지우기
+                </button>
+              ) : null}
+            </div>
+            {recentSearches.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recentSearches.map((recent) => (
+                  <button
+                    key={recent}
+                    type="button"
+                    className="rounded-full border border-stroke px-3 py-2 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                    onClick={() => submitSearch(recent)}
+                  >
+                    {recent}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-text-gray-300">
+                최근 검색어가 없어요.
+              </p>
+            )}
+          </div>
+          <div className="mt-9">
+            <h3 className="text-body-15-semibold text-text">추천 검색어</h3>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {VOLUNTEER_POSTING_SEARCH_RECOMMENDATIONS.map(
+                (recommendation) => (
+                  <button
+                    key={recommendation}
+                    type="button"
+                    className="rounded-full border border-button px-3 py-2 text-sm text-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                    onClick={() => submitSearch(recommendation)}
+                  >
+                    #{recommendation}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </PageContainer>
   );
 }
