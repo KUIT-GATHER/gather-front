@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MapPin } from "lucide-react";
 
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
@@ -9,8 +10,8 @@ import type { VolunteerPostingFilter } from "@/features/volunteer/types/voluntee
 import Button from "@/shared/ui/Button";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import FormField from "@/shared/ui/FormField";
+import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
-import Select from "@/shared/ui/Select";
 
 type VolunteerPostingFilterSheetProps = {
   open: boolean;
@@ -41,18 +42,18 @@ export function VolunteerPostingFilterSheet({
 }: VolunteerPostingFilterSheetProps) {
   const [draft, setDraft] = useState<VolunteerPostingFilter>(filter);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isRegionPickerOpen, setIsRegionPickerOpen] = useState(false);
   const regionsQuery = useRegionsQuery();
   const regionGroupsQuery = useRegionGroupsQuery();
   const dateError = getDateError(draft);
 
-  const regionOptions = (regionsQuery.data ?? []).map((region) => ({
-    value: String(region.id),
-    label: region.name,
-  }));
-  const regionGroupOptions = (regionGroupsQuery.data ?? []).map((group) => ({
-    value: String(group.id),
-    label: `${group.name} 권역`,
-  }));
+  const regions = regionsQuery.data ?? [];
+  const regionGroups = regionGroupsQuery.data ?? [];
+  const selectedRegionName = draft.regionId
+    ? regions.find((region) => region.id === draft.regionId)?.name
+    : draft.regionGroupId
+      ? regionGroups.find((group) => group.id === draft.regionGroupId)?.name
+      : undefined;
 
   const handleApply = () => {
     setIsSubmitted(true);
@@ -67,7 +68,6 @@ export function VolunteerPostingFilterSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="필터"
-      description="지역, 모집 기간, 주제로 봉사 공고를 필터링합니다."
       footer={
         <Button fullWidth onClick={handleApply}>
           설정하기
@@ -77,49 +77,85 @@ export function VolunteerPostingFilterSheet({
       <div className="flex flex-col gap-6">
         <section>
           <h2 className="text-body-15-semibold text-text">지역</h2>
-          <div className="mt-3 grid gap-2">
-            <Select
-              ariaLabel="봉사 지역 권역"
-              placeholder="권역 선택"
-              value={draft.regionGroupId ? String(draft.regionGroupId) : ""}
-              options={regionGroupOptions}
-              onChange={(value) =>
-                setDraft((current) => ({
-                  ...current,
-                  regionId: undefined,
-                  regionGroupId: Number(value),
-                }))
-              }
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              aria-expanded={isRegionPickerOpen}
+              className="flex h-12 min-w-0 flex-1 items-center justify-center rounded-xl border border-stroke bg-white px-4 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+              onClick={() => setIsRegionPickerOpen((current) => !current)}
+            >
+              {selectedRegionName ?? "지역 선택"}
+            </button>
+            <IconButton
+              label="지역 선택 열기"
+              icon={<MapPin />}
+              variant="surface"
+              onClick={() => setIsRegionPickerOpen((current) => !current)}
             />
-            <Select
-              ariaLabel="봉사 세부 지역"
-              placeholder="세부 지역 선택"
-              value={draft.regionId ? String(draft.regionId) : ""}
-              options={regionOptions}
-              onChange={(value) =>
-                setDraft((current) => ({
-                  ...current,
-                  regionId: Number(value),
-                  regionGroupId: undefined,
-                }))
-              }
-            />
-            {draft.regionId || draft.regionGroupId ? (
-              <button
-                type="button"
-                className="w-fit text-sm text-text-gray-300 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-                onClick={() =>
-                  setDraft((current) => ({
-                    ...current,
-                    regionId: undefined,
-                    regionGroupId: undefined,
-                  }))
-                }
-              >
-                지역 선택 해제
-              </button>
-            ) : null}
           </div>
+          {isRegionPickerOpen ? (
+            <div className="mt-3 rounded-xl border border-stroke bg-white p-3">
+              <p className="text-sm font-medium text-text-gray-300">권역</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {regionGroups.map((group) => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    aria-pressed={draft.regionGroupId === group.id}
+                    className="rounded-full border border-stroke px-3 py-1.5 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 aria-pressed:border-button aria-pressed:text-icon"
+                    onClick={() => {
+                      setDraft((current) => ({
+                        ...current,
+                        regionId: undefined,
+                        regionGroupId: group.id,
+                      }));
+                      setIsRegionPickerOpen(false);
+                    }}
+                  >
+                    {group.name}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-4 text-sm font-medium text-text-gray-300">
+                세부 지역
+              </p>
+              <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+                {regions.map((region) => (
+                  <button
+                    key={region.id}
+                    type="button"
+                    aria-pressed={draft.regionId === region.id}
+                    className="rounded-full border border-stroke px-3 py-1.5 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 aria-pressed:border-button aria-pressed:text-icon"
+                    onClick={() => {
+                      setDraft((current) => ({
+                        ...current,
+                        regionId: region.id,
+                        regionGroupId: undefined,
+                      }));
+                      setIsRegionPickerOpen(false);
+                    }}
+                  >
+                    {region.name}
+                  </button>
+                ))}
+              </div>
+              {selectedRegionName ? (
+                <button
+                  type="button"
+                  className="mt-3 text-sm text-text-gray-300 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      regionId: undefined,
+                      regionGroupId: undefined,
+                    }))
+                  }
+                >
+                  지역 선택 해제
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         <section>
@@ -169,9 +205,6 @@ export function VolunteerPostingFilterSheet({
 
         <section>
           <h2 className="text-body-15-semibold text-text">주제</h2>
-          <p className="mt-1 text-sm text-text-gray-300">
-            한 가지 주제를 선택할 수 있어요.
-          </p>
           <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-3">
             {POSTING_CATEGORIES.map((category) => {
               const selected = draft.category === category;
@@ -180,7 +213,7 @@ export function VolunteerPostingFilterSheet({
                   key={category}
                   type="button"
                   aria-pressed={selected}
-                  className="flex flex-col items-center rounded-xl py-1 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                  className="relative flex min-h-24 items-center justify-center rounded-xl p-1 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                   onClick={() =>
                     setDraft((current) => ({
                       ...current,
@@ -189,13 +222,17 @@ export function VolunteerPostingFilterSheet({
                     }))
                   }
                 >
-                  <CategoryPuzzle
-                    category={category}
-                    selected={selected}
-                    className="size-18"
-                  />
-                  <span className="mt-1">
-                    {POSTING_CATEGORY_LABEL[category]}
+                  <span className="relative block size-18">
+                    <CategoryPuzzle
+                      category={category}
+                      selected={selected}
+                      className="size-full"
+                    />
+                    <span className="pointer-events-none absolute inset-0 grid place-items-center px-2">
+                      <span className="max-w-16 break-keep text-center text-sm font-medium leading-4 text-text">
+                        {POSTING_CATEGORY_LABEL[category]}
+                      </span>
+                    </span>
                   </span>
                 </button>
               );
