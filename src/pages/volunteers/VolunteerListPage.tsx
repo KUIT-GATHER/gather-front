@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { VolunteerPostingListScreen } from "@/features/volunteer/components/VolunteerPostingListScreen";
 
 export function VolunteerListPage() {
-  return <PageContainer size="narrow">VolunteerListPage</PageContainer>;
+  return <VolunteerPostingListScreen />;
 }

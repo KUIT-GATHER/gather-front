@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { HomeScreen } from "@/features/home/components/HomeScreen";
 
 export function HomePage() {
-  return <PageContainer size="narrow">HomePage</PageContainer>;
+  return <HomeScreen />;
 }
