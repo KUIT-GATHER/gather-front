@@ -15,14 +15,14 @@ import {
   isVolunteerPostingListSort,
   volunteerPostingListSortOptions,
   VOLUNTEER_POSTING_SORT_PARAMS,
-} from "../constants/volunteerPostingList.constants";
-import { useVolunteerPostingsQuery } from "../hooks/useVolunteerPostingsQuery";
+} from "../../constants/volunteerPostingList.constants";
+import { useVolunteerPostingsQuery } from "../../hooks/useVolunteerPostingsQuery";
 import type {
   VolunteerPostingListParams,
   VolunteerPostingStatus,
-} from "../types/volunteer.types";
-import type { VolunteerPostingListSort } from "../constants/volunteerPostingList.constants";
-import { VolunteerPostingCard } from "./VolunteerPostingCard";
+} from "../../types/volunteer.types";
+import type { VolunteerPostingListSort } from "../../constants/volunteerPostingList.constants";
+import { VolunteerPostingCard } from "../VolunteerPostingCard";
 
 const PAGE_SIZE = 20;
 

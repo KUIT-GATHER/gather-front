@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router";
 
-import { VolunteerPostingApplyBar } from "@/features/volunteer/components/VolunteerPostingApplyBar";
-import { VolunteerPostingConditionCard } from "@/features/volunteer/components/VolunteerPostingConditionCard";
-import { VolunteerPostingHeader } from "@/features/volunteer/components/VolunteerPostingHeader";
-import { VolunteerPostingHero } from "@/features/volunteer/components/VolunteerPostingHero";
-import { VolunteerPostingInfoCard } from "@/features/volunteer/components/VolunteerPostingInfoCard";
-import { VolunteerPostingTeamSection } from "@/features/volunteer/components/VolunteerPostingTeamSection";
+import { VolunteerPostingApplyBar } from "./VolunteerPostingApplyBar";
+import { VolunteerPostingConditionCard } from "./VolunteerPostingConditionCard";
+import { VolunteerPostingHeader } from "./VolunteerPostingHeader";
+import { VolunteerPostingHero } from "./VolunteerPostingHero";
+import { VolunteerPostingInfoCard } from "./VolunteerPostingInfoCard";
+import { VolunteerPostingTeamSection } from "./VolunteerPostingTeamSection";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";

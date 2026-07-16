@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 
-import { VolunteerPostingDetail } from "@/features/volunteer/components/VolunteerPostingDetail";
+import { VolunteerPostingDetail } from "@/features/volunteer/components/detail/VolunteerPostingDetail";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import PageContainer from "@/shared/ui/PageContainer";
 
