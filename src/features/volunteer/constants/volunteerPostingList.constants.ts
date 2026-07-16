@@ -1,25 +1,25 @@
 import type { SelectOption } from "@/shared/ui/Select";
 
-import type {
-  VolunteerPostingCardCategory,
-  VolunteerPostingListSort,
-} from "../types/volunteerPostingList.types";
+export type VolunteerPostingListSort =
+  | "latest"
+  | "deadline"
+  | "activityDate"
+  | "applicants";
 
 export const volunteerPostingListSortOptions: SelectOption[] = [
   { value: "latest", label: "최신순 ✨" },
-  { value: "popular", label: "인기순 🔥" },
+  { value: "applicants", label: "신청자순 👥" },
   { value: "deadline", label: "마감임박 ⏰" },
-  { value: "default", label: "공고기반" },
 ];
 
-export const volunteerPostingCategoryStyle: Record<
-  VolunteerPostingCardCategory,
-  string
+export const VOLUNTEER_POSTING_SORT_PARAMS: Record<
+  VolunteerPostingListSort,
+  string[]
 > = {
-  문화: "border-[#F2D28D] bg-[#FFF9EA] text-[#B98926]",
-  복지: "border-[#E4A6E7] bg-[#FFF2FF] text-[#B05AB6]",
-  교육: "border-[#9FC4F5] bg-[#F1F7FF] text-[#4D81C4]",
-  환경: "border-[#9ED6AE] bg-[#F0FFF4] text-[#4B9660]",
+  latest: ["id,desc"],
+  deadline: ["noticeEndDate,asc"],
+  activityDate: ["actStartDate,asc"],
+  applicants: ["applicantCount,desc"],
 };
 
 export function isVolunteerPostingListSort(

@@ -22,7 +22,7 @@ export function toSignupRequest(values: SignupFormValues): SignupRequest {
     nickname: values.nickname.trim(),
     introduction: values.introduction.trim() || null,
     activityRegionId: values.activityRegionId,
-    interestCategoryIds: values.interestCategoryIds,
+    interestCategories: values.interestCategories,
     serviceTermsAgreed: values.serviceTermsAgreed,
     privacyPolicyAgreed: values.privacyPolicyAgreed,
     marketingAgreed: values.marketingAgreed,

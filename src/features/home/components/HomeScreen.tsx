@@ -3,11 +3,69 @@ import { useNavigate } from "react-router";
 import alarmIcon from "@/assets/icons/Alarm.svg";
 import arrowIcon from "@/assets/icons/Arrow.svg";
 import filterIcon from "@/assets/icons/Filter.svg";
+import { TeamCard } from "@/features/team/components/TeamCard";
+import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
+import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
+import { useVolunteerPostingsQuery } from "@/features/volunteer/hooks/useVolunteerPostingsQuery";
 import IconButton from "@/shared/ui/IconButton";
+import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
+
+type HomeSectionStateProps = {
+  isLoading: boolean;
+  isError: boolean;
+  isEmpty: boolean;
+  emptyMessage: string;
+  onRetry: () => void;
+};
+
+function HomeSectionState({
+  isLoading,
+  isError,
+  isEmpty,
+  emptyMessage,
+  onRetry,
+}: HomeSectionStateProps) {
+  if (isLoading) {
+    return <LoadingState className="h-40" label="불러오는 중" />;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-40 flex-col items-center justify-center gap-2 text-sm text-text-gray-400">
+        <p>목록을 불러오지 못했어요.</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-lg px-3 py-2 font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <p className="flex h-40 items-center justify-center text-sm text-text-gray-400">
+        {emptyMessage}
+      </p>
+    );
+  }
+
+  return null;
+}
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const postingsQuery = useVolunteerPostingsQuery({
+    page: 0,
+    size: 5,
+    sort: ["actStartDate,asc"],
+  });
+  const meetingsQuery = useMeetingsQuery();
+  const postings = postingsQuery.data?.content ?? [];
+  const meetings = (meetingsQuery.data ?? []).slice(0, 5);
 
   return (
     <PageContainer size="narrow">
@@ -57,27 +115,27 @@ export function HomeScreen() {
           </div>
 
           <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="w-40 shrink-0">
-              <div className="h-40 rounded-xl bg-gray-200" />
-              <h3 className="mt-2 truncate text-[15px] font-bold">
-                한강공원 플로깅 🌿
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">여의도 · 05.16 (토)</p>
-              <p className="mt-1 text-sm text-red-500">D-4</p>
-            </div>
-
-            <div className="w-40 shrink-0">
-              <div className="h-40 rounded-xl bg-gray-200" />
-              <h3 className="mt-2 truncate text-[15px] font-bold">
-                동화책 같이 읽어요 📖
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">강남구 · 05.20 (수)</p>
-              <p className="mt-1 text-sm text-red-500">D-8</p>
-            </div>
-
-            <div className="w-40 shrink-0">
-              <div className="h-40 rounded-xl bg-gray-200" />
-            </div>
+            <HomeSectionState
+              isLoading={postingsQuery.isLoading}
+              isError={postingsQuery.isError}
+              isEmpty={
+                !postingsQuery.isLoading &&
+                !postingsQuery.isError &&
+                postings.length === 0
+              }
+              emptyMessage="표시할 봉사 공고가 없어요."
+              onRetry={() => {
+                void postingsQuery.refetch();
+              }}
+            />
+            {postings.map((posting) => (
+              <VolunteerPostingCard
+                key={posting.id}
+                variant="compact"
+                posting={posting}
+                onClick={() => navigate(`/volunteers/${posting.id}`)}
+              />
+            ))}
           </div>
         </section>
 
@@ -96,35 +154,27 @@ export function HomeScreen() {
           </div>
 
           <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <article className="w-52 shrink-0 overflow-hidden rounded-xl border border-gray-200">
-              <div className="h-52 bg-gray-200" />
-              <div className="p-3">
-                <h3 className="truncate text-[15px] font-bold">
-                  주말 한강공원 산책 플로깅
-                </h3>
-                <p className="mt-1 truncate text-sm text-gray-500">
-                  같이 한강 걸으면서 플로깅해요
-                </p>
-                <p className="mt-2 truncate text-xs text-gray-400">
-                  광진구 · 4/5명 · 26.05.15
-                </p>
-              </div>
-            </article>
-
-            <article className="w-52 shrink-0 overflow-hidden rounded-xl border border-gray-200">
-              <div className="h-52 bg-gray-200" />
-              <div className="p-3">
-                <h3 className="truncate text-[15px] font-bold">
-                  남양주 유기견 보호소
-                </h3>
-                <p className="mt-1 truncate text-sm text-gray-500">
-                  강아지들이랑 산책 가요
-                </p>
-                <p className="mt-2 truncate text-xs text-gray-400">
-                  마포구 · 4/5명 · 26.05.25
-                </p>
-              </div>
-            </article>
+            <HomeSectionState
+              isLoading={meetingsQuery.isLoading}
+              isError={meetingsQuery.isError}
+              isEmpty={
+                !meetingsQuery.isLoading &&
+                !meetingsQuery.isError &&
+                meetings.length === 0
+              }
+              emptyMessage="표시할 모임이 없어요."
+              onRetry={() => {
+                void meetingsQuery.refetch();
+              }}
+            />
+            {meetings.map((meeting) => (
+              <TeamCard
+                key={meeting.meetingId}
+                variant="compact"
+                team={meeting}
+                onClick={() => navigate(`/teams/${meeting.meetingId}`)}
+              />
+            ))}
           </div>
         </section>
       </div>

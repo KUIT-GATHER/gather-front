@@ -2,45 +2,19 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
-import type { Category } from "@/features/category/types/category.types";
+import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
+import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
-import { ErrorState } from "@/shared/ui/ErrorState";
-import LoadingState from "@/shared/ui/LoadingState";
 
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
 
-type CategorySelectorProps = {
-  categories: Category[];
-  isLoading: boolean;
-  isError: boolean;
-  onRetry: () => void;
-};
-
-export function CategorySelector({
-  categories,
-  isLoading,
-  isError,
-  onRetry,
-}: CategorySelectorProps) {
+export function CategorySelector() {
   const {
     control,
     setValue,
     formState: { errors },
   } = useFormContext<SignupFormValues>();
-  const selectedIds = useWatch({ control, name: "interestCategoryIds" });
-
-  if (isLoading) {
-    return <LoadingState label="카테고리를 불러오는 중입니다." />;
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        title="카테고리를 불러오지 못했습니다."
-        primaryAction={{ label: "다시 시도", onClick: onRetry }}
-      />
-    );
-  }
+  const selectedCategories = useWatch({ control, name: "interestCategories" });
 
   return (
     <section>
@@ -52,12 +26,12 @@ export function CategorySelector({
       </p>
 
       <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-4">
-        {categories.map((category) => {
-          const selected = selectedIds.includes(category.id);
+        {POSTING_CATEGORIES.map((category) => {
+          const selected = selectedCategories.includes(category);
 
           return (
             <button
-              key={category.id}
+              key={category}
               type="button"
               aria-pressed={selected}
               className={cn(
@@ -65,11 +39,11 @@ export function CategorySelector({
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
               )}
               onClick={() => {
-                const nextIds = selected
-                  ? selectedIds.filter((id) => id !== category.id)
-                  : [...selectedIds, category.id];
+                const nextCategories = selected
+                  ? selectedCategories.filter((value) => value !== category)
+                  : [...selectedCategories, category];
 
-                setValue("interestCategoryIds", nextIds, {
+                setValue("interestCategories", nextCategories, {
                   shouldDirty: true,
                   shouldValidate: true,
                 });
@@ -77,13 +51,13 @@ export function CategorySelector({
             >
               <span className="relative block size-[105px]">
                 <CategoryPuzzle
-                  code={category.code}
+                  category={category}
                   selected={selected}
                   className="size-full"
                 />
                 <span className="pointer-events-none absolute inset-0 grid place-items-center px-2">
                   <span className="max-w-[78px] break-keep text-center text-[13px] font-medium leading-4 text-text">
-                    {category.name}
+                    {POSTING_CATEGORY_LABEL[category]}
                   </span>
                 </span>
               </span>
@@ -92,12 +66,12 @@ export function CategorySelector({
         })}
       </div>
 
-      {errors.interestCategoryIds?.message ? (
+      {errors.interestCategories?.message ? (
         <p
-          id={getSignupFieldErrorId("interestCategoryIds")}
+          id={getSignupFieldErrorId("interestCategories")}
           className="mt-1.5 text-xs text-point-red"
         >
-          {errors.interestCategoryIds.message}
+          {errors.interestCategories.message}
         </p>
       ) : null}
     </section>

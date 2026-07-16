@@ -27,8 +27,7 @@
       "managerAddress": "서울 영등포구 여의동로 330",
       "regionId": 41,
       "regionName": "강남구",
-      "categoryId": 1,
-      "categoryName": "환경",
+      "category": "ENVIRONMENT",
       "locations": [
         {
           "locationSeq": 1,
@@ -67,8 +66,7 @@
       "managerAddress": "서울 마포구 월드컵로 240",
       "regionId": 32,
       "regionName": "마포구",
-      "categoryId": 4,
-      "categoryName": "지역사회",
+      "category": "COMMUNITY",
       "locations": [
         {
           "locationSeq": 1,

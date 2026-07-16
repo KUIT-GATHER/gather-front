@@ -4,6 +4,9 @@ import {
   isRealPastOrTodayBirthDate,
   normalizeBirthDate,
 } from "@/features/auth/lib/signupFormatters";
+import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
 export type SignupFormValues = {
   name: string;
@@ -17,7 +20,7 @@ export type SignupFormValues = {
   nickname: string;
   introduction: string;
   activityRegionId: number | null;
-  interestCategoryIds: number[];
+  interestCategories: PostingCategory[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
   marketingAgreed: boolean;
@@ -35,7 +38,7 @@ export const signupDefaultValues: SignupFormValues = {
   nickname: "",
   introduction: "",
   activityRegionId: null,
-  interestCategoryIds: [],
+  interestCategories: [],
   serviceTermsAgreed: false,
   privacyPolicyAgreed: false,
   marketingAgreed: false,
@@ -81,7 +84,7 @@ function createKoreanOrEnglishTextSchema(label: "이름" | "닉네임") {
   });
 }
 
-function hasUniqueNumbers(values: number[]) {
+function hasUniqueCategories(values: PostingCategory[]) {
   return new Set(values).size === values.length;
 }
 
@@ -147,10 +150,10 @@ export const signupSchema = z
         error: "활동 지역을 선택해 주세요.",
       }),
 
-    interestCategoryIds: z
-      .array(z.number())
+    interestCategories: z
+      .array(z.enum(POSTING_CATEGORIES))
       .min(1, { error: "관심 카테고리를 1개 이상 선택해 주세요." })
-      .refine(hasUniqueNumbers, {
+      .refine(hasUniqueCategories, {
         error: "관심 카테고리는 중복 선택할 수 없습니다.",
       }),
 
@@ -189,7 +192,7 @@ export const profileFields = [
   "nickname",
   "introduction",
   "activityRegionId",
-  "interestCategoryIds",
+  "interestCategories",
 ] satisfies SignupStepField[];
 
 export const termsFields = [

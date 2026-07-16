@@ -5,6 +5,10 @@ import LocationIcon from "@/assets/volunteer/location.svg";
 import MemberIcon from "@/assets/volunteer/member.svg";
 import PortalOrgIcon from "@/assets/volunteer/portalorg.svg";
 import VolunteerOrgIcon from "@/assets/volunteer/volunteerorg.svg";
+import {
+  formatVolunteerPeriod,
+  formatVolunteerTimeRange,
+} from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
 import { cn } from "@/shared/lib/cn";
 
@@ -19,29 +23,20 @@ type InfoRow = {
   value: string;
 };
 
-function formatDate(date: string, weekday?: string) {
-  const normalizedDate = date.replaceAll("-", ".");
-
-  return weekday ? `${normalizedDate} (${weekday})` : normalizedDate;
-}
-
-function formatDateRange(posting: VolunteerPosting) {
-  if (posting.actStartDate === posting.actEndDate) {
-    return formatDate(posting.actStartDate, posting.actWkdy);
-  }
-
-  return `${formatDate(posting.actStartDate)} ~ ${formatDate(
-    posting.actEndDate,
-    posting.actWkdy,
-  )}`;
-}
-
-function formatTimeRange(startTime: string, endTime: string) {
-  return `${startTime} ~ ${endTime}`;
-}
-
 function getLocation(posting: VolunteerPosting) {
   return posting.locations[0]?.address ?? posting.actPlace;
+}
+
+function getParticipantCount(posting: VolunteerPosting) {
+  if (posting.applicantCount === null && posting.recruitCount === null) {
+    return null;
+  }
+
+  return `${posting.applicantCount ?? "-"}/${posting.recruitCount ?? "-"}명`;
+}
+
+function isInfoRow(row: InfoRow | null): row is InfoRow {
+  return row !== null;
 }
 
 function DetailRow({ icon, label, value }: InfoRow) {
@@ -64,43 +59,72 @@ export function VolunteerPostingInfoCard({
   posting,
   className,
 }: VolunteerPostingInfoCardProps) {
-  const rows: InfoRow[] = [
-    {
-      icon: LocationIcon,
-      label: "장소",
-      value: getLocation(posting),
-    },
-    {
-      icon: CalendarIcon,
-      label: "날짜",
-      value: formatDateRange(posting),
-    },
-    {
-      icon: ClockIcon,
-      label: "시간",
-      value: formatTimeRange(posting.actStartTime, posting.actEndTime),
-    },
-    {
-      icon: MemberIcon,
-      label: "참여 인원",
-      value: `${posting.applicantCount}/${posting.recruitCount}명`,
-    },
-    {
-      icon: ExpireDateIcon,
-      label: "신청 마감",
-      value: formatDate(posting.noticeEndDate),
-    },
-    {
-      icon: VolunteerOrgIcon,
-      label: "봉사 기관명",
-      value: posting.recruitOrg,
-    },
-    {
-      icon: PortalOrgIcon,
-      label: "포털 등록 기관명",
-      value: posting.registerOrg,
-    },
-  ];
+  const location = getLocation(posting);
+  const activityPeriod = formatVolunteerPeriod(
+    posting.actStartDate,
+    posting.actEndDate,
+    posting.actWkdy,
+  );
+  const activityTime = formatVolunteerTimeRange(
+    posting.actStartTime,
+    posting.actEndTime,
+  );
+  const participantCount = getParticipantCount(posting);
+  const recruitmentDeadline = formatVolunteerPeriod(
+    posting.noticeEndDate,
+    posting.noticeEndDate,
+  );
+  const rows = [
+    location
+      ? {
+          icon: LocationIcon,
+          label: "장소",
+          value: location,
+        }
+      : null,
+    activityPeriod
+      ? {
+          icon: CalendarIcon,
+          label: "날짜",
+          value: activityPeriod,
+        }
+      : null,
+    activityTime
+      ? {
+          icon: ClockIcon,
+          label: "시간",
+          value: activityTime,
+        }
+      : null,
+    participantCount
+      ? {
+          icon: MemberIcon,
+          label: "참여 인원",
+          value: participantCount,
+        }
+      : null,
+    recruitmentDeadline
+      ? {
+          icon: ExpireDateIcon,
+          label: "신청 마감",
+          value: recruitmentDeadline,
+        }
+      : null,
+    posting.recruitOrg
+      ? {
+          icon: VolunteerOrgIcon,
+          label: "봉사 기관명",
+          value: posting.recruitOrg,
+        }
+      : null,
+    posting.registerOrg
+      ? {
+          icon: PortalOrgIcon,
+          label: "포털 등록 기관명",
+          value: posting.registerOrg,
+        }
+      : null,
+  ].filter(isInfoRow);
 
   return (
     <section

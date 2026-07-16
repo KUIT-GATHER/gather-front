@@ -1,11 +1,31 @@
-export type TeamStatus = "OPEN" | "RECRUITING" | "CLOSED" | "COMPLETED";
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
-export type PostingTeam = {
-  id: number;
-  postingId: number;
-  title: string;
-  status: TeamStatus;
-  recruitCount: number;
-  applicantCount: number;
-  categoryName: string;
+export type MeetingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
+
+export type MeetingListItem = {
+  meetingId: number;
+  name: string;
+  description: string | null;
+  currentMemberCount: number;
+  maxMember: number;
+  regionId: number;
+  category: PostingCategory;
+  status: MeetingStatus;
+  deadline: string;
+  activityStartAt: string;
+};
+
+export type MeetingDetail = MeetingListItem & {
+  hostId: number;
+  volunteerPostingId: number | null;
+  participationCondition: string | null;
+  memo: string | null;
+  activityEndAt: string;
+};
+
+export type MeetingListParams = {
+  keyword?: string;
+  regionId?: number;
+  category?: PostingCategory;
+  status?: MeetingStatus;
 };

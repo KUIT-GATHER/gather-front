@@ -49,21 +49,25 @@ export function VolunteerPostingHeader({
           {title}
         </h1>
 
-        <button
-          type="button"
-          aria-label={isBookmarked ? "관심 봉사에서 삭제" : "관심 봉사로 저장"}
-          aria-pressed={isBookmarked}
-          disabled={isBookmarkPending}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-point-red/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/30 disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={onBookmarkToggle}
-        >
-          <img
-            src={isBookmarked ? FilledHeartIcon : UnfilledHeartIcon}
-            alt=""
-            aria-hidden="true"
-            className="size-5"
-          />
-        </button>
+        {onBookmarkToggle ? (
+          <button
+            type="button"
+            aria-label={
+              isBookmarked ? "관심 봉사에서 삭제" : "관심 봉사로 저장"
+            }
+            aria-pressed={isBookmarked}
+            disabled={isBookmarkPending}
+            className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-point-red/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/30 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={onBookmarkToggle}
+          >
+            <img
+              src={isBookmarked ? FilledHeartIcon : UnfilledHeartIcon}
+              alt=""
+              aria-hidden="true"
+              className="size-5"
+            />
+          </button>
+        ) : null}
       </div>
     </header>
   );

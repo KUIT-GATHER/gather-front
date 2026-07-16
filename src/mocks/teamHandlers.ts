@@ -2,66 +2,111 @@ import { HttpResponse, http } from "msw";
 
 import teams from "./data/teams.json";
 
-function getNumberParams(url: URL, key: string) {
-  return url.searchParams
-    .getAll(key)
-    .flatMap((value) => value.split(","))
-    .map(Number)
-    .filter(Number.isFinite);
+const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
+const POSTING_CATEGORIES = new Set([
+  "ENVIRONMENT",
+  "EDUCATION",
+  "CULTURE",
+  "COMMUNITY",
+  "WELFARE",
+  "OVERSEAS",
+]);
+
+function getOptionalNumberParam(url: URL, key: string) {
+  const rawValue = url.searchParams.get(key);
+
+  if (!rawValue || rawValue.trim() === "") {
+    return undefined;
+  }
+
+  const value = Number(rawValue);
+
+  return Number.isFinite(value) ? value : undefined;
+}
+
+function toMeetingListItem(team: (typeof teams.data)[number]) {
+  return {
+    meetingId: team.meetingId,
+    name: team.name,
+    description: team.description,
+    currentMemberCount: team.currentMemberCount,
+    maxMember: team.maxMember,
+    regionId: team.regionId,
+    category: team.category,
+    status: team.status,
+    deadline: team.deadline,
+    activityStartAt: team.activityStartAt,
+  };
 }
 
 export const teamHandlers = [
-  http.get("*/api/v1/teams", ({ request }) => {
+  http.get("*/api/v1/meetings", ({ request }) => {
     const url = new URL(request.url);
-
     const keyword = url.searchParams.get("keyword")?.trim();
-    const regionIds = getNumberParams(url, "regionIds");
-    const categoryIds = getNumberParams(url, "categoryIds");
-    const startDate = url.searchParams.get("startDate");
-    const endDate = url.searchParams.get("endDate");
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const category = url.searchParams.get("category");
+    const status = url.searchParams.get("status");
+
+    if (category && !POSTING_CATEGORIES.has(category)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (status && !MEETING_STATUSES.has(status)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
 
     let items = teams.data;
 
     if (keyword) {
       items = items.filter((team) =>
-        [
-          team.title,
-          team.content,
-          team.address,
-          team.sido_name,
-          team.sigungu_name,
-          team.region.name,
-          team.category.name,
-        ].some((value) => value?.includes(keyword)),
+        [team.name, team.description]
+          .filter((value): value is string => value !== null)
+          .some((value) => value.includes(keyword)),
       );
     }
 
-    if (regionIds.length > 0) {
-      items = items.filter((team) => regionIds.includes(team.region.id));
+    if (regionId !== undefined) {
+      items = items.filter((team) => team.regionId === regionId);
     }
 
-    if (categoryIds.length > 0) {
-      items = items.filter((team) => categoryIds.includes(team.category.id));
+    if (category) {
+      items = items.filter((team) => team.category === category);
     }
 
-    if (startDate) {
-      items = items.filter((team) => team.meeting_date >= startDate);
-    }
-
-    if (endDate) {
-      items = items.filter((team) => team.meeting_date <= endDate);
+    if (status) {
+      items = items.filter((team) => team.status === status);
     }
 
     return HttpResponse.json({
       success: true,
-      data: items,
+      data: items.map(toMeetingListItem),
       error: null,
     });
   }),
 
-  http.get("*/api/v1/teams/:teamId", ({ params }) => {
-    const teamId = Number(params.teamId);
-    const team = teams.data.find((item) => item.id === teamId);
+  http.get("*/api/v1/meetings/:meetingId/home", ({ params }) => {
+    const meetingId = Number(params.meetingId);
+    const team = teams.data.find((item) => item.meetingId === meetingId);
 
     if (!team) {
       return HttpResponse.json(
@@ -69,7 +114,7 @@ export const teamHandlers = [
           success: false,
           data: null,
           error: {
-            code: "TEAM_NOT_FOUND",
+            code: "MEETING_NOT_FOUND",
             message: "모임을 찾을 수 없습니다.",
           },
         },
@@ -79,18 +124,57 @@ export const teamHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: team,
+      data: {
+        meetingId: team.meetingId,
+        name: team.name,
+        description: team.description,
+        deadline: team.deadline,
+        regionName: team.regionName,
+        currentMemberCount: team.currentMemberCount,
+        maxMember: team.maxMember,
+        timeVerified: false,
+        status: team.status,
+        basedOnPosting: team.volunteerPostingId !== null,
+        linkedPostingId: team.volunteerPostingId,
+        linkedPostingTitle: null,
+        participationCondition: team.participationCondition,
+        members: [],
+        upcomingActivity: null,
+        member: false,
+        host: false,
+      },
       error: null,
     });
   }),
 
-  http.get("*/api/v1/postings/:postingId/teams", ({ params }) => {
-    const postingId = Number(params.postingId);
-    const items = teams.data.filter((team) => team.posting_id === postingId);
+  http.get("*/api/v1/meetings/:meetingId", ({ params }) => {
+    const meetingId = Number(params.meetingId);
+    const team = teams.data.find((item) => item.meetingId === meetingId);
+
+    if (!team) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "MEETING_NOT_FOUND",
+            message: "모임을 찾을 수 없습니다.",
+          },
+        },
+        { status: 404 },
+      );
+    }
 
     return HttpResponse.json({
       success: true,
-      data: items,
+      data: {
+        ...toMeetingListItem(team),
+        hostId: team.hostId,
+        volunteerPostingId: team.volunteerPostingId,
+        participationCondition: team.participationCondition,
+        memo: team.memo,
+        activityEndAt: team.activityEndAt,
+      },
       error: null,
     });
   }),

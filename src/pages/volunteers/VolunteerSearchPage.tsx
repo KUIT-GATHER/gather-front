@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { VolunteerPostingSearchScreen } from "@/features/volunteer/components/VolunteerPostingSearchScreen";
 
 export function VolunteerSearchPage() {
-  return <PageContainer size="narrow">VolunteerSearchPage</PageContainer>;
+  return <VolunteerPostingSearchScreen />;
 }

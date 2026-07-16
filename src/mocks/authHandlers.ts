@@ -1,7 +1,10 @@
 import { HttpResponse, http } from "msw";
 
-import categories from "./data/categories.json";
 import regions from "./data/regions.json";
+
+import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
 type SignupRequest = {
   name?: string;
@@ -14,7 +17,7 @@ type SignupRequest = {
   nickname?: string;
   introduction?: string | null;
   activityRegionId?: number;
-  interestCategoryIds?: number[];
+  interestCategories?: PostingCategory[];
   serviceTermsAgreed?: boolean;
   privacyPolicyAgreed?: boolean;
   marketingAgreed?: boolean;
@@ -35,9 +38,7 @@ const validLevel2RegionIds = new Set(
     .filter((region) => region.level === 2)
     .map((region) => region.id),
 );
-const validCategoryIds = new Set(
-  categories.data.map((category) => category.id),
-);
+const validPostingCategories = new Set<PostingCategory>(POSTING_CATEGORIES);
 
 const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
@@ -96,7 +97,7 @@ type MockUser = {
   nickname: string;
   introduction?: string | null;
   activityRegionId: number;
-  interestCategoryIds: number[];
+  interestCategories: PostingCategory[];
 };
 
 const users: MockUser[] = [
@@ -111,7 +112,7 @@ const users: MockUser[] = [
     nickname: "가더",
     introduction: "함께 봉사하는 걸 좋아해요.",
     activityRegionId: 201,
-    interestCategoryIds: [1, 2],
+    interestCategories: ["ENVIRONMENT", "COMMUNITY"],
   },
 ];
 
@@ -292,7 +293,7 @@ export const authHandlers = [
       !body.phoneNumber ||
       !body.nickname ||
       typeof body.activityRegionId !== "number" ||
-      !body.interestCategoryIds ||
+      !body.interestCategories ||
       typeof body.marketingAgreed !== "boolean"
     ) {
       return HttpResponse.json(
@@ -364,7 +365,7 @@ export const authHandlers = [
       );
     }
 
-    if (!body.interestCategoryIds || body.interestCategoryIds.length < 1) {
+    if (!body.interestCategories || body.interestCategories.length < 1) {
       return HttpResponse.json(
         {
           success: false,
@@ -379,7 +380,7 @@ export const authHandlers = [
     }
 
     if (
-      new Set(body.interestCategoryIds).size !== body.interestCategoryIds.length
+      new Set(body.interestCategories).size !== body.interestCategories.length
     ) {
       return HttpResponse.json(
         {
@@ -414,8 +415,8 @@ export const authHandlers = [
     }
 
     if (
-      body.interestCategoryIds.some(
-        (categoryId) => !validCategoryIds.has(categoryId),
+      body.interestCategories.some(
+        (category) => !validPostingCategories.has(category),
       )
     ) {
       return HttpResponse.json(
@@ -484,7 +485,7 @@ export const authHandlers = [
       nickname: body.nickname,
       introduction: body.introduction?.trim() || null,
       activityRegionId: body.activityRegionId,
-      interestCategoryIds: body.interestCategoryIds,
+      interestCategories: body.interestCategories,
     };
 
     users.push(newUser);
