@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 
+import { clearAuthSession } from "@/features/auth/lib/clearAuthSession";
 import { refreshSessionOnce } from "@/features/auth/lib/refreshSession";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 
@@ -8,8 +9,6 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const authInitialized = useAuthStore((state) => state.authInitialized);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
   const setAuthInitialized = useAuthStore((state) => state.setAuthInitialized);
 
   useEffect(() => {
@@ -20,7 +19,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await refreshSessionOnce();
       } catch {
         if (!ignore) {
-          clearAuth();
+          clearAuthSession();
         }
       } finally {
         if (!ignore) {
@@ -34,11 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       ignore = true;
     };
-  }, [clearAuth, setAuthInitialized]);
-
-  if (!authInitialized) {
-    return null;
-  }
+  }, [setAuthInitialized]);
 
   return children;
 }

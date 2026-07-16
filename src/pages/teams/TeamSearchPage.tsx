@@ -1,3 +1,5 @@
+import { TeamSearchScreen } from "@/features/team/components/TeamSearchScreen";
+
 export function TeamSearchPage() {
-  return <div>TeamSearchPage</div>;
+  return <TeamSearchScreen />;
 }

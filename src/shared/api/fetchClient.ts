@@ -1,3 +1,4 @@
+import { clearAuthSession } from "@/features/auth/lib/clearAuthSession";
 import { refreshSessionOnce } from "@/features/auth/lib/refreshSession";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { ApiError } from "@/shared/api/apiError";
@@ -87,7 +88,7 @@ export async function fetchClient<T>(
       try {
         await refreshSessionOnce();
       } catch {
-        useAuthStore.getState().clearAuth();
+        clearAuthSession();
         throw error;
       }
 
@@ -102,7 +103,7 @@ export async function fetchClient<T>(
         error.code === API_ERROR_CODE.REVOKED_TOKEN);
 
     if (shouldClearAuth) {
-      useAuthStore.getState().clearAuth();
+      clearAuthSession();
     }
 
     throw error;

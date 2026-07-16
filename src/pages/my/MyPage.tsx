@@ -1,3 +1,5 @@
+import PageContainer from "@/shared/ui/PageContainer";
+
 export function MyPage() {
-  return <div>MyPage</div>;
+  return <PageContainer size="narrow">MyPage</PageContainer>;
 }

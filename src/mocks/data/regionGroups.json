@@ -1,0 +1,11 @@
+[
+  { "id": 1, "code": "GRP_SEOUL", "name": "서울" },
+  { "id": 2, "code": "GRP_BUSAN", "name": "부산" },
+  { "id": 3, "code": "GRP_INCHEON", "name": "인천" },
+  { "id": 4, "code": "GRP_GYEONGGI", "name": "경기" },
+  { "id": 5, "code": "GRP_GANGWON", "name": "강원" },
+  { "id": 6, "code": "GRP_JEJU", "name": "제주" },
+  { "id": 7, "code": "GRP_GYEONGSANG", "name": "경상" },
+  { "id": 8, "code": "GRP_JEOLLA", "name": "전라" },
+  { "id": 9, "code": "GRP_CHUNGCHEONG", "name": "충청" }
+]

@@ -1,3 +1,5 @@
+import { TeamListScreen } from "@/features/team/components/TeamListScreen";
+
 export function TeamPage() {
-  return <div>TeamPage</div>;
+  return <TeamListScreen />;
 }

@@ -1,7 +1,10 @@
 import { HttpResponse, http } from "msw";
 
-import categories from "./data/categories.json";
 import regions from "./data/regions.json";
+
+import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
 type SignupRequest = {
   name?: string;
@@ -13,19 +16,29 @@ type SignupRequest = {
   passwordConfirm?: string;
   nickname?: string;
   introduction?: string | null;
-  activityRegionIds?: number[];
-  interestCategoryIds?: number[];
+  activityRegionId?: number;
+  interestCategories?: PostingCategory[];
   serviceTermsAgreed?: boolean;
   privacyPolicyAgreed?: boolean;
   marketingAgreed?: boolean;
 };
 
 const verifiedEmails = new Set<string>();
+const emailVerificationRequests = new Map<
+  string,
+  {
+    code: string;
+    expiresAt: number;
+  }
+>();
 
 const validRegionIds = new Set(regions.data.map((region) => region.id));
-const validCategoryIds = new Set(
-  categories.data.map((category) => category.id),
+const validLevel2RegionIds = new Set(
+  regions.data
+    .filter((region) => region.level === 2)
+    .map((region) => region.id),
 );
+const validPostingCategories = new Set<PostingCategory>(POSTING_CATEGORIES);
 
 const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
@@ -83,8 +96,8 @@ type MockUser = {
   password: string;
   nickname: string;
   introduction?: string | null;
-  activityRegionIds: number[];
-  interestCategoryIds: number[];
+  activityRegionId: number;
+  interestCategories: PostingCategory[];
 };
 
 const users: MockUser[] = [
@@ -98,8 +111,8 @@ const users: MockUser[] = [
     password: "test1234",
     nickname: "가더",
     introduction: "함께 봉사하는 걸 좋아해요.",
-    activityRegionIds: [1],
-    interestCategoryIds: [1, 2],
+    activityRegionId: 201,
+    interestCategories: ["ENVIRONMENT", "COMMUNITY"],
   },
 ];
 
@@ -138,7 +151,7 @@ export const authHandlers = [
     const body = (await request.json()) as { email?: string };
     const email = body.email?.trim().toLowerCase();
 
-    if (!email) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return HttpResponse.json(
         {
           success: false,
@@ -152,13 +165,32 @@ export const authHandlers = [
       );
     }
 
+    if (users.some((user) => user.email === email)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "DUPLICATE_EMAIL",
+            message: "이미 사용 중인 이메일입니다.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    const expiresAt = Date.now() + 10 * 60 * 1000;
     verifiedEmails.delete(email);
+    emailVerificationRequests.set(email, {
+      code: "123456",
+      expiresAt,
+    });
 
     return HttpResponse.json({
       success: true,
       data: {
         email,
-        expiresAt: "2026-07-04T12:10:00",
+        expiresAt: new Date(expiresAt).toISOString(),
         message: "인증 코드가 발송되었습니다.",
       },
       error: null,
@@ -190,7 +222,37 @@ export const authHandlers = [
         );
       }
 
-      if (code !== "123456") {
+      const verification = emailVerificationRequests.get(email);
+
+      if (!verification) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "EMAIL_VERIFICATION_NOT_FOUND",
+              message: "이메일 인증 요청을 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      if (Date.now() > verification.expiresAt) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "EXPIRED_VERIFICATION_CODE",
+              message: "인증 코드가 만료되었습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      if (code !== verification.code) {
         return HttpResponse.json(
           {
             success: false,
@@ -211,7 +273,7 @@ export const authHandlers = [
         data: {
           email,
           verified: true,
-          verifiedAt: "2026-06-28T12:05:00",
+          verifiedAt: new Date().toISOString(),
         },
         error: null,
       });
@@ -230,6 +292,8 @@ export const authHandlers = [
       !body.gender ||
       !body.phoneNumber ||
       !body.nickname ||
+      typeof body.activityRegionId !== "number" ||
+      !body.interestCategories ||
       typeof body.marketingAgreed !== "boolean"
     ) {
       return HttpResponse.json(
@@ -273,25 +337,35 @@ export const authHandlers = [
       );
     }
 
-    if (
-      !body.activityRegionIds ||
-      body.activityRegionIds.length < 1 ||
-      body.activityRegionIds.length > 3
-    ) {
+    if (!validRegionIds.has(body.activityRegionId)) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
-            code: "INVALID_ACTIVITY_REGION_COUNT",
-            message: "활동 지역은 1개 이상 3개 이하로 선택해야 합니다.",
+            code: "REGION_NOT_FOUND",
+            message: "활동 지역을 찾을 수 없습니다.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    if (!validLevel2RegionIds.has(body.activityRegionId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "INVALID_ACTIVITY_REGION",
+            message: "활동 지역은 시군구 단위로 1개 선택해야 합니다.",
           },
         },
         { status: 400 },
       );
     }
 
-    if (!body.interestCategoryIds || body.interestCategoryIds.length < 1) {
+    if (!body.interestCategories || body.interestCategories.length < 1) {
       return HttpResponse.json(
         {
           success: false,
@@ -299,6 +373,22 @@ export const authHandlers = [
           error: {
             code: "INVALID_INTEREST_CATEGORY_COUNT",
             message: "관심 카테고리는 1개 이상 선택해야 합니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      new Set(body.interestCategories).size !== body.interestCategories.length
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "INVALID_INTEREST_CATEGORY_COUNT",
+            message: "관심 카테고리는 중복 없이 1개 이상 선택해야 합니다.",
           },
         },
         { status: 400 },
@@ -325,24 +415,8 @@ export const authHandlers = [
     }
 
     if (
-      body.activityRegionIds.some((regionId) => !validRegionIds.has(regionId))
-    ) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "REGION_NOT_FOUND",
-            message: "존재하지 않는 활동 지역입니다.",
-          },
-        },
-        { status: 404 },
-      );
-    }
-
-    if (
-      body.interestCategoryIds.some(
-        (categoryId) => !validCategoryIds.has(categoryId),
+      body.interestCategories.some(
+        (category) => !validPostingCategories.has(category),
       )
     ) {
       return HttpResponse.json(
@@ -409,9 +483,9 @@ export const authHandlers = [
       email,
       password: body.password,
       nickname: body.nickname,
-      introduction: body.introduction,
-      activityRegionIds: body.activityRegionIds,
-      interestCategoryIds: body.interestCategoryIds,
+      introduction: body.introduction?.trim() || null,
+      activityRegionId: body.activityRegionId,
+      interestCategories: body.interestCategories,
     };
 
     users.push(newUser);

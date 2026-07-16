@@ -1,3 +1,5 @@
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
+
 export type PhoneAvailabilityRequest = {
   phoneNumber: string;
 };
@@ -38,8 +40,8 @@ export type SignupRequest = {
   passwordConfirm: string;
   nickname: string;
   introduction?: string | null;
-  activityRegionIds: number[];
-  interestCategoryIds: number[];
+  activityRegionId: number;
+  interestCategories: PostingCategory[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
   marketingAgreed: boolean;
@@ -50,11 +52,6 @@ export type SignupResponse = {
   email: string;
   name: string;
   nickname: string;
-};
-
-export type LoginRequest = {
-  email: string;
-  password: string;
 };
 
 export type TokenResponse = {

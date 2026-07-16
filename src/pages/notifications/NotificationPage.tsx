@@ -1,3 +1,5 @@
+import PageContainer from "@/shared/ui/PageContainer";
+
 export function NotificationPage() {
-  return <div>NotificationPage</div>;
+  return <PageContainer size="narrow">NotificationPage</PageContainer>;
 }
