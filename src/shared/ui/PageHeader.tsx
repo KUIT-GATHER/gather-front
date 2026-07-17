@@ -36,7 +36,7 @@ export default function PageHeader({
   return (
     <header
       className={cn(
-        "relative w-full bg-white pt-[env(safe-area-inset-top)]",
+        "relative w-full bg-bg pt-[env(safe-area-inset-top)]",
         sticky && "sticky top-0 z-40",
         className,
       )}

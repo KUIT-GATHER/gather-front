@@ -68,6 +68,7 @@ function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
   setQueryParam(searchParams, "noticeStartDate", params.noticeStartDate);
   setQueryParam(searchParams, "noticeEndDate", params.noticeEndDate);
   setQueryParam(searchParams, "keyword", params.keyword);
+  setQueryParam(searchParams, "category", params.category);
 
   return searchParams.toString();
 }

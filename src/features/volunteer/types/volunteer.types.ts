@@ -95,6 +95,7 @@ type VolunteerPostingBaseParams = {
   noticeStartDate?: string;
   noticeEndDate?: string;
   keyword?: string;
+  category?: PostingCategory;
 };
 
 export type VolunteerPostingListParams = VolunteerPostingBaseParams &
