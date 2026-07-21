@@ -139,6 +139,7 @@ export function VolunteerPostingSearchScreen() {
             <IconButton
               label="뒤로가기"
               icon={<ChevronLeft />}
+              variant="plain"
               onClick={() => navigate(-1)}
             />
             <VolunteerPostingSearchForm

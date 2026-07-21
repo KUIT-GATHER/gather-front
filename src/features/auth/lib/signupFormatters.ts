@@ -1,3 +1,5 @@
+export const MIN_BIRTH_DATE = "1900-01-01";
+
 export function normalizePhoneNumber(value: string) {
   return value.replace(/\D/g, "").slice(0, 11);
 }
@@ -74,4 +76,14 @@ export function isRealPastOrTodayBirthDate(value: string) {
   date.setHours(0, 0, 0, 0);
 
   return date <= today;
+}
+
+export function isAllowedBirthDate(value: string) {
+  const normalized = normalizeBirthDate(value);
+
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(normalized) &&
+    normalized >= MIN_BIRTH_DATE &&
+    isRealPastOrTodayBirthDate(normalized)
+  );
 }

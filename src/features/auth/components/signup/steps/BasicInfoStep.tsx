@@ -8,7 +8,7 @@ import {
 import {
   formatBirthDateInput,
   formatPhoneNumber,
-  isRealPastOrTodayBirthDate,
+  isAllowedBirthDate,
   normalizeBirthDate,
   normalizePhoneNumber,
 } from "@/features/auth/lib/signupFormatters";
@@ -134,7 +134,7 @@ export function BasicInfoStep({
                     const nextValue = normalizeBirthDate(event.target.value);
 
                     field.onChange(nextValue);
-                    if (isRealPastOrTodayBirthDate(nextValue)) {
+                    if (isAllowedBirthDate(nextValue)) {
                       clearErrors("birthDate");
                     }
                   }}

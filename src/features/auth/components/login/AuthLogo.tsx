@@ -20,7 +20,7 @@ export function AuthLogo({ size = "large", className }: AuthLogoProps) {
           aria-hidden="true"
           className={cn(
             "absolute z-20 h-auto",
-            isLarge ? "top-0 left-5.5 w-32.5" : "top-0 left-4.5 w-29",
+            isLarge ? "top-0 left-0 w-32.5" : "top-0 left-0 w-29",
           )}
         />
         <img
@@ -29,7 +29,7 @@ export function AuthLogo({ size = "large", className }: AuthLogoProps) {
           aria-hidden="true"
           className={cn(
             "absolute z-10 h-auto",
-            isLarge ? "top-5.5 right-4.5 w-26.75" : "top-5 right-3.5 w-24",
+            isLarge ? "top-5.5 right-3 w-26.75" : "top-5 right-2.5 w-24",
           )}
         />
       </div>
