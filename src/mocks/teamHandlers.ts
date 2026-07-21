@@ -33,6 +33,34 @@ type MeetingSort = {
 };
 
 const bookmarkedMeetingIds = new Set<number>();
+const joinedMeetingIds = new Set<number>();
+
+const meetingPosts = [
+  {
+    postId: 1,
+    meetingId: 1,
+    type: "NOTICE",
+    title: "오늘도 아이들과 독서 봉사를 다녀왔어요!",
+    content: "아이들과 이야기 나누며 책을 읽고 따뜻한 시간을 보냈어요.",
+    authorId: 1,
+    authorNickname: "김수민",
+    likeCount: 15,
+    commentCount: 5,
+    createdAt: "2026-05-11T19:30:00",
+  },
+  {
+    postId: 2,
+    meetingId: 2,
+    type: "REVIEW",
+    title: "첫 활동 후기",
+    content: "처음 참여했는데 편하게 함께할 수 있었어요.",
+    authorId: 2,
+    authorNickname: "이하늘",
+    likeCount: 7,
+    commentCount: 2,
+    createdAt: "2026-07-24T18:10:00",
+  },
+] as const;
 
 function createMeetingNotFoundResponse() {
   return HttpResponse.json(
@@ -132,11 +160,13 @@ function sortMeetings(
 }
 
 function toMeetingListItem(team: (typeof teams.data)[number]) {
+  const joined = joinedMeetingIds.has(team.meetingId);
+
   return {
     meetingId: team.meetingId,
     name: team.name,
     description: team.description,
-    currentMemberCount: team.currentMemberCount,
+    currentMemberCount: team.currentMemberCount + (joined ? 1 : 0),
     maxMember: team.maxMember,
     regionId: team.regionId,
     category: team.category,
@@ -258,6 +288,8 @@ export const teamHandlers = [
       );
     }
 
+    const joined = joinedMeetingIds.has(meetingId);
+
     return HttpResponse.json({
       success: true,
       data: {
@@ -266,7 +298,7 @@ export const teamHandlers = [
         description: team.description,
         deadline: team.deadline,
         regionName: team.regionName,
-        currentMemberCount: team.currentMemberCount,
+        currentMemberCount: team.currentMemberCount + (joined ? 1 : 0),
         maxMember: team.maxMember,
         timeVerified: false,
         status: team.status,
@@ -274,11 +306,97 @@ export const teamHandlers = [
         linkedPostingId: team.volunteerPostingId,
         linkedPostingTitle: null,
         participationCondition: team.participationCondition,
-        members: [],
+        members: [
+          {
+            userId: team.hostId,
+            nickname: "팀장",
+            role: "HOST",
+            host: true,
+          },
+          ...(joined
+            ? [
+                {
+                  userId: 99,
+                  nickname: "나",
+                  role: "MEMBER",
+                  host: false,
+                },
+              ]
+            : []),
+        ],
         upcomingActivity: null,
-        member: false,
+        member: joined,
         host: false,
       },
+      error: null,
+    });
+  }),
+
+  http.get("*/api/v1/meetings/:meetingId/posts", ({ params, request }) => {
+    const meetingId = Number(params.meetingId);
+    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const url = new URL(request.url);
+    const type = url.searchParams.get("type");
+
+    if (!team) {
+      return createMeetingNotFoundResponse();
+    }
+
+    if (
+      type &&
+      type !== "NOTICE" &&
+      type !== "REVIEW" &&
+      type !== "RECRUIT" &&
+      type !== "FREE"
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid post type.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const posts = meetingPosts
+      .filter((post) => post.meetingId === meetingId)
+      .filter((post) => !type || post.type === type)
+      .map((post) => ({
+        postId: post.postId,
+        type: post.type,
+        title: post.title,
+        content: post.content,
+        authorId: post.authorId,
+        authorNickname: post.authorNickname,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount,
+        createdAt: post.createdAt,
+      }));
+
+    return HttpResponse.json({
+      success: true,
+      data: posts,
+      error: null,
+    });
+  }),
+
+  http.post("*/api/v1/meetings/:meetingId/join", ({ params }) => {
+    const meetingId = Number(params.meetingId);
+    const team = teams.data.find((item) => item.meetingId === meetingId);
+
+    if (!team) {
+      return createMeetingNotFoundResponse();
+    }
+
+    joinedMeetingIds.add(meetingId);
+
+    return HttpResponse.json({
+      success: true,
+      data: toMeetingListItem(team),
       error: null,
     });
   }),

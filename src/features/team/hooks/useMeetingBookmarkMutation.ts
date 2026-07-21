@@ -36,6 +36,9 @@ export function useAddMeetingBookmarkMutation(meetingId: number) {
         teamKeys.detail(meetingId),
         (meeting) => updateMeetingBookmarkState(meeting, bookmark),
       );
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.detail(meetingId),
+      });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
     },
   });
@@ -52,6 +55,9 @@ export function useRemoveMeetingBookmarkMutation(meetingId: number) {
         teamKeys.detail(meetingId),
         (meeting) => updateMeetingBookmarkState(meeting, bookmark),
       );
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.detail(meetingId),
+      });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
     },
   });
