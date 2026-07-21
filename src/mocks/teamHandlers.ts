@@ -32,6 +32,22 @@ type MeetingSort = {
   direction: "asc" | "desc";
 };
 
+const bookmarkedMeetingIds = new Set<number>();
+
+function createMeetingNotFoundResponse() {
+  return HttpResponse.json(
+    {
+      success: false,
+      data: null,
+      error: {
+        code: "MEETING_NOT_FOUND",
+        message: "Meeting not found.",
+      },
+    },
+    { status: 404 },
+  );
+}
+
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
 
@@ -294,6 +310,75 @@ export const teamHandlers = [
         participationCondition: team.participationCondition,
         memo: team.memo,
         activityEndAt: team.activityEndAt,
+        bookmarked: bookmarkedMeetingIds.has(meetingId),
+      },
+      error: null,
+    });
+  }),
+
+  http.post("*/api/v1/meetings/:meetingId/bookmark", ({ params }) => {
+    const meetingId = Number(params.meetingId);
+    const team = teams.data.find((item) => item.meetingId === meetingId);
+
+    if (!team) {
+      return createMeetingNotFoundResponse();
+    }
+
+    if (bookmarkedMeetingIds.has(meetingId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "MEETING_BOOKMARK_DUPLICATE",
+            message: "Meeting already bookmarked.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    bookmarkedMeetingIds.add(meetingId);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        meetingId,
+        bookmarked: true,
+      },
+      error: null,
+    });
+  }),
+
+  http.delete("*/api/v1/meetings/:meetingId/bookmark", ({ params }) => {
+    const meetingId = Number(params.meetingId);
+    const team = teams.data.find((item) => item.meetingId === meetingId);
+
+    if (!team) {
+      return createMeetingNotFoundResponse();
+    }
+
+    if (!bookmarkedMeetingIds.has(meetingId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "MEETING_BOOKMARK_NOT_FOUND",
+            message: "Meeting bookmark not found.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    bookmarkedMeetingIds.delete(meetingId);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        meetingId,
+        bookmarked: false,
       },
       error: null,
     });

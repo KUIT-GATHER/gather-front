@@ -11,6 +11,8 @@ export const teamKeys = {
     [...teamKeys.lists(), params] as const,
   details: () => [...teamKeys.all, "detail"] as const,
   detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
+  bookmark: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "bookmark"] as const,
 };
 
 export const teamQueries = {

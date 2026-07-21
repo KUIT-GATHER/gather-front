@@ -21,6 +21,7 @@ export type MeetingDetail = MeetingListItem & {
   participationCondition: string | null;
   memo: string | null;
   activityEndAt: string;
+  bookmarked?: boolean;
 };
 
 export type MeetingListParams = {
@@ -39,4 +40,9 @@ export type MeetingPage = {
   totalPages: number;
   page: number;
   size: number;
+};
+
+export type MeetingBookmarkResponse = {
+  meetingId: number;
+  bookmarked: boolean;
 };

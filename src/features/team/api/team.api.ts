@@ -1,6 +1,7 @@
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
+  MeetingBookmarkResponse,
   MeetingDetail,
   MeetingListParams,
   MeetingPage,
@@ -75,5 +76,23 @@ export function getMeeting(meetingId: number) {
   return fetchClient<MeetingDetail>(
     `${MEETING_ENDPOINT}/${meetingId}`,
     publicOptions,
+  );
+}
+
+export function addMeetingBookmark(meetingId: number) {
+  return fetchClient<MeetingBookmarkResponse>(
+    `${MEETING_ENDPOINT}/${meetingId}/bookmark`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export function removeMeetingBookmark(meetingId: number) {
+  return fetchClient<MeetingBookmarkResponse>(
+    `${MEETING_ENDPOINT}/${meetingId}/bookmark`,
+    {
+      method: "DELETE",
+    },
   );
 }
