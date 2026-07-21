@@ -3,7 +3,11 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "@/shared/lib/cn";
 
 type ButtonVariant =
-  "primary" | "primaryOutline" | "dark" | "danger" | "dangerOutline";
+  | "primary"
+  | "primaryOutline"
+  | "dark"
+  | "danger"
+  | "dangerOutline";
 type ButtonSize = "large" | "medium" | "pill" | "next";
 
 export type ButtonProps = ComponentPropsWithRef<"button"> & {
