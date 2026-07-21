@@ -3,6 +3,8 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 export type MeetingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 export type MeetingMemberRole = "HOST" | "MEMBER";
 export type MeetingPostType = "NOTICE" | "REVIEW" | "RECRUIT" | "FREE";
+export type TeamViewerRole = "guest" | "member" | "leader";
+export type TeammateViewerRole = Exclude<TeamViewerRole, "guest">;
 
 export type MeetingListItem = {
   meetingId: number;
