@@ -31,7 +31,7 @@ export function VolunteerPostingHero({ posting }: VolunteerPostingHeroProps) {
     <section>
       <div className="overflow-hidden rounded-lg">
         <img
-          src={getVolunteerPostingImage(posting.category)}
+          src={getVolunteerPostingImage(posting.category, posting.id)}
           alt=""
           className="aspect-[344/175] w-full object-cover"
         />

@@ -1,6 +1,10 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
-import { getVolunteerPosting, getVolunteerPostings } from "./volunteer.api";
+import {
+  getVolunteerPosting,
+  getVolunteerPostingRecommendedKeywords,
+  getVolunteerPostings,
+} from "./volunteer.api";
 
 import type {
   VolunteerPostingInfiniteParams,
@@ -34,6 +38,8 @@ export const volunteerPostingKeys = {
   details: () => [...volunteerPostingKeys.all, "detail"] as const,
   detail: (postingId: number) =>
     [...volunteerPostingKeys.details(), postingId] as const,
+  recommendedKeywords: () =>
+    [...volunteerPostingKeys.all, "recommendedKeywords"] as const,
 };
 
 export const volunteerPostingQueries = {
@@ -60,5 +66,12 @@ export const volunteerPostingQueries = {
     queryOptions({
       queryKey: volunteerPostingKeys.detail(postingId),
       queryFn: () => getVolunteerPosting(postingId),
+    }),
+
+  recommendedKeywords: () =>
+    queryOptions({
+      queryKey: volunteerPostingKeys.recommendedKeywords(),
+      queryFn: getVolunteerPostingRecommendedKeywords,
+      staleTime: 24 * 60 * 60 * 1000,
     }),
 };

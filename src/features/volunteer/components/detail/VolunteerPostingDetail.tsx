@@ -1,16 +1,19 @@
 import { useNavigate } from "react-router";
 
+import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
+import { ApiError } from "@/shared/api/apiError";
+import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
+import { cn } from "@/shared/lib/cn";
+import { EmptyState } from "@/shared/ui/EmptyState";
+import { ErrorState } from "@/shared/ui/ErrorState";
+import LoadingState from "@/shared/ui/LoadingState";
+
 import { VolunteerPostingApplyBar } from "./VolunteerPostingApplyBar";
 import { VolunteerPostingConditionCard } from "./VolunteerPostingConditionCard";
 import { VolunteerPostingHeader } from "./VolunteerPostingHeader";
 import { VolunteerPostingHero } from "./VolunteerPostingHero";
 import { VolunteerPostingInfoCard } from "./VolunteerPostingInfoCard";
 import { VolunteerPostingTeamSection } from "./VolunteerPostingTeamSection";
-import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
-import { EmptyState } from "@/shared/ui/EmptyState";
-import { ErrorState } from "@/shared/ui/ErrorState";
-import { cn } from "@/shared/lib/cn";
-import LoadingState from "@/shared/ui/LoadingState";
 
 type VolunteerPostingDetailProps = {
   postingId: number;
@@ -43,23 +46,46 @@ export function VolunteerPostingDetail({
   }
 
   if (postingQuery.isError) {
+    const isPostingNotFound =
+      postingQuery.error instanceof ApiError &&
+      postingQuery.error.code === API_ERROR_CODE.POSTING_NOT_FOUND;
+
     return (
       <>
         <VolunteerPostingHeader onBack={() => navigate(-1)} />
         <ErrorState
           className="min-h-[calc(100dvh-7rem)] justify-center"
-          title="봉사 공고를 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
-          primaryAction={{
-            label: "다시 시도",
-            onClick: () => {
-              void postingQuery.refetch();
-            },
-          }}
-          secondaryAction={{
-            label: "이전 페이지",
-            onClick: () => navigate(-1),
-          }}
+          title={
+            isPostingNotFound
+              ? "봉사 공고를 찾을 수 없어요"
+              : "봉사 공고를 불러오지 못했어요"
+          }
+          description={
+            isPostingNotFound
+              ? "삭제되었거나 존재하지 않는 봉사 공고예요."
+              : "잠시 후 다시 시도해 주세요."
+          }
+          primaryAction={
+            isPostingNotFound
+              ? {
+                  label: "봉사공고 목록으로 이동",
+                  onClick: () => navigate("/volunteers"),
+                }
+              : {
+                  label: "다시 시도",
+                  onClick: () => {
+                    void postingQuery.refetch();
+                  },
+                }
+          }
+          secondaryAction={
+            isPostingNotFound
+              ? undefined
+              : {
+                  label: "이전 페이지",
+                  onClick: () => navigate(-1),
+                }
+          }
         />
       </>
     );

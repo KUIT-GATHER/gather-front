@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Dialog } from "radix-ui";
-import { X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
@@ -14,6 +14,8 @@ type BottomSheetProps = {
   footer?: ReactNode;
   className?: string;
   contentClassName?: string;
+  onBack?: () => void;
+  backLabel?: string;
 };
 
 export default function BottomSheet({
@@ -25,6 +27,8 @@ export default function BottomSheet({
   footer,
   className,
   contentClassName,
+  onBack,
+  backLabel = "이전 화면으로",
 }: BottomSheetProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -37,12 +41,22 @@ export default function BottomSheet({
             className,
           )}
         >
-          <div className="relative flex shrink-0 justify-end px-5.5 pt-5 pb-3">
+          <div className="relative flex shrink-0 items-center justify-between px-5.5 pt-5 pb-3">
             <Dialog.Title className="absolute top-5 left-1/2 -translate-x-1/2 text-title-18 text-text">
               {title}
             </Dialog.Title>
+            {onBack ? (
+              <IconButton
+                label={backLabel}
+                icon={<ChevronLeft />}
+                variant="plain"
+                onClick={onBack}
+              />
+            ) : (
+              <span className="size-11" aria-hidden="true" />
+            )}
             <Dialog.Close asChild>
-              <IconButton label="닫기" icon={<X />} />
+              <IconButton label="닫기" icon={<X />} variant="plain" />
             </Dialog.Close>
           </div>
           <Dialog.Description

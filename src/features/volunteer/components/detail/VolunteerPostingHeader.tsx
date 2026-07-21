@@ -34,7 +34,7 @@ export function VolunteerPostingHeader({
         <button
           type="button"
           aria-label="뒤로가기"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full transition hover:bg-text/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
           onClick={onBack}
         >
           <img

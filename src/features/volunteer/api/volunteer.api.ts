@@ -96,3 +96,10 @@ export function getVolunteerPosting(postingId: number) {
     publicOptions,
   );
 }
+
+export function getVolunteerPostingRecommendedKeywords() {
+  return fetchClient<string[]>(
+    `${POSTING_ENDPOINT}/keywords/recommended`,
+    publicOptions,
+  );
+}

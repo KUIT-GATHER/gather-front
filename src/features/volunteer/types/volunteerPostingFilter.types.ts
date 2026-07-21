@@ -1,9 +1,30 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
-export type VolunteerPostingFilter = {
-  regionId?: number;
-  regionGroupId?: number;
-  noticeStartDate?: string;
-  noticeEndDate?: string;
-  category?: PostingCategory;
-};
+type VolunteerPostingFilterRegion =
+  | {
+      regionId?: never;
+      regionGroupId?: never;
+    }
+  | {
+      regionId: number;
+      regionGroupId?: never;
+    }
+  | {
+      regionId?: never;
+      regionGroupId: number;
+    };
+
+type VolunteerPostingFilterDate =
+  | {
+      noticeStartDate?: never;
+      noticeEndDate?: never;
+    }
+  | {
+      noticeStartDate: string;
+      noticeEndDate: string;
+    };
+
+export type VolunteerPostingFilter = VolunteerPostingFilterRegion &
+  VolunteerPostingFilterDate & {
+    category?: PostingCategory;
+  };

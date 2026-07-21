@@ -7,10 +7,10 @@ import PageHeader from "@/shared/ui/PageHeader";
 import type { SignupStep } from "@/features/auth/constants/signupFlow.constants";
 
 const stepMeta: Record<SignupStep, { label: string; value: number }> = {
-  basic: { label: "1 /4 기본 정보", value: 25 },
-  account: { label: "2 /4 계정 정보", value: 50 },
-  profile: { label: "3 /4 프로필 생성", value: 75 },
-  terms: { label: "4 /4 서비스 약관", value: 100 },
+  basic: { label: "1/4 기본 정보", value: 25 },
+  account: { label: "2/4 계정 정보", value: 50 },
+  profile: { label: "3/4 프로필 생성", value: 75 },
+  terms: { label: "4/4 서비스 약관", value: 100 },
 };
 
 type SignupShellProps = {

@@ -63,20 +63,28 @@ export function getVolunteerPostingFilter(
   const regionGroupId = parsePositiveInteger(searchParams.get("regionGroupId"));
   const noticeStartDate = parseDate(searchParams.get("noticeStartDate"));
   const noticeEndDate = parseDate(searchParams.get("noticeEndDate"));
-
-  return {
-    ...(regionId !== undefined
-      ? { regionId }
-      : regionGroupId !== undefined
-        ? { regionGroupId }
-        : {}),
-    ...(noticeStartDate && noticeEndDate && noticeStartDate <= noticeEndDate
+  const category = parseCategory(searchParams.get("category"));
+  const dateFilter =
+    noticeStartDate && noticeEndDate && noticeStartDate <= noticeEndDate
       ? { noticeStartDate, noticeEndDate }
-      : {}),
-    ...(parseCategory(searchParams.get("category"))
-      ? { category: parseCategory(searchParams.get("category")) }
-      : {}),
-  };
+      : undefined;
+  const categoryFilter = category ? { category } : {};
+
+  if (regionId !== undefined) {
+    return dateFilter
+      ? { regionId, ...dateFilter, ...categoryFilter }
+      : { regionId, ...categoryFilter };
+  }
+
+  if (regionGroupId !== undefined) {
+    return dateFilter
+      ? { regionGroupId, ...dateFilter, ...categoryFilter }
+      : { regionGroupId, ...categoryFilter };
+  }
+
+  return dateFilter
+    ? { ...dateFilter, ...categoryFilter }
+    : { ...categoryFilter };
 }
 
 export function getVolunteerPostingSort(searchParams: URLSearchParams) {

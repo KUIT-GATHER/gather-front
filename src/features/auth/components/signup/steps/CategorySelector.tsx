@@ -3,10 +3,18 @@ import { useFormContext, useWatch } from "react-hook-form";
 import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+import {
+  POSTING_CATEGORIES,
+  type PostingCategory,
+} from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
 
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
+
+const labelPositionClasses: Partial<Record<PostingCategory, string>> = {
+  COMMUNITY: "-translate-x-1 translate-y-1",
+  CULTURE: "-translate-x-1 -translate-y-1",
+};
 
 export function CategorySelector() {
   const {
@@ -56,7 +64,12 @@ export function CategorySelector() {
                   className="size-full"
                 />
                 <span className="pointer-events-none absolute inset-0 grid place-items-center px-2">
-                  <span className="max-w-[78px] break-keep text-center text-[13px] font-medium leading-4 text-text">
+                  <span
+                    className={cn(
+                      "max-w-[78px] break-keep text-center text-[13px] font-medium leading-4 text-text",
+                      labelPositionClasses[category],
+                    )}
+                  >
                     {POSTING_CATEGORY_LABEL[category]}
                   </span>
                 </span>

@@ -63,6 +63,7 @@ export type VolunteerPostingListItem = {
   regionId: number | null;
   regionName: string | null;
   category: PostingCategory;
+  noticeEndDate: string | null;
 };
 
 export type VolunteerPostingPage = {
