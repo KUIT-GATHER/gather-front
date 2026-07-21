@@ -28,4 +28,15 @@ export type MeetingListParams = {
   regionId?: number;
   category?: PostingCategory;
   status?: MeetingStatus;
+  page?: number;
+  size?: number;
+  sort?: string[];
+};
+
+export type MeetingPage = {
+  content: MeetingListItem[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
 };
