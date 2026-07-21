@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import {
-  isRealPastOrTodayBirthDate,
+  isAllowedBirthDate,
   normalizeBirthDate,
 } from "@/features/auth/lib/signupFormatters";
 import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
@@ -109,8 +109,8 @@ export const signupSchema = z
         (value) => /^\d{4}-\d{2}-\d{2}$/.test(normalizeBirthDate(value)),
         { error: "생년월일은 YYYY. MM. DD 형식으로 입력해 주세요." },
       )
-      .refine(isRealPastOrTodayBirthDate, {
-        error: "실제 존재하는 과거 또는 오늘 날짜를 입력해 주세요.",
+      .refine(isAllowedBirthDate, {
+        error: "생년월일은 1900년 1월 1일부터 오늘까지 입력해 주세요.",
       }),
 
     gender: z
@@ -130,12 +130,14 @@ export const signupSchema = z
     password: z
       .string()
       .min(6, { error: "비밀번호는 6자 이상이어야 합니다." })
-      .max(12, { error: "비밀번호는 12자 이하이어야 합니다." }),
+      .max(12, { error: "비밀번호는 12자 이하이어야 합니다." })
+      .regex(/^\S+$/, { error: "비밀번호에는 공백을 사용할 수 없습니다." }),
 
     passwordConfirm: z
       .string()
       .min(6, { error: "비밀번호 확인은 6자 이상이어야 합니다." })
-      .max(12, { error: "비밀번호 확인은 12자 이하이어야 합니다." }),
+      .max(12, { error: "비밀번호 확인은 12자 이하이어야 합니다." })
+      .regex(/^\S+$/, { error: "비밀번호에는 공백을 사용할 수 없습니다." }),
 
     nickname: createKoreanOrEnglishTextSchema("닉네임"),
 
