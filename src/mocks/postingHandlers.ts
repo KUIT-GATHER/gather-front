@@ -281,6 +281,7 @@ export const postingHandlers = [
           regionId,
           regionName,
           category,
+          noticeEndDate,
         }) => ({
           id,
           title,
@@ -294,6 +295,7 @@ export const postingHandlers = [
           regionId,
           regionName,
           category,
+          noticeEndDate,
         }),
       );
 
@@ -306,6 +308,14 @@ export const postingHandlers = [
         page,
         size,
       },
+      error: null,
+    });
+  }),
+
+  http.get("*/api/v1/postings/keywords/recommended", () => {
+    return HttpResponse.json({
+      success: true,
+      data: ["유기견", "환경", "아동", "멘토링"],
       error: null,
     });
   }),

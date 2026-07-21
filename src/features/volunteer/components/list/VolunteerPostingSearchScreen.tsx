@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, Search, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 
-import { VOLUNTEER_POSTING_SEARCH_RECOMMENDATIONS } from "@/features/volunteer/constants/volunteerPostingSearch.constants";
 import {
   isVolunteerPostingListSort,
   volunteerPostingListSortOptions,
 } from "@/features/volunteer/constants/volunteerPostingList.constants";
 import { useRecentVolunteerSearches } from "@/features/volunteer/hooks/useRecentVolunteerSearches";
+import { useVolunteerPostingRecommendedKeywordsQuery } from "@/features/volunteer/hooks/useVolunteerPostingRecommendedKeywordsQuery";
 import {
   getVolunteerPostingSort,
   toVolunteerPostingQueryParams,
@@ -110,6 +110,9 @@ export function VolunteerPostingSearchScreen() {
   const keywordFromUrl = searchParams.get("keyword")?.trim() ?? "";
   const { recentSearches, addRecentSearch, clearRecentSearches } =
     useRecentVolunteerSearches();
+  const recommendedKeywordsQuery =
+    useVolunteerPostingRecommendedKeywordsQuery();
+  const recommendedKeywords = recommendedKeywordsQuery.data ?? [];
   const sort = getVolunteerPostingSort(searchParams);
   const queryParams = useMemo(
     () => toVolunteerPostingQueryParams(searchParams, sort),
@@ -224,11 +227,11 @@ export function VolunteerPostingSearchScreen() {
                 </p>
               )}
             </div>
-            <div className="mt-9">
-              <h3 className="text-body-15-semibold text-text">추천 검색어</h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {VOLUNTEER_POSTING_SEARCH_RECOMMENDATIONS.map(
-                  (recommendation) => (
+            {recommendedKeywords.length > 0 ? (
+              <div className="mt-9">
+                <h3 className="text-body-15-semibold text-text">추천 검색어</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {recommendedKeywords.map((recommendation) => (
                     <button
                       key={recommendation}
                       type="button"
@@ -237,10 +240,10 @@ export function VolunteerPostingSearchScreen() {
                     >
                       #{recommendation}
                     </button>
-                  ),
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
           </section>
         </>
       )}
