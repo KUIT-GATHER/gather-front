@@ -17,7 +17,7 @@ export function VolunteerPostingCard({
   onClick,
   variant = "list",
 }: VolunteerPostingCardProps) {
-  const imageSrc = getVolunteerPostingImage(posting.category);
+  const imageSrc = getVolunteerPostingImage(posting.category, posting.id);
   const location = formatVolunteerLocation(posting);
   const activityDate = formatVolunteerDate(posting.actStartDate);
 
@@ -31,7 +31,7 @@ export function VolunteerPostingCard({
         <img
           src={imageSrc}
           alt=""
-          className="aspect-square w-34 rounded-xl border border-stroke bg-bg object-cover p-5"
+          className="aspect-square w-34 rounded-xl border border-stroke object-cover"
         />
         <h3 className="mt-2 truncate text-body-15-semibold text-text">
           {posting.title}
@@ -54,7 +54,7 @@ export function VolunteerPostingCard({
       <img
         src={imageSrc}
         alt=""
-        className="size-22 shrink-0 rounded-lg border border-stroke bg-bg object-cover p-3"
+        className="size-22 shrink-0 rounded-lg border border-stroke object-cover"
       />
 
       <div className="min-w-0 flex-1 py-0.5">
