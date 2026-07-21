@@ -11,6 +11,26 @@ const POSTING_CATEGORIES = new Set([
   "WELFARE",
   "OVERSEAS",
 ]);
+const SORTABLE_MEETING_FIELDS = [
+  "id",
+  "name",
+  "currentMemberCount",
+  "maxMember",
+  "regionId",
+  "category",
+  "status",
+  "deadline",
+  "activityStartAt",
+  "activityEndAt",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+type MeetingSortField = (typeof SORTABLE_MEETING_FIELDS)[number];
+type MeetingSort = {
+  field: MeetingSortField;
+  direction: "asc" | "desc";
+};
 
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
@@ -21,7 +41,78 @@ function getOptionalNumberParam(url: URL, key: string) {
 
   const value = Number(rawValue);
 
-  return Number.isFinite(value) ? value : undefined;
+  return Number.isInteger(value) ? value : undefined;
+}
+
+function getPageParam(url: URL) {
+  const page = getOptionalNumberParam(url, "page");
+
+  return page !== undefined && page >= 0 ? page : 0;
+}
+
+function getSizeParam(url: URL) {
+  const size = getOptionalNumberParam(url, "size");
+
+  return size !== undefined && size > 0 ? size : 10;
+}
+
+function parseSorts(url: URL): MeetingSort[] | null {
+  const rawSorts = url.searchParams.getAll("sort");
+
+  if (rawSorts.length === 0) {
+    return [{ field: "createdAt", direction: "desc" }];
+  }
+
+  return rawSorts.reduce<MeetingSort[] | null>((sorts, rawSort) => {
+    if (!sorts) {
+      return null;
+    }
+
+    const [field, direction = "asc"] = rawSort.split(",");
+
+    if (
+      !SORTABLE_MEETING_FIELDS.includes(field as MeetingSortField) ||
+      (direction !== "asc" && direction !== "desc")
+    ) {
+      return null;
+    }
+
+    sorts.push({ field: field as MeetingSortField, direction });
+    return sorts;
+  }, []);
+}
+
+function getSortValue(
+  team: (typeof teams.data)[number],
+  field: MeetingSortField,
+) {
+  if (field === "id" || field === "createdAt" || field === "updatedAt") {
+    return team.meetingId;
+  }
+
+  return team[field];
+}
+
+function sortMeetings(
+  items: (typeof teams.data)[number][],
+  sorts: MeetingSort[],
+) {
+  return [...items].sort((left, right) => {
+    for (const { field, direction } of sorts) {
+      const leftValue = getSortValue(left, field);
+      const rightValue = getSortValue(right, field);
+      const comparison =
+        typeof leftValue === "number" && typeof rightValue === "number"
+          ? leftValue - rightValue
+          : String(leftValue).localeCompare(String(rightValue));
+
+      if (comparison !== 0) {
+        return direction === "asc" ? comparison : -comparison;
+      }
+    }
+
+    return 0;
+  });
 }
 
 function toMeetingListItem(team: (typeof teams.data)[number]) {
@@ -46,6 +137,9 @@ export const teamHandlers = [
     const regionId = getOptionalNumberParam(url, "regionId");
     const category = url.searchParams.get("category");
     const status = url.searchParams.get("status");
+    const page = getPageParam(url);
+    const size = getSizeParam(url);
+    const sorts = parseSorts(url);
 
     if (category && !POSTING_CATEGORIES.has(category)) {
       return HttpResponse.json(
@@ -62,6 +156,20 @@ export const teamHandlers = [
     }
 
     if (status && !MEETING_STATUSES.has(status)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!sorts) {
       return HttpResponse.json(
         {
           success: false,
@@ -97,9 +205,21 @@ export const teamHandlers = [
       items = items.filter((team) => team.status === status);
     }
 
+    const sortedItems = sortMeetings(items, sorts);
+    const startIndex = page * size;
+    const content = sortedItems
+      .slice(startIndex, startIndex + size)
+      .map(toMeetingListItem);
+
     return HttpResponse.json({
       success: true,
-      data: items.map(toMeetingListItem),
+      data: {
+        content,
+        totalElements: sortedItems.length,
+        totalPages: Math.ceil(sortedItems.length / size),
+        page,
+        size,
+      },
       error: null,
     });
   }),

@@ -47,11 +47,16 @@ export function TeamListScreen() {
       regionId: toPositiveNumber(searchParams.get("regionId")),
       category: toPostingCategory(searchParams.get("category")),
       status: toMeetingStatus(searchParams.get("status")),
+      page: 0,
+      size: 10,
+      sort: ["createdAt,desc"],
     }),
     [searchParams],
   );
   const meetingsQuery = useMeetingsQuery(queryParams);
-  const meetings = meetingsQuery.data;
+  const meetingPage = meetingsQuery.data;
+  const meetings = meetingPage?.content ?? [];
+  const totalElements = meetingPage?.totalElements ?? 0;
 
   return (
     <PageContainer size="narrow" className="min-h-dvh pb-8">
@@ -79,9 +84,7 @@ export function TeamListScreen() {
       />
 
       <div className="mt-6 flex items-center justify-between pb-3">
-        <p className="text-xs text-gray-700">
-          전체 {meetings?.length ?? 0}개 활동
-        </p>
+        <p className="text-xs text-gray-700">전체 {totalElements}개 활동</p>
       </div>
 
       {meetingsQuery.isLoading ? (
@@ -101,14 +104,16 @@ export function TeamListScreen() {
         />
       ) : null}
 
-      {meetings && meetings.length === 0 ? (
+      {!meetingsQuery.isLoading &&
+      !meetingsQuery.isError &&
+      meetings.length === 0 ? (
         <EmptyState
           title="조건에 맞는 모임이 없어요"
           description="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
         />
       ) : null}
 
-      {meetings && meetings.length > 0 ? (
+      {meetings.length > 0 ? (
         <ul className="flex flex-col gap-3">
           {meetings.map((team) => (
             <li key={team.meetingId}>
