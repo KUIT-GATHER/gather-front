@@ -104,6 +104,14 @@ export function VolunteerPostingDetail({
   }
 
   const posting = postingQuery.data;
+  const handleCreateTeam = () => {
+    if (!posting) {
+      return;
+    }
+
+    navigate(`/volunteers/${posting.id}/teams/new`);
+  };
+
   const handleBookmarkToggle = () => {
     if (!posting) {
       return;
@@ -158,7 +166,10 @@ export function VolunteerPostingDetail({
         <VolunteerPostingInfoCard posting={posting} className="mt-5" />
         <VolunteerPostingConditionCard posting={posting} className="mt-4" />
         <VolunteerPostingDivider className="mt-5" />
-        <VolunteerPostingTeamSection className="mt-5" />
+        <VolunteerPostingTeamSection
+          className="mt-5"
+          onCreateTeam={handleCreateTeam}
+        />
       </div>
 
       <VolunteerPostingApplyBar disabled />
