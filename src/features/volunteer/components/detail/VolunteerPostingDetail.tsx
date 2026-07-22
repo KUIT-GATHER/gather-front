@@ -1,5 +1,10 @@
 import { useNavigate } from "react-router";
 
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import {
+  useAddVolunteerPostingBookmarkMutation,
+  useRemoveVolunteerPostingBookmarkMutation,
+} from "@/features/volunteer/hooks/useVolunteerPostingBookmarkMutation";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
@@ -32,7 +37,14 @@ export function VolunteerPostingDetail({
   postingId,
 }: VolunteerPostingDetailProps) {
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const postingQuery = useVolunteerPostingDetail(postingId);
+  const addBookmarkMutation = useAddVolunteerPostingBookmarkMutation(postingId);
+  const removeBookmarkMutation =
+    useRemoveVolunteerPostingBookmarkMutation(postingId);
+  const isBookmarkPending =
+    addBookmarkMutation.isPending || removeBookmarkMutation.isPending;
+
   if (postingQuery.isLoading) {
     return (
       <>
@@ -92,6 +104,27 @@ export function VolunteerPostingDetail({
   }
 
   const posting = postingQuery.data;
+  const handleBookmarkToggle = () => {
+    if (!posting) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: {
+          from: `/volunteers/${posting.id}`,
+        },
+      });
+      return;
+    }
+
+    if (posting.bookmarked) {
+      removeBookmarkMutation.mutate();
+      return;
+    }
+
+    addBookmarkMutation.mutate();
+  };
 
   if (!posting) {
     return (
@@ -113,6 +146,9 @@ export function VolunteerPostingDetail({
       <VolunteerPostingHeader
         title={posting.title}
         onBack={() => navigate(-1)}
+        isBookmarked={posting.bookmarked}
+        isBookmarkPending={isBookmarkPending}
+        onBookmarkToggle={handleBookmarkToggle}
         sticky
       />
 

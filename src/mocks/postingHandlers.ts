@@ -54,6 +54,7 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
 });
 
 const mockPostings = [...postings.data, ...additionalMockPostings];
+const bookmarkedPostingIds = new Set<number>();
 
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
@@ -340,13 +341,17 @@ export const postingHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: posting,
+      data: {
+        ...posting,
+        bookmarked: bookmarkedPostingIds.has(postingId),
+      },
       error: null,
     });
   }),
 
   http.post("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
     const postingId = Number(params.postingId);
+    bookmarkedPostingIds.add(postingId);
 
     return HttpResponse.json({
       success: true,
@@ -360,6 +365,7 @@ export const postingHandlers = [
 
   http.delete("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
     const postingId = Number(params.postingId);
+    bookmarkedPostingIds.delete(postingId);
 
     return HttpResponse.json({
       success: true,
