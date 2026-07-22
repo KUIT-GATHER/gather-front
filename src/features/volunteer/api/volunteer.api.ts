@@ -2,6 +2,7 @@ import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
   VolunteerPosting,
+  VolunteerPostingBookmarkResponse,
   VolunteerPostingListParams,
   VolunteerPostingPage,
 } from "@/features/volunteer/types/volunteer.types";
@@ -91,15 +92,30 @@ export function getVolunteerPostings(params?: VolunteerPostingListParams) {
 }
 
 export function getVolunteerPosting(postingId: number) {
-  return fetchClient<VolunteerPosting>(
-    buildPostingEndpoint(postingId),
-    publicOptions,
-  );
+  return fetchClient<VolunteerPosting>(buildPostingEndpoint(postingId));
 }
 
 export function getVolunteerPostingRecommendedKeywords() {
   return fetchClient<string[]>(
     `${POSTING_ENDPOINT}/keywords/recommended`,
     publicOptions,
+  );
+}
+
+export function addVolunteerPostingBookmark(postingId: number) {
+  return fetchClient<VolunteerPostingBookmarkResponse>(
+    `${POSTING_ENDPOINT}/${postingId}/bookmark`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export function removeVolunteerPostingBookmark(postingId: number) {
+  return fetchClient<VolunteerPostingBookmarkResponse>(
+    `${POSTING_ENDPOINT}/${postingId}/bookmark`,
+    {
+      method: "DELETE",
+    },
   );
 }
