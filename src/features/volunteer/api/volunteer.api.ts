@@ -5,6 +5,7 @@ import type {
   VolunteerPostingBookmarkResponse,
   VolunteerPostingListParams,
   VolunteerPostingPage,
+  VolunteerPostingParticipationResponse,
 } from "@/features/volunteer/types/volunteer.types";
 
 const publicOptions = {
@@ -116,6 +117,15 @@ export function removeVolunteerPostingBookmark(postingId: number) {
     `${POSTING_ENDPOINT}/${postingId}/bookmark`,
     {
       method: "DELETE",
+    },
+  );
+}
+
+export function applyVolunteerPostingParticipation(postingId: number) {
+  return fetchClient<VolunteerPostingParticipationResponse>(
+    `${POSTING_ENDPOINT}/${postingId}/participations`,
+    {
+      method: "POST",
     },
   );
 }

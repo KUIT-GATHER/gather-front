@@ -80,6 +80,18 @@ export type VolunteerPostingBookmarkResponse = {
   bookmarked: boolean;
 };
 
+export type VolunteerPostingParticipationStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "REVIEWED";
+
+export type VolunteerPostingParticipationResponse = {
+  participationId: number;
+  status: VolunteerPostingParticipationStatus;
+  applicationUrl: string;
+};
+
 type VolunteerPostingRegionFilter =
   | {
       regionId?: never;

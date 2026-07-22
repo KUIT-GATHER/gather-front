@@ -40,6 +40,8 @@ export const volunteerPostingKeys = {
     [...volunteerPostingKeys.details(), postingId] as const,
   bookmark: (postingId: number) =>
     [...volunteerPostingKeys.detail(postingId), "bookmark"] as const,
+  participation: (postingId: number) =>
+    [...volunteerPostingKeys.detail(postingId), "participation"] as const,
   recommendedKeywords: () =>
     [...volunteerPostingKeys.all, "recommendedKeywords"] as const,
 };

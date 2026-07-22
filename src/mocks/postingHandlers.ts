@@ -55,6 +55,7 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
 
 const mockPostings = [...postings.data, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
+const participatedPostingIds = new Map<number, number>();
 
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
@@ -358,6 +359,52 @@ export const postingHandlers = [
       data: {
         postingId,
         bookmarked: true,
+      },
+      error: null,
+    });
+  }),
+
+  http.post("*/api/v1/postings/:postingId/participations", ({ params }) => {
+    const postingId = Number(params.postingId);
+    const posting = mockPostings.find((item) => item.id === postingId);
+
+    if (!posting) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "POSTING_NOT_FOUND",
+            message: "Posting not found.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    if (participatedPostingIds.has(postingId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "PARTICIPATION_DUPLICATE",
+            message: "Already applied to this posting.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    const participationId = participatedPostingIds.size + 1;
+    participatedPostingIds.set(postingId, participationId);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        participationId,
+        status: "APPLIED",
+        applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
       },
       error: null,
     });
