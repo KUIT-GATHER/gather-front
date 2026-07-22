@@ -17,6 +17,7 @@ export const teamKeys = {
   lists: () => [...teamKeys.all, "list"] as const,
   list: (params: MeetingListParams = {}) =>
     [...teamKeys.lists(), params] as const,
+  create: () => [...teamKeys.all, "create"] as const,
   details: () => [...teamKeys.all, "detail"] as const,
   detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
   home: (meetingId: number) => [...teamKeys.detail(meetingId), "home"] as const,

@@ -2,6 +2,8 @@ import { HttpResponse, http } from "msw";
 
 import teams from "./data/teams.json";
 
+import type { MeetingCreateRequest } from "@/features/team/types/team.types";
+
 const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = new Set([
   "ENVIRONMENT",
@@ -32,8 +34,28 @@ type MeetingSort = {
   direction: "asc" | "desc";
 };
 
+type MockMeeting = {
+  meetingId: number;
+  name: string;
+  description: string | null;
+  currentMemberCount: number;
+  maxMember: number;
+  regionId: number;
+  regionName: string;
+  category: string;
+  status: string;
+  deadline: string;
+  activityStartAt: string;
+  activityEndAt: string;
+  hostId: number;
+  volunteerPostingId: number | null;
+  participationCondition: string | null;
+  memo: string | null;
+};
+
 const bookmarkedMeetingIds = new Set<number>();
 const joinedMeetingIds = new Set<number>();
+const createdMeetings: MockMeeting[] = [];
 
 const meetingPosts = [
   {
@@ -126,10 +148,7 @@ function parseSorts(url: URL): MeetingSort[] | null {
   }, []);
 }
 
-function getSortValue(
-  team: (typeof teams.data)[number],
-  field: MeetingSortField,
-) {
+function getSortValue(team: MockMeeting, field: MeetingSortField) {
   if (field === "id" || field === "createdAt" || field === "updatedAt") {
     return team.meetingId;
   }
@@ -137,10 +156,7 @@ function getSortValue(
   return team[field];
 }
 
-function sortMeetings(
-  items: (typeof teams.data)[number][],
-  sorts: MeetingSort[],
-) {
+function sortMeetings(items: MockMeeting[], sorts: MeetingSort[]) {
   return [...items].sort((left, right) => {
     for (const { field, direction } of sorts) {
       const leftValue = getSortValue(left, field);
@@ -159,7 +175,11 @@ function sortMeetings(
   });
 }
 
-function toMeetingListItem(team: (typeof teams.data)[number]) {
+function getMockMeetings() {
+  return [...(teams.data as MockMeeting[]), ...createdMeetings];
+}
+
+function toMeetingListItem(team: MockMeeting) {
   const joined = joinedMeetingIds.has(team.meetingId);
 
   return {
@@ -229,7 +249,7 @@ export const teamHandlers = [
       );
     }
 
-    let items = teams.data;
+    let items = getMockMeetings();
 
     if (keyword) {
       items = items.filter((team) =>
@@ -270,9 +290,63 @@ export const teamHandlers = [
     });
   }),
 
+  http.post("*/api/v1/meetings", async ({ request }) => {
+    const body = (await request.json()) as Partial<MeetingCreateRequest>;
+
+    if (
+      !body.name ||
+      typeof body.maxMember !== "number" ||
+      typeof body.regionId !== "number" ||
+      !body.deadline ||
+      !body.activityStartAt ||
+      !body.activityEndAt
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid meeting create request.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const meetingId =
+      Math.max(...getMockMeetings().map((team) => team.meetingId), 0) + 1;
+    const meeting = {
+      meetingId,
+      name: body.name,
+      description: body.description ?? null,
+      currentMemberCount: 1,
+      maxMember: body.maxMember,
+      regionId: body.regionId,
+      regionName: "",
+      category: body.category ?? "COMMUNITY",
+      status: "RECRUITING",
+      deadline: body.deadline,
+      activityStartAt: body.activityStartAt,
+      activityEndAt: body.activityEndAt,
+      hostId: 1,
+      volunteerPostingId: body.volunteerPostingId ?? null,
+      participationCondition: body.participationCondition ?? null,
+      memo: body.memo ?? null,
+    };
+
+    createdMeetings.push(meeting);
+
+    return HttpResponse.json({
+      success: true,
+      data: toMeetingListItem(meeting),
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/meetings/:meetingId/home", ({ params }) => {
     const meetingId = Number(params.meetingId);
-    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
 
     if (!team) {
       return HttpResponse.json(
@@ -334,7 +408,7 @@ export const teamHandlers = [
 
   http.get("*/api/v1/meetings/:meetingId/posts", ({ params, request }) => {
     const meetingId = Number(params.meetingId);
-    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
 
@@ -386,7 +460,7 @@ export const teamHandlers = [
 
   http.post("*/api/v1/meetings/:meetingId/join", ({ params }) => {
     const meetingId = Number(params.meetingId);
-    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
 
     if (!team) {
       return createMeetingNotFoundResponse();
@@ -403,7 +477,7 @@ export const teamHandlers = [
 
   http.get("*/api/v1/meetings/:meetingId", ({ params }) => {
     const meetingId = Number(params.meetingId);
-    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
 
     if (!team) {
       return HttpResponse.json(
@@ -436,7 +510,7 @@ export const teamHandlers = [
 
   http.post("*/api/v1/meetings/:meetingId/bookmark", ({ params }) => {
     const meetingId = Number(params.meetingId);
-    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
 
     if (!team) {
       return createMeetingNotFoundResponse();
@@ -470,7 +544,7 @@ export const teamHandlers = [
 
   http.delete("*/api/v1/meetings/:meetingId/bookmark", ({ params }) => {
     const meetingId = Number(params.meetingId);
-    const team = teams.data.find((item) => item.meetingId === meetingId);
+    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
 
     if (!team) {
       return createMeetingNotFoundResponse();

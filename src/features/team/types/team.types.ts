@@ -19,6 +19,20 @@ export type MeetingListItem = {
   activityStartAt: string;
 };
 
+export type MeetingCreateRequest = {
+  name: string;
+  description?: string | null;
+  maxMember: number;
+  deadline: string;
+  memo?: string | null;
+  category?: PostingCategory;
+  regionId: number;
+  participationCondition?: string | null;
+  volunteerPostingId?: number | null;
+  activityStartAt: string;
+  activityEndAt: string;
+};
+
 export type MeetingDetail = MeetingListItem & {
   hostId: number;
   volunteerPostingId: number | null;

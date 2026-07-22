@@ -2,6 +2,7 @@ import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
   MeetingBookmarkResponse,
+  MeetingCreateRequest,
   MeetingDetail,
   MeetingHome,
   MeetingListItem,
@@ -88,6 +89,13 @@ function buildMeetingPostsEndpoint(
 
 export function getMeetings(params?: MeetingListParams) {
   return fetchClient<MeetingPage>(buildMeetingsEndpoint(params), publicOptions);
+}
+
+export function createMeeting(payload: MeetingCreateRequest) {
+  return fetchClient<MeetingListItem>(MEETING_ENDPOINT, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function getMeeting(meetingId: number) {
