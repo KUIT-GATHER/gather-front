@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useApplyVolunteerPostingParticipationMutation } from "@/features/volunteer/hooks/useApplyVolunteerPostingParticipationMutation";
 import {
   useAddVolunteerPostingBookmarkMutation,
   useRemoveVolunteerPostingBookmarkMutation,
@@ -14,6 +16,7 @@ import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 
 import { VolunteerPostingApplyBar } from "./VolunteerPostingApplyBar";
+import { VolunteerPostingApplyConfirmSheet } from "./VolunteerPostingApplyConfirmSheet";
 import { VolunteerPostingConditionCard } from "./VolunteerPostingConditionCard";
 import { VolunteerPostingHeader } from "./VolunteerPostingHeader";
 import { VolunteerPostingHero } from "./VolunteerPostingHero";
@@ -37,8 +40,11 @@ export function VolunteerPostingDetail({
   postingId,
 }: VolunteerPostingDetailProps) {
   const navigate = useNavigate();
+  const [isApplySheetOpen, setIsApplySheetOpen] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const postingQuery = useVolunteerPostingDetail(postingId);
+  const applyMutation =
+    useApplyVolunteerPostingParticipationMutation(postingId);
   const addBookmarkMutation = useAddVolunteerPostingBookmarkMutation(postingId);
   const removeBookmarkMutation =
     useRemoveVolunteerPostingBookmarkMutation(postingId);
@@ -104,6 +110,31 @@ export function VolunteerPostingDetail({
   }
 
   const posting = postingQuery.data;
+  const handleApplyClick = () => {
+    if (!posting) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: {
+          from: `/volunteers/${posting.id}`,
+        },
+      });
+      return;
+    }
+
+    setIsApplySheetOpen(true);
+  };
+
+  const handleApplyConfirm = () => {
+    applyMutation.mutate(undefined, {
+      onSuccess: (participation) => {
+        window.location.assign(participation.applicationUrl);
+      },
+    });
+  };
+
   const handleCreateTeam = () => {
     if (!posting) {
       return;
@@ -172,7 +203,23 @@ export function VolunteerPostingDetail({
         />
       </div>
 
-      <VolunteerPostingApplyBar disabled />
+      <VolunteerPostingApplyBar
+        isPending={applyMutation.isPending}
+        onApply={handleApplyClick}
+      />
+
+      <VolunteerPostingApplyConfirmSheet
+        open={isApplySheetOpen}
+        posting={posting}
+        isPending={applyMutation.isPending}
+        errorMessage={
+          applyMutation.isError
+            ? "신청 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요."
+            : undefined
+        }
+        onOpenChange={setIsApplySheetOpen}
+        onConfirm={handleApplyConfirm}
+      />
     </article>
   );
 }
