@@ -23,6 +23,9 @@ import { TeamPage } from "@/pages/teams/TeamPage";
 import { TeamSearchPage } from "@/pages/teams/TeamSearchPage";
 import { TeamCreatePage } from "@/pages/teams/TeamCreatePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
+import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
+import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
+import { TeamDetailPostsPage } from "@/pages/teams/TeamDetailPostsPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
@@ -71,6 +74,15 @@ export const router = createBrowserRouter([
             element: <RequireAuth />,
             children: [
               { path: "/teams", element: <TeamPage /> },
+              { path: "/teams/:teamId/home", element: <TeamDetailHomePage /> },
+              {
+                path: "/teams/:teamId/posts",
+                element: <TeamDetailPostsPage />,
+              },
+              {
+                path: "/teams/:teamId/activity",
+                element: <TeamDetailActivityPage />,
+              },
               { path: "/my", element: <MyPage /> },
             ],
           },
