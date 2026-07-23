@@ -2,6 +2,7 @@ import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
 import {
   formatVolunteerDate,
+  formatVolunteerHomeDate,
   formatVolunteerLocation,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
@@ -19,7 +20,10 @@ export function VolunteerPostingCard({
 }: VolunteerPostingCardProps) {
   const imageSrc = getVolunteerPostingImage(posting.category, posting.id);
   const location = formatVolunteerLocation(posting);
-  const activityDate = formatVolunteerDate(posting.actStartDate);
+  const activityDate =
+    variant === "compact"
+      ? formatVolunteerHomeDate(posting.actStartDate)
+      : formatVolunteerDate(posting.actStartDate);
 
   if (variant === "compact") {
     return (

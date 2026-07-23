@@ -7,6 +7,7 @@ import { cn } from "@/shared/lib/cn";
 export type SelectOption = {
   label: string;
   value: string;
+  selectedLabel?: string;
 };
 
 type SelectProps = {
@@ -34,6 +35,7 @@ export default function Select({
   invalid = false,
   ariaLabel,
 }: SelectProps) {
+  const selectedOption = options.find((option) => option.value === value);
   return (
     <RadixSelect.Root
       value={value}
@@ -60,7 +62,9 @@ export default function Select({
           <img src={SortIcon} alt="" className="h-3.75 w-3.75 shrink-0" />
         </RadixSelect.Icon>
 
-        <RadixSelect.Value placeholder={placeholder} />
+        <RadixSelect.Value placeholder={placeholder}>
+          {selectedOption?.selectedLabel ?? selectedOption?.label}
+        </RadixSelect.Value>
       </RadixSelect.Trigger>
 
       <RadixSelect.Portal>

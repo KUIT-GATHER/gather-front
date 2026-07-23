@@ -49,14 +49,14 @@ export default function PageHeader({
       <div className="relative flex h-14 items-center justify-between">
         <div
           className={cn(
-            "z-10 flex items-center justify-start",
+            "z-10 -ml-4 flex items-center justify-start",
             titleAlign === "left" ? "min-w-0 flex-1" : "min-w-11",
           )}
         >
           {resolvedLeftAction}
 
           {title && titleAlign === "left" ? (
-            <h1 className="min-w-0 truncate text-title-18 text-text">
+            <h1 className="-ml-1 min-w-0  truncate text-[20px] text-text font-semibold">
               {title}
             </h1>
           ) : null}

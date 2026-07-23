@@ -39,6 +39,21 @@ export function formatVolunteerDate(value: string | null) {
   return date ? formatDateParts(date) : null;
 }
 
+export function formatVolunteerHomeDate(value: string | null) {
+  const date = parseLocalDate(value);
+
+  if (!date) {
+    return null;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekday = weekdays[date.getDay()];
+
+  return `${month}.${day}(${weekday})`;
+}
+
 export function formatVolunteerPeriod(
   startDate: string | null,
   endDate: string | null,

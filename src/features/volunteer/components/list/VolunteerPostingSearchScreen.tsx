@@ -13,6 +13,7 @@ import {
   toVolunteerPostingQueryParams,
   updateVolunteerPostingSearchParams,
 } from "@/features/volunteer/lib/volunteerPostingSearchParams";
+import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -186,8 +187,12 @@ export function VolunteerPostingSearchScreen() {
         <>
           <PageHeader title="봉사 찾기" onBack={() => navigate(-1)} />
           <section className="mt-14">
-            <h2 className="whitespace-pre-line text-title-24 text-text">
-              어떤 봉사를{`\n`}찾고 계시나요?
+            <h2 className="text-title-24 text-text">
+              <span className="block">어떤 봉사를</span>
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                찾고 계시나요?
+                <img src={greenPuzzle} alt="" className="size-6 shrink-0" />
+              </span>
             </h2>
             <VolunteerPostingSearchForm
               key={keywordFromUrl}
@@ -218,7 +223,7 @@ export function VolunteerPostingSearchScreen() {
                       className="rounded-full border border-stroke px-3 py-2 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recent)}
                     >
-                      {recent}
+                      #{recent}
                     </button>
                   ))}
                 </div>

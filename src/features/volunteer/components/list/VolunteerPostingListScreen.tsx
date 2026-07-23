@@ -40,7 +40,7 @@ export function VolunteerPostingListScreen() {
       <PageHeader
         sticky
         title="봉사 공고"
-        onBack={() => navigate(-1)}
+        onBack={() => navigate("/home")}
         rightAction={
           <div className="flex items-center gap-1">
             <IconButton
@@ -58,7 +58,7 @@ export function VolunteerPostingListScreen() {
       />
 
       <div className="mt-6 flex items-center justify-between gap-3">
-        <h2 className="text-body-15-semibold text-text">
+        <h2 className="text-[18px] font-semibold leading-[28px] tracking-[0px] text-text">
           이번 주, 내 주변에선 뭐하지? 👀
         </h2>
         <Select
