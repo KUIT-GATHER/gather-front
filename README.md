@@ -27,10 +27,11 @@ npm install
 
 `.env.example`을 참고해 루트에 `.env.local`을 만들고 필요한 값을 설정합니다. `.env.local`에는 실제 비밀값을 커밋하지 않습니다.
 
-| 변수                | 설명                                                    |
-| ------------------- | ------------------------------------------------------- |
-| `VITE_API_BASE_URL` | API 서버 기본 URL                                       |
-| `VITE_ENABLE_MSW`   | `true`이면 MSW mock API 사용, `false`이면 실제 API 사용 |
+| 변수                      | 설명                                                    |
+| ------------------------- | ------------------------------------------------------- |
+| `VITE_API_BASE_URL`       | API 서버 기본 URL                                       |
+| `VITE_ENABLE_MSW`         | `true`이면 MSW mock API 사용, `false`이면 실제 API 사용 |
+| `VITE_KAKAO_REST_API_KEY` | 카카오 로그인 인가 요청에 사용하는 REST API 키          |
 
 환경 변수의 실제 항목과 형식은 [.env.example](./.env.example)을 기준으로 합니다.
 

@@ -4,29 +4,43 @@ import { cn } from "@/shared/lib/cn";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
 
-import type { SignupStep } from "@/features/auth/constants/signupFlow.constants";
+import type {
+  EmailSignupStep,
+  KakaoSignupStep,
+} from "@/features/auth/constants/signupFlow.constants";
 
-const stepMeta: Record<SignupStep, { label: string; value: number }> = {
-  basic: { label: "1/4 기본 정보", value: 25 },
-  account: { label: "2/4 계정 정보", value: 50 },
-  profile: { label: "3/4 프로필 생성", value: 75 },
-  terms: { label: "4/4 서비스 약관", value: 100 },
-};
+const emailStepMeta: Record<EmailSignupStep, { label: string; value: number }> =
+  {
+    basic: { label: "1/4 기본 정보", value: 25 },
+    account: { label: "2/4 계정 정보", value: 50 },
+    profile: { label: "3/4 프로필 생성", value: 75 },
+    terms: { label: "4/4 서비스 약관", value: 100 },
+  };
+
+const kakaoStepMeta: Record<KakaoSignupStep, { label: string; value: number }> =
+  {
+    basic: { label: "1/3 기본 정보", value: 100 / 3 },
+    profile: { label: "2/3 프로필 생성", value: 200 / 3 },
+    terms: { label: "3/3 서비스 약관", value: 100 },
+  };
 
 type SignupShellProps = {
-  step: SignupStep;
   onBack: () => void;
   children: ReactNode;
   className?: string;
-};
+} & (
+  | { step: EmailSignupStep; flow: "email" }
+  | { step: KakaoSignupStep; flow: "kakao" }
+);
 
 export function SignupShell({
   step,
+  flow,
   onBack,
   children,
   className,
 }: SignupShellProps) {
-  const meta = stepMeta[step];
+  const meta = flow === "email" ? emailStepMeta[step] : kakaoStepMeta[step];
 
   return (
     <PageContainer

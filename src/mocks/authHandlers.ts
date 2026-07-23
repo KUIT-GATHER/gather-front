@@ -23,6 +23,11 @@ type SignupRequest = {
   marketingAgreed?: boolean;
 };
 
+type KakaoSignupRequest = Omit<
+  SignupRequest,
+  "email" | "password" | "passwordConfirm"
+>;
+
 const verifiedEmails = new Set<string>();
 const emailVerificationRequests = new Map<
   string,
@@ -41,6 +46,11 @@ const validLevel2RegionIds = new Set(
 const validPostingCategories = new Set<PostingCategory>(POSTING_CATEGORIES);
 
 const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+const MOCK_KAKAO_SIGNUP_TOKEN = "mock-kakao-signup-token";
+const MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN = "mock-kakao-expired-signup-token";
+const MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN =
+  "mock-kakao-already-registered-signup-token";
+const MOCK_INVALID_KAKAO_SIGNUP_TOKEN = "mock-kakao-invalid-signup-token";
 
 const activeRefreshTokens = new Map<number, string>();
 
@@ -502,6 +512,285 @@ export const authHandlers = [
         error: null,
       },
       { status: 201 },
+    );
+  }),
+
+  http.post("*/api/v1/auth/kakao/login", async ({ request }) => {
+    const body = (await request.json()) as {
+      authorizationCode?: string;
+      redirectUri?: string;
+    };
+
+    if (!body.authorizationCode || !body.redirectUri) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (body.authorizationCode === "mock-kakao-suspended") {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "SUSPENDED_USER",
+            message: "이용 정지된 계정입니다.",
+          },
+        },
+        { status: 403 },
+      );
+    }
+
+    if (body.authorizationCode === "mock-kakao-withdrawn") {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "WITHDRAWN_USER",
+            message: "탈퇴한 계정입니다.",
+          },
+        },
+        { status: 403 },
+      );
+    }
+
+    if (body.authorizationCode === "mock-kakao-unavailable") {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "KAKAO_API_UNAVAILABLE",
+            message: "카카오 로그인 서비스를 일시적으로 사용할 수 없습니다.",
+          },
+        },
+        { status: 503 },
+      );
+    }
+
+    if (body.authorizationCode === "mock-kakao-new-user") {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          signupStatus: "ADDITIONAL_INFO_REQUIRED",
+          signupToken: MOCK_KAKAO_SIGNUP_TOKEN,
+          profile: { nickname: "카카오사용자" },
+        },
+        error: null,
+      });
+    }
+
+    if (body.authorizationCode === "mock-kakao-expired-signup") {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          signupStatus: "ADDITIONAL_INFO_REQUIRED",
+          signupToken: MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN,
+          profile: { nickname: "카카오사용자" },
+        },
+        error: null,
+      });
+    }
+
+    if (body.authorizationCode === "mock-kakao-invalid-signup") {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          signupStatus: "ADDITIONAL_INFO_REQUIRED",
+          signupToken: MOCK_INVALID_KAKAO_SIGNUP_TOKEN,
+          profile: { nickname: "카카오사용자" },
+        },
+        error: null,
+      });
+    }
+
+    if (body.authorizationCode === "mock-kakao-already-registered") {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          signupStatus: "ADDITIONAL_INFO_REQUIRED",
+          signupToken: MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN,
+          profile: { nickname: "카카오사용자" },
+        },
+        error: null,
+      });
+    }
+
+    if (body.authorizationCode === "mock-kakao-existing-user") {
+      const refreshToken = createRefreshToken(1);
+      activeRefreshTokens.set(1, refreshToken);
+
+      return HttpResponse.json(
+        {
+          success: true,
+          data: {
+            signupStatus: "LOGIN_COMPLETED",
+            accessToken: createAccessToken(1),
+            tokenType: "Bearer",
+          },
+          error: null,
+        },
+        {
+          headers: {
+            "Set-Cookie": createRefreshTokenCookie(refreshToken),
+          },
+        },
+      );
+    }
+
+    // 실제 카카오 인가 코드는 매번 달라 로컬 MSW에서는 신규 회원 흐름을 기본으로 검증한다.
+    return HttpResponse.json({
+      success: true,
+      data: {
+        signupStatus: "ADDITIONAL_INFO_REQUIRED",
+        signupToken: MOCK_KAKAO_SIGNUP_TOKEN,
+        profile: { nickname: "카카오사용자" },
+      },
+      error: null,
+    });
+  }),
+
+  http.post("*/api/v1/auth/kakao/signup", async ({ request }) => {
+    const signupToken = request.headers.get("X-Signup-Token");
+    const body = (await request.json()) as KakaoSignupRequest;
+
+    if (signupToken === MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "SIGNUP_TOKEN_EXPIRED",
+            message: "가입 인증이 만료되었습니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    if (!signupToken || signupToken !== MOCK_KAKAO_SIGNUP_TOKEN) {
+      if (signupToken === MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "ALREADY_REGISTERED",
+              message: "이미 가입된 계정입니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "SIGNUP_TOKEN_INVALID",
+            message: "유효하지 않은 가입 인증입니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    if (
+      "email" in body ||
+      "password" in body ||
+      "passwordConfirm" in body ||
+      !body.name ||
+      !body.birthDate ||
+      !body.gender ||
+      !body.phoneNumber ||
+      !body.nickname ||
+      typeof body.activityRegionId !== "number" ||
+      !body.interestCategories ||
+      typeof body.marketingAgreed !== "boolean"
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "필수 정보를 모두 입력해 주세요.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!body.serviceTermsAgreed || !body.privacyPolicyAgreed) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "REQUIRED_TERMS_NOT_AGREED",
+            message: "필수 약관 동의가 필요합니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (users.some((user) => user.phoneNumber === body.phoneNumber)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "DUPLICATE_PHONE_NUMBER",
+            message: "이미 사용 중인 전화번호입니다.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    if (users.some((user) => user.nickname === body.nickname)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "DUPLICATE_NICKNAME",
+            message: "이미 사용 중인 닉네임입니다.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    const refreshToken = createRefreshToken(users.length + 1);
+    activeRefreshTokens.set(users.length + 1, refreshToken);
+
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          accessToken: createAccessToken(users.length + 1),
+          tokenType: "Bearer",
+        },
+        error: null,
+      },
+      {
+        status: 201,
+        headers: {
+          "Set-Cookie": createRefreshTokenCookie(refreshToken),
+        },
+      },
     );
   }),
 

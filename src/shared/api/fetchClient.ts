@@ -98,6 +98,7 @@ export async function fetchClient<T>(
     const shouldClearAuth =
       error instanceof ApiError &&
       error.status === 401 &&
+      !options.skipAuth &&
       (error.code === API_ERROR_CODE.UNAUTHORIZED ||
         error.code === API_ERROR_CODE.INVALID_TOKEN ||
         error.code === API_ERROR_CODE.REVOKED_TOKEN);
