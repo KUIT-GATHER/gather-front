@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { FormProvider } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router";
 
@@ -25,9 +25,16 @@ export function KakaoSignupFlow() {
   const navigate = useNavigate();
   const signupToken = useKakaoSignupStore((state) => state.signupToken);
   const initialNickname = useKakaoSignupStore((state) => state.initialNickname);
+  const hadKakaoSignupSessionRef = useRef(Boolean(signupToken));
 
   useEffect(() => {
     if (signupToken) {
+      hadKakaoSignupSessionRef.current = true;
+      return;
+    }
+
+    // 가입 완료·취소·토큰 오류 처리에서 명시적으로 이동하기 전에 토큰을 지워도 이 화면이 이동을 가로채지 않는다.
+    if (hadKakaoSignupSessionRef.current) {
       return;
     }
 

@@ -625,25 +625,38 @@ export const authHandlers = [
       });
     }
 
-    const refreshToken = createRefreshToken(1);
-    activeRefreshTokens.set(1, refreshToken);
+    if (body.authorizationCode === "mock-kakao-existing-user") {
+      const refreshToken = createRefreshToken(1);
+      activeRefreshTokens.set(1, refreshToken);
 
-    return HttpResponse.json(
-      {
-        success: true,
-        data: {
-          signupStatus: "LOGIN_COMPLETED",
-          accessToken: createAccessToken(1),
-          tokenType: "Bearer",
+      return HttpResponse.json(
+        {
+          success: true,
+          data: {
+            signupStatus: "LOGIN_COMPLETED",
+            accessToken: createAccessToken(1),
+            tokenType: "Bearer",
+          },
+          error: null,
         },
-        error: null,
-      },
-      {
-        headers: {
-          "Set-Cookie": createRefreshTokenCookie(refreshToken),
+        {
+          headers: {
+            "Set-Cookie": createRefreshTokenCookie(refreshToken),
+          },
         },
+      );
+    }
+
+    // 실제 카카오 인가 코드는 매번 달라 로컬 MSW에서는 신규 회원 흐름을 기본으로 검증한다.
+    return HttpResponse.json({
+      success: true,
+      data: {
+        signupStatus: "ADDITIONAL_INFO_REQUIRED",
+        signupToken: MOCK_KAKAO_SIGNUP_TOKEN,
+        profile: { nickname: "카카오사용자" },
       },
-    );
+      error: null,
+    });
   }),
 
   http.post("*/api/v1/auth/kakao/signup", async ({ request }) => {
