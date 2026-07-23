@@ -198,6 +198,7 @@ export function VolunteerPostingDetail({
         <VolunteerPostingConditionCard posting={posting} className="mt-4" />
         <VolunteerPostingDivider className="mt-5" />
         <VolunteerPostingTeamSection
+          postingId={posting.id}
           className="mt-5"
           onCreateTeam={handleCreateTeam}
         />
