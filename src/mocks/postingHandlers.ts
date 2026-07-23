@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 
 import postings from "./data/postings.json";
 import regions from "./data/regions.json";
+import teams from "./data/teams.json";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = [
@@ -29,6 +30,11 @@ const SORTABLE_POSTING_FIELDS = [
 type PostingSortField = (typeof SORTABLE_POSTING_FIELDS)[number];
 type PostingSort = {
   field: PostingSortField;
+  direction: "asc" | "desc";
+};
+type PostingMeetingSortField = "createdAt";
+type PostingMeetingSort = {
+  field: PostingMeetingSortField;
   direction: "asc" | "desc";
 };
 
@@ -119,6 +125,32 @@ function parseSorts(url: URL): PostingSort[] | null {
   }, []);
 }
 
+function parsePostingMeetingSorts(url: URL): PostingMeetingSort[] | null {
+  const rawSorts = url.searchParams.getAll("sort");
+
+  if (rawSorts.length === 0) {
+    return [{ field: "createdAt", direction: "desc" }];
+  }
+
+  return rawSorts.reduce<PostingMeetingSort[] | null>((sorts, rawSort) => {
+    if (!sorts) {
+      return null;
+    }
+
+    const [field, direction = "asc"] = rawSort.split(",");
+
+    if (
+      field !== "createdAt" ||
+      (direction !== "asc" && direction !== "desc")
+    ) {
+      return null;
+    }
+
+    sorts.push({ field, direction });
+    return sorts;
+  }, []);
+}
+
 function sortPostings(
   items: (typeof postings.data)[number][],
   sorts: PostingSort[],
@@ -135,6 +167,23 @@ function sortPostings(
         typeof leftValue === "number" && typeof rightValue === "number"
           ? leftValue - rightValue
           : String(leftValue).localeCompare(String(rightValue));
+
+      if (comparison !== 0) {
+        return direction === "asc" ? comparison : -comparison;
+      }
+    }
+
+    return 0;
+  });
+}
+
+function sortPostingMeetings(
+  items: (typeof teams.data)[number][],
+  sorts: PostingMeetingSort[],
+) {
+  return [...items].sort((left, right) => {
+    for (const { direction } of sorts) {
+      const comparison = left.meetingId - right.meetingId;
 
       if (comparison !== 0) {
         return direction === "asc" ? comparison : -comparison;
@@ -318,6 +367,80 @@ export const postingHandlers = [
     return HttpResponse.json({
       success: true,
       data: ["유기견", "환경", "아동", "멘토링"],
+      error: null,
+    });
+  }),
+
+  http.get("*/api/v1/postings/:postingId/meetings", ({ params, request }) => {
+    const postingId = Number(params.postingId);
+    const posting = mockPostings.find((item) => item.id === postingId);
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("page") ?? 0);
+    const size = Number(url.searchParams.get("size") ?? 10);
+    const sorts = parsePostingMeetingSorts(url);
+
+    if (!posting) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "POSTING_NOT_FOUND",
+            message: "Posting not found.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    if (!sorts) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid sort parameter.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const items = sortPostingMeetings(
+      teams.data.filter((team) => team.volunteerPostingId === postingId),
+      sorts,
+    );
+    const startIndex = page * size;
+    const content = items
+      .slice(startIndex, startIndex + size)
+      .map(
+        ({
+          meetingId,
+          name,
+          category,
+          currentMemberCount,
+          maxMember,
+          status,
+        }) => ({
+          meetingId,
+          name,
+          category,
+          currentMemberCount,
+          maxMember,
+          status,
+        }),
+      );
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        totalElements: items.length,
+        totalPages: Math.ceil(items.length / size),
+        page,
+        size,
+      },
       error: null,
     });
   }),

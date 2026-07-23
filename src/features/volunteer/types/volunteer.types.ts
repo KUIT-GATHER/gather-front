@@ -75,6 +75,29 @@ export type VolunteerPostingPage = {
   size: number;
 };
 
+export type VolunteerPostingMeeting = {
+  meetingId: number;
+  name: string;
+  category: PostingCategory;
+  currentMemberCount: number;
+  maxMember: number;
+  status: VolunteerPostingStatus;
+};
+
+export type VolunteerPostingMeetingPage = {
+  content: VolunteerPostingMeeting[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
+export type VolunteerPostingMeetingListParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
+};
+
 export type VolunteerPostingBookmarkResponse = {
   postingId: number;
   bookmarked: boolean;

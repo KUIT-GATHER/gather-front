@@ -2,6 +2,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
   getVolunteerPosting,
+  getVolunteerPostingMeetings,
   getVolunteerPostingRecommendedKeywords,
   getVolunteerPostings,
 } from "./volunteer.api";
@@ -9,6 +10,7 @@ import {
 import type {
   VolunteerPostingInfiniteParams,
   VolunteerPostingListParams,
+  VolunteerPostingMeetingListParams,
 } from "../types/volunteer.types";
 
 function withPage(
@@ -40,6 +42,10 @@ export const volunteerPostingKeys = {
     [...volunteerPostingKeys.details(), postingId] as const,
   bookmark: (postingId: number) =>
     [...volunteerPostingKeys.detail(postingId), "bookmark"] as const,
+  meetings: (
+    postingId: number,
+    params: VolunteerPostingMeetingListParams = {},
+  ) => [...volunteerPostingKeys.detail(postingId), "meetings", params] as const,
   participation: (postingId: number) =>
     [...volunteerPostingKeys.detail(postingId), "participation"] as const,
   recommendedKeywords: () =>
@@ -70,6 +76,15 @@ export const volunteerPostingQueries = {
     queryOptions({
       queryKey: volunteerPostingKeys.detail(postingId),
       queryFn: () => getVolunteerPosting(postingId),
+    }),
+
+  meetings: (
+    postingId: number,
+    params: VolunteerPostingMeetingListParams = {},
+  ) =>
+    queryOptions({
+      queryKey: volunteerPostingKeys.meetings(postingId, params),
+      queryFn: () => getVolunteerPostingMeetings(postingId, params),
     }),
 
   recommendedKeywords: () =>
