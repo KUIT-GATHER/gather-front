@@ -14,8 +14,8 @@ import {
 } from "@/features/auth/lib/signupFormatters";
 import {
   signupPhoneNumberSchema,
-  type SignupFormValues,
-} from "@/features/auth/schemas/signup.schema";
+  type SignupCommonFormValues,
+} from "@/features/auth/schemas/signupCommon.schema";
 import { cn } from "@/shared/lib/cn";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
@@ -38,7 +38,7 @@ export function BasicInfoStep({
     setError,
     clearErrors,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<SignupCommonFormValues>();
   const phoneMutation = usePhoneAvailabilityMutation();
   const phoneNumber = useWatch({ control, name: "phoneNumber" });
   const isPhoneNumberValid =

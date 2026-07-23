@@ -10,7 +10,9 @@ import { EntryPage } from "@/pages/entry/EntryPage";
 import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { EmailLoginPage } from "@/pages/auth/EmailLoginPage";
+import { KakaoLoginCallbackPage } from "@/pages/auth/KakaoLoginCallbackPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
+import { KakaoSignupPage } from "@/pages/auth/KakaoSignupPage";
 import { TermsPage } from "@/pages/auth/TermsPage";
 
 import { HomePage } from "@/pages/home/HomePage";
@@ -60,7 +62,12 @@ export const router = createBrowserRouter([
           { path: "/onboarding", element: <OnboardingPage /> },
           { path: "/login", element: <LoginPage /> },
           { path: "/login/email", element: <EmailLoginPage /> },
+          {
+            path: "/login/kakao/callback",
+            element: <KakaoLoginCallbackPage />,
+          },
           { path: "/signup", element: <SignupPage /> },
+          { path: "/signup/kakao", element: <KakaoSignupPage /> },
           { path: "/terms", element: <TermsPage /> },
         ],
       },

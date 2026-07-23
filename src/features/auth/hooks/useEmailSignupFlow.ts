@@ -4,23 +4,23 @@ import { useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { useNavigate } from "react-router";
 
 import {
-  SIGNUP_STEP_FIELDS,
-  SIGNUP_STEP_ORDER,
-  type SignupStep,
+  EMAIL_SIGNUP_STEP_FIELDS,
+  EMAIL_SIGNUP_STEP_ORDER,
+  type EmailSignupStep,
+  type EmailSignupStepField,
 } from "@/features/auth/constants/signupFlow.constants";
-import type { LegalDocumentType } from "@/features/legal";
 import { useSignupMutation } from "@/features/auth/hooks/useSignupMutation";
 import { applySignupError } from "@/features/auth/lib/applySignupError";
-import { toSignupRequest } from "@/features/auth/lib/signup.mapper";
+import { toEmailSignupRequest } from "@/features/auth/lib/signup.mapper";
 import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
+import type { LegalDocumentType } from "@/features/legal";
 import {
-  signupDefaultValues,
-  signupSchema,
-  type SignupStepField,
-  type SignupFormValues,
-} from "@/features/auth/schemas/signup.schema";
+  emailSignupDefaultValues,
+  signupEmailSchema,
+  type EmailSignupFormValues,
+} from "@/features/auth/schemas/emailSignup.schema";
 
-const FOCUSABLE_SIGNUP_FIELDS = new Set<SignupStepField>([
+const FOCUSABLE_SIGNUP_FIELDS = new Set<EmailSignupStepField>([
   "name",
   "birthDate",
   "phoneNumber",
@@ -33,60 +33,58 @@ const FOCUSABLE_SIGNUP_FIELDS = new Set<SignupStepField>([
 ]);
 
 function findFirstErrorStep(
-  errors: FieldErrors<SignupFormValues>,
-): SignupStep | null {
+  errors: FieldErrors<EmailSignupFormValues>,
+): EmailSignupStep | null {
   return (
-    SIGNUP_STEP_ORDER.find((targetStep) =>
-      SIGNUP_STEP_FIELDS[targetStep].some((field) => Boolean(errors[field])),
+    EMAIL_SIGNUP_STEP_ORDER.find((targetStep) =>
+      EMAIL_SIGNUP_STEP_FIELDS[targetStep].some((field) =>
+        Boolean(errors[field]),
+      ),
     ) ?? null
   );
 }
 
 function findFirstErrorField(
-  errors: FieldErrors<SignupFormValues>,
-  targetStep: SignupStep,
+  errors: FieldErrors<EmailSignupFormValues>,
+  targetStep: EmailSignupStep,
 ) {
-  return SIGNUP_STEP_FIELDS[targetStep].find((field) => Boolean(errors[field]));
+  return EMAIL_SIGNUP_STEP_FIELDS[targetStep].find((field) =>
+    Boolean(errors[field]),
+  );
 }
 
-function getFocusableSignupField(field: SignupStepField | undefined) {
+function getFocusableSignupField(field: EmailSignupStepField | undefined) {
   return field && FOCUSABLE_SIGNUP_FIELDS.has(field) ? field : null;
 }
 
-export function useSignupFlow() {
+export function useEmailSignupFlow() {
   const navigate = useNavigate();
-  const methods = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
+  const methods = useForm<EmailSignupFormValues>({
+    resolver: zodResolver(signupEmailSchema),
     mode: "onTouched",
     reValidateMode: "onChange",
     shouldUnregister: false,
-    defaultValues: signupDefaultValues,
+    defaultValues: emailSignupDefaultValues,
   });
 
   const signupMutation = useSignupMutation();
-  const [step, setStep] = useState<SignupStep>("basic");
+  const [step, setStep] = useState<EmailSignupStep>("basic");
   const [detailType, setDetailType] = useState<LegalDocumentType | null>(null);
-
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
   );
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
-
   const watchedPhoneNumber = useWatch({
     control: methods.control,
     name: "phoneNumber",
   });
-  const watchedEmail = useWatch({
-    control: methods.control,
-    name: "email",
-  });
-
+  const watchedEmail = useWatch({ control: methods.control, name: "email" });
   const previousPhoneNumberRef = useRef(watchedPhoneNumber);
   const previousEmailRef = useRef(watchedEmail);
   const [pendingFocusField, setPendingFocusField] =
-    useState<SignupStepField | null>(null);
+    useState<EmailSignupStepField | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -125,7 +123,7 @@ export function useSignupFlow() {
   }, [methods, watchedEmail]);
 
   const resetSignupFlow = () => {
-    methods.reset(signupDefaultValues);
+    methods.reset(emailSignupDefaultValues);
     setStep("basic");
     setDetailType(null);
     setVerifiedEmail(null);
@@ -135,8 +133,8 @@ export function useSignupFlow() {
   };
 
   const moveToFieldError = (
-    targetStep: SignupStep,
-    field: SignupStepField,
+    targetStep: EmailSignupStep,
+    field: EmailSignupStepField,
     message: string,
   ) => {
     setSubmitError(null);
@@ -151,17 +149,17 @@ export function useSignupFlow() {
       return;
     }
 
-    const currentIndex = SIGNUP_STEP_ORDER.indexOf(step);
+    const currentIndex = EMAIL_SIGNUP_STEP_ORDER.indexOf(step);
     if (currentIndex <= 0) {
       setShowExitDialog(true);
       return;
     }
 
-    setStep(SIGNUP_STEP_ORDER[currentIndex - 1]);
+    setStep(EMAIL_SIGNUP_STEP_ORDER[currentIndex - 1]);
   };
 
-  const validateStep = async (targetStep: SignupStep) => {
-    return methods.trigger([...SIGNUP_STEP_FIELDS[targetStep]], {
+  const validateStep = async (targetStep: EmailSignupStep) => {
+    return methods.trigger([...EMAIL_SIGNUP_STEP_FIELDS[targetStep]], {
       shouldFocus: true,
     });
   };
@@ -205,7 +203,7 @@ export function useSignupFlow() {
     }
   };
 
-  const onValidSubmit = (values: SignupFormValues) => {
+  const onValidSubmit = (values: EmailSignupFormValues) => {
     if (values.phoneNumber !== verifiedPhoneNumber) {
       moveToFieldError(
         "basic",
@@ -220,7 +218,7 @@ export function useSignupFlow() {
       return;
     }
 
-    signupMutation.mutate(toSignupRequest(values), {
+    signupMutation.mutate(toEmailSignupRequest(values), {
       onSuccess: (data) => {
         resetSignupFlow();
         navigate("/login/email", {
@@ -241,7 +239,7 @@ export function useSignupFlow() {
     });
   };
 
-  const onInvalidSubmit = (errors: FieldErrors<SignupFormValues>) => {
+  const onInvalidSubmit = (errors: FieldErrors<EmailSignupFormValues>) => {
     const errorStep = findFirstErrorStep(errors);
 
     if (!errorStep) {
@@ -276,7 +274,6 @@ export function useSignupFlow() {
       case "terms":
         setSubmitError(null);
         void submitSignup();
-        return;
     }
   };
 

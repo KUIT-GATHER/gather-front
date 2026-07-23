@@ -6,7 +6,7 @@ import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { SignupCommonFormValues } from "@/features/auth/schemas/signupCommon.schema";
 import { useRegionGroupsQuery } from "@/features/region/hooks/useRegionGroupsQuery";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import FormField from "@/shared/ui/FormField";
@@ -21,7 +21,7 @@ export function ProfileStep() {
     control,
     register,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<SignupCommonFormValues>();
   const regionsQuery = useRegionsQuery();
   const regionGroupsQuery = useRegionGroupsQuery();
   const introduction = useWatch({ control, name: "introduction" });

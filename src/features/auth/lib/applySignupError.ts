@@ -1,15 +1,15 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
-import type { SignupStep } from "@/features/auth/constants/signupFlow.constants";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { EmailSignupStep } from "@/features/auth/constants/signupFlow.constants";
+import type { EmailSignupFormValues } from "@/features/auth/schemas/emailSignup.schema";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 
 type ApplySignupErrorParams = {
   error: unknown;
-  methods: UseFormReturn<SignupFormValues>;
-  setStep: Dispatch<SetStateAction<SignupStep>>;
+  methods: UseFormReturn<EmailSignupFormValues>;
+  setStep: Dispatch<SetStateAction<EmailSignupStep>>;
   setVerifiedEmail: Dispatch<SetStateAction<string | null>>;
   setVerifiedPhoneNumber: Dispatch<SetStateAction<string | null>>;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
@@ -24,8 +24,8 @@ export function applySignupError({
   setSubmitError,
 }: ApplySignupErrorParams) {
   const moveToFieldError = (
-    step: SignupStep,
-    field: keyof SignupFormValues,
+    step: EmailSignupStep,
+    field: keyof EmailSignupFormValues,
     message: string,
   ) => {
     setSubmitError(null);
