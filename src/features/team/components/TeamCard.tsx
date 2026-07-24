@@ -22,6 +22,8 @@ export function TeamCard({
 }: TeamCardProps) {
   const activityDate = formatMeetingActivityDate(team.activityStartAt);
   const deadline = getMeetingDDay(team.deadline);
+  const urgentDeadline =
+    deadline === "D-day" || /^D-[1-7]$/.test(deadline ?? "") ? deadline : null;
   const imageSrc = getMeetingImage(team.category, team.meetingId);
 
   if (variant === "compact") {
@@ -80,14 +82,19 @@ export function TeamCard({
           {regionName ? `${regionName} · ` : ""}
           {team.currentMemberCount}/{team.maxMember}명
           {activityDate ? ` · ${activityDate}` : ""}
-          {deadline ? (
+          {urgentDeadline ? (
             <span
               className={cn(
-                deadline === "마감" ? "text-text-gray-400" : "text-point-red",
+                urgentDeadline === "D-day" ||
+                  urgentDeadline === "D-1" ||
+                  urgentDeadline === "D-2" ||
+                  urgentDeadline === "D-3"
+                  ? "font-semibold text-point-red"
+                  : "text-point-red",
               )}
             >
               {" "}
-              · {deadline}
+              · {urgentDeadline}
             </span>
           ) : null}
         </p>

@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import filterIcon from "@/assets/icons/Filter.svg";
 import plusIcon from "@/assets/icons/Plus.svg";
 import searchIcon from "@/assets/icons/Search.svg";
-import sortIcon from "@/assets/icons/Sort.svg";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
+import Select, { type SelectOption } from "@/shared/ui/Select";
 import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
 import { useInfiniteMeetingsQuery } from "@/features/team/hooks/useInfiniteMeetingsQuery";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -17,6 +17,25 @@ import LoadingState from "@/shared/ui/LoadingState";
 
 import type { MeetingInfiniteParams, MeetingStatus } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
+import { TeamFilterSheet, type TeamFilter } from "./TeamFilterSheet";
+
+const teamSortOptions = [
+  { value: "latest", label: "최신순 ✨" },
+  { value: "popular", label: "인기순 🔥" },
+  { value: "deadline", label: "마감임박" },
+] satisfies SelectOption[];
+
+const teamSortParams = {
+  latest: ["createdAt,desc"],
+  popular: ["currentMemberCount,desc", "createdAt,desc"],
+  deadline: ["deadline,asc", "createdAt,desc"],
+} as const;
+
+type TeamSort = keyof typeof teamSortParams;
+
+function isTeamSort(value: string | null): value is TeamSort {
+  return value !== null && value in teamSortParams;
+}
 
 function toPositiveNumber(value: string | null) {
   if (!value) {
@@ -43,19 +62,28 @@ function toPostingCategory(value: string | null) {
 
 export function TeamListScreen() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const regionsQuery = useRegionsQuery();
-  const queryParams = useMemo<MeetingInfiniteParams>(
+  const sortValue = searchParams.get("sort");
+  const sort: TeamSort = isTeamSort(sortValue) ? sortValue : "latest";
+  const filter = useMemo<TeamFilter>(
     () => ({
-      keyword: searchParams.get("keyword")?.trim() || undefined,
       regionId: toPositiveNumber(searchParams.get("regionId")),
       category: toPostingCategory(searchParams.get("category")),
       status: toMeetingStatus(searchParams.get("status")),
-      size: 10,
-      sort: ["createdAt,desc"],
     }),
     [searchParams],
+  );
+  const queryParams = useMemo<MeetingInfiniteParams>(
+    () => ({
+      keyword: searchParams.get("keyword")?.trim() || undefined,
+      ...filter,
+      size: 20,
+      sort: [...teamSortParams[sort]],
+    }),
+    [filter, searchParams, sort],
   );
   const meetingsQuery = useInfiniteMeetingsQuery(queryParams);
   const meetings =
@@ -99,11 +127,11 @@ export function TeamListScreen() {
         rightAction={
           <div className="ml-3 flex shrink-0 items-center gap-2">
             <IconButton
-              disabled
               label="필터 열기"
               icon={<img src={filterIcon} alt="" />}
               size="medium"
-              className="-m-3 disabled:opacity-100"
+              className="-m-3"
+              onClick={() => setIsFilterOpen(true)}
             />
             <IconButton
               label="모임 검색"
@@ -135,10 +163,18 @@ export function TeamListScreen() {
 
       <div className="flex h-[60px] items-center justify-between">
         <h1 className="text-title-18">같이 갈 사람 찾는 중 🙌</h1>
-        <div className="flex items-center gap-2 text-sm text-text">
-          <img src={sortIcon} alt="" className="size-[15px]" />
-          <span>최신순</span>
-        </div>
+        <Select
+          ariaLabel="모임 정렬"
+          value={sort}
+          options={teamSortOptions}
+          onChange={(value) => {
+            if (!isTeamSort(value)) return;
+            const next = new URLSearchParams(searchParams);
+            next.set("sort", value);
+            setSearchParams(next);
+            window.scrollTo({ top: 0, behavior: "auto" });
+          }}
+        />
       </div>
 
       {meetingsQuery.isLoading ? (
@@ -207,11 +243,38 @@ export function TeamListScreen() {
       <button
         type="button"
         onClick={() => navigate("/teams/new")}
-        className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-[calc(50%+27px)] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-[calc(50%+27px)] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
       >
         <img src={plusIcon} alt="" className="size-5" />
         모임 만들기
       </button>
+
+      {isFilterOpen ? (
+        <TeamFilterSheet
+          open
+          onOpenChange={setIsFilterOpen}
+          filter={filter}
+          onApply={(nextFilter) => {
+            const next = new URLSearchParams(searchParams);
+            next.delete("regionId");
+            next.delete("category");
+            next.delete("status");
+
+            if (nextFilter.regionId !== undefined) {
+              next.set("regionId", String(nextFilter.regionId));
+            }
+            if (nextFilter.category) {
+              next.set("category", nextFilter.category);
+            }
+            if (nextFilter.status) {
+              next.set("status", nextFilter.status);
+            }
+
+            setSearchParams(next);
+            window.scrollTo({ top: 0, behavior: "auto" });
+          }}
+        />
+      ) : null}
     </PageContainer>
   );
 }
