@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 
 import alarmIcon from "@/assets/icons/Alarm.svg";
 import arrowIcon from "@/assets/icons/Arrow.svg";
 import filterIcon from "@/assets/icons/Filter.svg";
+import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
@@ -62,6 +63,7 @@ function HomeSectionState({
 export function HomeScreen() {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const regionsQuery = useRegionsQuery();
   const postingsQuery = useVolunteerPostingsQuery({
     page: 0,
     size: 5,
@@ -74,11 +76,17 @@ export function HomeScreen() {
   });
   const postings = postingsQuery.data?.content ?? [];
   const meetings = meetingsQuery.data?.content ?? [];
-
+  const regionNameById = useMemo(
+    () =>
+      new Map(
+        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
+      ),
+    [regionsQuery.data],
+  );
   return (
-    <PageContainer size="narrow">
-      <header className="flex items-center justify-between pb-10 pt-8">
-        <h1 className="text-[34px] font-bold tracking-tight text-[#316B43]">
+    <PageContainer size="narrow" className="min-h-dvh">
+      <header className="flex h-[70px] items-center justify-between">
+        <h1 className="font-mimi text-[32px] leading-none tracking-[-0.03em] text-icon">
           Gather
         </h1>
 
@@ -100,19 +108,17 @@ export function HomeScreen() {
               onClick={() => navigate("/notifications")}
             />
 
-            <span className="pointer-events-none absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white">
-              2
+            <span className="pointer-events-none absolute -right-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full bg-point-red text-[8px] font-semibold text-text2">
+              1
             </span>
           </div>
         </div>
       </header>
 
-      <div>
+      <div className="pt-6">
         <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold">
-              이번 주, 내 주변에선 뭐하지? 👀
-            </h2>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-title-18">이번 주, 내 주변에선 뭐하지? 👀</h2>
             <IconButton
               label="봉사 공고 전체 보기"
               icon={<img src={arrowIcon} alt="" />}
@@ -147,10 +153,10 @@ export function HomeScreen() {
           </div>
         </section>
 
-        <div className="-mx-5.5 my-7 h-2 bg-gray-100" />
+        <div className="-mx-5.5 my-6 h-1.5 bg-[#f1f1f1]" />
 
         <section>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between [&>h2]:font-semibold">
             <h2 className="text-lg font-bold">같이 갈 사람 찾는 중 🙌</h2>
             <IconButton
               label="모임 공고 전체 보기"
@@ -180,6 +186,7 @@ export function HomeScreen() {
                 key={meeting.meetingId}
                 variant="compact"
                 team={meeting}
+                regionName={regionNameById.get(meeting.regionId) ?? null}
                 onClick={() => navigate(`/teams/${meeting.meetingId}`)}
               />
             ))}
