@@ -16,6 +16,7 @@ type BottomSheetProps = {
   contentClassName?: string;
   onBack?: () => void;
   backLabel?: string;
+  leadingAction?: ReactNode;
 };
 
 export default function BottomSheet({
@@ -29,6 +30,7 @@ export default function BottomSheet({
   contentClassName,
   onBack,
   backLabel = "이전 화면으로",
+  leadingAction,
 }: BottomSheetProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -45,7 +47,9 @@ export default function BottomSheet({
             <Dialog.Title className="absolute top-5 left-1/2 -translate-x-1/2 text-title-18 text-text">
               {title}
             </Dialog.Title>
-            {onBack ? (
+            {leadingAction ? (
+              <div className="flex h-11 items-center">{leadingAction}</div>
+            ) : onBack ? (
               <IconButton
                 label={backLabel}
                 icon={<ChevronLeft />}
