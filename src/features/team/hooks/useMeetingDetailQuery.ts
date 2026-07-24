@@ -2,16 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 
 import { teamQueries } from "@/features/team/api/team.queries";
 
-type UseMeetingHomeQueryOptions = {
+type UseMeetingDetailQueryOptions = {
   enabled?: boolean;
 };
 
-export function useMeetingHomeQuery(
+export function useMeetingDetailQuery(
   meetingId: number,
-  options: UseMeetingHomeQueryOptions = {},
+  options: UseMeetingDetailQueryOptions = {},
 ) {
   return useQuery({
-    ...teamQueries.home(meetingId),
+    ...teamQueries.detail(meetingId),
     enabled: options.enabled,
   });
 }
