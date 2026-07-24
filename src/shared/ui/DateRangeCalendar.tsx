@@ -4,6 +4,8 @@ import { ko } from "@daypicker/react/locale/ko";
 
 import "@daypicker/react/style.css";
 
+import "./DateRangeCalendar.css";
+
 import { cn } from "@/shared/lib/cn";
 
 type DateRangeCalendarProps = {
@@ -48,7 +50,7 @@ export default function DateRangeCalendar({
       className={cn("w-full", className)}
       style={calendarStyle}
       classNames={{
-        root: "rdp-root w-full",
+        root: "rdp-root date-range-calendar w-full",
         months: "rdp-months block w-full max-w-none",
         month: "rdp-month w-full",
         month_caption:
@@ -74,12 +76,9 @@ export default function DateRangeCalendar({
         outside: "rdp-outside text-text-gray-100",
         today: "rdp-today font-semibold text-text",
         selected: "rdp-selected !text-body-14 !font-normal",
-        range_middle:
-          "rdp-range_middle bg-button/15 [&>.rdp-day_button]:rounded-none [&>.rdp-day_button]:bg-transparent [&>.rdp-day_button]:!text-body-14 [&>.rdp-day_button]:!font-normal",
-        range_start:
-          "rdp-range_start bg-button/15 [&>.rdp-day_button]:rounded-xl [&>.rdp-day_button]:bg-bg [&>.rdp-day_button]:text-icon [&>.rdp-day_button]:shadow-md [&>.rdp-day_button]:!text-body-14 [&>.rdp-day_button]:!font-normal",
-        range_end:
-          "rdp-range_end bg-button/15 [&>.rdp-day_button]:rounded-xl [&>.rdp-day_button]:bg-bg [&>.rdp-day_button]:text-icon [&>.rdp-day_button]:shadow-md [&>.rdp-day_button]:!text-body-14 [&>.rdp-day_button]:!font-normal",
+        range_middle: "rdp-range_middle bg-button/15",
+        range_start: "rdp-range_start",
+        range_end: "rdp-range_end",
       }}
     />
   );

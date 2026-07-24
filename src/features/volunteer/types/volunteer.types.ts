@@ -48,6 +48,7 @@ export type VolunteerPosting = {
 
   createdAt: string | null;
   updatedAt: string | null;
+  bookmarked: boolean;
 };
 
 export type VolunteerPostingListItem = {
@@ -72,6 +73,23 @@ export type VolunteerPostingPage = {
   totalPages: number;
   page: number;
   size: number;
+};
+
+export type VolunteerPostingBookmarkResponse = {
+  postingId: number;
+  bookmarked: boolean;
+};
+
+export type VolunteerPostingParticipationStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "REVIEWED";
+
+export type VolunteerPostingParticipationResponse = {
+  participationId: number;
+  status: VolunteerPostingParticipationStatus;
+  applicationUrl: string;
 };
 
 type VolunteerPostingRegionFilter =

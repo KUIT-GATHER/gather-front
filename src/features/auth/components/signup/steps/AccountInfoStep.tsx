@@ -11,9 +11,9 @@ import {
 } from "@/features/auth/lib/signupFieldA11y";
 import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
 import {
-  signupEmailSchema,
-  type SignupFormValues,
-} from "@/features/auth/schemas/signup.schema";
+  signupEmailFieldSchema,
+  type EmailSignupFormValues,
+} from "@/features/auth/schemas/emailSignup.schema";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import { cn } from "@/shared/lib/cn";
@@ -42,7 +42,7 @@ export function AccountInfoStep({
     setError,
     clearErrors,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<EmailSignupFormValues>();
   const [showCodeField, setShowCodeField] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -56,7 +56,7 @@ export function AccountInfoStep({
     name: "emailVerificationCode",
   });
   const email = normalizeEmail(watchedEmail);
-  const isEmailValid = signupEmailSchema.safeParse(email).success;
+  const isEmailValid = signupEmailFieldSchema.safeParse(email).success;
   const isEmailVerified = email.length > 0 && email === verifiedEmail;
 
   const handleSend = () => {

@@ -67,9 +67,13 @@ export function HomeScreen() {
     size: 5,
     sort: ["actStartDate,asc"],
   });
-  const meetingsQuery = useMeetingsQuery();
+  const meetingsQuery = useMeetingsQuery({
+    page: 0,
+    size: 5,
+    sort: ["createdAt,desc"],
+  });
   const postings = postingsQuery.data?.content ?? [];
-  const meetings = (meetingsQuery.data ?? []).slice(0, 5);
+  const meetings = meetingsQuery.data?.content ?? [];
 
   return (
     <PageContainer size="narrow">

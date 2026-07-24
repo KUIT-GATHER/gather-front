@@ -10,7 +10,9 @@ import { EntryPage } from "@/pages/entry/EntryPage";
 import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { EmailLoginPage } from "@/pages/auth/EmailLoginPage";
+import { KakaoLoginCallbackPage } from "@/pages/auth/KakaoLoginCallbackPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
+import { KakaoSignupPage } from "@/pages/auth/KakaoSignupPage";
 import { TermsPage } from "@/pages/auth/TermsPage";
 
 import { HomePage } from "@/pages/home/HomePage";
@@ -23,6 +25,9 @@ import { TeamPage } from "@/pages/teams/TeamPage";
 import { TeamSearchPage } from "@/pages/teams/TeamSearchPage";
 import { TeamCreatePage } from "@/pages/teams/TeamCreatePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
+import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
+import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
+import { TeamDetailPostsPage } from "@/pages/teams/TeamDetailPostsPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
@@ -57,7 +62,12 @@ export const router = createBrowserRouter([
           { path: "/onboarding", element: <OnboardingPage /> },
           { path: "/login", element: <LoginPage /> },
           { path: "/login/email", element: <EmailLoginPage /> },
+          {
+            path: "/login/kakao/callback",
+            element: <KakaoLoginCallbackPage />,
+          },
           { path: "/signup", element: <SignupPage /> },
+          { path: "/signup/kakao", element: <KakaoSignupPage /> },
           { path: "/terms", element: <TermsPage /> },
         ],
       },
@@ -71,6 +81,15 @@ export const router = createBrowserRouter([
             element: <RequireAuth />,
             children: [
               { path: "/teams", element: <TeamPage /> },
+              { path: "/teams/:teamId/home", element: <TeamDetailHomePage /> },
+              {
+                path: "/teams/:teamId/posts",
+                element: <TeamDetailPostsPage />,
+              },
+              {
+                path: "/teams/:teamId/activity",
+                element: <TeamDetailActivityPage />,
+              },
               { path: "/my", element: <MyPage /> },
             ],
           },

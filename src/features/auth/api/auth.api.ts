@@ -3,6 +3,9 @@ import { fetchClient } from "@/shared/api/fetchClient";
 import type {
   ConfirmEmailVerificationRequest,
   ConfirmEmailVerificationResponse,
+  KakaoLoginRequest,
+  KakaoLoginResponse,
+  KakaoSignupRequest,
   PhoneAvailabilityRequest,
   PhoneAvailabilityResponse,
   SendEmailVerificationRequest,
@@ -71,6 +74,25 @@ export function login(payload: LoginRequest) {
   return fetchClient<TokenResponse>("/api/v1/auth/login", {
     ...cookieAuthOptions,
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function kakaoLogin(payload: KakaoLoginRequest) {
+  return fetchClient<KakaoLoginResponse>("/api/v1/auth/kakao/login", {
+    ...cookieAuthOptions,
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function kakaoSignup(payload: KakaoSignupRequest, signupToken: string) {
+  return fetchClient<TokenResponse>("/api/v1/auth/kakao/signup", {
+    ...cookieAuthOptions,
+    method: "POST",
+    headers: {
+      "X-Signup-Token": signupToken,
+    },
     body: JSON.stringify(payload),
   });
 }
