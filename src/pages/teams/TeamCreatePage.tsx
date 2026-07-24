@@ -225,7 +225,15 @@ export function TeamCreatePage() {
         activityEndAt,
       });
 
-      navigate(`/teams/${meeting.meetingId}`, { replace: true });
+      const completeSearchParams = new URLSearchParams({
+        meetingId: String(meeting.meetingId),
+      });
+      if (isPostingBased) {
+        completeSearchParams.set("volunteerPostingId", String(postingId));
+      }
+      navigate(`/teams/new/complete?${completeSearchParams.toString()}`, {
+        replace: true,
+      });
     } catch {
       // Mutation state renders the request error below the form.
     }
