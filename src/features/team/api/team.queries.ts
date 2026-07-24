@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
   getMeeting,
@@ -8,6 +8,7 @@ import {
 } from "@/features/team/api/team.api";
 
 import type {
+  MeetingInfiniteParams,
   MeetingListParams,
   MeetingPostListParams,
 } from "../types/team.types";
@@ -17,6 +18,8 @@ export const teamKeys = {
   lists: () => [...teamKeys.all, "list"] as const,
   list: (params: MeetingListParams = {}) =>
     [...teamKeys.lists(), params] as const,
+  infiniteList: (params: MeetingInfiniteParams = {}) =>
+    [...teamKeys.lists(), "infinite", params] as const,
   create: () => [...teamKeys.all, "create"] as const,
   details: () => [...teamKeys.all, "detail"] as const,
   detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
@@ -34,6 +37,18 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.list(params),
       queryFn: () => getMeetings(params),
+    }),
+
+  infiniteList: (params: MeetingInfiniteParams = {}) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.infiniteList(params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) => getMeetings({ ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
     }),
 
   detail: (meetingId: number) =>

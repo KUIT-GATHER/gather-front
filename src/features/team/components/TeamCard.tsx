@@ -59,29 +59,31 @@ export function TeamCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full gap-3 rounded-xl border border-gray-200 p-3 text-left"
+      className="flex w-full items-center gap-4 rounded-xl border border-stroke bg-white px-3 py-4 text-left focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
     >
       <img
         src={imageSrc}
         alt=""
-        className="h-[100px] w-[76px] shrink-0 rounded-lg object-cover"
+        className="h-[106px] w-[91px] shrink-0 rounded-[10px] object-cover"
       />
 
       <div className="min-w-0 flex-1">
-        <h2 className="truncate text-base font-bold">{team.name}</h2>
+        <h2 className="truncate text-lg font-semibold leading-5 text-text">
+          {team.name}
+        </h2>
         {team.description ? (
-          <p className="mt-1 truncate text-sm text-gray-500">
+          <p className="mt-3 truncate text-[15px] leading-4 text-text-gray-400">
             {team.description}
           </p>
         ) : null}
-        <p className="mt-1 truncate text-xs text-gray-500">
+        <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
+          {regionName ? `${regionName} · ` : ""}
           {team.currentMemberCount}/{team.maxMember}명
           {activityDate ? ` · ${activityDate}` : ""}
           {deadline ? (
             <span
               className={cn(
-                "font-medium",
-                deadline === "마감" ? "text-text-gray-400" : "text-red-500",
+                deadline === "마감" ? "text-text-gray-400" : "text-point-red",
               )}
             >
               {" "}
@@ -91,7 +93,7 @@ export function TeamCard({
         </p>
 
         <div className="mt-2 flex flex-wrap gap-1">
-          <CategoryBadge category={team.category} className="text-[11px]" />
+          <CategoryBadge category={team.category} className="text-sm" />
         </div>
       </div>
     </button>
