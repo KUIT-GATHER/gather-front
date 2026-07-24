@@ -52,6 +52,8 @@ export default function Select({
           "px-0.5 py-px",
           "text-sm font-normal leading-7 text-text",
           "whitespace-nowrap transition",
+          "hover:bg-text/5 active:bg-text/10",
+          "data-[state=open]:bg-text/5",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
           "disabled:cursor-not-allowed disabled:text-text-gray-100",
           invalid && "text-point-red ring-1 ring-point-red/70",

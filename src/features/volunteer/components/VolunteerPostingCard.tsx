@@ -53,7 +53,7 @@ export function VolunteerPostingCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full gap-3 rounded-xl border border-stroke bg-white p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+      className="flex w-full gap-3 rounded-xl border border-stroke bg-white p-3 text-left transition-colors duration-200 hover:border-[#90D79D] hover:bg-[#F0F6F0] active:border-[#90D79D] active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
     >
       <img
         src={imageSrc}

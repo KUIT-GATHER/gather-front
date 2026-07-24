@@ -30,12 +30,7 @@ export default function PageHeader({
   const resolvedLeftAction =
     leftAction ??
     (onBack ? (
-      <IconButton
-        label={backLabel}
-        icon={<ChevronLeft />}
-        variant="plain"
-        onClick={onBack}
-      />
+      <IconButton label={backLabel} icon={<ChevronLeft />} onClick={onBack} />
     ) : null);
 
   return (

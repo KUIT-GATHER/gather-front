@@ -84,7 +84,7 @@ function VolunteerPostingSearchForm({
           className={
             variant === "initial"
               ? "border-0 bg-transparent px-0 focus:border-0"
-              : "border-0 bg-transparent px-0 focus:border-0"
+              : "border-0 bg-transparent pl-2 pr-0 focus:border-0"
           }
           aria-describedby={error ? "volunteer-search-error" : undefined}
           autoFocus={!initialKeyword}
@@ -136,11 +136,10 @@ export function VolunteerPostingSearchScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-8">
       {keywordFromUrl ? (
         <>
-          <header className="flex items-center gap-1 pt-[env(safe-area-inset-top)]">
+          <header className="-ml-4 flex items-center gap-1 pt-[env(safe-area-inset-top)]">
             <IconButton
               label="뒤로가기"
               icon={<ChevronLeft />}
-              variant="plain"
               onClick={() => navigate(-1)}
             />
             <VolunteerPostingSearchForm
@@ -158,7 +157,7 @@ export function VolunteerPostingSearchScreen() {
               emptyDescription="다른 검색어로 다시 찾아보세요."
               onSelect={(postingId) => navigate(`/volunteers/${postingId}`)}
               renderMeta={(totalElements) => (
-                <div className="flex items-center justify-between py-4">
+                <div className="flex items-center justify-between pt-2">
                   <p className="text-body-14 text-text-gray-300">
                     전체 {totalElements}개 활동
                   </p>
@@ -206,7 +205,7 @@ export function VolunteerPostingSearchScreen() {
                 {recentSearches.length > 0 ? (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 text-sm text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                    className="inline-flex items-center gap-1 text-sm text-text-gray-300 transition-colors hover:bg-text/5 active:bg-text/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                     onClick={clearRecentSearches}
                   >
                     <Trash2 aria-hidden="true" className="size-4" />
@@ -220,7 +219,7 @@ export function VolunteerPostingSearchScreen() {
                     <button
                       key={recent}
                       type="button"
-                      className="rounded-full border border-stroke px-3 py-2 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="rounded-full border border-stroke px-3 py-2 text-sm text-text transition-colors hover:border-[#5E5E5D] hover:bg-[#5E5E5D] hover:text-[#FAFAF8] active:text-[#FAFAF8] active:border-[#5E5E5D] active:bg-[#5E5E5D] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recent)}
                     >
                       #{recent}
@@ -241,7 +240,7 @@ export function VolunteerPostingSearchScreen() {
                     <button
                       key={recommendation}
                       type="button"
-                      className="rounded-full border border-button px-3 py-2 text-sm text-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="rounded-full border border-button px-3 py-2 text-sm text-icon transition-colors hover:bg-[#F0F6F0] hover:text-[#00C77B] active:text-[#00C77B]  active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recommendation)}
                     >
                       #{recommendation}
