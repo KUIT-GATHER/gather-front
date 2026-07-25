@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import alarmIcon from "@/assets/icons/Alarm.svg";
 import arrowIcon from "@/assets/icons/Arrow.svg";
 import filterIcon from "@/assets/icons/Filter.svg";
+import gatherIcon from "@/assets/volunteer/Gather.svg";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
@@ -77,32 +78,34 @@ export function HomeScreen() {
 
   return (
     <PageContainer size="narrow">
-      <header className="flex items-center justify-between pb-10 pt-8">
-        <h1 className="text-[34px] font-bold tracking-tight text-[#316B43]">
+      <header className="flex items-center justify-between pb-8 pt-8">
+        {/* <h1 className="font-['1973_MimiWorld'] text-[32px] font-normal leading-none tracking-[-0.03em] text-[#2E6136]">
           Gather
-        </h1>
-
-        <div className="flex items-center gap-4">
+        </h1> */}
+        <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
+        <div className="flex items-center">
           <IconButton
             label="필터 열기"
             icon={<img src={filterIcon} alt="" />}
             size="medium"
-            className="-m-3"
             onClick={() => setIsFilterOpen(true)}
           />
 
-          <div className="relative">
+          <div className="flex size-10 items-center justify-center">
             <IconButton
               label="알림 확인"
-              icon={<img src={alarmIcon} alt="" />}
+              icon={
+                <span className="relative block size-6">
+                  <img src={alarmIcon} alt="" className="block size-6" />
+
+                  <span className="pointer-events-none absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full bg-[#F76073] text-[9px] leading-none text-white">
+                    1
+                  </span>
+                </span>
+              }
               size="medium"
-              className="-m-3"
               onClick={() => navigate("/notifications")}
             />
-
-            <span className="pointer-events-none absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white">
-              2
-            </span>
           </div>
         </div>
       </header>
@@ -110,7 +113,7 @@ export function HomeScreen() {
       <div>
         <section>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold">
+            <h2 className="text-[18px] font-semibold leading-7">
               이번 주, 내 주변에선 뭐하지? 👀
             </h2>
             <IconButton
@@ -151,7 +154,9 @@ export function HomeScreen() {
 
         <section>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold">같이 갈 사람 찾는 중 🙌</h2>
+            <h2 className="text-[18px] font-semibold leading-7">
+              같이 갈 사람 찾는 중 🙌
+            </h2>
             <IconButton
               label="모임 공고 전체 보기"
               icon={<img src={arrowIcon} alt="" />}
