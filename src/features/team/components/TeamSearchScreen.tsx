@@ -3,7 +3,7 @@ import { ChevronLeft, Puzzle, Search, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import { useRecentTeamSearches } from "@/features/team/hooks/useRecentTeamSearches";
-import { useVolunteerPostingRecommendedKeywordsQuery } from "@/features/volunteer/hooks/useVolunteerPostingRecommendedKeywordsQuery";
+import { useMeetingRecommendedKeywordsQuery } from "@/features/team/hooks/useMeetingRecommendedKeywordsQuery";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -120,8 +120,7 @@ export function TeamSearchScreen() {
   const keywordFromUrl = searchParams.get("keyword")?.trim() ?? "";
   const { recentSearches, addRecentSearch, clearRecentSearches } =
     useRecentTeamSearches();
-  const recommendedKeywordsQuery =
-    useVolunteerPostingRecommendedKeywordsQuery();
+  const recommendedKeywordsQuery = useMeetingRecommendedKeywordsQuery();
   const recommendedKeywords = recommendedKeywordsQuery.data ?? [];
   const sortValue = searchParams.get("sort");
   const sort: TeamSearchSort = isTeamSearchSort(sortValue)
