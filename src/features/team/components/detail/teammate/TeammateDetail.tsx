@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
+import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 import type {
   MeetingHome,
   MeetingDetail,
@@ -23,15 +25,17 @@ export function TeammateDetail({
   detail,
   viewerRole,
 }: TeammateDetailProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TeammateTab>("home");
-  const tabs: TeammateTab[] =
-    viewerRole === "leader"
-      ? ["home", "posts", "myActivity"]
-      : ["home", "posts"];
+  const tabs: TeammateTab[] = ["home", "posts", "myActivity"];
 
   return (
-    <>
-      <TeammateHeader title={home.name} viewerRole={viewerRole} />
+    <article className="min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <TeammateHeader
+        title={home.name}
+        viewerRole={viewerRole}
+        onBack={() => navigate(-1)}
+      />
       <TeammateTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
       {activeTab === "home" ? (
@@ -52,6 +56,8 @@ export function TeammateDetail({
           </p>
         </section>
       ) : null}
-    </>
+
+      <MobileBottomNavigation />
+    </article>
   );
 }

@@ -20,10 +20,7 @@ export function TeammateTabs({ tabs, activeTab, onChange }: TeammateTabsProps) {
   return (
     <nav
       aria-label="모임 상세 메뉴"
-      className={cn(
-        "sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30 grid border-b border-stroke bg-bg",
-        tabs.length === 3 ? "grid-cols-3" : "grid-cols-2",
-      )}
+      className="sticky top-[calc(env(safe-area-inset-top)+4.375rem)] z-30 grid grid-cols-3 border-b border-stroke bg-bg"
     >
       {tabs.map((tab) => (
         <button

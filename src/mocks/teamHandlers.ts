@@ -57,7 +57,7 @@ type MockMeeting = {
 };
 
 const bookmarkedMeetingIds = new Set<number>();
-const joinedMeetingIds = new Set<number>();
+const joinedMeetingIds = new Set<number>([1]);
 const createdMeetings: MockMeeting[] = [];
 
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {

@@ -1,4 +1,5 @@
-import { Heart, MessageSquare } from "lucide-react";
+import CommentIcon from "@/assets/icons/Comment.svg";
+import HeartIcon from "@/assets/icons/Heart.svg";
 
 import type {
   MeetingPostSummary,
@@ -39,52 +40,80 @@ export function SharedMeetingBoardPostCard({
 }: SharedMeetingBoardPostCardProps) {
   return (
     <article className="rounded-xl border border-stroke bg-white px-4.5 py-5">
-      <div className="flex items-start gap-3.5">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-stroke text-[18px] leading-5 font-medium text-text-gray-500">
-          {getInitial(post.authorNickname)}
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[18px] leading-6 font-semibold text-text">
-                {post.authorNickname}
-              </p>
-              <p className="mt-0.5 text-[18px] leading-6 font-medium text-text-gray-500">
-                {formatPostDate(post.createdAt)}
-              </p>
-            </div>
-
-            <span className="shrink-0 rounded-full bg-point-green/20 px-4 py-2 text-[17px] leading-5 font-medium text-button">
-              {POST_TYPE_LABELS[post.type]}
-            </span>
-          </div>
-
-          <h3 className="mt-7 line-clamp-1 text-[21px] leading-7 font-semibold text-text">
-            {post.title}
-          </h3>
-          <div className="mt-3 flex items-start gap-3 text-[19px] leading-7 text-text-gray-500">
-            <p className="line-clamp-1 min-w-0 flex-1">{post.content}</p>
-            {/* TODO: 게시글 상세 라우트가 정해지면 GET /api/v1/meetings/{meetingId}/posts/{postId}로 연결한다. */}
-            <span
-              aria-hidden="true"
-              className="shrink-0 text-text underline underline-offset-3"
-            >
-              더보기
-            </span>
-          </div>
-
-          <div className="mt-8 flex items-center gap-6 text-[19px] leading-5 text-text-gray-500">
-            <span className="inline-flex items-center gap-2">
-              <Heart aria-hidden="true" className="size-6" />
-              {post.likeCount}
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <MessageSquare aria-hidden="true" className="size-6" />
-              {post.commentCount}
-            </span>
+      <div className="flex w-full items-start justify-between gap-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-stroke text-[14px] leading-4 font-normal text-text">
+            {getInitial(post.authorNickname)}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-[16px] leading-5 font-medium text-text">
+              {post.authorNickname}
+            </p>
+            <p className="mt-0.5 text-[14px] leading-5 font-normal text-text-gray-100">
+              {formatPostDate(post.createdAt)}
+            </p>
           </div>
         </div>
+
+        <span className="shrink-0 rounded-[30px] bg-[#DCECDF] px-3.5 py-1 text-[14px] leading-4 font-normal text-button">
+          {POST_TYPE_LABELS[post.type]}
+        </span>
+      </div>
+      <h3 className="mt-4 line-clamp-1 text-[15px] leading-5 font-semibold text-text">
+        {post.title}
+      </h3>
+      <div className="mt-3 flex items-start gap-3 text-[15px] leading-5 font-normal text-text-gray-500">
+        <p
+          className="line-clamp-1 min-w-0 flex-1"
+          style={{
+            background:
+              "linear-gradient(90deg, #5E5E5D 0%, #676766 84.62%, #C4C4C2 100%)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          {post.content}
+        </p>
+        {/* 게시글에 대한 라우트가 정해지면 GET /api/v1/meetings/{meetingId}/posts/{postId}로 연결한다. */}
+        <span
+          aria-hidden="true"
+          className="shrink-0 text-text"
+          style={{
+            textDecorationLine: "underline",
+            textDecorationSkipInk: "auto",
+            textDecorationStyle: "solid",
+            textDecorationThickness: "auto",
+            textUnderlineOffset: "auto",
+            textUnderlinePosition: "from-font",
+          }}
+        >
+          더보기
+        </span>
+      </div>
+      <div
+        aria-hidden="true"
+        className="mt-5 h-[150px] w-full rounded-[12px] bg-stroke"
+      />{" "}
+      {/* 사진 추후 연결 예정 */}
+      <div className="mt-5 flex items-center gap-4 text-text-gray-100">
+        <span className="inline-flex items-center gap-1">
+          <img
+            aria-hidden="true"
+            src={HeartIcon}
+            alt=""
+            className="h-3 w-[13.333px]"
+          />
+          <span className="text-[14px] leading-4 font-normal">
+            {post.likeCount}
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <img aria-hidden="true" src={CommentIcon} alt="" className="size-4" />
+          <span className="text-[14px] leading-4 font-normal">
+            {post.commentCount}
+          </span>
+        </span>
       </div>
     </article>
   );

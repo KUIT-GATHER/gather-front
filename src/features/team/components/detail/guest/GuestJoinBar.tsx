@@ -45,7 +45,7 @@ export function GuestJoinBar({
           {joinMeetingMutation.isPending
             ? "신청 중"
             : isJoinRequested
-              ? "신청 완료"
+              ? "신청 취소하기"
               : disabled
                 ? "모집 마감된 모임이에요"
                 : "모임 신청하기"}

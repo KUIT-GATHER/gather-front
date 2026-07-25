@@ -15,6 +15,8 @@ export function SharedMeetingSummary({
 }: SharedMeetingSummaryProps) {
   return (
     <section>
+      <div className="-mx-5.5 -mt-4 mb-2.5 h-[184px] bg-stroke" aria-hidden="true" /> {/* 사진 추후 추가 예정 */}
+
       <CategoryBadge category={detail.category} />
 
       {home.description ? (
