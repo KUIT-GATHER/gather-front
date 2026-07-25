@@ -2,35 +2,24 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, Puzzle, Search, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 
+import {
+  isTeamListSort,
+  TEAM_SORT_PARAMS,
+  teamListSortOptions,
+  type TeamListSort,
+} from "@/features/team/constants/teamList.constants";
+
 import { useRecentTeamSearches } from "@/features/team/hooks/useRecentTeamSearches";
 import { useMeetingRecommendedKeywordsQuery } from "@/features/team/hooks/useMeetingRecommendedKeywordsQuery";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
-import Select, { type SelectOption } from "@/shared/ui/Select";
+import Select from "@/shared/ui/Select";
 
 import { TeamSearchResults } from "./TeamSearchResults";
 
 const SEARCH_PATTERN = /^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\s]+$/;
-
-const sortOptions = [
-  { value: "latest", label: "최신순 ✨" },
-  { value: "popular", label: "인기순 🔥" },
-  { value: "deadline", label: "마감임박" },
-] satisfies SelectOption[];
-
-const sortParams = {
-  latest: ["createdAt,desc"],
-  popular: ["currentMemberCount,desc", "createdAt,desc"],
-  deadline: ["deadline,asc", "createdAt,desc"],
-} as const;
-
-type TeamSearchSort = keyof typeof sortParams;
-
-function isTeamSearchSort(value: string | null): value is TeamSearchSort {
-  return value !== null && value in sortParams;
-}
 
 function getSearchError(value: string) {
   const keyword = value.trim();
@@ -123,14 +112,12 @@ export function TeamSearchScreen() {
   const recommendedKeywordsQuery = useMeetingRecommendedKeywordsQuery();
   const recommendedKeywords = recommendedKeywordsQuery.data ?? [];
   const sortValue = searchParams.get("sort");
-  const sort: TeamSearchSort = isTeamSearchSort(sortValue)
-    ? sortValue
-    : "latest";
+  const sort: TeamListSort = isTeamListSort(sortValue) ? sortValue : "latest";
   const queryParams = useMemo(
     () => ({
       keyword: keywordFromUrl,
       size: 20,
-      sort: [...sortParams[sort]],
+      sort: [...TEAM_SORT_PARAMS[sort]],
     }),
     [keywordFromUrl, sort],
   );
@@ -175,9 +162,9 @@ export function TeamSearchScreen() {
                   <Select
                     ariaLabel="검색 결과 정렬"
                     value={sort}
-                    options={sortOptions}
+                    options={teamListSortOptions}
                     onChange={(value) => {
-                      if (!isTeamSearchSort(value)) return;
+                      if (!isTeamListSort(value)) return;
                       const next = new URLSearchParams(searchParams);
                       next.set("sort", value);
                       setSearchParams(next);

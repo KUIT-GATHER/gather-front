@@ -5,10 +5,16 @@ import filterIcon from "@/assets/icons/Filter.svg";
 import plusIcon from "@/assets/icons/Plus.svg";
 import searchIcon from "@/assets/icons/Search.svg";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
+import {
+  isTeamListSort,
+  TEAM_SORT_PARAMS,
+  teamListSortOptions,
+  type TeamListSort,
+} from "@/features/team/constants/teamList.constants";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
-import Select, { type SelectOption } from "@/shared/ui/Select";
+import Select from "@/shared/ui/Select";
 import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
 import { useInfiniteMeetingsQuery } from "@/features/team/hooks/useInfiniteMeetingsQuery";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -18,24 +24,6 @@ import LoadingState from "@/shared/ui/LoadingState";
 import type { MeetingInfiniteParams, MeetingStatus } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
 import { TeamFilterSheet, type TeamFilter } from "./TeamFilterSheet";
-
-const teamSortOptions = [
-  { value: "latest", label: "최신순 ✨" },
-  { value: "popular", label: "인기순 🔥" },
-  { value: "deadline", label: "마감임박" },
-] satisfies SelectOption[];
-
-const teamSortParams = {
-  latest: ["createdAt,desc"],
-  popular: ["currentMemberCount,desc", "createdAt,desc"],
-  deadline: ["deadline,asc", "createdAt,desc"],
-} as const;
-
-type TeamSort = keyof typeof teamSortParams;
-
-function isTeamSort(value: string | null): value is TeamSort {
-  return value !== null && value in teamSortParams;
-}
 
 function toPositiveNumber(value: string | null) {
   if (!value) {
@@ -67,7 +55,7 @@ export function TeamListScreen() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const regionsQuery = useRegionsQuery();
   const sortValue = searchParams.get("sort");
-  const sort: TeamSort = isTeamSort(sortValue) ? sortValue : "latest";
+  const sort: TeamListSort = isTeamListSort(sortValue) ? sortValue : "latest";
   const filter = useMemo<TeamFilter>(
     () => ({
       regionId: toPositiveNumber(searchParams.get("regionId")),
@@ -81,7 +69,7 @@ export function TeamListScreen() {
       keyword: searchParams.get("keyword")?.trim() || undefined,
       ...filter,
       size: 20,
-      sort: [...teamSortParams[sort]],
+      sort: [...TEAM_SORT_PARAMS[sort]],
     }),
     [filter, searchParams, sort],
   );
@@ -166,9 +154,9 @@ export function TeamListScreen() {
         <Select
           ariaLabel="모임 정렬"
           value={sort}
-          options={teamSortOptions}
+          options={teamListSortOptions}
           onChange={(value) => {
-            if (!isTeamSort(value)) return;
+            if (!isTeamListSort(value)) return;
             const next = new URLSearchParams(searchParams);
             next.set("sort", value);
             setSearchParams(next);
