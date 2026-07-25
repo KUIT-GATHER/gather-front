@@ -37,7 +37,6 @@ export function consumeKakaoOAuthState(callbackState: string | null) {
 }
 
 export function getKakaoRedirectUri() {
-  // Preview URL은 백엔드와 카카오 개발자 콘솔에 등록되지 않으면 인가 코드 교환에 실패합니다.
   return new URL("/login/kakao/callback", window.location.origin).toString();
 }
 

@@ -79,9 +79,6 @@ export function HomeScreen() {
   return (
     <PageContainer size="narrow">
       <header className="flex items-center justify-between pb-8 pt-8">
-        {/* <h1 className="font-['1973_MimiWorld'] text-[32px] font-normal leading-none tracking-[-0.03em] text-[#2E6136]">
-          Gather
-        </h1> */}
         <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
         <div className="flex items-center">
           <IconButton
