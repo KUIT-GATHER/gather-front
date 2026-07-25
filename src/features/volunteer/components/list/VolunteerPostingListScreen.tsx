@@ -40,7 +40,7 @@ export function VolunteerPostingListScreen() {
       <PageHeader
         sticky
         title="봉사 공고"
-        onBack={() => navigate("/home")}
+        onBack={() => navigate(-1)}
         rightAction={
           <div className="flex items-center gap-1">
             <IconButton

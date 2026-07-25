@@ -130,15 +130,12 @@ function KakaoSignupFlowContent({
 
       <ConfirmDialog
         open={showExitDialog}
-        title="가입을 취소할까요?"
-        description="작성 중인 정보와 카카오 가입 정보가 사라집니다."
-        cancelText="계속 작성"
-        confirmText="가입 취소"
-        confirmVariant="danger"
+        title="뒤로 가면 작성 중인 내용이 사라집니다."
+        cancelText="취소"
+        confirmText="확인"
         onCancel={() => setShowExitDialog(false)}
         onConfirm={confirmExit}
       />
-
       <ConfirmDialog
         open={showDuplicatePhoneDialog}
         title="이미 가입된 전화번호입니다."
