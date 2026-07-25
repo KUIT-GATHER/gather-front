@@ -1,6 +1,6 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { SignupCommonFormValues } from "@/features/auth/schemas/signupCommon.schema";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
 import {
@@ -21,7 +21,7 @@ export function CategorySelector() {
     control,
     setValue,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<SignupCommonFormValues>();
   const selectedCategories = useWatch({ control, name: "interestCategories" });
 
   return (

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { getSignupFieldErrorId } from "@/features/auth/lib/signupFieldA11y";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { SignupCommonFormValues } from "@/features/auth/schemas/signupCommon.schema";
 import {
   findRegionGroupIdBySelectedRegion,
   getLevel2RegionsByGroup,
@@ -32,7 +32,7 @@ export function RegionSelector({
     setValue,
     clearErrors,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<SignupCommonFormValues>();
 
   const activityRegionId = useWatch({
     control,

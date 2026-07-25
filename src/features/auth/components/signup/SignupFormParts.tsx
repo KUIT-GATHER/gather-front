@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { EmailSignupFormValues } from "@/features/auth/schemas/emailSignup.schema";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
@@ -62,7 +62,7 @@ export function PasswordField({
   const {
     register,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<EmailSignupFormValues>();
   const error = errors[name]?.message;
 
   return (

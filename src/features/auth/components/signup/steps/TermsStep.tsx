@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
 import type { LegalDocumentType } from "@/features/legal";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { SignupCommonFormValues } from "@/features/auth/schemas/signupCommon.schema";
 import { cn } from "@/shared/lib/cn";
 
 import { SignupRootError, SignupStepButton } from "../SignupFormParts";
@@ -24,7 +24,7 @@ export function TermsStep({
     setValue,
     clearErrors,
     formState: { errors },
-  } = useFormContext<SignupFormValues>();
+  } = useFormContext<SignupCommonFormValues>();
   const serviceTermsAgreed = useWatch({
     control,
     name: "serviceTermsAgreed",

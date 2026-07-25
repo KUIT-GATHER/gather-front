@@ -3,10 +3,17 @@ import {
   normalizeEmail,
   normalizePhoneNumber,
 } from "@/features/auth/lib/signupFormatters";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
-import type { SignupRequest } from "@/features/auth/types/auth.types";
+import type { EmailSignupFormValues } from "@/features/auth/schemas/emailSignup.schema";
+import type { KakaoSignupFormValues } from "@/features/auth/schemas/kakaoSignup.schema";
+import type {
+  CommonSignupRequest,
+  KakaoSignupRequest,
+  SignupRequest,
+} from "@/features/auth/types/auth.types";
 
-export function toSignupRequest(values: SignupFormValues): SignupRequest {
+function toCommonSignupRequest(
+  values: KakaoSignupFormValues,
+): CommonSignupRequest {
   if (values.gender === "" || values.activityRegionId === null) {
     throw new Error("Invalid signup form state");
   }
@@ -16,9 +23,6 @@ export function toSignupRequest(values: SignupFormValues): SignupRequest {
     birthDate: normalizeBirthDate(values.birthDate),
     gender: values.gender,
     phoneNumber: normalizePhoneNumber(values.phoneNumber),
-    email: normalizeEmail(values.email),
-    password: values.password,
-    passwordConfirm: values.passwordConfirm,
     nickname: values.nickname.trim(),
     introduction: values.introduction.trim() || null,
     activityRegionId: values.activityRegionId,
@@ -27,4 +31,21 @@ export function toSignupRequest(values: SignupFormValues): SignupRequest {
     privacyPolicyAgreed: values.privacyPolicyAgreed,
     marketingAgreed: values.marketingAgreed,
   };
+}
+
+export function toEmailSignupRequest(
+  values: EmailSignupFormValues,
+): SignupRequest {
+  return {
+    ...toCommonSignupRequest(values),
+    email: normalizeEmail(values.email),
+    password: values.password,
+    passwordConfirm: values.passwordConfirm,
+  };
+}
+
+export function toKakaoSignupRequest(
+  values: KakaoSignupFormValues,
+): KakaoSignupRequest {
+  return toCommonSignupRequest(values);
 }

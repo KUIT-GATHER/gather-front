@@ -18,6 +18,10 @@ const envSchema = z.object({
 
   VITE_API_BASE_URL: httpUrlSchema,
   VITE_ENABLE_MSW: z.enum(["true", "false"]).default("false"),
+  VITE_KAKAO_REST_API_KEY: z
+    .string()
+    .trim()
+    .min(1, "VITE_KAKAO_REST_API_KEY is required"),
 });
 
 const parsedEnv = envSchema.parse(import.meta.env);
@@ -32,4 +36,5 @@ export const env = {
 
   API_BASE_URL: parsedEnv.VITE_API_BASE_URL,
   ENABLE_MSW: parsedEnv.VITE_ENABLE_MSW === "true",
+  KAKAO_REST_API_KEY: parsedEnv.VITE_KAKAO_REST_API_KEY,
 } as const;
