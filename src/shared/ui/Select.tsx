@@ -7,6 +7,7 @@ import { cn } from "@/shared/lib/cn";
 export type SelectOption = {
   label: string;
   value: string;
+  selectedLabel?: string;
 };
 
 type SelectProps = {
@@ -34,6 +35,7 @@ export default function Select({
   invalid = false,
   ariaLabel,
 }: SelectProps) {
+  const selectedOption = options.find((option) => option.value === value);
   return (
     <RadixSelect.Root
       value={value}
@@ -50,6 +52,8 @@ export default function Select({
           "px-0.5 py-px",
           "text-sm font-normal leading-7 text-text",
           "whitespace-nowrap transition",
+          "hover:bg-text/5 active:bg-text/10",
+          "data-[state=open]:bg-text/5",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
           "disabled:cursor-not-allowed disabled:text-text-gray-100",
           invalid && "text-point-red ring-1 ring-point-red/70",
@@ -60,7 +64,9 @@ export default function Select({
           <img src={SortIcon} alt="" className="h-3.75 w-3.75 shrink-0" />
         </RadixSelect.Icon>
 
-        <RadixSelect.Value placeholder={placeholder} />
+        <RadixSelect.Value placeholder={placeholder}>
+          {selectedOption?.selectedLabel ?? selectedOption?.label}
+        </RadixSelect.Value>
       </RadixSelect.Trigger>
 
       <RadixSelect.Portal>

@@ -9,9 +9,9 @@ export const VOLUNTEER_POSTING_SORTS = [
 export type VolunteerPostingListSort = (typeof VOLUNTEER_POSTING_SORTS)[number];
 
 export const volunteerPostingListSortOptions = [
-  { value: "latest", label: "최신순 ✨" },
-  { value: "popular", label: "인기순 👥" },
-  { value: "deadline", label: "마감임박 ⏰" },
+  { value: "latest", label: "최신순 ✨", selectedLabel: "최신순" },
+  { value: "popular", label: "인기순 🔥", selectedLabel: "인기순" },
+  { value: "deadline", label: "마감임박 ⏰", selectedLabel: "마감임박" },
 ] satisfies SelectOption[];
 
 export const VOLUNTEER_POSTING_SORT_PARAMS = {
