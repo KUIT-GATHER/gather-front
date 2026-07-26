@@ -90,6 +90,8 @@ export type MeetingListParams = {
   sort?: string[];
 };
 
+export type MeetingInfiniteParams = Omit<MeetingListParams, "page">;
+
 export type MeetingPage = {
   content: MeetingListItem[];
   totalElements: number;

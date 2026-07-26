@@ -91,6 +91,13 @@ export function getMeetings(params?: MeetingListParams) {
   return fetchClient<MeetingPage>(buildMeetingsEndpoint(params), publicOptions);
 }
 
+export function getMeetingRecommendedKeywords() {
+  return fetchClient<string[]>(
+    `${MEETING_ENDPOINT}/keywords/recommended`,
+    publicOptions,
+  );
+}
+
 export function createMeeting(payload: MeetingCreateRequest) {
   return fetchClient<MeetingListItem>(MEETING_ENDPOINT, {
     method: "POST",
