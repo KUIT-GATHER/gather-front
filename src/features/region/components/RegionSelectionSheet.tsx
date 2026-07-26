@@ -18,6 +18,15 @@ type RegionSelectionSheetProps = {
 
 export function RegionSelectionSheet({
   open,
+  ...props
+}: RegionSelectionSheetProps) {
+  if (!open) return null;
+
+  return <RegionSelectionSheetContent open={open} {...props} />;
+}
+
+function RegionSelectionSheetContent({
+  open,
   onOpenChange,
   value,
   onApply,
@@ -30,31 +39,31 @@ export function RegionSelectionSheet({
     () => createRegionIndex(regionsQuery.data ?? []),
     [regionsQuery.data],
   );
-  const selectedRegion = selectionId
-    ? regionIndex.byId.get(selectionId)
-    : undefined;
+  const selectedRegion =
+    selectionId !== undefined ? regionIndex.byId.get(selectionId) : undefined;
   const displayedActiveLevel1RegionId =
     activeLevel1RegionId ??
     (selectedRegion?.level === REGION_LEVEL.SIDO
       ? selectedRegion.id
       : selectedRegion?.parentId) ??
     regionIndex.level1Regions[0]?.id;
-  const activeLevel1Region = displayedActiveLevel1RegionId
-    ? regionIndex.byId.get(displayedActiveLevel1RegionId)
-    : undefined;
-  const level2Regions = displayedActiveLevel1RegionId
-    ? (
-        regionIndex.childrenByParentId.get(displayedActiveLevel1RegionId) ?? []
-      ).filter((region) => region.level === REGION_LEVEL.SIGUNGU)
-    : [];
+  const activeLevel1Region =
+    displayedActiveLevel1RegionId !== undefined
+      ? regionIndex.byId.get(displayedActiveLevel1RegionId)
+      : undefined;
+  const level2Regions =
+    displayedActiveLevel1RegionId !== undefined
+      ? (
+          regionIndex.childrenByParentId.get(displayedActiveLevel1RegionId) ??
+          []
+        ).filter((region) => region.level === REGION_LEVEL.SIGUNGU)
+      : [];
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (nextOpen) {
-      setSelectionId(value);
-      setActiveLevel1RegionId(undefined);
-    }
     onOpenChange(nextOpen);
   };
+
+  const hasSelection = selectionId !== undefined;
 
   return (
     <BottomSheet
@@ -65,10 +74,10 @@ export function RegionSelectionSheet({
       footer={
         <Button
           fullWidth
-          disabled={!selectionId}
+          disabled={!hasSelection}
           className="active:bg-icon"
           onClick={() => {
-            if (!selectionId) return;
+            if (selectionId === undefined) return;
             onApply(selectionId);
             onOpenChange(false);
           }}

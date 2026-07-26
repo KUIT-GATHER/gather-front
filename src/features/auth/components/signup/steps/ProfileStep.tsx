@@ -7,8 +7,6 @@ import {
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupCommonFormValues } from "@/features/auth/schemas/signupCommon.schema";
-import { useRegionGroupsQuery } from "@/features/region/hooks/useRegionGroupsQuery";
-import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 
@@ -22,16 +20,7 @@ export function ProfileStep() {
     register,
     formState: { errors },
   } = useFormContext<SignupCommonFormValues>();
-  const regionsQuery = useRegionsQuery();
-  const regionGroupsQuery = useRegionGroupsQuery();
   const introduction = useWatch({ control, name: "introduction" });
-  const isSignupOptionUnavailable =
-    regionsQuery.isLoading ||
-    regionsQuery.isError ||
-    regionGroupsQuery.isLoading ||
-    regionGroupsQuery.isError;
-  const isRegionLoading = regionsQuery.isLoading || regionGroupsQuery.isLoading;
-  const isRegionError = regionsQuery.isError || regionGroupsQuery.isError;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -91,27 +80,14 @@ export function ProfileStep() {
           />
         </FormField>
 
-        <RegionSelector
-          regions={regionsQuery.data ?? []}
-          regionGroups={regionGroupsQuery.data ?? []}
-          isLoading={isRegionLoading}
-          isError={isRegionError}
-          onRetry={() => {
-            void Promise.all([
-              regionsQuery.refetch(),
-              regionGroupsQuery.refetch(),
-            ]);
-          }}
-        />
+        <RegionSelector />
 
         <CategorySelector />
       </div>
 
       <div className="mt-8" />
 
-      <SignupStepButton disabled={isSignupOptionUnavailable}>
-        다음
-      </SignupStepButton>
+      <SignupStepButton>다음</SignupStepButton>
     </div>
   );
 }
