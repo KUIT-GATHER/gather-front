@@ -2,7 +2,10 @@ import { HttpResponse, http } from "msw";
 
 import teams from "./data/teams.json";
 
-import type { MeetingCreateRequest } from "@/features/team/types/team.types";
+import type {
+  MeetingCreateRequest,
+  MeetingMember,
+} from "@/features/team/types/team.types";
 
 const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = new Set([
@@ -54,8 +57,85 @@ type MockMeeting = {
 };
 
 const bookmarkedMeetingIds = new Set<number>();
-const joinedMeetingIds = new Set<number>();
+const joinedMeetingIds = new Set<number>([1]);
 const createdMeetings: MockMeeting[] = [];
+
+const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
+  1: [
+    {
+      userId: 1,
+      nickname: "김수민",
+      role: "HOST",
+      host: true,
+    },
+    {
+      userId: 101,
+      nickname: "이하늘",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 102,
+      nickname: "박지호",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 103,
+      nickname: "최유진",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 104,
+      nickname: "정다은",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 105,
+      nickname: "강민준",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 106,
+      nickname: "윤서아",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 107,
+      nickname: "한지민",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 108,
+      nickname: "오준호",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 109,
+      nickname: "문채원",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 110,
+      nickname: "서도윤",
+      role: "MEMBER",
+      host: false,
+    },
+    {
+      userId: 111,
+      nickname: "장예린",
+      role: "MEMBER",
+      host: false,
+    },
+  ],
+};
 
 const meetingPosts = [
   {
@@ -179,6 +259,43 @@ function getMockMeetings() {
   return [...(teams.data as MockMeeting[]), ...createdMeetings];
 }
 
+function createHostMember(team: MockMeeting): MeetingMember {
+  return {
+    userId: team.hostId,
+    nickname: "팀장",
+    role: "HOST",
+    host: true,
+  };
+}
+
+function getBaseMeetingMembers(team: MockMeeting) {
+  return meetingMembersByMeetingId[team.meetingId] ?? [createHostMember(team)];
+}
+
+function getMeetingMembers(team: MockMeeting, joined: boolean) {
+  const members = getBaseMeetingMembers(team);
+
+  if (!joined) {
+    return members;
+  }
+
+  return [
+    ...members,
+    {
+      userId: 99,
+      nickname: "나",
+      role: "MEMBER",
+      host: false,
+    },
+  ] satisfies MeetingMember[];
+}
+
+function getMeetingMemberCount(team: MockMeeting, joined: boolean) {
+  const members = meetingMembersByMeetingId[team.meetingId];
+
+  return members ? members.length + (joined ? 1 : 0) : team.currentMemberCount;
+}
+
 function toMeetingListItem(team: MockMeeting) {
   const joined = joinedMeetingIds.has(team.meetingId);
 
@@ -186,7 +303,7 @@ function toMeetingListItem(team: MockMeeting) {
     meetingId: team.meetingId,
     name: team.name,
     description: team.description,
-    currentMemberCount: team.currentMemberCount + (joined ? 1 : 0),
+    currentMemberCount: getMeetingMemberCount(team, joined),
     maxMember: team.maxMember,
     regionId: team.regionId,
     category: team.category,
@@ -363,6 +480,7 @@ export const teamHandlers = [
     }
 
     const joined = joinedMeetingIds.has(meetingId);
+    const members = getMeetingMembers(team, joined);
 
     return HttpResponse.json({
       success: true,
@@ -372,7 +490,7 @@ export const teamHandlers = [
         description: team.description,
         deadline: team.deadline,
         regionName: team.regionName,
-        currentMemberCount: team.currentMemberCount + (joined ? 1 : 0),
+        currentMemberCount: members.length,
         maxMember: team.maxMember,
         timeVerified: false,
         status: team.status,
@@ -380,25 +498,20 @@ export const teamHandlers = [
         linkedPostingId: team.volunteerPostingId,
         linkedPostingTitle: null,
         participationCondition: team.participationCondition,
-        members: [
-          {
-            userId: team.hostId,
-            nickname: "팀장",
-            role: "HOST",
-            host: true,
-          },
-          ...(joined
-            ? [
-                {
-                  userId: 99,
-                  nickname: "나",
-                  role: "MEMBER",
-                  host: false,
-                },
-              ]
-            : []),
-        ],
-        upcomingActivity: null,
+        members,
+        upcomingActivity:
+          team.volunteerPostingId === 1
+            ? {
+                postingId: 1,
+                title: "한강공원 플로깅 봉사",
+                activityDate: "2026-07-20",
+                startTime: "10:00",
+                endTime: "13:00",
+                place: "여의도 한강공원",
+                remainingCount: 12,
+                status: "RECRUITING",
+              }
+            : null,
         member: joined,
         host: false,
       },

@@ -14,6 +14,7 @@ export type ConfirmDialogProps = {
   description?: ReactNode;
   confirmVariant?: "primary" | "dark" | "danger";
   isPending?: boolean;
+  showCancel?: boolean;
 };
 
 const confirmVariantClasses: Record<
@@ -36,6 +37,7 @@ export default function ConfirmDialog({
   description,
   confirmVariant = "primary",
   isPending = false,
+  showCancel = true,
 }: ConfirmDialogProps) {
   const dialogDescription = description ?? children;
 
@@ -98,20 +100,22 @@ export default function ConfirmDialog({
             </div>
 
             <div className="flex w-full gap-2">
-              <AlertDialog.Cancel asChild>
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={handleCancelClick}
-                  className={cn(
-                    "h-12 flex-1 rounded-full bg-[#DCECDF] text-lg font-medium leading-7 text-text transition",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
-                    "disabled:cursor-not-allowed disabled:bg-stroke disabled:text-text-gray-100",
-                  )}
-                >
-                  {cancelText}
-                </button>
-              </AlertDialog.Cancel>
+              {showCancel ? (
+                <AlertDialog.Cancel asChild>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={handleCancelClick}
+                    className={cn(
+                      "h-12 flex-1 rounded-full bg-[#DCECDF] text-lg font-medium leading-7 text-text transition",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                      "disabled:cursor-not-allowed disabled:bg-stroke disabled:text-text-gray-100",
+                    )}
+                  >
+                    {cancelText}
+                  </button>
+                </AlertDialog.Cancel>
+              ) : null}
 
               <AlertDialog.Action asChild>
                 <button

@@ -1,7 +1,50 @@
 function parseLocalDateTime(value: string) {
-  const date = new Date(value);
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+
+    if (
+      date.getFullYear() !== Number(year) ||
+      date.getMonth() !== Number(month) - 1 ||
+      date.getDate() !== Number(day)
+    ) {
+      return null;
+    }
+
+    return date;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
+    value,
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const [, year, month, day, hour, minute, second = "0"] = match;
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+  );
+
+  if (
+    date.getFullYear() !== Number(year) ||
+    date.getMonth() !== Number(month) - 1 ||
+    date.getDate() !== Number(day) ||
+    date.getHours() !== Number(hour) ||
+    date.getMinutes() !== Number(minute)
+  ) {
+    return null;
+  }
+
+  return date;
 }
 
 export function formatMeetingActivityDate(value: string) {
@@ -16,6 +59,39 @@ export function formatMeetingActivityDate(value: string) {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}.${month}.${day}`;
+}
+
+export function formatMeetingFullDate(value: string) {
+  const date = parseLocalDateTime(value);
+
+  if (!date) {
+    return null;
+  }
+
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+}
+
+export function formatMeetingTimeRange(
+  startTime: string | null,
+  endTime: string | null,
+) {
+  if (!startTime && !endTime) {
+    return null;
+  }
+
+  if (!startTime) {
+    return endTime;
+  }
+
+  if (!endTime) {
+    return startTime;
+  }
+
+  return `${startTime} - ${endTime}`;
 }
 
 export function getMeetingDDay(value: string) {
