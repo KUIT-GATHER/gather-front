@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useJoinMeetingMutation } from "@/features/team/hooks/useJoinMeetingMutation";
 import Button from "@/shared/ui/Button";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
@@ -15,6 +17,8 @@ export function GuestJoinBar({
   meetingId,
   meetingName,
 }: GuestJoinBarProps) {
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [joinConfirmOpen, setJoinConfirmOpen] = useState(false);
   const [joinCompleteOpen, setJoinCompleteOpen] = useState(false);
   const [isJoinRequested, setIsJoinRequested] = useState(false);
@@ -29,6 +33,16 @@ export function GuestJoinBar({
   const closeJoinCompleteDialog = () => {
     setJoinCompleteOpen(false);
   };
+  const openJoinConfirm = () => {
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: { from: `/teams/${meetingId}` },
+      });
+      return;
+    }
+
+    setJoinConfirmOpen(true);
+  };
 
   return (
     <>
@@ -39,7 +53,7 @@ export function GuestJoinBar({
           disabled={
             disabled || isJoinRequested || joinMeetingMutation.isPending
           }
-          onClick={() => setJoinConfirmOpen(true)}
+          onClick={openJoinConfirm}
           className="pointer-events-auto disabled:text-text-gray-400"
         >
           {joinMeetingMutation.isPending

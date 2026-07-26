@@ -4,6 +4,7 @@ import { teamQueries } from "@/features/team/api/team.queries";
 
 type UseMeetingDetailQueryOptions = {
   enabled?: boolean;
+  isAuthenticated?: boolean;
 };
 
 export function useMeetingDetailQuery(
@@ -11,7 +12,7 @@ export function useMeetingDetailQuery(
   options: UseMeetingDetailQueryOptions = {},
 ) {
   return useQuery({
-    ...teamQueries.detail(meetingId),
+    ...teamQueries.detail(meetingId, options.isAuthenticated ?? false),
     enabled: options.enabled,
   });
 }

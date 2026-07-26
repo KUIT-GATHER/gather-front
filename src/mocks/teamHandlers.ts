@@ -2,9 +2,14 @@ import { HttpResponse, http } from "msw";
 
 import teams from "./data/teams.json";
 
+import {
+  createUnauthorizedResponse,
+  getMockUserId,
+} from "@/mocks/lib/mockAuth";
 import type {
   MeetingCreateRequest,
   MeetingMember,
+  MeetingMemberRole,
 } from "@/features/team/types/team.types";
 
 const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
@@ -56,84 +61,32 @@ type MockMeeting = {
   memo: string | null;
 };
 
-const bookmarkedMeetingIds = new Set<number>();
-const joinedMeetingIds = new Set<number>([1]);
 const createdMeetings: MockMeeting[] = [];
+const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
+  [
+    1,
+    new Map([
+      [1, "HOST"],
+      [3, "MEMBER"],
+    ]),
+  ],
+]);
+const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>();
 
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   1: [
     {
       userId: 1,
-      nickname: "김수민",
+      nickname: "가더",
       role: "HOST",
       host: true,
     },
-    {
-      userId: 101,
-      nickname: "이하늘",
-      role: "MEMBER",
+    ...Array.from({ length: 11 }, (_, index) => ({
+      userId: 101 + index,
+      nickname: `팀원 ${index + 1}`,
+      role: "MEMBER" as const,
       host: false,
-    },
-    {
-      userId: 102,
-      nickname: "박지호",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 103,
-      nickname: "최유진",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 104,
-      nickname: "정다은",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 105,
-      nickname: "강민준",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 106,
-      nickname: "윤서아",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 107,
-      nickname: "한지민",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 108,
-      nickname: "오준호",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 109,
-      nickname: "문채원",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 110,
-      nickname: "서도윤",
-      role: "MEMBER",
-      host: false,
-    },
-    {
-      userId: 111,
-      nickname: "장예린",
-      role: "MEMBER",
-      host: false,
-    },
+    })),
   ],
 };
 
@@ -145,13 +98,37 @@ const meetingPosts = [
     title: "오늘도 아이들과 독서 봉사를 다녀왔어요!",
     content: "아이들과 이야기 나누며 책을 읽고 따뜻한 시간을 보냈어요.",
     authorId: 1,
-    authorNickname: "김수민",
+    authorNickname: "가더",
     likeCount: 15,
     commentCount: 5,
     createdAt: "2026-05-11T19:30:00",
   },
   {
     postId: 2,
+    meetingId: 1,
+    type: "RECRUIT",
+    title: "다음 활동에 함께할 팀원을 모집합니다",
+    content: "다음 주 활동에 함께해 주세요.",
+    authorId: 1,
+    authorNickname: "가더",
+    likeCount: 7,
+    commentCount: 2,
+    createdAt: "2026-07-24T18:10:00",
+  },
+  {
+    postId: 3,
+    meetingId: 1,
+    type: "FREE",
+    title: "활동 전 준비물을 확인해 주세요",
+    content: "편한 복장과 물을 준비해 주세요.",
+    authorId: 101,
+    authorNickname: "팀원 1",
+    likeCount: 4,
+    commentCount: 1,
+    createdAt: "2026-07-25T18:10:00",
+  },
+  {
+    postId: 4,
     meetingId: 2,
     type: "REVIEW",
     title: "첫 활동 후기",
@@ -171,10 +148,24 @@ function createMeetingNotFoundResponse() {
       data: null,
       error: {
         code: "MEETING_NOT_FOUND",
-        message: "Meeting not found.",
+        message: "모임을 찾을 수 없습니다.",
       },
     },
     { status: 404 },
+  );
+}
+
+function createConflictResponse(message: string) {
+  return HttpResponse.json(
+    {
+      success: false,
+      data: null,
+      error: {
+        code: "CONFLICT",
+        message,
+      },
+    },
+    { status: 409 },
   );
 }
 
@@ -259,51 +250,79 @@ function getMockMeetings() {
   return [...(teams.data as MockMeeting[]), ...createdMeetings];
 }
 
-function createHostMember(team: MockMeeting): MeetingMember {
-  return {
-    userId: team.hostId,
-    nickname: "팀장",
-    role: "HOST",
-    host: true,
-  };
+function getMembershipRole(userId: number, meetingId: number) {
+  return membershipsByUserId.get(userId)?.get(meetingId) ?? null;
+}
+
+function addMembership(
+  userId: number,
+  meetingId: number,
+  role: MeetingMemberRole,
+) {
+  const memberships = membershipsByUserId.get(userId) ?? new Map();
+
+  memberships.set(meetingId, role);
+  membershipsByUserId.set(userId, memberships);
 }
 
 function getBaseMeetingMembers(team: MockMeeting) {
-  return meetingMembersByMeetingId[team.meetingId] ?? [createHostMember(team)];
-}
+  const existingMembers = meetingMembersByMeetingId[team.meetingId];
 
-function getMeetingMembers(team: MockMeeting, joined: boolean) {
-  const members = getBaseMeetingMembers(team);
-
-  if (!joined) {
-    return members;
+  if (existingMembers) {
+    return existingMembers;
   }
 
+  const membershipCount = [...membershipsByUserId.values()].filter(
+    (memberships) => memberships.has(team.meetingId),
+  ).length;
+  const baseMemberCount = Math.max(
+    team.currentMemberCount - membershipCount,
+    1,
+  );
+
   return [
-    ...members,
     {
-      userId: 99,
-      nickname: "나",
-      role: "MEMBER",
-      host: false,
+      userId: team.hostId,
+      nickname: "팀장",
+      role: "HOST",
+      host: true,
     },
+    ...Array.from({ length: Math.max(baseMemberCount - 1, 0) }, (_, index) => ({
+      userId: team.meetingId * 1000 + index,
+      nickname: `팀원 ${index + 1}`,
+      role: "MEMBER" as const,
+      host: false,
+    })),
   ] satisfies MeetingMember[];
 }
 
-function getMeetingMemberCount(team: MockMeeting, joined: boolean) {
-  const members = meetingMembersByMeetingId[team.meetingId];
+function getMeetingMembers(team: MockMeeting) {
+  const members = [...getBaseMeetingMembers(team)];
 
-  return members ? members.length + (joined ? 1 : 0) : team.currentMemberCount;
+  for (const [userId, memberships] of membershipsByUserId) {
+    const role = memberships.get(team.meetingId);
+
+    if (!role || members.some((member) => member.userId === userId)) {
+      continue;
+    }
+
+    members.push({
+      userId,
+      nickname: userId === 1 ? "가더" : "나",
+      role,
+      host: role === "HOST",
+    });
+  }
+
+  return members;
 }
 
 function toMeetingListItem(team: MockMeeting) {
-  const joined = joinedMeetingIds.has(team.meetingId);
-
   return {
     meetingId: team.meetingId,
     name: team.name,
     description: team.description,
-    currentMemberCount: getMeetingMemberCount(team, joined),
+    currentMemberCount: getMeetingMembers(team).length,
     maxMember: team.maxMember,
     regionId: team.regionId,
     category: team.category,
@@ -313,7 +332,36 @@ function toMeetingListItem(team: MockMeeting) {
   };
 }
 
+function findMeeting(meetingId: number) {
+  return getMockMeetings().find((team) => team.meetingId === meetingId);
+}
+
 export const teamHandlers = [
+  http.get("*/api/v1/meetings/my", ({ request }) => {
+    const userId = getMockUserId(request);
+
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
+    const memberships = membershipsByUserId.get(userId) ?? new Map();
+    const data = getMockMeetings().flatMap((team) => {
+      const viewerRole = memberships.get(team.meetingId);
+
+      return viewerRole ? [{ ...toMeetingListItem(team), viewerRole }] : [];
+    });
+
+    return HttpResponse.json({ success: true, data, error: null });
+  }),
+
+  http.get("*/api/v1/meetings/keywords/recommended", () => {
+    return HttpResponse.json({
+      success: true,
+      data: ["플로깅", "독서 봉사", "도시락 배달"],
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/meetings", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim();
@@ -408,6 +456,12 @@ export const teamHandlers = [
   }),
 
   http.post("*/api/v1/meetings", async ({ request }) => {
+    const userId = getMockUserId(request);
+
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
     const body = (await request.json()) as Partial<MeetingCreateRequest>;
 
     if (
@@ -433,7 +487,7 @@ export const teamHandlers = [
 
     const meetingId =
       Math.max(...getMockMeetings().map((team) => team.meetingId), 0) + 1;
-    const meeting = {
+    const meeting: MockMeeting = {
       meetingId,
       name: body.name,
       description: body.description ?? null,
@@ -446,13 +500,14 @@ export const teamHandlers = [
       deadline: body.deadline,
       activityStartAt: body.activityStartAt,
       activityEndAt: body.activityEndAt,
-      hostId: 1,
+      hostId: userId,
       volunteerPostingId: body.volunteerPostingId ?? null,
       participationCondition: body.participationCondition ?? null,
       memo: body.memo ?? null,
     };
 
     createdMeetings.push(meeting);
+    addMembership(userId, meetingId, "HOST");
 
     return HttpResponse.json({
       success: true,
@@ -461,26 +516,17 @@ export const teamHandlers = [
     });
   }),
 
-  http.get("*/api/v1/meetings/:meetingId/home", ({ params }) => {
+  http.get("*/api/v1/meetings/:meetingId/home", ({ params, request }) => {
     const meetingId = Number(params.meetingId);
-    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
+    const team = findMeeting(meetingId);
 
     if (!team) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "MEETING_NOT_FOUND",
-            message: "모임을 찾을 수 없습니다.",
-          },
-        },
-        { status: 404 },
-      );
+      return createMeetingNotFoundResponse();
     }
 
-    const joined = joinedMeetingIds.has(meetingId);
-    const members = getMeetingMembers(team, joined);
+    const userId = getMockUserId(request);
+    const viewerRole = userId ? getMembershipRole(userId, meetingId) : null;
+    const members = getMeetingMembers(team);
 
     return HttpResponse.json({
       success: true,
@@ -512,16 +558,22 @@ export const teamHandlers = [
                 status: "RECRUITING",
               }
             : null,
-        member: joined,
-        host: false,
+        member: viewerRole === "MEMBER",
+        host: viewerRole === "HOST",
       },
       error: null,
     });
   }),
 
   http.get("*/api/v1/meetings/:meetingId/posts", ({ params, request }) => {
+    const userId = getMockUserId(request);
+
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
     const meetingId = Number(params.meetingId);
-    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
+    const team = findMeeting(meetingId);
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
 
@@ -549,37 +601,36 @@ export const teamHandlers = [
       );
     }
 
+    const isJoined = getMembershipRole(userId, meetingId) !== null;
     const posts = meetingPosts
       .filter((post) => post.meetingId === meetingId)
-      .filter((post) => !type || post.type === type)
-      .map((post) => ({
-        postId: post.postId,
-        type: post.type,
-        title: post.title,
-        content: post.content,
-        authorId: post.authorId,
-        authorNickname: post.authorNickname,
-        likeCount: post.likeCount,
-        commentCount: post.commentCount,
-        createdAt: post.createdAt,
-      }));
+      .filter(
+        (post) => isJoined || post.type === "NOTICE" || post.type === "REVIEW",
+      )
+      .filter((post) => !type || post.type === type);
 
-    return HttpResponse.json({
-      success: true,
-      data: posts,
-      error: null,
-    });
+    return HttpResponse.json({ success: true, data: posts, error: null });
   }),
 
-  http.post("*/api/v1/meetings/:meetingId/join", ({ params }) => {
+  http.post("*/api/v1/meetings/:meetingId/join", ({ params, request }) => {
+    const userId = getMockUserId(request);
+
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
     const meetingId = Number(params.meetingId);
-    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
+    const team = findMeeting(meetingId);
 
     if (!team) {
       return createMeetingNotFoundResponse();
     }
 
-    joinedMeetingIds.add(meetingId);
+    if (getMembershipRole(userId, meetingId)) {
+      return createConflictResponse("이미 가입한 모임입니다.");
+    }
+
+    addMembership(userId, meetingId, "MEMBER");
 
     return HttpResponse.json({
       success: true,
@@ -588,23 +639,91 @@ export const teamHandlers = [
     });
   }),
 
-  http.get("*/api/v1/meetings/:meetingId", ({ params }) => {
+  http.post("*/api/v1/meetings/:meetingId/bookmark", ({ params, request }) => {
+    const userId = getMockUserId(request);
+
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
     const meetingId = Number(params.meetingId);
-    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
+    const team = findMeeting(meetingId);
 
     if (!team) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "MEETING_NOT_FOUND",
-            message: "모임을 찾을 수 없습니다.",
-          },
-        },
-        { status: 404 },
-      );
+      return createMeetingNotFoundResponse();
     }
+
+    const bookmarkedMeetingIds =
+      bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+
+    if (bookmarkedMeetingIds.has(meetingId)) {
+      return createConflictResponse("이미 북마크한 모임입니다.");
+    }
+
+    bookmarkedMeetingIds.add(meetingId);
+    bookmarkedMeetingIdsByUserId.set(userId, bookmarkedMeetingIds);
+
+    return HttpResponse.json({
+      success: true,
+      data: { meetingId, bookmarked: true },
+      error: null,
+    });
+  }),
+
+  http.delete(
+    "*/api/v1/meetings/:meetingId/bookmark",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const bookmarkedMeetingIds = bookmarkedMeetingIdsByUserId.get(userId);
+
+      if (!bookmarkedMeetingIds?.has(meetingId)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "MEETING_BOOKMARK_NOT_FOUND",
+              message: "Meeting bookmark not found.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      bookmarkedMeetingIds.delete(meetingId);
+
+      return HttpResponse.json({
+        success: true,
+        data: { meetingId, bookmarked: false },
+        error: null,
+      });
+    },
+  ),
+
+  http.get("*/api/v1/meetings/:meetingId", ({ params, request }) => {
+    const meetingId = Number(params.meetingId);
+    const team = findMeeting(meetingId);
+
+    if (!team) {
+      return createMeetingNotFoundResponse();
+    }
+
+    const userId = getMockUserId(request);
+    const bookmarked = userId
+      ? (bookmarkedMeetingIdsByUserId.get(userId)?.has(meetingId) ?? false)
+      : false;
 
     return HttpResponse.json({
       success: true,
@@ -615,75 +734,7 @@ export const teamHandlers = [
         participationCondition: team.participationCondition,
         memo: team.memo,
         activityEndAt: team.activityEndAt,
-        bookmarked: bookmarkedMeetingIds.has(meetingId),
-      },
-      error: null,
-    });
-  }),
-
-  http.post("*/api/v1/meetings/:meetingId/bookmark", ({ params }) => {
-    const meetingId = Number(params.meetingId);
-    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
-
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-
-    if (bookmarkedMeetingIds.has(meetingId)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "MEETING_BOOKMARK_DUPLICATE",
-            message: "Meeting already bookmarked.",
-          },
-        },
-        { status: 409 },
-      );
-    }
-
-    bookmarkedMeetingIds.add(meetingId);
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        meetingId,
-        bookmarked: true,
-      },
-      error: null,
-    });
-  }),
-
-  http.delete("*/api/v1/meetings/:meetingId/bookmark", ({ params }) => {
-    const meetingId = Number(params.meetingId);
-    const team = getMockMeetings().find((item) => item.meetingId === meetingId);
-
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-
-    if (!bookmarkedMeetingIds.has(meetingId)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "MEETING_BOOKMARK_NOT_FOUND",
-            message: "Meeting bookmark not found.",
-          },
-        },
-        { status: 404 },
-      );
-    }
-
-    bookmarkedMeetingIds.delete(meetingId);
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        meetingId,
-        bookmarked: false,
+        bookmarked,
       },
       error: null,
     });

@@ -33,7 +33,7 @@ export function useAddMeetingBookmarkMutation(meetingId: number) {
     mutationFn: () => addMeetingBookmark(meetingId),
     onSuccess: (bookmark) => {
       queryClient.setQueryData<MeetingDetail>(
-        teamKeys.detail(meetingId),
+        teamKeys.detailForViewer(meetingId, true),
         (meeting) => updateMeetingBookmarkState(meeting, bookmark),
       );
       void queryClient.invalidateQueries({
@@ -52,7 +52,7 @@ export function useRemoveMeetingBookmarkMutation(meetingId: number) {
     mutationFn: () => removeMeetingBookmark(meetingId),
     onSuccess: (bookmark) => {
       queryClient.setQueryData<MeetingDetail>(
-        teamKeys.detail(meetingId),
+        teamKeys.detailForViewer(meetingId, true),
         (meeting) => updateMeetingBookmarkState(meeting, bookmark),
       );
       void queryClient.invalidateQueries({

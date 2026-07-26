@@ -19,6 +19,10 @@ export type MeetingListItem = {
   activityStartAt: string;
 };
 
+export type MyMeetingListItem = MeetingListItem & {
+  viewerRole: MeetingMemberRole;
+};
+
 export type MeetingCreateRequest = {
   name: string;
   description?: string | null;

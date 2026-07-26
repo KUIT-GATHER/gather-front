@@ -10,6 +10,7 @@ import type {
   MeetingPage,
   MeetingPostListParams,
   MeetingPostSummary,
+  MyMeetingListItem,
 } from "@/features/team/types/team.types";
 
 const MEETING_ENDPOINT = "/api/v1/meetings";
@@ -96,6 +97,10 @@ export function getMeetingRecommendedKeywords() {
     `${MEETING_ENDPOINT}/keywords/recommended`,
     publicOptions,
   );
+}
+
+export function getMyMeetings() {
+  return fetchClient<MyMeetingListItem[]>(`${MEETING_ENDPOINT}/my`);
 }
 
 export function createMeeting(payload: MeetingCreateRequest) {

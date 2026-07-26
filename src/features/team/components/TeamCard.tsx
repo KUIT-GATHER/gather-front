@@ -4,7 +4,10 @@ import {
   getMeetingDDay,
 } from "@/features/team/lib/teamFormatters";
 import { getMeetingImage } from "@/features/team/lib/getMeetingImage";
-import type { MeetingListItem } from "@/features/team/types/team.types";
+import type {
+  MeetingListItem,
+  MeetingMemberRole,
+} from "@/features/team/types/team.types";
 import { cn } from "@/shared/lib/cn";
 
 type TeamCardProps = {
@@ -12,6 +15,7 @@ type TeamCardProps = {
   onClick: () => void;
   variant?: "list" | "compact";
   regionName?: string | null;
+  viewerRole?: MeetingMemberRole;
 };
 
 export function TeamCard({
@@ -19,6 +23,7 @@ export function TeamCard({
   onClick,
   variant = "list",
   regionName,
+  viewerRole,
 }: TeamCardProps) {
   const activityDate = formatMeetingActivityDate(team.activityStartAt);
   const deadline = getMeetingDDay(team.deadline);
@@ -101,6 +106,11 @@ export function TeamCard({
 
         <div className="mt-2 flex flex-wrap gap-1">
           <CategoryBadge category={team.category} className="text-sm" />
+          {viewerRole ? (
+            <span className="rounded-full border border-button bg-button/10 px-2 py-0.5 text-xs font-semibold text-button">
+              {viewerRole === "HOST" ? "팀장" : "팀원"}
+            </span>
+          ) : null}
         </div>
       </div>
     </button>

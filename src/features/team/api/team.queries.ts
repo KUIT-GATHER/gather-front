@@ -6,6 +6,7 @@ import {
   getMeetingPosts,
   getMeetingRecommendedKeywords,
   getMeetings,
+  getMyMeetings,
 } from "@/features/team/api/team.api";
 
 import type {
@@ -21,11 +22,22 @@ export const teamKeys = {
     [...teamKeys.lists(), params] as const,
   infiniteList: (params: MeetingInfiniteParams = {}) =>
     [...teamKeys.lists(), "infinite", params] as const,
+  my: () => [...teamKeys.all, "my"] as const,
   recommendedKeywords: () => [...teamKeys.all, "recommendedKeywords"] as const,
   create: () => [...teamKeys.all, "create"] as const,
   details: () => [...teamKeys.all, "detail"] as const,
   detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
+  detailForViewer: (meetingId: number, isAuthenticated: boolean) =>
+    [
+      ...teamKeys.detail(meetingId),
+      isAuthenticated ? "authenticated" : "anonymous",
+    ] as const,
   home: (meetingId: number) => [...teamKeys.detail(meetingId), "home"] as const,
+  homeForViewer: (meetingId: number, isAuthenticated: boolean) =>
+    [
+      ...teamKeys.home(meetingId),
+      isAuthenticated ? "authenticated" : "anonymous",
+    ] as const,
   posts: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "posts"] as const,
   postList: (meetingId: number, params: MeetingPostListParams = {}) =>
@@ -60,15 +72,21 @@ export const teamQueries = {
       },
     }),
 
-  detail: (meetingId: number) =>
+  my: () =>
     queryOptions({
-      queryKey: teamKeys.detail(meetingId),
+      queryKey: teamKeys.my(),
+      queryFn: getMyMeetings,
+    }),
+
+  detail: (meetingId: number, isAuthenticated: boolean) =>
+    queryOptions({
+      queryKey: teamKeys.detailForViewer(meetingId, isAuthenticated),
       queryFn: () => getMeeting(meetingId),
     }),
 
-  home: (meetingId: number) =>
+  home: (meetingId: number, isAuthenticated: boolean) =>
     queryOptions({
-      queryKey: teamKeys.home(meetingId),
+      queryKey: teamKeys.homeForViewer(meetingId, isAuthenticated),
       queryFn: () => getMeetingHome(meetingId),
     }),
 
