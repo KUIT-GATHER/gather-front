@@ -112,12 +112,15 @@ export function TeamSearchScreen() {
   const recommendedKeywordsQuery = useMeetingRecommendedKeywordsQuery();
   const recommendedKeywords = recommendedKeywordsQuery.data ?? [];
   const sortValue = searchParams.get("sort");
-  const sort: TeamListSort = isTeamListSort(sortValue) ? sortValue : "latest";
+  const sort: TeamListSort | undefined = isTeamListSort(sortValue)
+    ? sortValue
+    : undefined;
   const queryParams = useMemo(
     () => ({
       keyword: keywordFromUrl,
       size: 20,
-      sort: [...TEAM_SORT_PARAMS[sort]],
+      sort: [...TEAM_SORT_PARAMS[sort ?? "latest"]],
+      basedOnPosting: sort === "posting" ? true : undefined,
     }),
     [keywordFromUrl, sort],
   );
@@ -126,7 +129,6 @@ export function TeamSearchScreen() {
     addRecentSearch(keyword);
     const next = new URLSearchParams();
     next.set("keyword", keyword);
-    next.set("sort", "latest");
     setSearchParams(next);
     window.scrollTo({ top: 0, behavior: "auto" });
   };
@@ -161,8 +163,9 @@ export function TeamSearchScreen() {
                   </p>
                   <Select
                     ariaLabel="검색 결과 정렬"
-                    value={sort}
+                    value={sort ?? ""}
                     options={teamListSortOptions}
+                    contentClassName="w-[206px]"
                     onChange={(value) => {
                       if (!isTeamListSort(value)) return;
                       const next = new URLSearchParams(searchParams);

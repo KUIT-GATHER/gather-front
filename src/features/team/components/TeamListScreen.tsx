@@ -173,7 +173,9 @@ function MeetingDiscoverList({
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const regionsQuery = useRegionsQuery();
   const sortValue = searchParams.get("sort");
-  const sort: TeamListSort = isTeamListSort(sortValue) ? sortValue : "latest";
+  const sort: TeamListSort | undefined = isTeamListSort(sortValue)
+    ? sortValue
+    : undefined;
   const filter = useMemo<TeamFilter>(
     () => ({
       regionId: toPositiveNumber(searchParams.get("regionId")),
@@ -188,7 +190,8 @@ function MeetingDiscoverList({
       keyword: searchParams.get("keyword")?.trim() || undefined,
       ...filter,
       size: 20,
-      sort: [...TEAM_SORT_PARAMS[sort]],
+      sort: [...TEAM_SORT_PARAMS[sort ?? "latest"]],
+      basedOnPosting: sort === "posting" ? true : undefined,
     }),
     [filter, searchParams, sort],
   );
@@ -231,8 +234,9 @@ function MeetingDiscoverList({
         <h1 className="text-title-18">같이 갈 사람 찾는 중 🙌</h1>
         <Select
           ariaLabel="모임 정렬"
-          value={sort}
+          value={sort ?? ""}
           options={teamListSortOptions}
+          contentClassName="w-[206px]"
           onChange={(value) => {
             if (!isTeamListSort(value)) return;
             const next = new URLSearchParams(searchParams);

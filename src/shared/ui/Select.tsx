@@ -15,6 +15,7 @@ type SelectProps = {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  contentClassName?: string;
   placeholder?: string;
   disabled?: boolean;
   name?: string;
@@ -28,6 +29,7 @@ export default function Select({
   value,
   onChange,
   className,
+  contentClassName,
   placeholder = "전체",
   disabled = false,
   name,
@@ -77,6 +79,7 @@ export default function Select({
           className={cn(
             "z-50 w-43.5 overflow-hidden rounded-xl border border-icon bg-bg p-3",
             "max-h-[min(20.5rem,var(--radix-select-content-available-height))]",
+            contentClassName,
           )}
         >
           <RadixSelect.Viewport className="max-h-[inherit] overflow-y-auto">
