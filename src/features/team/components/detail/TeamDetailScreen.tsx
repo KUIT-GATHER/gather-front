@@ -1,26 +1,30 @@
-import type {
-  MeetingDetail,
-  MeetingHome,
-} from "@/features/team/types/team.types";
+import type { ReactNode } from "react";
+
+import type { MeetingHome } from "@/features/team/types/team.types";
 
 import { GuestDetail } from "./guest/GuestDetail";
 import { TeammateDetail } from "./teammate/TeammateDetail";
 
 type TeamDetailScreenProps = {
   home: MeetingHome;
-  detail: MeetingDetail;
+  isJoined: boolean;
+  isHost: boolean;
+  children: ReactNode;
 };
 
-export function TeamDetailScreen({ home, detail }: TeamDetailScreenProps) {
-  if (!home.member && !home.host) {
-    return <GuestDetail home={home} detail={detail} />;
+export function TeamDetailScreen({
+  home,
+  isJoined,
+  isHost,
+  children,
+}: TeamDetailScreenProps) {
+  if (!isJoined) {
+    return <GuestDetail home={home}>{children}</GuestDetail>;
   }
 
   return (
-    <TeammateDetail
-      home={home}
-      detail={detail}
-      viewerRole={home.host ? "leader" : "member"}
-    />
+    <TeammateDetail home={home} viewerRole={isHost ? "leader" : "member"}>
+      {children}
+    </TeammateDetail>
   );
 }

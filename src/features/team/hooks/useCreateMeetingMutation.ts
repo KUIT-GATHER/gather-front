@@ -11,6 +11,7 @@ export function useCreateMeetingMutation() {
     mutationFn: createMeeting,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: teamKeys.my() });
     },
   });
 }

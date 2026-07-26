@@ -77,22 +77,11 @@ export const router = createBrowserRouter([
         element: <MainTabLayout />,
         children: [
           { path: "/home", element: <HomePage /> },
+          { path: "/teams", element: <TeamPage /> },
 
           {
             element: <RequireAuth />,
-            children: [
-              { path: "/teams", element: <TeamPage /> },
-              { path: "/teams/:teamId/home", element: <TeamDetailHomePage /> },
-              {
-                path: "/teams/:teamId/posts",
-                element: <TeamDetailPostsPage />,
-              },
-              {
-                path: "/teams/:teamId/activity",
-                element: <TeamDetailActivityPage />,
-              },
-              { path: "/my", element: <MyPage /> },
-            ],
+            children: [{ path: "/my", element: <MyPage /> }],
           },
         ],
       },
@@ -108,7 +97,15 @@ export const router = createBrowserRouter([
             element: <VolunteerDetailPage />,
           },
           { path: "/teams/search", element: <TeamSearchPage /> },
-          { path: "/teams/:teamId", element: <TeamDetailPage /> },
+          {
+            path: "/teams/:teamId",
+            element: <TeamDetailPage />,
+            children: [
+              { index: true, element: <TeamDetailHomePage /> },
+              { path: "posts", element: <TeamDetailPostsPage /> },
+              { path: "activity", element: <TeamDetailActivityPage /> },
+            ],
+          },
 
           // 보호
           {
