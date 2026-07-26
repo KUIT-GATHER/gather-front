@@ -39,6 +39,7 @@ import { NotFoundPage } from "@/pages/errors/NotFoundPage";
 import { RootRouteErrorBoundary } from "@/pages/errors/RootRouteErrorBoundary";
 
 import { RequireAuth } from "@/features/auth/guards/RequireAuth";
+import { RequireGuest } from "@/features/auth/guards/RequireGuest";
 
 import { env } from "@/shared/config/env";
 
@@ -60,14 +61,19 @@ export const router = createBrowserRouter([
       {
         element: <AuthLayout />,
         children: [
-          { path: "/onboarding", element: <OnboardingPage /> },
-          { path: "/login", element: <LoginPage /> },
-          { path: "/login/email", element: <EmailLoginPage /> },
+          {
+            element: <RequireGuest />,
+            children: [
+              { path: "/onboarding", element: <OnboardingPage /> },
+              { path: "/login", element: <LoginPage /> },
+              { path: "/login/email", element: <EmailLoginPage /> },
+              { path: "/signup", element: <SignupPage /> },
+            ],
+          },
           {
             path: "/login/kakao/callback",
             element: <KakaoLoginCallbackPage />,
           },
-          { path: "/signup", element: <SignupPage /> },
           { path: "/signup/kakao", element: <KakaoSignupPage /> },
           { path: "/terms", element: <TermsPage /> },
         ],
