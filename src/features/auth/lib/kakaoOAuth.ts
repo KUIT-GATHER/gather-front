@@ -4,6 +4,8 @@ const OAUTH_STATE_STORAGE_KEY = "gather:kakao-oauth-state";
 const OAUTH_RETURN_PATH_STORAGE_KEY = "gather:kakao-oauth-return-path";
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 
+export const KAKAO_CALLBACK_PATH = "/login/kakao/callback";
+
 function isSafeInternalPath(value: string | null | undefined): value is string {
   return (
     typeof value === "string" &&
@@ -37,7 +39,7 @@ export function consumeKakaoOAuthState(callbackState: string | null) {
 }
 
 export function getKakaoRedirectUri() {
-  return new URL("/login/kakao/callback", window.location.origin).toString();
+  return new URL(KAKAO_CALLBACK_PATH, window.location.origin).toString();
 }
 
 export function consumeKakaoLoginReturnPath() {
