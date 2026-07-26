@@ -4,13 +4,12 @@ import { RouterProvider } from "react-router";
 
 import { AppProviders } from "@/app/providers";
 import { router } from "@/app/router";
+import { env } from "@/shared/config/env";
 
 import "./index.css";
 
 async function enableMocking() {
-  const { env } = await import("@/shared/config/env");
-
-  if (!env.ENABLE_MSW) {
+  if (!env.IS_DEV || !env.ENABLE_MSW) {
     return;
   }
 
