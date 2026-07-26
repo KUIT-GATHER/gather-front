@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { Navigate, useNavigate, useSearchParams } from "react-router";
 
 import filterIcon from "@/assets/icons/Filter.svg";
 import plusIcon from "@/assets/icons/Plus.svg";
@@ -128,7 +128,13 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
     );
   }
 
-  const meetings = meetingsQuery.data ?? [];
+  const meetings = [...(meetingsQuery.data ?? [])].sort((left, right) => {
+    if (left.viewerRole === right.viewerRole) {
+      return 0;
+    }
+
+    return left.viewerRole === "HOST" ? -1 : 1;
+  });
 
   if (meetings.length === 0) {
     return (
@@ -145,9 +151,10 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
         <li key={team.meetingId}>
           <TeamCard
             team={team}
+            variant="my"
             viewerRole={team.viewerRole}
             regionName={regionNameById.get(team.regionId) ?? null}
-            onClick={() => navigate(`/teams/${team.meetingId}`)}
+            onClick={() => navigate(`/teams/${team.meetingId}/posts`)}
           />
         </li>
       ))}
@@ -374,6 +381,11 @@ export function TeamListScreen() {
   }
 
   const tabParam = searchParams.get("tab");
+
+  if (!isAuthenticated && tabParam === "my") {
+    return <Navigate to="/login" replace state={{ from: "/teams?tab=my" }} />;
+  }
+
   const activeTab: TeamListTab =
     tabParam === "my" || tabParam === "find"
       ? tabParam

@@ -1,3 +1,5 @@
+import { Settings } from "lucide-react";
+
 import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import {
   formatMeetingActivityDate,
@@ -13,7 +15,7 @@ import { cn } from "@/shared/lib/cn";
 type TeamCardProps = {
   team: MeetingListItem;
   onClick: () => void;
-  variant?: "list" | "compact";
+  variant?: "list" | "compact" | "my";
   regionName?: string | null;
   viewerRole?: MeetingMemberRole;
 };
@@ -59,6 +61,67 @@ export function TeamCard({
           </p>
         </div>
       </button>
+    );
+  }
+
+  if (variant === "my") {
+    return (
+      <article className="relative overflow-hidden rounded-xl border border-stroke bg-white">
+        <button
+          type="button"
+          onClick={onClick}
+          className="block w-full p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        >
+          <img
+            src={imageSrc}
+            alt=""
+            className="h-[136px] w-full rounded-[10px] object-cover"
+          />
+
+          <div className="mt-2.5 min-w-0 pr-16">
+            <h2 className="truncate text-lg font-semibold leading-5 text-text">
+              {team.name}
+            </h2>
+            {team.description ? (
+              <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
+                {team.description}
+              </p>
+            ) : null}
+            <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
+              {regionName ? `${regionName} · ` : ""}
+              {team.currentMemberCount}/{team.maxMember}명
+              {activityDate ? ` · ${activityDate}` : ""}
+            </p>
+          </div>
+        </button>
+
+        {viewerRole ? (
+          <div className="absolute top-[158px] right-3 flex items-center gap-2">
+            <span
+              className={cn(
+                "rounded-lg px-2 py-1 text-xs leading-4 font-medium",
+                viewerRole === "HOST"
+                  ? "bg-text-gray-400 text-white"
+                  : "border border-text-gray-300 bg-white text-text-gray-300",
+              )}
+            >
+              {viewerRole === "HOST" ? "팀장" : "팀원"}
+            </span>
+
+            {viewerRole === "HOST" ? (
+              <button
+                type="button"
+                disabled
+                aria-label="모임 설정 준비 중"
+                title="모임 설정은 준비 중입니다."
+                className="grid size-7 place-items-center text-text-gray-300 disabled:cursor-not-allowed"
+              >
+                <Settings className="size-5" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </article>
     );
   }
 

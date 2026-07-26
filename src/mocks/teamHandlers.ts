@@ -155,17 +155,21 @@ function createMeetingNotFoundResponse() {
   );
 }
 
-function createConflictResponse(message: string) {
+function createMeetingErrorResponse(
+  code: string,
+  message: string,
+  status: number,
+) {
   return HttpResponse.json(
     {
       success: false,
       data: null,
       error: {
-        code: "CONFLICT",
+        code,
         message,
       },
     },
-    { status: 409 },
+    { status },
   );
 }
 
@@ -558,7 +562,7 @@ export const teamHandlers = [
                 status: "RECRUITING",
               }
             : null,
-        member: viewerRole === "MEMBER",
+        member: viewerRole !== null,
         host: viewerRole === "HOST",
       },
       error: null,
@@ -626,11 +630,32 @@ export const teamHandlers = [
       return createMeetingNotFoundResponse();
     }
 
+    if (team.status !== "RECRUITING") {
+      return createMeetingErrorResponse(
+        "MEETING_CLOSED",
+        "모집이 마감된 모임입니다.",
+        409,
+      );
+    }
+
+    if (getMeetingMembers(team).length >= team.maxMember) {
+      return createMeetingErrorResponse(
+        "MEETING_FULL",
+        "모임 정원이 가득 찼습니다.",
+        409,
+      );
+    }
+
     if (getMembershipRole(userId, meetingId)) {
-      return createConflictResponse("이미 가입한 모임입니다.");
+      return createMeetingErrorResponse(
+        "MEETING_ALREADY_JOINED",
+        "이미 가입한 모임입니다.",
+        409,
+      );
     }
 
     addMembership(userId, meetingId, "MEMBER");
+    team.currentMemberCount += 1;
 
     return HttpResponse.json({
       success: true,
@@ -657,7 +682,11 @@ export const teamHandlers = [
       bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
 
     if (bookmarkedMeetingIds.has(meetingId)) {
-      return createConflictResponse("이미 북마크한 모임입니다.");
+      return createMeetingErrorResponse(
+        "MEETING_BOOKMARK_DUPLICATE",
+        "이미 북마크한 모임입니다.",
+        409,
+      );
     }
 
     bookmarkedMeetingIds.add(meetingId);

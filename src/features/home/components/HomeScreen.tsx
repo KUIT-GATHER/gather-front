@@ -167,7 +167,7 @@ export function HomeScreen() {
               icon={<img src={arrowIcon} alt="" />}
               size="medium"
               className="-m-3 [&>span>img]:size-8"
-              onClick={() => navigate("/teams")}
+              onClick={() => navigate("/teams?tab=find")}
             />
           </div>
 
