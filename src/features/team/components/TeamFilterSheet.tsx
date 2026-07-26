@@ -23,19 +23,13 @@ import {
   getTeamDateFilterFromRange,
   getTeamDateRangeFromValues,
 } from "@/features/team/lib/teamDateRange";
+import type { TeamFilter } from "@/features/team/types/teamFilter.types";
 
 import Button from "@/shared/ui/Button";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import DateRangeCalendar from "@/shared/ui/DateRangeCalendar";
 import IconButton from "@/shared/ui/IconButton";
 import { cn } from "@/shared/lib/cn";
-
-export type TeamFilter = {
-  regionId?: number;
-  activityStartDate?: string;
-  activityEndDate?: string;
-  category?: PostingCategory;
-};
 
 type FilterView = "main" | "date" | "region";
 

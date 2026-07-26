@@ -7,14 +7,17 @@ import searchIcon from "@/assets/icons/Search.svg";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import {
   isTeamListSort,
-  TEAM_SORT_PARAMS,
   teamListSortOptions,
-  type TeamListSort,
 } from "@/features/team/constants/teamList.constants";
 import { useInfiniteMeetingsQuery } from "@/features/team/hooks/useInfiniteMeetingsQuery";
 import { useMyMeetingsQuery } from "@/features/team/hooks/useMyMeetingsQuery";
+import {
+  getTeamListFilter,
+  getTeamListSort,
+  toTeamListQueryParams,
+  updateTeamListSearchParams,
+} from "@/features/team/lib/teamListSearchParams";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
-import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import IconButton from "@/shared/ui/IconButton";
@@ -24,28 +27,12 @@ import PageHeader from "@/shared/ui/PageHeader";
 import Select from "@/shared/ui/Select";
 import { cn } from "@/shared/lib/cn";
 
-import type { MeetingInfiniteParams } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
-import { TeamFilterSheet, type TeamFilter } from "./TeamFilterSheet";
+import type { TeamFilter } from "@/features/team/types/teamFilter.types";
+
+import { TeamFilterSheet } from "./TeamFilterSheet";
 
 type TeamListTab = "my" | "find";
-
-function toPositiveNumber(value: string | null) {
-  if (!value) {
-    return undefined;
-  }
-
-  const number = Number(value);
-
-  return Number.isInteger(number) && number > 0 ? number : undefined;
-}
-
-function toPostingCategory(value: string | null) {
-  return value &&
-    POSTING_CATEGORIES.includes(value as (typeof POSTING_CATEGORIES)[number])
-    ? (value as (typeof POSTING_CATEGORIES)[number])
-    : undefined;
-}
 
 function TeamListTabs({
   activeTab,
@@ -172,28 +159,14 @@ function MeetingDiscoverList({
   const navigate = useNavigate();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const regionsQuery = useRegionsQuery();
-  const sortValue = searchParams.get("sort");
-  const sort: TeamListSort | undefined = isTeamListSort(sortValue)
-    ? sortValue
-    : undefined;
+  const sort = getTeamListSort(searchParams);
   const filter = useMemo<TeamFilter>(
-    () => ({
-      regionId: toPositiveNumber(searchParams.get("regionId")),
-      category: toPostingCategory(searchParams.get("category")),
-      activityStartDate: searchParams.get("activityStartDate") || undefined,
-      activityEndDate: searchParams.get("activityEndDate") || undefined,
-    }),
+    () => getTeamListFilter(searchParams),
     [searchParams],
   );
-  const queryParams = useMemo<MeetingInfiniteParams>(
-    () => ({
-      keyword: searchParams.get("keyword")?.trim() || undefined,
-      ...filter,
-      size: 20,
-      sort: [...TEAM_SORT_PARAMS[sort ?? "latest"]],
-      basedOnPosting: sort === "posting" ? true : undefined,
-    }),
-    [filter, searchParams, sort],
+  const queryParams = useMemo(
+    () => toTeamListQueryParams(searchParams),
+    [searchParams],
   );
   const meetingsQuery = useInfiniteMeetingsQuery(queryParams);
   const meetings =
@@ -239,9 +212,11 @@ function MeetingDiscoverList({
           contentClassName="w-[206px]"
           onChange={(value) => {
             if (!isTeamListSort(value)) return;
-            const next = new URLSearchParams(searchParams);
-            next.set("sort", value);
-            setSearchParams(next);
+            setSearchParams(
+              updateTeamListSearchParams(searchParams, filter, {
+                sort: value,
+              }),
+            );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
         />
@@ -332,24 +307,9 @@ function MeetingDiscoverList({
           onOpenChange={setIsFilterOpen}
           filter={filter}
           onApply={(nextFilter) => {
-            const next = new URLSearchParams(searchParams);
-            next.delete("regionId");
-            next.delete("category");
-            next.delete("activityStartDate");
-            next.delete("activityEndDate");
-
-            if (nextFilter.regionId !== undefined) {
-              next.set("regionId", String(nextFilter.regionId));
-            }
-            if (nextFilter.category) {
-              next.set("category", nextFilter.category);
-            }
-            if (nextFilter.activityStartDate && nextFilter.activityEndDate) {
-              next.set("activityStartDate", nextFilter.activityStartDate);
-              next.set("activityEndDate", nextFilter.activityEndDate);
-            }
-
-            setSearchParams(next);
+            setSearchParams(
+              updateTeamListSearchParams(searchParams, nextFilter),
+            );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
         />

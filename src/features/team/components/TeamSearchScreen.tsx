@@ -4,13 +4,16 @@ import { useNavigate, useSearchParams } from "react-router";
 
 import {
   isTeamListSort,
-  TEAM_SORT_PARAMS,
   teamListSortOptions,
-  type TeamListSort,
 } from "@/features/team/constants/teamList.constants";
 
 import { useRecentTeamSearches } from "@/features/team/hooks/useRecentTeamSearches";
 import { useMeetingRecommendedKeywordsQuery } from "@/features/team/hooks/useMeetingRecommendedKeywordsQuery";
+import {
+  getTeamListSort,
+  toTeamListQueryParams,
+  updateTeamListSearchParams,
+} from "@/features/team/lib/teamListSearchParams";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -111,18 +114,10 @@ export function TeamSearchScreen() {
     useRecentTeamSearches();
   const recommendedKeywordsQuery = useMeetingRecommendedKeywordsQuery();
   const recommendedKeywords = recommendedKeywordsQuery.data ?? [];
-  const sortValue = searchParams.get("sort");
-  const sort: TeamListSort | undefined = isTeamListSort(sortValue)
-    ? sortValue
-    : undefined;
+  const sort = getTeamListSort(searchParams);
   const queryParams = useMemo(
-    () => ({
-      keyword: keywordFromUrl,
-      size: 20,
-      sort: [...TEAM_SORT_PARAMS[sort ?? "latest"]],
-      basedOnPosting: sort === "posting" ? true : undefined,
-    }),
-    [keywordFromUrl, sort],
+    () => toTeamListQueryParams(searchParams),
+    [searchParams],
   );
 
   const submitSearch = (keyword: string) => {
@@ -168,9 +163,13 @@ export function TeamSearchScreen() {
                     contentClassName="w-[206px]"
                     onChange={(value) => {
                       if (!isTeamListSort(value)) return;
-                      const next = new URLSearchParams(searchParams);
-                      next.set("sort", value);
-                      setSearchParams(next);
+                      setSearchParams(
+                        updateTeamListSearchParams(
+                          searchParams,
+                          {},
+                          { sort: value },
+                        ),
+                      );
                       window.scrollTo({ top: 0, behavior: "auto" });
                     }}
                   />
