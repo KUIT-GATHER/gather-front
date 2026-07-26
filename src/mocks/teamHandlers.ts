@@ -12,7 +12,6 @@ import type {
   MeetingMemberRole,
 } from "@/features/team/types/team.types";
 
-const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = new Set([
   "ENVIRONMENT",
   "EDUCATION",
@@ -371,26 +370,13 @@ export const teamHandlers = [
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
     const category = url.searchParams.get("category");
-    const status = url.searchParams.get("status");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
     const page = getPageParam(url);
     const size = getSizeParam(url);
     const sorts = parseSorts(url);
 
     if (category && !POSTING_CATEGORIES.has(category)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "요청 값이 올바르지 않습니다.",
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    if (status && !MEETING_STATUSES.has(status)) {
       return HttpResponse.json(
         {
           success: false,
@@ -436,8 +422,16 @@ export const teamHandlers = [
       items = items.filter((team) => team.category === category);
     }
 
-    if (status) {
-      items = items.filter((team) => team.status === status);
+    if (activityStartDate) {
+      items = items.filter(
+        (team) => team.activityStartAt.slice(0, 10) >= activityStartDate,
+      );
+    }
+
+    if (activityEndDate) {
+      items = items.filter(
+        (team) => team.activityStartAt.slice(0, 10) <= activityEndDate,
+      );
     }
 
     const sortedItems = sortMeetings(items, sorts);

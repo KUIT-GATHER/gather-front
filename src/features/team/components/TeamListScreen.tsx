@@ -24,7 +24,7 @@ import PageHeader from "@/shared/ui/PageHeader";
 import Select from "@/shared/ui/Select";
 import { cn } from "@/shared/lib/cn";
 
-import type { MeetingInfiniteParams, MeetingStatus } from "../types/team.types";
+import type { MeetingInfiniteParams } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
 import { TeamFilterSheet, type TeamFilter } from "./TeamFilterSheet";
 
@@ -38,12 +38,6 @@ function toPositiveNumber(value: string | null) {
   const number = Number(value);
 
   return Number.isInteger(number) && number > 0 ? number : undefined;
-}
-
-function toMeetingStatus(value: string | null): MeetingStatus | undefined {
-  return value === "RECRUITING" || value === "CLOSED" || value === "COMPLETED"
-    ? value
-    : undefined;
 }
 
 function toPostingCategory(value: string | null) {
@@ -184,7 +178,8 @@ function MeetingDiscoverList({
     () => ({
       regionId: toPositiveNumber(searchParams.get("regionId")),
       category: toPostingCategory(searchParams.get("category")),
-      status: toMeetingStatus(searchParams.get("status")),
+      activityStartDate: searchParams.get("activityStartDate") || undefined,
+      activityEndDate: searchParams.get("activityEndDate") || undefined,
     }),
     [searchParams],
   );
@@ -336,7 +331,8 @@ function MeetingDiscoverList({
             const next = new URLSearchParams(searchParams);
             next.delete("regionId");
             next.delete("category");
-            next.delete("status");
+            next.delete("activityStartDate");
+            next.delete("activityEndDate");
 
             if (nextFilter.regionId !== undefined) {
               next.set("regionId", String(nextFilter.regionId));
@@ -344,8 +340,9 @@ function MeetingDiscoverList({
             if (nextFilter.category) {
               next.set("category", nextFilter.category);
             }
-            if (nextFilter.status) {
-              next.set("status", nextFilter.status);
+            if (nextFilter.activityStartDate && nextFilter.activityEndDate) {
+              next.set("activityStartDate", nextFilter.activityStartDate);
+              next.set("activityEndDate", nextFilter.activityEndDate);
             }
 
             setSearchParams(next);

@@ -67,7 +67,8 @@ function buildMeetingsEndpoint(params: MeetingListParams = {}) {
   setQueryParam(searchParams, "keyword", params.keyword);
   setQueryParam(searchParams, "regionId", params.regionId);
   setQueryParam(searchParams, "category", params.category);
-  setQueryParam(searchParams, "status", params.status);
+  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
+  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
 
   const query = searchParams.toString();
 
