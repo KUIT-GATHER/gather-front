@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 
 import alarmIcon from "@/assets/icons/Alarm.svg";
 import arrowIcon from "@/assets/icons/Arrow.svg";
 import filterIcon from "@/assets/icons/Filter.svg";
 import gatherIcon from "@/assets/volunteer/Gather.svg";
+import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
@@ -63,6 +64,7 @@ function HomeSectionState({
 export function HomeScreen() {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const regionsQuery = useRegionsQuery();
   const postingsQuery = useVolunteerPostingsQuery({
     page: 0,
     size: 5,
@@ -75,7 +77,13 @@ export function HomeScreen() {
   });
   const postings = postingsQuery.data?.content ?? [];
   const meetings = meetingsQuery.data?.content ?? [];
-
+  const regionNameById = useMemo(
+    () =>
+      new Map(
+        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
+      ),
+    [regionsQuery.data],
+  );
   return (
     <PageContainer size="narrow">
       <header className="flex items-center justify-between pb-8 pt-8">
@@ -107,7 +115,7 @@ export function HomeScreen() {
         </div>
       </header>
 
-      <div>
+      <div className="pt-6">
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[18px] font-semibold leading-7">
@@ -147,7 +155,7 @@ export function HomeScreen() {
           </div>
         </section>
 
-        <div className="-mx-5.5 my-7 h-2 bg-gray-100" />
+        <div className="-mx-5.5 my-6 h-1.5 bg-[#f1f1f1]" />
 
         <section>
           <div className="mb-4 flex items-center justify-between">
@@ -182,6 +190,7 @@ export function HomeScreen() {
                 key={meeting.meetingId}
                 variant="compact"
                 team={meeting}
+                regionName={regionNameById.get(meeting.regionId) ?? null}
                 onClick={() => navigate(`/teams/${meeting.meetingId}`)}
               />
             ))}

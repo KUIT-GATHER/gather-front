@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import type { DateRange } from "@daypicker/react";
-import { CalendarDays, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 import mapIcon from "@/assets/icons/Map.svg";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
@@ -9,6 +8,7 @@ import {
   POSTING_CATEGORIES,
   type PostingCategory,
 } from "@/features/category/types/postingCategory.types";
+import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { createRegionIndex } from "@/features/region/lib/createRegionIndex";
 import {
   getFullRegionSelectionLabel,
@@ -16,91 +16,56 @@ import {
   getShortRegionLabel,
 } from "@/features/region/lib/regionLabel";
 import { REGION_LEVEL } from "@/features/region/types/region.types";
-import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
-import {
-  formatLocalDateForApi,
-  formatVolunteerPostingDateRange,
-  getDateFilterFromRange,
-  getDateRangeFromValues,
-} from "@/features/volunteer/lib/volunteerPostingDateRange";
-import type { VolunteerPostingFilter } from "@/features/volunteer/types/volunteerPostingFilter.types";
-import Button from "@/shared/ui/Button";
-import BottomSheet from "@/shared/ui/BottomSheet";
-import DateRangeCalendar from "@/shared/ui/DateRangeCalendar";
-import IconButton from "@/shared/ui/IconButton";
+import type { MeetingStatus } from "@/features/team/types/team.types";
 import { cn } from "@/shared/lib/cn";
+import BottomSheet from "@/shared/ui/BottomSheet";
+import Button from "@/shared/ui/Button";
+import IconButton from "@/shared/ui/IconButton";
 
-type FilterView = "main" | "date" | "region";
-
-type VolunteerPostingDateFilter = {
-  noticeStartDate: string;
-  noticeEndDate: string;
-};
-
-type FilterDraft = {
+export type TeamFilter = {
   regionId?: number;
-  dateRange?: VolunteerPostingDateFilter;
   category?: PostingCategory;
+  status?: MeetingStatus;
 };
+
+type FilterView = "main" | "region";
+
+type TeamFilterSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  filter: TeamFilter;
+  onApply: (filter: TeamFilter) => void;
+};
+
+const statusOptions = [
+  { value: "RECRUITING", label: "모집 중" },
+  { value: "CLOSED", label: "모집 마감" },
+  { value: "COMPLETED", label: "활동 완료" },
+] as const satisfies ReadonlyArray<{
+  value: MeetingStatus;
+  label: string;
+}>;
 
 const categoryLabelPositionClasses: Partial<Record<PostingCategory, string>> = {
   COMMUNITY: "-translate-x-1 translate-y-1",
   CULTURE: "-translate-x-1 -translate-y-1",
 };
 
-type VolunteerPostingFilterSheetProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  filter: VolunteerPostingFilter;
-  onApply: (filter: VolunteerPostingFilter) => void;
-};
-
-function createDraft(filter: VolunteerPostingFilter): FilterDraft {
-  return {
-    ...(filter.regionId !== undefined ? { regionId: filter.regionId } : {}),
-    ...(filter.noticeStartDate && filter.noticeEndDate
-      ? {
-          dateRange: {
-            noticeStartDate: filter.noticeStartDate,
-            noticeEndDate: filter.noticeEndDate,
-          },
-        }
-      : {}),
-    ...(filter.category ? { category: filter.category } : {}),
-  };
-}
-
-function toVolunteerPostingFilter(draft: FilterDraft): VolunteerPostingFilter {
-  const categoryFilter = draft.category ? { category: draft.category } : {};
-
-  if (draft.regionId !== undefined) {
-    return draft.dateRange
-      ? { regionId: draft.regionId, ...draft.dateRange, ...categoryFilter }
-      : { regionId: draft.regionId, ...categoryFilter };
-  }
-
-  return draft.dateRange
-    ? { ...draft.dateRange, ...categoryFilter }
-    : { ...categoryFilter };
-}
-
-export function VolunteerPostingFilterSheet({
+export function TeamFilterSheet({
   open,
   onOpenChange,
   filter,
   onApply,
-}: VolunteerPostingFilterSheetProps) {
+}: TeamFilterSheetProps) {
   const [view, setView] = useState<FilterView>("main");
-  const [draft, setDraft] = useState<FilterDraft>(() => createDraft(filter));
-  const [dateSelection, setDateSelection] = useState<DateRange>();
+  const [draft, setDraft] = useState<TeamFilter>(filter);
   const [activeLevel1RegionId, setActiveLevel1RegionId] = useState<number>();
   const [regionSelectionId, setRegionSelectionId] = useState<number>();
   const shouldLoadRegions = view === "region" || draft.regionId !== undefined;
   const regionsQuery = useRegionsQuery(shouldLoadRegions);
-  const regions = regionsQuery.data;
   const regionIndex = useMemo(
-    () => createRegionIndex(regions ?? []),
-    [regions],
+    () => createRegionIndex(regionsQuery.data ?? []),
+    [regionsQuery.data],
   );
   const selectedDraftRegion = draft.regionId
     ? regionIndex.byId.get(draft.regionId)
@@ -134,20 +99,8 @@ export function VolunteerPostingFilterSheet({
     : [];
 
   const closeSheet = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      setView("main");
-    }
+    if (!nextOpen) setView("main");
     onOpenChange(nextOpen);
-  };
-
-  const openDateView = () => {
-    setDateSelection(
-      getDateRangeFromValues(
-        draft.dateRange?.noticeStartDate,
-        draft.dateRange?.noticeEndDate,
-      ),
-    );
-    setView("date");
   };
 
   const openRegionView = () => {
@@ -156,47 +109,14 @@ export function VolunteerPostingFilterSheet({
     setView("region");
   };
 
-  const applyDateSelection = () => {
-    const dateRange = getDateFilterFromRange(dateSelection);
-    if (!dateRange) return;
-
-    setDraft((current) => ({ ...current, dateRange }));
-    setView("main");
-  };
-
   const applyRegionSelection = () => {
     if (!regionSelectionId) return;
-
     setDraft((current) => ({ ...current, regionId: regionSelectionId }));
     setView("main");
   };
 
-  const applyFilter = () => {
-    onApply(toVolunteerPostingFilter(draft));
-    onOpenChange(false);
-  };
-
-  const title =
-    view === "date" ? "모집 기간" : view === "region" ? "지역" : "필터";
-  const onBack =
-    view === "date" || view === "region" ? () => setView("main") : undefined;
-
   const footer =
-    view === "date" ? (
-      <Button
-        fullWidth
-        disabled={!dateSelection?.from || !dateSelection.to}
-        className="active:bg-icon"
-        onClick={applyDateSelection}
-      >
-        {dateSelection?.from && dateSelection.to
-          ? formatVolunteerPostingDateRange(
-              formatLocalDateForApi(dateSelection.from),
-              formatLocalDateForApi(dateSelection.to),
-            )
-          : "기간을 선택해 주세요"}
-      </Button>
-    ) : view === "region" ? (
+    view === "region" ? (
       <div className="space-y-3">
         {selectedRegion ? (
           <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-md">
@@ -204,7 +124,7 @@ export function VolunteerPostingFilterSheet({
               <MapPin className="size-5" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-xs text-text-gray-300">선택된 지역</p>
+              <p className="text-xs text-text-gray-300">선택한 지역</p>
               <p className="text-body-14-semibold text-text">
                 {getFullRegionSelectionLabel(
                   selectedRegion,
@@ -225,7 +145,14 @@ export function VolunteerPostingFilterSheet({
       </div>
     ) : (
       <div>
-        <Button fullWidth className="active:bg-icon" onClick={applyFilter}>
+        <Button
+          fullWidth
+          className="active:bg-icon"
+          onClick={() => {
+            onApply(draft);
+            onOpenChange(false);
+          }}
+        >
           설정하기
         </Button>
       </div>
@@ -235,8 +162,8 @@ export function VolunteerPostingFilterSheet({
     <BottomSheet
       open={open}
       onOpenChange={closeSheet}
-      title={title}
-      onBack={onBack}
+      title={view === "region" ? "지역" : "필터"}
+      onBack={view === "region" ? () => setView("main") : undefined}
       footer={footer}
       className={view === "region" ? "max-h-[min(88dvh,48rem)]" : undefined}
       contentClassName={view === "region" ? "px-0 py-0" : undefined}
@@ -268,20 +195,36 @@ export function VolunteerPostingFilterSheet({
           </section>
 
           <section>
-            <h2 className="text-body-15-semibold text-text">모집 기간</h2>
-            <button
-              type="button"
-              className="mt-3 flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-stroke bg-white px-4 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-              onClick={openDateView}
-            >
-              <CalendarDays className="size-5 text-icon" aria-hidden="true" />
-              {draft.dateRange
-                ? formatVolunteerPostingDateRange(
-                    draft.dateRange.noticeStartDate,
-                    draft.dateRange.noticeEndDate,
-                  )
-                : "모집 기간 선택"}
-            </button>
+            <h2 className="text-body-15-semibold text-text">모임 상태</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {statusOptions.map((option) => {
+                const selected = draft.status === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={selected}
+                    className={cn(
+                      "rounded-full border px-3 py-2 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                      selected
+                        ? "border-button bg-button/10 text-button"
+                        : "border-stroke bg-white text-text-gray-400",
+                    )}
+                    onClick={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        status:
+                          current.status === option.value
+                            ? undefined
+                            : option.value,
+                      }))
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
           </section>
 
           <section>
@@ -289,7 +232,6 @@ export function VolunteerPostingFilterSheet({
             <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-4">
               {POSTING_CATEGORIES.map((category) => {
                 const selected = draft.category === category;
-
                 return (
                   <button
                     key={category}
@@ -329,16 +271,6 @@ export function VolunteerPostingFilterSheet({
         </div>
       ) : null}
 
-      {view === "date" ? (
-        <div className="rounded-3xl border-2 border-button px-3 py-4">
-          <DateRangeCalendar
-            selected={dateSelection}
-            defaultMonth={dateSelection?.from}
-            onSelect={setDateSelection}
-          />
-        </div>
-      ) : null}
-
       {view === "region" ? (
         <div className="min-h-0 border-t border-stroke">
           {regionsQuery.isLoading ? (
@@ -365,15 +297,13 @@ export function VolunteerPostingFilterSheet({
               <div className="overflow-y-auto bg-button/5 p-1.5">
                 {regionIndex.level1Regions.map((region) => {
                   const isActive = region.id === displayedActiveLevel1RegionId;
-
                   return (
                     <button
                       key={region.id}
                       type="button"
                       aria-pressed={isActive}
                       className={cn(
-                        "flex w-full rounded-lg px-3 py-3 text-left text-sm text-text-gray-300",
-                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                        "flex w-full rounded-lg px-3 py-3 text-left text-sm text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                         isActive && "bg-icon/10 font-medium text-text",
                       )}
                       onClick={() => setActiveLevel1RegionId(region.id)}
@@ -389,8 +319,7 @@ export function VolunteerPostingFilterSheet({
                     type="button"
                     aria-pressed={regionSelectionId === activeLevel1Region.id}
                     className={cn(
-                      "w-full rounded-lg px-4 py-3 text-left text-sm text-text-gray-300",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                      "w-full rounded-lg px-4 py-3 text-left text-sm text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                       regionSelectionId === activeLevel1Region.id &&
                         "bg-icon/10 font-medium text-text",
                     )}
@@ -405,8 +334,7 @@ export function VolunteerPostingFilterSheet({
                     type="button"
                     aria-pressed={regionSelectionId === region.id}
                     className={cn(
-                      "mt-1 w-full rounded-lg px-4 py-3 text-left text-sm text-text-gray-300",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                      "mt-1 w-full rounded-lg px-4 py-3 text-left text-sm text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                       regionSelectionId === region.id &&
                         "bg-icon/10 font-medium text-text",
                     )}

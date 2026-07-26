@@ -24,6 +24,7 @@ import { VolunteerDetailPage } from "@/pages/volunteers/VolunteerDetailPage";
 import { TeamPage } from "@/pages/teams/TeamPage";
 import { TeamSearchPage } from "@/pages/teams/TeamSearchPage";
 import { TeamCreatePage } from "@/pages/teams/TeamCreatePage";
+import { TeamCreateCompletePage } from "@/pages/teams/TeamCreateCompletePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
 import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
@@ -118,6 +119,10 @@ export const router = createBrowserRouter([
                 element: <TeamCreatePage />,
               },
               { path: "/teams/new", element: <TeamCreatePage /> },
+              {
+                path: "/teams/new/complete",
+                element: <TeamCreateCompletePage />,
+              },
               {
                 path: "/notifications",
                 element: <NotificationPage />,

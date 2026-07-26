@@ -1,19 +1,29 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import filterIcon from "@/assets/icons/Filter.svg";
+import plusIcon from "@/assets/icons/Plus.svg";
 import searchIcon from "@/assets/icons/Search.svg";
+import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
+import {
+  isTeamListSort,
+  TEAM_SORT_PARAMS,
+  teamListSortOptions,
+  type TeamListSort,
+} from "@/features/team/constants/teamList.constants";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
+import Select from "@/shared/ui/Select";
 import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
-import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
+import { useInfiniteMeetingsQuery } from "@/features/team/hooks/useInfiniteMeetingsQuery";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 
-import type { MeetingListParams, MeetingStatus } from "../types/team.types";
+import type { MeetingInfiniteParams, MeetingStatus } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
+import { TeamFilterSheet, type TeamFilter } from "./TeamFilterSheet";
 
 function toPositiveNumber(value: string | null) {
   if (!value) {
@@ -40,37 +50,76 @@ function toPostingCategory(value: string | null) {
 
 export function TeamListScreen() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const queryParams = useMemo<MeetingListParams>(
+  const [searchParams, setSearchParams] = useSearchParams();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const regionsQuery = useRegionsQuery();
+  const sortValue = searchParams.get("sort");
+  const sort: TeamListSort = isTeamListSort(sortValue) ? sortValue : "latest";
+  const filter = useMemo<TeamFilter>(
     () => ({
-      keyword: searchParams.get("keyword")?.trim() || undefined,
       regionId: toPositiveNumber(searchParams.get("regionId")),
       category: toPostingCategory(searchParams.get("category")),
       status: toMeetingStatus(searchParams.get("status")),
-      page: 0,
-      size: 10,
-      sort: ["createdAt,desc"],
     }),
     [searchParams],
   );
-  const meetingsQuery = useMeetingsQuery(queryParams);
-  const meetingPage = meetingsQuery.data;
-  const meetings = meetingPage?.content ?? [];
-  const totalElements = meetingPage?.totalElements ?? 0;
+  const queryParams = useMemo<MeetingInfiniteParams>(
+    () => ({
+      keyword: searchParams.get("keyword")?.trim() || undefined,
+      ...filter,
+      size: 20,
+      sort: [...TEAM_SORT_PARAMS[sort]],
+    }),
+    [filter, searchParams, sort],
+  );
+  const meetingsQuery = useInfiniteMeetingsQuery(queryParams);
+  const meetings =
+    meetingsQuery.data?.pages.flatMap((page) => page.content) ?? [];
+  const regionNameById = useMemo(
+    () =>
+      new Map(
+        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
+      ),
+    [regionsQuery.data],
+  );
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (
+          entry.isIntersecting &&
+          meetingsQuery.hasNextPage &&
+          !meetingsQuery.isFetchingNextPage &&
+          !meetingsQuery.isFetchNextPageError
+        ) {
+          void meetingsQuery.fetchNextPage();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [meetingsQuery]);
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-8">
+    <PageContainer size="narrow" className="min-h-dvh pb-28">
       <PageHeader
-        title="같이 갈 사람 찾는 중 🙌"
+        title="모임"
         onBack={() => navigate(-1)}
+        className="[&>div]:h-[70px]"
         rightAction={
-          <div className="ml-3 flex shrink-0 items-center gap-4">
+          <div className="ml-3 flex shrink-0 items-center gap-2">
             <IconButton
-              disabled
               label="필터 열기"
               icon={<img src={filterIcon} alt="" />}
               size="medium"
-              className="-m-3 disabled:opacity-100"
+              className="-m-3"
+              onClick={() => setIsFilterOpen(true)}
             />
             <IconButton
               label="모임 검색"
@@ -83,8 +132,37 @@ export function TeamListScreen() {
         }
       />
 
-      <div className="mt-6 flex items-center justify-between pb-3">
-        <p className="text-xs text-gray-700">전체 {totalElements}개 활동</p>
+      <div className="-mx-5.5 grid h-12 grid-cols-2 border-b border-stroke">
+        <button
+          type="button"
+          disabled
+          className="text-base font-medium text-text-gray-400 disabled:opacity-100"
+        >
+          우리 모임
+        </button>
+        <button
+          type="button"
+          aria-current="page"
+          className="relative text-base font-semibold text-text after:absolute after:inset-x-0 after:bottom-[-1px] after:h-px after:bg-text"
+        >
+          모임 찾기
+        </button>
+      </div>
+
+      <div className="flex h-[60px] items-center justify-between">
+        <h1 className="text-title-18">같이 갈 사람 찾는 중 🙌</h1>
+        <Select
+          ariaLabel="모임 정렬"
+          value={sort}
+          options={teamListSortOptions}
+          onChange={(value) => {
+            if (!isTeamListSort(value)) return;
+            const next = new URLSearchParams(searchParams);
+            next.set("sort", value);
+            setSearchParams(next);
+            window.scrollTo({ top: 0, behavior: "auto" });
+          }}
+        />
       </div>
 
       {meetingsQuery.isLoading ? (
@@ -114,16 +192,76 @@ export function TeamListScreen() {
       ) : null}
 
       {meetings.length > 0 ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-2">
           {meetings.map((team) => (
             <li key={team.meetingId}>
               <TeamCard
                 team={team}
+                regionName={regionNameById.get(team.regionId) ?? null}
                 onClick={() => navigate(`/teams/${team.meetingId}`)}
               />
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {meetings.length > 0 ? (
+        <>
+          <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
+          {meetingsQuery.isFetchingNextPage ? (
+            <LoadingState label="모임을 더 불러오는 중" className="min-h-24" />
+          ) : null}
+          {meetingsQuery.isFetchNextPageError ? (
+            <div className="py-6 text-center">
+              <p className="text-sm text-text-gray-400">
+                모임을 더 불러오지 못했어요.
+              </p>
+              <button
+                type="button"
+                className="mt-2 rounded-lg px-3 py-2 text-sm font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                onClick={() => void meetingsQuery.fetchNextPage()}
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : null}
+        </>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => navigate("/teams/new")}
+        className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-[calc(50%+27px)] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+      >
+        <img src={plusIcon} alt="" className="size-5" />
+        모임 만들기
+      </button>
+
+      {isFilterOpen ? (
+        <TeamFilterSheet
+          open
+          onOpenChange={setIsFilterOpen}
+          filter={filter}
+          onApply={(nextFilter) => {
+            const next = new URLSearchParams(searchParams);
+            next.delete("regionId");
+            next.delete("category");
+            next.delete("status");
+
+            if (nextFilter.regionId !== undefined) {
+              next.set("regionId", String(nextFilter.regionId));
+            }
+            if (nextFilter.category) {
+              next.set("category", nextFilter.category);
+            }
+            if (nextFilter.status) {
+              next.set("status", nextFilter.status);
+            }
+
+            setSearchParams(next);
+            window.scrollTo({ top: 0, behavior: "auto" });
+          }}
+        />
       ) : null}
     </PageContainer>
   );
