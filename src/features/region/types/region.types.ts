@@ -14,9 +14,3 @@ export type Region = {
   parentId: number | null;
   regionGroupId: number | null;
 };
-
-export type RegionGroup = {
-  id: number;
-  code: string;
-  name: string;
-};
