@@ -49,6 +49,7 @@ export type VolunteerPosting = {
   createdAt: string | null;
   updatedAt: string | null;
   bookmarked: boolean;
+  applied: boolean;
 };
 
 export type VolunteerPostingListItem = {

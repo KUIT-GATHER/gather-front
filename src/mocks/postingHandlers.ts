@@ -468,6 +468,7 @@ export const postingHandlers = [
       data: {
         ...posting,
         bookmarked: bookmarkedPostingIds.has(postingId),
+        applied: participatedPostingIds.has(postingId),
       },
       error: null,
     });

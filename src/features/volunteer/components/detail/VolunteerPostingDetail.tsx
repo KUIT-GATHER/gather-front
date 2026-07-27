@@ -115,6 +115,10 @@ export function VolunteerPostingDetail({
       return;
     }
 
+    if (posting.applied) {
+      return;
+    }
+
     if (!isAuthenticated) {
       navigate("/login", {
         state: {
@@ -205,6 +209,7 @@ export function VolunteerPostingDetail({
       </div>
 
       <VolunteerPostingApplyBar
+        applied={posting.applied}
         isPending={applyMutation.isPending}
         onApply={handleApplyClick}
       />
