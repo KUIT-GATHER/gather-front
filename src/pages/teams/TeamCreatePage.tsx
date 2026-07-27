@@ -14,7 +14,13 @@ import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
 import { SingleDateCalendar } from "@/features/team/components/SingleDateCalendar";
 import { TimeWheelPicker } from "@/features/team/components/TimeWheelPicker";
 import { useCreateMeetingMutation } from "@/features/team/hooks/useCreateMeetingMutation";
+import { buildMeetingCreateDateTimePayload } from "@/features/team/lib/meetingCreatePayload";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
+import {
+  combineLocalDateAndTime,
+  formatLocalDateTimeForInput,
+  parseLocalDateTimeInput,
+} from "@/shared/lib/localDateTime";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
@@ -35,20 +41,11 @@ type ImagePreview = {
 };
 
 type FormErrors = Partial<
-  Record<"name" | "description" | "region" | "category" | "deadline", string>
+  Record<
+    "name" | "description" | "region" | "category" | "deadline" | "activity",
+    string
+  >
 >;
-
-function toLocalDateTimeValue(date: Date) {
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
-function toPostingDateTime(date: string | null, time: string | null) {
-  if (!date) return undefined;
-  const value = `${date}T${time || "00:00"}`;
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
 
 function formatDeadline(value: string) {
   if (!value) return "신청 마감일을 선택해 주세요";
@@ -103,7 +100,7 @@ export function TeamCreatePage() {
   const [draftDeadline, setDraftDeadline] = useState(() => new Date());
 
   const postingDefaultDeadline = postingQuery.data?.noticeEndDate
-    ? toPostingDateTime(postingQuery.data.noticeEndDate, "23:59")
+    ? combineLocalDateAndTime(postingQuery.data.noticeEndDate, "23:59")
     : undefined;
   const resolvedRegionId =
     regionId ||
@@ -122,9 +119,7 @@ export function TeamCreatePage() {
   }, [resolvedCategory]);
   const resolvedDeadline =
     deadline ||
-    (postingDefaultDeadline
-      ? toLocalDateTimeValue(new Date(postingDefaultDeadline))
-      : "");
+    (postingDefaultDeadline ? postingDefaultDeadline.slice(0, 16) : "");
   const regions = useMemo(() => regionsQuery.data ?? [], [regionsQuery.data]);
   const regionById = useMemo(
     () => new Map(regions.map((region) => [region.id, region])),
@@ -195,19 +190,30 @@ export function TeamCreatePage() {
     event.preventDefault();
     if (!validate() || !resolvedCategory) return;
 
-    const deadlineIso = new Date(resolvedDeadline).toISOString();
-    const activityStartAt = isPostingBased
-      ? (toPostingDateTime(
-          postingQuery.data?.actStartDate ?? null,
-          postingQuery.data?.actStartTime ?? null,
-        ) ?? deadlineIso)
-      : deadlineIso;
-    const activityEndAt = isPostingBased
-      ? (toPostingDateTime(
-          postingQuery.data?.actEndDate ?? null,
-          postingQuery.data?.actEndTime ?? null,
-        ) ?? activityStartAt)
-      : deadlineIso;
+    const deadlineDate = parseLocalDateTimeInput(resolvedDeadline);
+    const dateTimePayload = deadlineDate
+      ? buildMeetingCreateDateTimePayload({
+          deadline: deadlineDate,
+          volunteerPostingId: isPostingBased ? postingId : null,
+          activityStartDate: postingQuery.data?.actStartDate ?? null,
+          activityStartTime: postingQuery.data?.actStartTime ?? null,
+          activityEndDate: postingQuery.data?.actEndDate ?? null,
+          activityEndTime: postingQuery.data?.actEndTime ?? null,
+        })
+      : undefined;
+
+    if (!dateTimePayload) {
+      const errorKey: keyof FormErrors = deadlineDate ? "activity" : "deadline";
+      setErrors((current) => ({
+        ...current,
+        [errorKey]:
+          errorKey === "deadline"
+            ? "신청 마감일을 다시 선택해 주세요."
+            : "연관 공고의 활동 날짜와 시간을 확인해 주세요.",
+      }));
+      return;
+    }
+
     try {
       const meeting = await createMeetingMutation.mutateAsync({
         name: name.trim(),
@@ -218,11 +224,9 @@ export function TeamCreatePage() {
         ),
         regionId: Number(resolvedRegionId),
         category: resolvedCategory,
-        deadline: deadlineIso,
         participationCondition: participationCondition.trim() || null,
         volunteerPostingId: isPostingBased ? postingId : null,
-        activityStartAt,
-        activityEndAt,
+        ...dateTimePayload,
       });
 
       const completeSearchParams = new URLSearchParams({
@@ -261,7 +265,7 @@ export function TeamCreatePage() {
 
       <form className="mt-5 flex flex-col gap-6" onSubmit={handleSubmit}>
         {isPostingBased ? (
-          <FormField label="연관 공고">
+          <FormField label="연관 공고" error={errors.activity}>
             <div className="flex h-12 items-center rounded-xl border border-stroke bg-white px-4 text-[15px] text-text">
               {postingQuery.isLoading
                 ? "공고 정보를 불러오는 중이에요."
@@ -448,7 +452,9 @@ export function TeamCreatePage() {
             className={`flex h-12 w-full items-center justify-between rounded-xl border bg-white px-4 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-button/40 ${errors.deadline ? "border-point-red" : "border-stroke"}`}
             onClick={() => {
               setDraftDeadline(
-                resolvedDeadline ? new Date(resolvedDeadline) : new Date(),
+                (resolvedDeadline &&
+                  parseLocalDateTimeInput(resolvedDeadline)) ||
+                  new Date(),
               );
               setIsDeadlineSheetOpen(true);
             }}
@@ -527,7 +533,17 @@ export function TeamCreatePage() {
               fullWidth
               className="max-w-[315px] active:bg-icon"
               onClick={() => {
-                setDeadline(toLocalDateTimeValue(draftDeadline));
+                const nextDeadline = formatLocalDateTimeForInput(draftDeadline);
+
+                if (!nextDeadline) {
+                  setErrors((current) => ({
+                    ...current,
+                    deadline: "신청 마감일을 다시 선택해 주세요.",
+                  }));
+                  return;
+                }
+
+                setDeadline(nextDeadline);
                 clearError("deadline");
                 setIsDeadlineSheetOpen(false);
               }}

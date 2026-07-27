@@ -4,8 +4,10 @@ import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
   formatVolunteerLocation,
+  getVolunteerDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
+import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingCardProps = {
   posting: VolunteerPostingListItem;
@@ -24,6 +26,11 @@ export function VolunteerPostingCard({
     variant === "compact"
       ? formatVolunteerHomeDate(posting.actStartDate)
       : formatVolunteerDate(posting.actStartDate);
+  const activityDDay = getVolunteerDDay(posting.actStartDate);
+  const urgentActivityDDay =
+    activityDDay === "D-day" || /^D-[1-7]$/.test(activityDDay ?? "")
+      ? activityDDay
+      : null;
 
   if (variant === "compact") {
     return (
@@ -70,9 +77,24 @@ export function VolunteerPostingCard({
             {posting.recruitOrg}
           </p>
         ) : null}
-        {location || activityDate ? (
+        {location || activityDate || urgentActivityDDay ? (
           <p className="mt-1 line-clamp-2 text-sm text-text-gray-300">
             {[location, activityDate].filter(Boolean).join(" · ")}
+            {urgentActivityDDay ? (
+              <span
+                className={cn(
+                  "text-point-red",
+                  (urgentActivityDDay === "D-day" ||
+                    urgentActivityDDay === "D-1" ||
+                    urgentActivityDDay === "D-2" ||
+                    urgentActivityDDay === "D-3") &&
+                    "font-semibold",
+                )}
+              >
+                {location || activityDate ? " · " : ""}
+                {urgentActivityDDay}
+              </span>
+            ) : null}
           </p>
         ) : null}
 

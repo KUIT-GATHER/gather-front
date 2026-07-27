@@ -6,6 +6,7 @@ import {
   createUnauthorizedResponse,
   getMockUserId,
 } from "@/mocks/lib/mockAuth";
+import { isLocalDateTimeApiValue } from "@/shared/lib/localDateTime";
 import type {
   MeetingCreateRequest,
   MeetingMember,
@@ -53,8 +54,8 @@ type MockMeeting = {
   category: string;
   status: string;
   deadline: string;
-  activityStartAt: string;
-  activityEndAt: string;
+  activityStartAt: string | null;
+  activityEndAt: string | null;
   hostId: number;
   volunteerPostingId: number | null;
   participationCondition: string | null;
@@ -234,12 +235,14 @@ function getSortValue(team: MockMeeting, field: MeetingSortField) {
 function isMeetingRecruiting(team: MockMeeting) {
   const now = new Date();
   const deadline = new Date(team.deadline);
-  const activityEndAt = new Date(team.activityEndAt);
+  const activityEndAt = team.activityEndAt
+    ? new Date(team.activityEndAt)
+    : null;
 
   return (
     team.status === "RECRUITING" &&
     deadline.getTime() > now.getTime() &&
-    activityEndAt.getTime() > now.getTime() &&
+    (!activityEndAt || activityEndAt.getTime() > now.getTime()) &&
     getMeetingMembers(team).length < team.maxMember
   );
 }
@@ -275,6 +278,10 @@ function overlapsActivityPeriod(
   activityStartDate?: string,
   activityEndDate?: string,
 ) {
+  if (!team.activityStartAt || !team.activityEndAt) {
+    return false;
+  }
+
   const selectedStartAt = activityStartDate
     ? parseLocalDateStart(activityStartDate)
     : undefined;
@@ -569,13 +576,28 @@ export const teamHandlers = [
 
     const body = (await request.json()) as Partial<MeetingCreateRequest>;
 
+    const isPostingBased = body.volunteerPostingId != null;
+    const activitySchedule = isPostingBased
+      ? isLocalDateTimeApiValue(body.activityStartAt) &&
+        isLocalDateTimeApiValue(body.activityEndAt)
+        ? {
+            activityStartAt: body.activityStartAt,
+            activityEndAt: body.activityEndAt,
+          }
+        : undefined
+      : body.activityStartAt === null && body.activityEndAt === null
+        ? {
+            activityStartAt: null,
+            activityEndAt: null,
+          }
+        : undefined;
+
     if (
       !body.name ||
       typeof body.maxMember !== "number" ||
       typeof body.regionId !== "number" ||
-      !body.deadline ||
-      !body.activityStartAt ||
-      !body.activityEndAt
+      !isLocalDateTimeApiValue(body.deadline) ||
+      !activitySchedule
     ) {
       return HttpResponse.json(
         {
@@ -603,8 +625,8 @@ export const teamHandlers = [
       category: body.category ?? "COMMUNITY",
       status: "RECRUITING",
       deadline: body.deadline,
-      activityStartAt: body.activityStartAt,
-      activityEndAt: body.activityEndAt,
+      activityStartAt: activitySchedule.activityStartAt,
+      activityEndAt: activitySchedule.activityEndAt,
       hostId: userId,
       volunteerPostingId: body.volunteerPostingId ?? null,
       participationCondition: body.participationCondition ?? null,

@@ -91,8 +91,8 @@ export function formatVolunteerTimeRange(
   return `${startTime} ~ ${endTime}`;
 }
 
-export function getRecruitmentDDay(noticeEndDate: string | null) {
-  const deadline = parseLocalDate(noticeEndDate);
+export function getVolunteerDDay(value: string | null) {
+  const deadline = parseLocalDate(value);
 
   if (!deadline) {
     return null;
@@ -113,6 +113,10 @@ export function getRecruitmentDDay(noticeEndDate: string | null) {
   }
 
   return `D-${differenceInDays}`;
+}
+
+export function getRecruitmentDDay(noticeEndDate: string | null) {
+  return getVolunteerDDay(noticeEndDate);
 }
 
 export function formatVolunteerLocation(
