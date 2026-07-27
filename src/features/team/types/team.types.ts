@@ -33,8 +33,8 @@ export type MeetingCreateRequest = {
   regionId: number;
   participationCondition?: string | null;
   volunteerPostingId?: number | null;
-  activityStartAt: string;
-  activityEndAt: string;
+  activityStartAt: string | null;
+  activityEndAt: string | null;
 };
 
 export type MeetingDetail = MeetingListItem & {

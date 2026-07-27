@@ -47,7 +47,11 @@ function parseLocalDateTime(value: string) {
   return date;
 }
 
-export function formatMeetingActivityDate(value: string) {
+export function formatMeetingActivityDate(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
   const date = parseLocalDateTime(value);
 
   if (!date) {
