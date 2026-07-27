@@ -43,7 +43,7 @@ export type MeetingDetail = MeetingListItem & {
   participationCondition: string | null;
   memo: string | null;
   activityEndAt: string;
-  bookmarked?: boolean;
+  bookmarked: boolean;
 };
 
 export type MeetingMember = {
