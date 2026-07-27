@@ -15,7 +15,7 @@ export const TEAM_SORT_PARAMS = {
   latest: ["createdAt,desc"],
   popular: ["currentMemberCount,desc", "createdAt,desc"],
   deadline: ["deadline,asc", "createdAt,desc"],
-  posting: [],
+  posting: ["createdAt,desc"],
 } satisfies Record<TeamListSort, string[]>;
 
 export function isTeamListSort(value: string | null): value is TeamListSort {

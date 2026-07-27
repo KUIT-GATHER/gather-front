@@ -57,13 +57,19 @@ type TeamFilterSheetProps = {
 };
 
 function createDraft(filter: TeamFilter): FilterDraft {
+  const dateRange = getTeamDateRangeFromValues(
+    filter.activityStartDate,
+    filter.activityEndDate,
+  );
+  const dateFilter = getTeamDateFilterFromRange(dateRange);
+
   return {
     ...(filter.regionId !== undefined ? { regionId: filter.regionId } : {}),
-    ...(filter.activityStartDate && filter.activityEndDate
+    ...(dateFilter
       ? {
           dateRange: {
-            activityStartDate: filter.activityStartDate,
-            activityEndDate: filter.activityEndDate,
+            activityStartDate: dateFilter.activityStartDate,
+            activityEndDate: dateFilter.activityEndDate,
           },
         }
       : {}),
@@ -225,7 +231,19 @@ export function TeamFilterSheet({
         </Button>
       </div>
     ) : (
-      <div>
+      <div className="grid grid-cols-[auto_1fr] gap-3">
+        <Button
+          variant="primaryOutline"
+          className="active:bg-button/8"
+          onClick={() => {
+            setDraft({});
+            setDateSelection(undefined);
+            setRegionSelectionId(undefined);
+            setActiveLevel1RegionId(undefined);
+          }}
+        >
+          초기화
+        </Button>
         <Button fullWidth className="active:bg-icon" onClick={applyFilter}>
           설정하기
         </Button>

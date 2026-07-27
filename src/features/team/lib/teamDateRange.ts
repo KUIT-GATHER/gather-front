@@ -19,6 +19,10 @@ function parseLocalDate(value: string) {
     : undefined;
 }
 
+function isValidDate(date: Date) {
+  return !Number.isNaN(date.getTime());
+}
+
 export function formatTeamDateForApi(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
@@ -42,11 +46,17 @@ export function getTeamDateRangeFromValues(
   const from = parseLocalDate(activityStartDate);
   const to = parseLocalDate(activityEndDate);
 
-  return from && to ? { from, to } : undefined;
+  return from && to && from <= to ? { from, to } : undefined;
 }
 
 export function getTeamDateFilterFromRange(range: DateRange | undefined) {
-  if (!range?.from || !range.to) {
+  if (
+    !range?.from ||
+    !range.to ||
+    !isValidDate(range.from) ||
+    !isValidDate(range.to) ||
+    range.from > range.to
+  ) {
     return undefined;
   }
 

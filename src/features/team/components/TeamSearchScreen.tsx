@@ -10,6 +10,7 @@ import {
 import { useRecentTeamSearches } from "@/features/team/hooks/useRecentTeamSearches";
 import { useMeetingRecommendedKeywordsQuery } from "@/features/team/hooks/useMeetingRecommendedKeywordsQuery";
 import {
+  getTeamListFilter,
   getTeamListSort,
   toTeamListQueryParams,
   updateTeamListSearchParams,
@@ -124,6 +125,7 @@ export function TeamSearchScreen() {
     addRecentSearch(keyword);
     const next = new URLSearchParams();
     next.set("keyword", keyword);
+    next.set("sort", "latest");
     setSearchParams(next);
     window.scrollTo({ top: 0, behavior: "auto" });
   };
@@ -158,7 +160,7 @@ export function TeamSearchScreen() {
                   </p>
                   <Select
                     ariaLabel="검색 결과 정렬"
-                    value={sort ?? ""}
+                    value={sort}
                     options={teamListSortOptions}
                     contentClassName="w-[206px]"
                     onChange={(value) => {
@@ -166,7 +168,7 @@ export function TeamSearchScreen() {
                       setSearchParams(
                         updateTeamListSearchParams(
                           searchParams,
-                          {},
+                          getTeamListFilter(searchParams),
                           { sort: value },
                         ),
                       );

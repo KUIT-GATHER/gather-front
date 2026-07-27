@@ -17,6 +17,21 @@ function parsePositiveInteger(value: string | null) {
   return Number.isInteger(number) && number > 0 ? number : undefined;
 }
 
+function parseDate(value: string | null) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+    ? value
+    : undefined;
+}
+
 function parseCategory(value: string | null): PostingCategory | undefined {
   return value && POSTING_CATEGORIES.includes(value as PostingCategory)
     ? (value as PostingCategory)
@@ -24,19 +39,31 @@ function parseCategory(value: string | null): PostingCategory | undefined {
 }
 
 export function getTeamListFilter(searchParams: URLSearchParams): TeamFilter {
-  return {
-    regionId: parsePositiveInteger(searchParams.get("regionId")),
-    activityStartDate: searchParams.get("activityStartDate") || undefined,
-    activityEndDate: searchParams.get("activityEndDate") || undefined,
-    category: parseCategory(searchParams.get("category")),
-  };
+  const regionId = parsePositiveInteger(searchParams.get("regionId"));
+  const activityStartDate = parseDate(searchParams.get("activityStartDate"));
+  const activityEndDate = parseDate(searchParams.get("activityEndDate"));
+  const category = parseCategory(searchParams.get("category"));
+  const dateFilter =
+    activityStartDate && activityEndDate && activityStartDate <= activityEndDate
+      ? { activityStartDate, activityEndDate }
+      : undefined;
+  const categoryFilter = category ? { category } : {};
+
+  if (regionId !== undefined) {
+    return dateFilter
+      ? { regionId, ...dateFilter, ...categoryFilter }
+      : { regionId, ...categoryFilter };
+  }
+
+  return dateFilter
+    ? { ...dateFilter, ...categoryFilter }
+    : { ...categoryFilter };
 }
 
-export function getTeamListSort(
-  searchParams: URLSearchParams,
-): TeamListSort | undefined {
+export function getTeamListSort(searchParams: URLSearchParams): TeamListSort {
   const value = searchParams.get("sort");
-  return isTeamListSort(value) ? value : undefined;
+
+  return isTeamListSort(value) ? value : "latest";
 }
 
 export function toTeamListQueryParams(
@@ -49,9 +76,10 @@ export function toTeamListQueryParams(
   return {
     ...(keyword ? { keyword } : {}),
     ...filter,
+    status: "RECRUITING",
     size: 20,
-    sort: [...TEAM_SORT_PARAMS[sort ?? "latest"]],
-    basedOnPosting: sort === "posting" ? true : undefined,
+    sort: [...TEAM_SORT_PARAMS[sort]],
+    postingBasedFirst: sort === "posting" ? true : undefined,
   };
 }
 

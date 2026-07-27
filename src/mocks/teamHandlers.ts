@@ -231,8 +231,87 @@ function getSortValue(team: MockMeeting, field: MeetingSortField) {
   return team[field];
 }
 
-function sortMeetings(items: MockMeeting[], sorts: MeetingSort[]) {
+function isMeetingRecruiting(team: MockMeeting) {
+  const now = new Date();
+  const deadline = new Date(team.deadline);
+  const activityEndAt = new Date(team.activityEndAt);
+
+  return (
+    team.status === "RECRUITING" &&
+    deadline.getTime() > now.getTime() &&
+    activityEndAt.getTime() > now.getTime() &&
+    getMeetingMembers(team).length < team.maxMember
+  );
+}
+
+function parseLocalDateStart(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+    ? date
+    : undefined;
+}
+
+function getNextLocalDateStart(value: string) {
+  const date = parseLocalDateStart(value);
+
+  if (!date) {
+    return undefined;
+  }
+
+  date.setDate(date.getDate() + 1);
+  return date;
+}
+
+function overlapsActivityPeriod(
+  team: MockMeeting,
+  activityStartDate?: string,
+  activityEndDate?: string,
+) {
+  const selectedStartAt = activityStartDate
+    ? parseLocalDateStart(activityStartDate)
+    : undefined;
+  const selectedEndAtExclusive = activityEndDate
+    ? getNextLocalDateStart(activityEndDate)
+    : undefined;
+  const teamActivityStartAt = new Date(team.activityStartAt);
+  const teamActivityEndAt = new Date(team.activityEndAt);
+
+  if (
+    Number.isNaN(teamActivityStartAt.getTime()) ||
+    Number.isNaN(teamActivityEndAt.getTime())
+  ) {
+    return false;
+  }
+
+  return (
+    (!selectedStartAt || teamActivityEndAt >= selectedStartAt) &&
+    (!selectedEndAtExclusive || teamActivityStartAt < selectedEndAtExclusive)
+  );
+}
+
+function sortMeetingsWithPostingFirst(
+  items: MockMeeting[],
+  sorts: MeetingSort[],
+  postingBasedFirst: boolean,
+) {
   return [...items].sort((left, right) => {
+    if (postingBasedFirst) {
+      const leftIsPostingBased = left.volunteerPostingId !== null;
+      const rightIsPostingBased = right.volunteerPostingId !== null;
+
+      if (leftIsPostingBased !== rightIsPostingBased) {
+        return leftIsPostingBased ? -1 : 1;
+      }
+    }
+
     for (const { field, direction } of sorts) {
       const leftValue = getSortValue(left, field);
       const rightValue = getSortValue(right, field);
@@ -374,7 +453,8 @@ export const teamHandlers = [
     const status = url.searchParams.get("status");
     const activityStartDate = url.searchParams.get("activityStartDate");
     const activityEndDate = url.searchParams.get("activityEndDate");
-    const basedOnPosting = url.searchParams.get("basedOnPosting") === "true";
+    const postingBasedFirst =
+      url.searchParams.get("postingBasedFirst") === "true";
     const page = getPageParam(url);
     const size = getSizeParam(url);
     const sorts = parseSorts(url);
@@ -440,26 +520,28 @@ export const teamHandlers = [
     }
 
     if (status) {
-      items = items.filter((team) => team.status === status);
-    }
-
-    if (activityStartDate) {
-      items = items.filter(
-        (team) => team.activityStartAt.slice(0, 10) >= activityStartDate,
+      items = items.filter((team) =>
+        status === "RECRUITING"
+          ? isMeetingRecruiting(team)
+          : team.status === status,
       );
     }
 
-    if (activityEndDate) {
-      items = items.filter(
-        (team) => team.activityStartAt.slice(0, 10) <= activityEndDate,
+    if (activityStartDate || activityEndDate) {
+      items = items.filter((team) =>
+        overlapsActivityPeriod(
+          team,
+          activityStartDate ?? undefined,
+          activityEndDate ?? undefined,
+        ),
       );
     }
 
-    if (basedOnPosting) {
-      items = items.filter((team) => team.volunteerPostingId !== null);
-    }
-
-    const sortedItems = sortMeetings(items, sorts);
+    const sortedItems = sortMeetingsWithPostingFirst(
+      items,
+      sorts,
+      postingBasedFirst,
+    );
     const startIndex = page * size;
     const content = sortedItems
       .slice(startIndex, startIndex + size)

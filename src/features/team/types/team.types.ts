@@ -91,7 +91,7 @@ export type MeetingListParams = {
   status?: MeetingStatus;
   activityStartDate?: string;
   activityEndDate?: string;
-  basedOnPosting?: boolean;
+  postingBasedFirst?: boolean;
   page?: number;
   size?: number;
   sort?: string[];

@@ -72,8 +72,8 @@ function buildMeetingsEndpoint(params: MeetingListParams = {}) {
   setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
   setQueryParam(
     searchParams,
-    "basedOnPosting",
-    params.basedOnPosting ? "true" : undefined,
+    "postingBasedFirst",
+    params.postingBasedFirst ? "true" : undefined,
   );
 
   const query = searchParams.toString();

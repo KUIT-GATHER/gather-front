@@ -207,7 +207,7 @@ function MeetingDiscoverList({
         <h1 className="text-title-18">같이 갈 사람 찾는 중 🙌</h1>
         <Select
           ariaLabel="모임 정렬"
-          value={sort ?? ""}
+          value={sort}
           options={teamListSortOptions}
           contentClassName="w-[206px]"
           onChange={(value) => {
@@ -303,6 +303,7 @@ function MeetingDiscoverList({
 
       {isFilterOpen ? (
         <TeamFilterSheet
+          key={searchParams.toString()}
           open
           onOpenChange={setIsFilterOpen}
           filter={filter}
