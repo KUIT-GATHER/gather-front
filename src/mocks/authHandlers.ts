@@ -38,9 +38,9 @@ const emailVerificationRequests = new Map<
 >();
 
 const validRegionIds = new Set(regions.data.map((region) => region.id));
-const validLevel2RegionIds = new Set(
+const validActivityRegionIds = new Set(
   regions.data
-    .filter((region) => region.level === 2)
+    .filter((region) => region.level === 1 || region.level === 2)
     .map((region) => region.id),
 );
 const validPostingCategories = new Set<PostingCategory>(POSTING_CATEGORIES);
@@ -361,14 +361,14 @@ export const authHandlers = [
       );
     }
 
-    if (!validLevel2RegionIds.has(body.activityRegionId)) {
+    if (!validActivityRegionIds.has(body.activityRegionId)) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: "INVALID_ACTIVITY_REGION",
-            message: "활동 지역은 시군구 단위로 1개 선택해야 합니다.",
+            message: "활동 지역은 시도 또는 시군구 단위로 1개 선택해야 합니다.",
           },
         },
         { status: 400 },
