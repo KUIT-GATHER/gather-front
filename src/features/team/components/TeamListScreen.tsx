@@ -7,14 +7,17 @@ import searchIcon from "@/assets/icons/Search.svg";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import {
   isTeamListSort,
-  TEAM_SORT_PARAMS,
   teamListSortOptions,
-  type TeamListSort,
 } from "@/features/team/constants/teamList.constants";
 import { useInfiniteMeetingsQuery } from "@/features/team/hooks/useInfiniteMeetingsQuery";
 import { useMyMeetingsQuery } from "@/features/team/hooks/useMyMeetingsQuery";
+import {
+  getTeamListFilter,
+  getTeamListSort,
+  toTeamListQueryParams,
+  updateTeamListSearchParams,
+} from "@/features/team/lib/teamListSearchParams";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
-import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import IconButton from "@/shared/ui/IconButton";
@@ -24,34 +27,12 @@ import PageHeader from "@/shared/ui/PageHeader";
 import Select from "@/shared/ui/Select";
 import { cn } from "@/shared/lib/cn";
 
-import type { MeetingInfiniteParams, MeetingStatus } from "../types/team.types";
 import { TeamCard } from "./TeamCard";
-import { TeamFilterSheet, type TeamFilter } from "./TeamFilterSheet";
+import type { TeamFilter } from "@/features/team/types/teamFilter.types";
+
+import { TeamFilterSheet } from "./TeamFilterSheet";
 
 type TeamListTab = "my" | "find";
-
-function toPositiveNumber(value: string | null) {
-  if (!value) {
-    return undefined;
-  }
-
-  const number = Number(value);
-
-  return Number.isInteger(number) && number > 0 ? number : undefined;
-}
-
-function toMeetingStatus(value: string | null): MeetingStatus | undefined {
-  return value === "RECRUITING" || value === "CLOSED" || value === "COMPLETED"
-    ? value
-    : undefined;
-}
-
-function toPostingCategory(value: string | null) {
-  return value &&
-    POSTING_CATEGORIES.includes(value as (typeof POSTING_CATEGORIES)[number])
-    ? (value as (typeof POSTING_CATEGORIES)[number])
-    : undefined;
-}
 
 function TeamListTabs({
   activeTab,
@@ -178,24 +159,14 @@ function MeetingDiscoverList({
   const navigate = useNavigate();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const regionsQuery = useRegionsQuery();
-  const sortValue = searchParams.get("sort");
-  const sort: TeamListSort = isTeamListSort(sortValue) ? sortValue : "latest";
+  const sort = getTeamListSort(searchParams);
   const filter = useMemo<TeamFilter>(
-    () => ({
-      regionId: toPositiveNumber(searchParams.get("regionId")),
-      category: toPostingCategory(searchParams.get("category")),
-      status: toMeetingStatus(searchParams.get("status")),
-    }),
+    () => getTeamListFilter(searchParams),
     [searchParams],
   );
-  const queryParams = useMemo<MeetingInfiniteParams>(
-    () => ({
-      keyword: searchParams.get("keyword")?.trim() || undefined,
-      ...filter,
-      size: 20,
-      sort: [...TEAM_SORT_PARAMS[sort]],
-    }),
-    [filter, searchParams, sort],
+  const queryParams = useMemo(
+    () => toTeamListQueryParams(searchParams),
+    [searchParams],
   );
   const meetingsQuery = useInfiniteMeetingsQuery(queryParams);
   const meetings =
@@ -238,11 +209,14 @@ function MeetingDiscoverList({
           ariaLabel="모임 정렬"
           value={sort}
           options={teamListSortOptions}
+          contentClassName="w-[206px]"
           onChange={(value) => {
             if (!isTeamListSort(value)) return;
-            const next = new URLSearchParams(searchParams);
-            next.set("sort", value);
-            setSearchParams(next);
+            setSearchParams(
+              updateTeamListSearchParams(searchParams, filter, {
+                sort: value,
+              }),
+            );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
         />
@@ -329,26 +303,14 @@ function MeetingDiscoverList({
 
       {isFilterOpen ? (
         <TeamFilterSheet
+          key={searchParams.toString()}
           open
           onOpenChange={setIsFilterOpen}
           filter={filter}
           onApply={(nextFilter) => {
-            const next = new URLSearchParams(searchParams);
-            next.delete("regionId");
-            next.delete("category");
-            next.delete("status");
-
-            if (nextFilter.regionId !== undefined) {
-              next.set("regionId", String(nextFilter.regionId));
-            }
-            if (nextFilter.category) {
-              next.set("category", nextFilter.category);
-            }
-            if (nextFilter.status) {
-              next.set("status", nextFilter.status);
-            }
-
-            setSearchParams(next);
+            setSearchParams(
+              updateTeamListSearchParams(searchParams, nextFilter),
+            );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
         />

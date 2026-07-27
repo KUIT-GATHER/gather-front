@@ -89,6 +89,9 @@ export type MeetingListParams = {
   regionId?: number;
   category?: PostingCategory;
   status?: MeetingStatus;
+  activityStartDate?: string;
+  activityEndDate?: string;
+  postingBasedFirst?: boolean;
   page?: number;
   size?: number;
   sort?: string[];
