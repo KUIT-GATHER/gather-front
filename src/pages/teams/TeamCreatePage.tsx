@@ -79,6 +79,7 @@ export function TeamCreatePage() {
   const postingId = Number(volunteerId);
   const isPostingBased = Number.isInteger(postingId) && postingId > 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageSliderRef = useRef<HTMLDivElement>(null);
   const imageUrlsRef = useRef<string[]>([]);
   const regionsQuery = useRegionsQuery();
   const createMeetingMutation = useCreateMeetingMutation();
@@ -94,6 +95,7 @@ export function TeamCreatePage() {
   const [participationCondition, setParticipationCondition] = useState("");
   const [isTimeRecognized, setIsTimeRecognized] = useState(true);
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isRegionSheetOpen, setIsRegionSheetOpen] = useState(false);
   const [isDeadlineSheetOpen, setIsDeadlineSheetOpen] = useState(false);
@@ -171,6 +173,48 @@ export function TeamCreatePage() {
         );
       }
       return current.filter((_, imageIndex) => imageIndex !== index);
+    });
+    setActiveImageIndex((current) =>
+      current > index
+        ? current - 1
+        : Math.max(0, Math.min(current, images.length - 2)),
+    );
+  };
+
+  const handleImageSliderScroll = () => {
+    const slider = imageSliderRef.current;
+    const firstImage = slider?.children[0] as HTMLElement | undefined;
+    if (!slider || !firstImage) return;
+
+    const closestImageIndex = Array.from(slider.children).reduce(
+      (closestIndex, child, index) => {
+        const imagePosition =
+          (child as HTMLElement).offsetLeft - firstImage.offsetLeft;
+        const closestImagePosition =
+          (slider.children[closestIndex] as HTMLElement).offsetLeft -
+          firstImage.offsetLeft;
+
+        return Math.abs(imagePosition - slider.scrollLeft) <
+          Math.abs(closestImagePosition - slider.scrollLeft)
+          ? index
+          : closestIndex;
+      },
+      0,
+    );
+
+    setActiveImageIndex(closestImageIndex);
+  };
+
+  const scrollToImage = (index: number) => {
+    const slider = imageSliderRef.current;
+    const firstImage = slider?.children[0] as HTMLElement | undefined;
+    const image = slider?.children[index] as HTMLElement | undefined;
+    if (!slider || !firstImage || !image) return;
+
+    setActiveImageIndex(index);
+    slider.scrollTo({
+      left: image.offsetLeft - firstImage.offsetLeft,
+      behavior: "smooth",
     });
   };
 
@@ -337,27 +381,59 @@ export function TeamCreatePage() {
             onChange={(event) => handleImageChange(event.target.files)}
           />
           {images.length > 0 ? (
-            <div className="mt-3 flex snap-x gap-3 overflow-x-auto pb-1">
-              {images.map((image, index) => (
-                <div
-                  key={`${image.file.name}-${image.file.lastModified}`}
-                  className="relative min-w-full snap-center overflow-hidden rounded-xl"
-                >
-                  <img
-                    src={image.url}
-                    alt={`첨부 사진 ${index + 1}`}
-                    className="h-41 w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    aria-label={`첨부 사진 ${index + 1} 삭제`}
-                    className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-icon/80 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                    onClick={() => removeImage(index)}
+            <div className="mt-5">
+              <div
+                ref={imageSliderRef}
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                aria-label="첨부 사진 미리보기"
+                onScroll={handleImageSliderScroll}
+              >
+                {images.map((image, index) => (
+                  <div
+                    key={image.url}
+                    className="relative min-w-full snap-start overflow-hidden rounded-2xl"
                   >
-                    <X aria-hidden="true" className="size-4" />
-                  </button>
-                </div>
-              ))}
+                    <img
+                      src={image.url}
+                      alt={`첨부 사진 ${index + 1}`}
+                      className="h-41 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`첨부 사진 ${index + 1} 삭제`}
+                      className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full bg-white/80 text-text-gray-400 shadow-sm backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-button/50"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X
+                        aria-hidden="true"
+                        className="size-6"
+                        strokeWidth={1.8}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div
+                className="mt-3 flex h-3 items-center justify-center gap-2"
+                aria-label={`${images.length}장 중 ${activeImageIndex + 1}번째 사진`}
+              >
+                {images.map((image, index) => (
+                  <button
+                    key={image.url}
+                    type="button"
+                    aria-label={`${index + 1}번째 사진 보기`}
+                    aria-current={
+                      index === activeImageIndex ? "true" : undefined
+                    }
+                    className={`size-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-button/50 ${
+                      index === activeImageIndex
+                        ? "bg-[#18bd77]"
+                        : "bg-[#d9d9d9]"
+                    }`}
+                    onClick={() => scrollToImage(index)}
+                  />
+                ))}
+              </div>
             </div>
           ) : null}
         </section>
