@@ -636,7 +636,7 @@ export function TeamCreatePage() {
             </p>
             <CalendarDays aria-hidden="true" className="size-6 text-icon" />
           </div>
-          <div className="h-[348px] overflow-hidden rounded-2xl border border-button bg-white px-1">
+          <div className="min-h-[348px] rounded-2xl border border-button bg-white px-1 pb-2">
             <SingleDateCalendar
               selected={draftDeadline}
               onSelect={(date) => {
