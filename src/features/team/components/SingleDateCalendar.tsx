@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  type ButtonHTMLAttributes,
-  type CSSProperties,
-} from "react";
+import { useState, type ButtonHTMLAttributes, type CSSProperties } from "react";
 import { DayPicker, type DayButtonProps } from "@daypicker/react";
 import { ko } from "@daypicker/react/locale/ko";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -68,13 +63,17 @@ export function SingleDateCalendar({
   onSelect,
   className,
 }: SingleDateCalendarProps) {
+  const selectedTimestamp = selected.getTime();
+  const [lastSelectedTimestamp, setLastSelectedTimestamp] =
+    useState(selectedTimestamp);
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(selected.getFullYear(), selected.getMonth(), 1),
   );
 
-  useEffect(() => {
+  if (lastSelectedTimestamp !== selectedTimestamp) {
+    setLastSelectedTimestamp(selectedTimestamp);
     setVisibleMonth(new Date(selected.getFullYear(), selected.getMonth(), 1));
-  }, [selected]);
+  }
 
   const moveMonth = (offset: number) => {
     setVisibleMonth(
