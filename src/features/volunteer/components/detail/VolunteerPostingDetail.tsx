@@ -10,7 +10,6 @@ import {
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
-import { cn } from "@/shared/lib/cn";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -26,15 +25,6 @@ import { VolunteerPostingTeamSection } from "./VolunteerPostingTeamSection";
 type VolunteerPostingDetailProps = {
   postingId: number;
 };
-
-function VolunteerPostingDivider({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn("-mx-5.5 h-1.5 bg-[#ECECEC]", className)}
-      aria-hidden="true"
-    />
-  );
-}
 
 export function VolunteerPostingDetail({
   postingId,
@@ -197,10 +187,8 @@ export function VolunteerPostingDetail({
 
       <div className="pt-1">
         <VolunteerPostingHero posting={posting} />
-        <VolunteerPostingDivider className="mt-5" />
         <VolunteerPostingInfoCard posting={posting} className="mt-5" />
         <VolunteerPostingConditionCard posting={posting} className="mt-4" />
-        <VolunteerPostingDivider className="mt-5" />
         <VolunteerPostingTeamSection
           postingId={posting.id}
           className="mt-5"
