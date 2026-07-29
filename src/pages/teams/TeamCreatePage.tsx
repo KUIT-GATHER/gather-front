@@ -499,7 +499,11 @@ export function TeamCreatePage() {
             </button>
           </div>
         ) : null}
-        <FormField label="카테고리 (최대 3개)" required error={errors.categories}>
+        <FormField
+          label="카테고리 (최대 3개)"
+          required
+          error={errors.categories}
+        >
           <div className="-mx-5.5 flex gap-2 overflow-x-auto px-5.5 pb-1">
             {orderedCategories.map((value) => (
               <button
