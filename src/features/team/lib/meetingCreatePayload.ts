@@ -51,7 +51,12 @@ export function buildMeetingCreateDateTimePayload({
     activityEndTime,
   );
 
-  if (!activityStartAt || !activityEndAt) {
+  if (
+    !activityStartAt ||
+    !activityEndAt ||
+    formattedDeadline > activityStartAt ||
+    activityStartAt >= activityEndAt
+  ) {
     return undefined;
   }
 

@@ -11,6 +11,7 @@ type SingleDateCalendarProps = {
   selected: Date;
   onSelect: (date: Date) => void;
   className?: string;
+  maxDate?: Date;
 };
 
 const calendarStyle = {
@@ -62,6 +63,7 @@ export function SingleDateCalendar({
   selected,
   onSelect,
   className,
+  maxDate,
 }: SingleDateCalendarProps) {
   const selectedTimestamp = selected.getTime();
   const [lastSelectedTimestamp, setLastSelectedTimestamp] =
@@ -123,7 +125,10 @@ export function SingleDateCalendar({
         month={visibleMonth}
         onMonthChange={setVisibleMonth}
         hideNavigation
-        disabled={{ before: startOfToday() }}
+        disabled={[
+          { before: startOfToday() },
+          ...(maxDate ? [{ after: maxDate }] : []),
+        ]}
         onSelect={(date) => {
           if (date) onSelect(date);
         }}
