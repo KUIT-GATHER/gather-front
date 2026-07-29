@@ -113,7 +113,10 @@ export function combineLocalDateAndTime(
   }
 
   const normalizedDate = date.trim();
-  const normalizedTime = time?.trim() || "00:00";
+  const rawTime = time?.trim() || "00:00";
+  const normalizedTime = /^\d{1,2}$/.test(rawTime)
+    ? `${pad(Number(rawTime))}:00`
+    : rawTime;
   const value = `${normalizedDate}T${normalizedTime}`;
 
   return parseLocalDateTimeInput(value)
