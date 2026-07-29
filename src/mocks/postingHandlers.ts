@@ -429,6 +429,8 @@ export const postingHandlers = [
           currentMemberCount,
           maxMember,
           status,
+          member: false,
+          host: false,
         }),
       );
 

@@ -125,7 +125,6 @@ export function getVolunteerPostingMeetings(
 ) {
   return fetchClient<VolunteerPostingMeetingPage>(
     buildPostingMeetingsEndpoint(postingId, params),
-    publicOptions,
   );
 }
 

@@ -45,7 +45,14 @@ export const volunteerPostingKeys = {
   meetings: (
     postingId: number,
     params: VolunteerPostingMeetingListParams = {},
-  ) => [...volunteerPostingKeys.detail(postingId), "meetings", params] as const,
+    isAuthenticated: boolean,
+  ) =>
+    [
+      ...volunteerPostingKeys.detail(postingId),
+      "meetings",
+      params,
+      isAuthenticated ? "authenticated" : "anonymous",
+    ] as const,
   participation: (postingId: number) =>
     [...volunteerPostingKeys.detail(postingId), "participation"] as const,
   recommendedKeywords: () =>
@@ -81,9 +88,14 @@ export const volunteerPostingQueries = {
   meetings: (
     postingId: number,
     params: VolunteerPostingMeetingListParams = {},
+    isAuthenticated: boolean,
   ) =>
     queryOptions({
-      queryKey: volunteerPostingKeys.meetings(postingId, params),
+      queryKey: volunteerPostingKeys.meetings(
+        postingId,
+        params,
+        isAuthenticated,
+      ),
       queryFn: () => getVolunteerPostingMeetings(postingId, params),
     }),
 

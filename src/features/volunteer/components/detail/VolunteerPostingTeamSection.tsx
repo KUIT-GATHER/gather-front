@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 
 import teamPlusIcon from "@/assets/volunteer/teamplus.svg";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useVolunteerPostingMeetingsQuery } from "@/features/volunteer/hooks/useVolunteerPostingMeetingsQuery";
 import { cn } from "@/shared/lib/cn";
 import Skeleton from "@/shared/ui/Skeleton";
@@ -19,11 +20,20 @@ export function VolunteerPostingTeamSection({
   onCreateTeam,
 }: VolunteerPostingTeamSectionProps) {
   const navigate = useNavigate();
-  const meetingsQuery = useVolunteerPostingMeetingsQuery(postingId, {
-    page: 0,
-    size: 10,
-    sort: ["createdAt,desc"],
-  });
+  const authInitialized = useAuthStore((state) => state.authInitialized);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const meetingsQuery = useVolunteerPostingMeetingsQuery(
+    postingId,
+    {
+      page: 0,
+      size: 10,
+      sort: ["createdAt,desc"],
+    },
+    {
+      enabled: authInitialized,
+      isAuthenticated,
+    },
+  );
   const meetings = meetingsQuery.data?.content ?? [];
 
   return (

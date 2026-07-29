@@ -1,4 +1,5 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
+import type { MeetingStatus } from "@/features/team/types/team.types";
 
 export type VolunteerPostingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 
@@ -82,7 +83,9 @@ export type VolunteerPostingMeeting = {
   category: PostingCategory;
   currentMemberCount: number;
   maxMember: number;
-  status: VolunteerPostingStatus;
+  status: MeetingStatus;
+  member: boolean;
+  host: boolean;
 };
 
 export type VolunteerPostingMeetingPage = {
