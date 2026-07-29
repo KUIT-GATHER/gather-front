@@ -27,7 +27,7 @@ export function TeamCard({
   regionName,
   viewerRole,
 }: TeamCardProps) {
-  const activityDate = formatMeetingActivityDate(team.activityStartAt);
+  const deadlineDate = formatMeetingActivityDate(team.deadline);
   const deadline = getMeetingDDay(team.deadline);
   const urgentDeadline =
     deadline === "D-day" || /^D-[1-7]$/.test(deadline ?? "") ? deadline : null;
@@ -57,7 +57,7 @@ export function TeamCard({
           <p className="mt-[3px] truncate text-sm leading-4 text-text-gray-100">
             {regionName ? `${regionName} \u00b7 ` : ""}
             {team.currentMemberCount}/{team.maxMember}명
-            {activityDate ? ` · ${activityDate}` : ""}
+            {deadlineDate ? ` · ${deadlineDate}` : ""}
           </p>
         </div>
       </button>
@@ -90,7 +90,7 @@ export function TeamCard({
             <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
               {regionName ? `${regionName} · ` : ""}
               {team.currentMemberCount}/{team.maxMember}명
-              {activityDate ? ` · ${activityDate}` : ""}
+              {deadlineDate ? ` · ${deadlineDate}` : ""}
             </p>
           </div>
         </button>
@@ -149,7 +149,7 @@ export function TeamCard({
         <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
           {regionName ? `${regionName} · ` : ""}
           {team.currentMemberCount}/{team.maxMember}명
-          {activityDate ? ` · ${activityDate}` : ""}
+          {deadlineDate ? ` · ${deadlineDate}` : ""}
           {urgentDeadline ? (
             <span
               className={cn(
