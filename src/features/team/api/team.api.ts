@@ -1,3 +1,4 @@
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
@@ -18,6 +19,26 @@ const publicOptions = {
   skipAuth: true,
   withCredentials: false,
 } as const;
+
+type MeetingCategoryResponse = {
+  category?: PostingCategory;
+  categories?: PostingCategory[];
+};
+
+type MeetingListItemResponse = Omit<MeetingListItem, "categories"> &
+  MeetingCategoryResponse;
+type MeetingDetailResponse = Omit<MeetingDetail, "categories"> &
+  MeetingCategoryResponse;
+
+export function normalizeMeetingCategories<T extends MeetingCategoryResponse>(
+  meeting: T,
+) {
+  return {
+    ...meeting,
+    categories:
+      meeting.categories ?? (meeting.category ? [meeting.category] : []),
+  };
+}
 
 function setQueryParam(
   searchParams: URLSearchParams,
@@ -95,8 +116,15 @@ function buildMeetingPostsEndpoint(
   return query ? `${endpoint}?${query}` : endpoint;
 }
 
-export function getMeetings(params?: MeetingListParams) {
-  return fetchClient<MeetingPage>(buildMeetingsEndpoint(params), publicOptions);
+export async function getMeetings(params?: MeetingListParams) {
+  const page = await fetchClient<
+    Omit<MeetingPage, "content"> & { content: MeetingListItemResponse[] }
+  >(buildMeetingsEndpoint(params), publicOptions);
+
+  return {
+    ...page,
+    content: page.content.map(normalizeMeetingCategories),
+  };
 }
 
 export function getMeetingRecommendedKeywords() {
@@ -106,19 +134,29 @@ export function getMeetingRecommendedKeywords() {
   );
 }
 
-export function getMyMeetings() {
-  return fetchClient<MyMeetingListItem[]>(`${MEETING_ENDPOINT}/my`);
+export async function getMyMeetings() {
+  const meetings = await fetchClient<
+    (Omit<MyMeetingListItem, "categories"> & MeetingCategoryResponse)[]
+  >(`${MEETING_ENDPOINT}/my`);
+
+  return meetings.map(normalizeMeetingCategories);
 }
 
-export function createMeeting(payload: MeetingCreateRequest) {
-  return fetchClient<MeetingListItem>(MEETING_ENDPOINT, {
+export async function createMeeting(payload: MeetingCreateRequest) {
+  const meeting = await fetchClient<MeetingListItemResponse>(MEETING_ENDPOINT, {
     method: "POST",
     body: JSON.stringify(payload),
   });
+
+  return normalizeMeetingCategories(meeting);
 }
 
-export function getMeeting(meetingId: number) {
-  return fetchClient<MeetingDetail>(`${MEETING_ENDPOINT}/${meetingId}`);
+export async function getMeeting(meetingId: number) {
+  const meeting = await fetchClient<MeetingDetailResponse>(
+    `${MEETING_ENDPOINT}/${meetingId}`,
+  );
+
+  return normalizeMeetingCategories(meeting);
 }
 
 export function getMeetingHome(meetingId: number) {
@@ -134,10 +172,13 @@ export function getMeetingPosts(
   );
 }
 
-export function joinMeeting(meetingId: number) {
-  return fetchClient<MeetingListItem>(`${MEETING_ENDPOINT}/${meetingId}/join`, {
-    method: "POST",
-  });
+export async function joinMeeting(meetingId: number) {
+  const meeting = await fetchClient<MeetingListItemResponse>(
+    `${MEETING_ENDPOINT}/${meetingId}/join`,
+    { method: "POST" },
+  );
+
+  return normalizeMeetingCategories(meeting);
 }
 
 export function addMeetingBookmark(meetingId: number) {
