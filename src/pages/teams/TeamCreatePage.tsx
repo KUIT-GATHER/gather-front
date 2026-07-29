@@ -101,8 +101,27 @@ export function TeamCreatePage() {
   const [isDeadlineSheetOpen, setIsDeadlineSheetOpen] = useState(false);
   const [draftDeadline, setDraftDeadline] = useState(() => new Date());
 
-  const postingDefaultDeadline = postingQuery.data?.noticeEndDate
-    ? combineLocalDateAndTime(postingQuery.data.noticeEndDate, "23:59")
+  const postingNoticeDeadline = postingQuery.data?.noticeEndDate
+    ? parseLocalDateTimeInput(`${postingQuery.data.noticeEndDate}T23:59`)
+    : undefined;
+  const postingActivityStartAt = combineLocalDateAndTime(
+    postingQuery.data?.actStartDate ?? null,
+    postingQuery.data?.actStartTime ?? null,
+  );
+  const postingActivityStart = postingActivityStartAt
+    ? parseLocalDateTimeInput(postingActivityStartAt.slice(0, 16))
+    : undefined;
+  const postingMaxDeadline =
+    postingNoticeDeadline && postingActivityStart
+      ? new Date(
+          Math.min(
+            postingNoticeDeadline.getTime(),
+            postingActivityStart.getTime(),
+          ),
+        )
+      : (postingNoticeDeadline ?? postingActivityStart);
+  const postingDefaultDeadline = postingMaxDeadline
+    ? formatLocalDateTimeForInput(postingMaxDeadline)
     : undefined;
   const resolvedRegionId =
     regionId ||
@@ -124,9 +143,7 @@ export function TeamCreatePage() {
     ],
     [resolvedCategories],
   );
-  const resolvedDeadline =
-    deadline ||
-    (postingDefaultDeadline ? postingDefaultDeadline.slice(0, 16) : "");
+  const resolvedDeadline = deadline || (postingDefaultDeadline ?? "");
   const regions = useMemo(() => regionsQuery.data ?? [], [regionsQuery.data]);
   const regionById = useMemo(
     () => new Map(regions.map((region) => [region.id, region])),
@@ -243,6 +260,18 @@ export function TeamCreatePage() {
     if (!validate() || resolvedCategories.length === 0) return;
 
     const deadlineDate = parseLocalDateTimeInput(resolvedDeadline);
+    if (
+      deadlineDate &&
+      postingActivityStart &&
+      deadlineDate > postingActivityStart
+    ) {
+      setErrors((current) => ({
+        ...current,
+        deadline: "모집 마감일은 활동 시작 시간 이전으로 선택해 주세요.",
+      }));
+      return;
+    }
+
     const dateTimePayload = deadlineDate
       ? buildMeetingCreateDateTimePayload({
           deadline: deadlineDate,
@@ -629,6 +658,15 @@ export function TeamCreatePage() {
               onClick={() => {
                 const nextDeadline = formatLocalDateTimeForInput(draftDeadline);
 
+                if (postingMaxDeadline && draftDeadline > postingMaxDeadline) {
+                  setErrors((current) => ({
+                    ...current,
+                    deadline:
+                      "모집 마감일은 활동 시작 시간 이전으로 선택해 주세요.",
+                  }));
+                  return;
+                }
+
                 if (!nextDeadline) {
                   setErrors((current) => ({
                     ...current,
@@ -657,6 +695,7 @@ export function TeamCreatePage() {
           <div className="min-h-[348px] rounded-2xl border border-button bg-white px-1 pb-2">
             <SingleDateCalendar
               selected={draftDeadline}
+              maxDate={isPostingBased ? postingMaxDeadline : undefined}
               onSelect={(date) => {
                 const next = new Date(date);
                 next.setHours(
