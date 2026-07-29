@@ -2,15 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ImagePlus, MapPin, RefreshCw, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
-import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import {
-  POSTING_CATEGORIES,
-  type PostingCategory,
-} from "@/features/category/types/postingCategory.types";
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
+import { MeetingCategoryTag } from "@/features/team/components/MeetingCategoryTag";
 import { SingleDateCalendar } from "@/features/team/components/SingleDateCalendar";
 import { TimeWheelPicker } from "@/features/team/components/TimeWheelPicker";
 import { useCreateMeetingMutation } from "@/features/team/hooks/useCreateMeetingMutation";
@@ -34,6 +31,14 @@ const DESCRIPTION_MAX_LENGTH = 200;
 const MAX_IMAGES = 3;
 const MAX_MEMBER = 100;
 const PARTICIPATION_CONDITION_MAX_LENGTH = 150;
+const MEETING_CATEGORY_ORDER: PostingCategory[] = [
+  "ENVIRONMENT",
+  "EDUCATION",
+  "WELFARE",
+  "CULTURE",
+  "COMMUNITY",
+  "OVERSEAS",
+];
 
 type ImagePreview = {
   file: File;
@@ -134,15 +139,12 @@ export function TeamCreatePage() {
       : isPostingBased && postingQuery.data?.category
         ? [postingQuery.data.category]
         : [];
-  const orderedCategories = useMemo(
-    () => [
-      ...resolvedCategories,
-      ...POSTING_CATEGORIES.filter(
-        (value) => !resolvedCategories.includes(value),
-      ),
-    ],
-    [resolvedCategories],
-  );
+  const orderedCategories = [
+    ...resolvedCategories,
+    ...MEETING_CATEGORY_ORDER.filter(
+      (category) => !resolvedCategories.includes(category),
+    ),
+  ];
   const resolvedDeadline = deadline || (postingDefaultDeadline ?? "");
   const regions = useMemo(() => regionsQuery.data ?? [], [regionsQuery.data]);
   const regionById = useMemo(
@@ -552,13 +554,9 @@ export function TeamCreatePage() {
                   clearError("categories");
                 }}
               >
-                <CategoryBadge
+                <MeetingCategoryTag
                   category={value}
-                  className={`h-11 px-4 text-sm font-semibold ${
-                    resolvedCategories.includes(value)
-                      ? "ring-2 ring-button/40"
-                      : "opacity-70"
-                  }`}
+                  selected={resolvedCategories.includes(value)}
                 />
               </button>
             ))}
