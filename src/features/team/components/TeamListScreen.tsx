@@ -285,21 +285,16 @@ function MeetingDiscoverList({
         </>
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => {
-          if (!isAuthenticated) {
-            navigate("/login", { state: { from: "/teams/new" } });
-            return;
-          }
-
-          navigate("/teams/new");
-        }}
-        className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-[calc(50%+27px)] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-      >
-        <img src={plusIcon} alt="" className="size-5" />
-        모임 만들기
-      </button>
+      {isAuthenticated ? (
+        <button
+          type="button"
+          onClick={() => navigate("/teams/new")}
+          className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-[calc(50%+27px)] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+        >
+          <img src={plusIcon} alt="" className="size-5" />
+          모임 만들기
+        </button>
+      ) : null}
 
       {isFilterOpen ? (
         <TeamFilterSheet

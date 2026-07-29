@@ -42,7 +42,7 @@ type ImagePreview = {
 
 type FormErrors = Partial<
   Record<
-    "name" | "description" | "region" | "category" | "deadline" | "activity",
+    "name" | "description" | "region" | "categories" | "deadline" | "activity",
     string
   >
 >;
@@ -79,6 +79,7 @@ export function TeamCreatePage() {
   const postingId = Number(volunteerId);
   const isPostingBased = Number.isInteger(postingId) && postingId > 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageSliderRef = useRef<HTMLDivElement>(null);
   const imageUrlsRef = useRef<string[]>([]);
   const regionsQuery = useRegionsQuery();
   const createMeetingMutation = useCreateMeetingMutation();
@@ -89,11 +90,12 @@ export function TeamCreatePage() {
   const [description, setDescription] = useState("");
   const [regionId, setRegionId] = useState("");
   const [maxMember, setMaxMember] = useState(isPostingBased ? "30" : "100");
-  const [category, setCategory] = useState<PostingCategory>();
+  const [categories, setCategories] = useState<PostingCategory[]>([]);
   const [deadline, setDeadline] = useState("");
   const [participationCondition, setParticipationCondition] = useState("");
   const [isTimeRecognized, setIsTimeRecognized] = useState(true);
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isRegionSheetOpen, setIsRegionSheetOpen] = useState(false);
   const [isDeadlineSheetOpen, setIsDeadlineSheetOpen] = useState(false);
@@ -107,16 +109,21 @@ export function TeamCreatePage() {
     (isPostingBased && postingQuery.data?.regionId
       ? String(postingQuery.data.regionId)
       : "");
-  const resolvedCategory =
-    category ?? (isPostingBased ? postingQuery.data?.category : undefined);
-  const orderedCategories = useMemo(() => {
-    if (!resolvedCategory) return POSTING_CATEGORIES;
-
-    return [
-      resolvedCategory,
-      ...POSTING_CATEGORIES.filter((value) => value !== resolvedCategory),
-    ];
-  }, [resolvedCategory]);
+  const resolvedCategories =
+    categories.length > 0
+      ? categories
+      : isPostingBased && postingQuery.data?.category
+        ? [postingQuery.data.category]
+        : [];
+  const orderedCategories = useMemo(
+    () => [
+      ...resolvedCategories,
+      ...POSTING_CATEGORIES.filter(
+        (value) => !resolvedCategories.includes(value),
+      ),
+    ],
+    [resolvedCategories],
+  );
   const resolvedDeadline =
     deadline ||
     (postingDefaultDeadline ? postingDefaultDeadline.slice(0, 16) : "");
@@ -172,6 +179,48 @@ export function TeamCreatePage() {
       }
       return current.filter((_, imageIndex) => imageIndex !== index);
     });
+    setActiveImageIndex((current) =>
+      current > index
+        ? current - 1
+        : Math.max(0, Math.min(current, images.length - 2)),
+    );
+  };
+
+  const handleImageSliderScroll = () => {
+    const slider = imageSliderRef.current;
+    const firstImage = slider?.children[0] as HTMLElement | undefined;
+    if (!slider || !firstImage) return;
+
+    const closestImageIndex = Array.from(slider.children).reduce(
+      (closestIndex, child, index) => {
+        const imagePosition =
+          (child as HTMLElement).offsetLeft - firstImage.offsetLeft;
+        const closestImagePosition =
+          (slider.children[closestIndex] as HTMLElement).offsetLeft -
+          firstImage.offsetLeft;
+
+        return Math.abs(imagePosition - slider.scrollLeft) <
+          Math.abs(closestImagePosition - slider.scrollLeft)
+          ? index
+          : closestIndex;
+      },
+      0,
+    );
+
+    setActiveImageIndex(closestImageIndex);
+  };
+
+  const scrollToImage = (index: number) => {
+    const slider = imageSliderRef.current;
+    const firstImage = slider?.children[0] as HTMLElement | undefined;
+    const image = slider?.children[index] as HTMLElement | undefined;
+    if (!slider || !firstImage || !image) return;
+
+    setActiveImageIndex(index);
+    slider.scrollTo({
+      left: image.offsetLeft - firstImage.offsetLeft,
+      behavior: "smooth",
+    });
   };
 
   const validate = () => {
@@ -180,7 +229,10 @@ export function TeamCreatePage() {
     if (!description.trim())
       nextErrors.description = "모임 소개를 입력해 주세요.";
     if (!resolvedRegionId) nextErrors.region = "활동 지역을 선택해 주세요.";
-    if (!resolvedCategory) nextErrors.category = "카테고리를 선택해 주세요.";
+    if (resolvedCategories.length === 0)
+      nextErrors.categories = "카테고리를 1개 이상 선택해 주세요.";
+    else if (resolvedCategories.length > 3)
+      nextErrors.categories = "카테고리는 최대 3개까지 선택할 수 있습니다.";
     if (!resolvedDeadline) nextErrors.deadline = "신청 마감일을 선택해 주세요.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -188,7 +240,7 @@ export function TeamCreatePage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!validate() || !resolvedCategory) return;
+    if (!validate() || resolvedCategories.length === 0) return;
 
     const deadlineDate = parseLocalDateTimeInput(resolvedDeadline);
     const dateTimePayload = deadlineDate
@@ -223,7 +275,7 @@ export function TeamCreatePage() {
           Math.max(2, Number.parseInt(maxMember, 10) || 2),
         ),
         regionId: Number(resolvedRegionId),
-        category: resolvedCategory,
+        categories: resolvedCategories,
         participationCondition: participationCondition.trim() || null,
         volunteerPostingId: isPostingBased ? postingId : null,
         ...dateTimePayload,
@@ -337,27 +389,59 @@ export function TeamCreatePage() {
             onChange={(event) => handleImageChange(event.target.files)}
           />
           {images.length > 0 ? (
-            <div className="mt-3 flex snap-x gap-3 overflow-x-auto pb-1">
-              {images.map((image, index) => (
-                <div
-                  key={`${image.file.name}-${image.file.lastModified}`}
-                  className="relative min-w-full snap-center overflow-hidden rounded-xl"
-                >
-                  <img
-                    src={image.url}
-                    alt={`첨부 사진 ${index + 1}`}
-                    className="h-41 w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    aria-label={`첨부 사진 ${index + 1} 삭제`}
-                    className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-icon/80 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                    onClick={() => removeImage(index)}
+            <div className="mt-5">
+              <div
+                ref={imageSliderRef}
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                aria-label="첨부 사진 미리보기"
+                onScroll={handleImageSliderScroll}
+              >
+                {images.map((image, index) => (
+                  <div
+                    key={image.url}
+                    className="relative min-w-full snap-start overflow-hidden rounded-2xl"
                   >
-                    <X aria-hidden="true" className="size-4" />
-                  </button>
-                </div>
-              ))}
+                    <img
+                      src={image.url}
+                      alt={`첨부 사진 ${index + 1}`}
+                      className="h-41 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`첨부 사진 ${index + 1} 삭제`}
+                      className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full bg-white/80 text-text-gray-400 shadow-sm backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-button/50"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X
+                        aria-hidden="true"
+                        className="size-6"
+                        strokeWidth={1.8}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div
+                className="mt-3 flex h-3 items-center justify-center gap-2"
+                aria-label={`${images.length}장 중 ${activeImageIndex + 1}번째 사진`}
+              >
+                {images.map((image, index) => (
+                  <button
+                    key={image.url}
+                    type="button"
+                    aria-label={`${index + 1}번째 사진 보기`}
+                    aria-current={
+                      index === activeImageIndex ? "true" : undefined
+                    }
+                    className={`size-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-button/50 ${
+                      index === activeImageIndex
+                        ? "bg-[#18bd77]"
+                        : "bg-[#d9d9d9]"
+                    }`}
+                    onClick={() => scrollToImage(index)}
+                  />
+                ))}
+              </div>
             </div>
           ) : null}
         </section>
@@ -415,24 +499,34 @@ export function TeamCreatePage() {
             </button>
           </div>
         ) : null}
-        <FormField label="카테고리" required error={errors.category}>
+        <FormField
+          label="카테고리 (최대 3개)"
+          required
+          error={errors.categories}
+        >
           <div className="-mx-5.5 flex gap-2 overflow-x-auto px-5.5 pb-1">
             {orderedCategories.map((value) => (
               <button
                 key={value}
                 type="button"
-                aria-pressed={resolvedCategory === value}
+                aria-pressed={resolvedCategories.includes(value)}
                 aria-label={`${POSTING_CATEGORY_LABEL[value]} 카테고리`}
                 className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                 onClick={() => {
-                  setCategory(value);
-                  clearError("category");
+                  setCategories((current) =>
+                    current.includes(value)
+                      ? current.filter((category) => category !== value)
+                      : current.length < 3
+                        ? [...current, value]
+                        : current,
+                  );
+                  clearError("categories");
                 }}
               >
                 <CategoryBadge
                   category={value}
                   className={`h-11 px-4 text-sm font-semibold ${
-                    resolvedCategory === value
+                    resolvedCategories.includes(value)
                       ? "ring-2 ring-button/40"
                       : "opacity-70"
                   }`}
@@ -560,7 +654,7 @@ export function TeamCreatePage() {
             </p>
             <CalendarDays aria-hidden="true" className="size-6 text-icon" />
           </div>
-          <div className="h-[348px] overflow-hidden rounded-2xl border border-button bg-white px-1">
+          <div className="min-h-[348px] rounded-2xl border border-button bg-white px-1 pb-2">
             <SingleDateCalendar
               selected={draftDeadline}
               onSelect={(date) => {

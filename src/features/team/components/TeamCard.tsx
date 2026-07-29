@@ -27,11 +27,11 @@ export function TeamCard({
   regionName,
   viewerRole,
 }: TeamCardProps) {
-  const activityDate = formatMeetingActivityDate(team.activityStartAt);
+  const deadlineDate = formatMeetingActivityDate(team.deadline);
   const deadline = getMeetingDDay(team.deadline);
   const urgentDeadline =
     deadline === "D-day" || /^D-[1-7]$/.test(deadline ?? "") ? deadline : null;
-  const imageSrc = getMeetingImage(team.category, team.meetingId);
+  const imageSrc = getMeetingImage(team.categories[0], team.meetingId);
 
   if (variant === "compact") {
     return (
@@ -57,7 +57,7 @@ export function TeamCard({
           <p className="mt-[3px] truncate text-sm leading-4 text-text-gray-100">
             {regionName ? `${regionName} \u00b7 ` : ""}
             {team.currentMemberCount}/{team.maxMember}명
-            {activityDate ? ` · ${activityDate}` : ""}
+            {deadlineDate ? ` · ${deadlineDate}` : ""}
           </p>
         </div>
       </button>
@@ -90,7 +90,7 @@ export function TeamCard({
             <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
               {regionName ? `${regionName} · ` : ""}
               {team.currentMemberCount}/{team.maxMember}명
-              {activityDate ? ` · ${activityDate}` : ""}
+              {deadlineDate ? ` · ${deadlineDate}` : ""}
             </p>
           </div>
         </button>
@@ -149,7 +149,7 @@ export function TeamCard({
         <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
           {regionName ? `${regionName} · ` : ""}
           {team.currentMemberCount}/{team.maxMember}명
-          {activityDate ? ` · ${activityDate}` : ""}
+          {deadlineDate ? ` · ${deadlineDate}` : ""}
           {urgentDeadline ? (
             <span
               className={cn(
@@ -168,7 +168,13 @@ export function TeamCard({
         </p>
 
         <div className="mt-2 flex flex-wrap gap-1">
-          <CategoryBadge category={team.category} className="text-sm" />
+          {team.categories.map((category) => (
+            <CategoryBadge
+              key={category}
+              category={category}
+              className="text-sm"
+            />
+          ))}
           {viewerRole ? (
             <span className="rounded-full border border-button bg-button/10 px-2 py-0.5 text-xs font-semibold text-button">
               {viewerRole === "HOST" ? "팀장" : "팀원"}
