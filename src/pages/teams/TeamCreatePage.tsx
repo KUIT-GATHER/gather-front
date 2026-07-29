@@ -42,7 +42,7 @@ type ImagePreview = {
 
 type FormErrors = Partial<
   Record<
-    "name" | "description" | "region" | "category" | "deadline" | "activity",
+    "name" | "description" | "region" | "categories" | "deadline" | "activity",
     string
   >
 >;
@@ -90,7 +90,7 @@ export function TeamCreatePage() {
   const [description, setDescription] = useState("");
   const [regionId, setRegionId] = useState("");
   const [maxMember, setMaxMember] = useState(isPostingBased ? "30" : "100");
-  const [category, setCategory] = useState<PostingCategory>();
+  const [categories, setCategories] = useState<PostingCategory[]>([]);
   const [deadline, setDeadline] = useState("");
   const [participationCondition, setParticipationCondition] = useState("");
   const [isTimeRecognized, setIsTimeRecognized] = useState(true);
@@ -109,16 +109,21 @@ export function TeamCreatePage() {
     (isPostingBased && postingQuery.data?.regionId
       ? String(postingQuery.data.regionId)
       : "");
-  const resolvedCategory =
-    category ?? (isPostingBased ? postingQuery.data?.category : undefined);
-  const orderedCategories = useMemo(() => {
-    if (!resolvedCategory) return POSTING_CATEGORIES;
-
-    return [
-      resolvedCategory,
-      ...POSTING_CATEGORIES.filter((value) => value !== resolvedCategory),
-    ];
-  }, [resolvedCategory]);
+  const resolvedCategories =
+    categories.length > 0
+      ? categories
+      : isPostingBased && postingQuery.data?.category
+        ? [postingQuery.data.category]
+        : [];
+  const orderedCategories = useMemo(
+    () => [
+      ...resolvedCategories,
+      ...POSTING_CATEGORIES.filter(
+        (value) => !resolvedCategories.includes(value),
+      ),
+    ],
+    [resolvedCategories],
+  );
   const resolvedDeadline =
     deadline ||
     (postingDefaultDeadline ? postingDefaultDeadline.slice(0, 16) : "");
@@ -224,7 +229,10 @@ export function TeamCreatePage() {
     if (!description.trim())
       nextErrors.description = "모임 소개를 입력해 주세요.";
     if (!resolvedRegionId) nextErrors.region = "활동 지역을 선택해 주세요.";
-    if (!resolvedCategory) nextErrors.category = "카테고리를 선택해 주세요.";
+    if (resolvedCategories.length === 0)
+      nextErrors.categories = "카테고리를 1개 이상 선택해 주세요.";
+    else if (resolvedCategories.length > 3)
+      nextErrors.categories = "카테고리는 최대 3개까지 선택할 수 있습니다.";
     if (!resolvedDeadline) nextErrors.deadline = "신청 마감일을 선택해 주세요.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -232,7 +240,7 @@ export function TeamCreatePage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!validate() || !resolvedCategory) return;
+    if (!validate() || resolvedCategories.length === 0) return;
 
     const deadlineDate = parseLocalDateTimeInput(resolvedDeadline);
     const dateTimePayload = deadlineDate
@@ -267,7 +275,7 @@ export function TeamCreatePage() {
           Math.max(2, Number.parseInt(maxMember, 10) || 2),
         ),
         regionId: Number(resolvedRegionId),
-        category: resolvedCategory,
+        categories: resolvedCategories,
         participationCondition: participationCondition.trim() || null,
         volunteerPostingId: isPostingBased ? postingId : null,
         ...dateTimePayload,
@@ -491,24 +499,30 @@ export function TeamCreatePage() {
             </button>
           </div>
         ) : null}
-        <FormField label="카테고리" required error={errors.category}>
+        <FormField label="카테고리 (최대 3개)" required error={errors.categories}>
           <div className="-mx-5.5 flex gap-2 overflow-x-auto px-5.5 pb-1">
             {orderedCategories.map((value) => (
               <button
                 key={value}
                 type="button"
-                aria-pressed={resolvedCategory === value}
+                aria-pressed={resolvedCategories.includes(value)}
                 aria-label={`${POSTING_CATEGORY_LABEL[value]} 카테고리`}
                 className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                 onClick={() => {
-                  setCategory(value);
-                  clearError("category");
+                  setCategories((current) =>
+                    current.includes(value)
+                      ? current.filter((category) => category !== value)
+                      : current.length < 3
+                        ? [...current, value]
+                        : current,
+                  );
+                  clearError("categories");
                 }}
               >
                 <CategoryBadge
                   category={value}
                   className={`h-11 px-4 text-sm font-semibold ${
-                    resolvedCategory === value
+                    resolvedCategories.includes(value)
                       ? "ring-2 ring-button/40"
                       : "opacity-70"
                   }`}

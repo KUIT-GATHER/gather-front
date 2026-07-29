@@ -51,7 +51,7 @@ type MockMeeting = {
   maxMember: number;
   regionId: number;
   regionName: string;
-  category: string;
+  categories: string[];
   status: string;
   deadline: string;
   activityStartAt: string | null;
@@ -227,6 +227,10 @@ function parseSorts(url: URL): MeetingSort[] | null {
 function getSortValue(team: MockMeeting, field: MeetingSortField) {
   if (field === "id" || field === "createdAt" || field === "updatedAt") {
     return team.meetingId;
+  }
+
+  if (field === "category") {
+    return team.categories[0] ?? "";
   }
 
   return team[field];
@@ -415,7 +419,7 @@ function toMeetingListItem(team: MockMeeting) {
     currentMemberCount: getMeetingMembers(team).length,
     maxMember: team.maxMember,
     regionId: team.regionId,
-    category: team.category,
+    categories: team.categories,
     status: team.status,
     deadline: team.deadline,
     activityStartAt: team.activityStartAt,
@@ -523,7 +527,7 @@ export const teamHandlers = [
     }
 
     if (category) {
-      items = items.filter((team) => team.category === category);
+      items = items.filter((team) => team.categories.includes(category));
     }
 
     if (status) {
@@ -596,6 +600,9 @@ export const teamHandlers = [
       !body.name ||
       typeof body.maxMember !== "number" ||
       typeof body.regionId !== "number" ||
+      !body.categories ||
+      body.categories.length < 1 ||
+      body.categories.length > 3 ||
       !isLocalDateTimeApiValue(body.deadline) ||
       !activitySchedule
     ) {
@@ -622,7 +629,7 @@ export const teamHandlers = [
       maxMember: body.maxMember,
       regionId: body.regionId,
       regionName: "",
-      category: body.category ?? "COMMUNITY",
+      categories: body.categories,
       status: "RECRUITING",
       deadline: body.deadline,
       activityStartAt: activitySchedule.activityStartAt,
