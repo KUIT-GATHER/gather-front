@@ -13,7 +13,7 @@ export type MeetingListItem = {
   currentMemberCount: number;
   maxMember: number;
   regionId: number;
-  category: PostingCategory;
+  categories: PostingCategory[];
   status: MeetingStatus;
   deadline: string;
   activityStartAt: string;
@@ -29,7 +29,7 @@ export type MeetingCreateRequest = {
   maxMember: number;
   deadline: string;
   memo?: string | null;
-  category?: PostingCategory;
+  categories: PostingCategory[];
   regionId: number;
   participationCondition?: string | null;
   volunteerPostingId?: number | null;

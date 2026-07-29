@@ -31,7 +31,7 @@ export function TeamCard({
   const deadline = getMeetingDDay(team.deadline);
   const urgentDeadline =
     deadline === "D-day" || /^D-[1-7]$/.test(deadline ?? "") ? deadline : null;
-  const imageSrc = getMeetingImage(team.category, team.meetingId);
+  const imageSrc = getMeetingImage(team.categories[0], team.meetingId);
 
   if (variant === "compact") {
     return (
@@ -168,7 +168,13 @@ export function TeamCard({
         </p>
 
         <div className="mt-2 flex flex-wrap gap-1">
-          <CategoryBadge category={team.category} className="text-sm" />
+          {team.categories.map((category) => (
+            <CategoryBadge
+              key={category}
+              category={category}
+              className="text-sm"
+            />
+          ))}
           {viewerRole ? (
             <span className="rounded-full border border-button bg-button/10 px-2 py-0.5 text-xs font-semibold text-button">
               {viewerRole === "HOST" ? "팀장" : "팀원"}
