@@ -7,6 +7,7 @@ import {
   getMeetingRecommendedKeywords,
   getMeetings,
   getMyMeetings,
+  getRecommendedMeetings,
 } from "@/features/team/api/team.api";
 import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 
@@ -21,6 +22,7 @@ export const teamKeys = {
   lists: () => [...teamKeys.all, "list"] as const,
   list: (params: MeetingListParams = {}) =>
     [...teamKeys.lists(), params] as const,
+  recommended: () => [...teamKeys.all, "recommended"] as const,
   infiniteList: (params: MeetingInfiniteParams = {}) =>
     [...teamKeys.lists(), "infinite", params] as const,
   my: () => [...teamKeys.all, "my"] as const,
@@ -61,6 +63,12 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.list(params),
       queryFn: () => getMeetings(params),
+    }),
+
+  recommended: () =>
+    queryOptions({
+      queryKey: teamKeys.recommended(),
+      queryFn: getRecommendedMeetings,
     }),
 
   infiniteList: (params: MeetingInfiniteParams = {}) =>

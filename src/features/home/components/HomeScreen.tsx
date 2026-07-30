@@ -7,11 +7,11 @@ import filterIcon from "@/assets/icons/Filter.svg";
 import gatherIcon from "@/assets/volunteer/Gather.svg";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
-import { useMeetingsQuery } from "@/features/team/hooks/useMeetingsQuery";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
 import { VolunteerPostingFilterSheet } from "@/features/volunteer/components/filter/VolunteerPostingFilterSheet";
-import { useVolunteerPostingsQuery } from "@/features/volunteer/hooks/useVolunteerPostingsQuery";
 import { updateVolunteerPostingSearchParams } from "@/features/volunteer/lib/volunteerPostingSearchParams";
+import { useRecommendedMeetingsQuery } from "@/features/team/hooks/useRecommendedMeetingsQuery";
+import { useRecommendedVolunteerPostingsQuery } from "@/features/volunteer/hooks/useRecommendedVolunteerPostingsQuery";
 import IconButton from "@/shared/ui/IconButton";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -65,18 +65,11 @@ export function HomeScreen() {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const regionsQuery = useRegionsQuery();
-  const postingsQuery = useVolunteerPostingsQuery({
-    page: 0,
-    size: 5,
-    sort: ["actStartDate,asc"],
-  });
-  const meetingsQuery = useMeetingsQuery({
-    page: 0,
-    size: 5,
-    sort: ["createdAt,desc"],
-  });
-  const postings = postingsQuery.data?.content ?? [];
-  const meetings = meetingsQuery.data?.content ?? [];
+  const postingsQuery = useRecommendedVolunteerPostingsQuery();
+  const meetingsQuery = useRecommendedMeetingsQuery();
+
+  const postings = postingsQuery.data ?? [];
+  const meetings = meetingsQuery.data ?? [];
   const regionNameById = useMemo(
     () =>
       new Map(
