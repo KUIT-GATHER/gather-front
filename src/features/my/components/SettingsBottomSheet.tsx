@@ -1,0 +1,80 @@
+import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router";
+
+import { useLogoutMutation } from "@/features/auth/hooks/useLogoutMutation";
+import BottomSheet from "@/shared/ui/BottomSheet";
+
+type SettingsBottomSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
+function SettingLink({ children }: { children: string }) {
+  return (
+    <button
+      type="button"
+      className="flex h-10 w-full items-center justify-between text-body-15"
+    >
+      {children}
+      <ChevronRight className="size-5 text-text-gray-400" />
+    </button>
+  );
+}
+
+export function SettingsBottomSheet({
+  open,
+  onOpenChange,
+}: SettingsBottomSheetProps) {
+  const navigate = useNavigate();
+  const logoutMutation = useLogoutMutation();
+
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSettled: () => navigate("/login", { replace: true }),
+    });
+  };
+
+  return (
+    <BottomSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="설정"
+      className="h-[535px] rounded-t-[40px]"
+      contentClassName="px-5.5 pt-1 pb-8"
+    >
+      <section>
+        <h2 className="text-title-18">안내</h2>
+        <div className="mt-3">
+          <SettingLink>서비스 이용약관</SettingLink>
+          <SettingLink>개인정보 처리방침</SettingLink>
+          <div className="flex h-10 items-center justify-between text-body-15">
+            <span>버전 정보</span>
+            <span className="text-text-gray-400">1.0.0</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-title-18">알림</h2>
+        <div className="mt-3">
+          <SettingLink>봉사활동</SettingLink>
+          <SettingLink>모임활동</SettingLink>
+        </div>
+      </section>
+
+      <div className="mt-8 flex flex-col items-start gap-2 text-body-14 text-text-gray-300">
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={logoutMutation.isPending}
+          className="py-1 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
+        </button>
+        <button type="button" className="py-1">
+          회원탈퇴
+        </button>
+      </div>
+    </BottomSheet>
+  );
+}

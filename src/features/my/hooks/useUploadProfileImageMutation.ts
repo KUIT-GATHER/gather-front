@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { myProfileKeys } from "../api/myProfile.queries";
+import { myPageKeys } from "../api/myPage.queries";
 import { uploadProfileImage } from "../lib/profileImageUpload";
 
 export function useUploadProfileImageMutation() {
@@ -12,6 +13,7 @@ export function useUploadProfileImageMutation() {
     retry: false,
     onSuccess: (image) => {
       queryClient.setQueryData(myProfileKeys.image(), image);
+      void queryClient.invalidateQueries({ queryKey: myPageKeys.home() });
     },
   });
 }

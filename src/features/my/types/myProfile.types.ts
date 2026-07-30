@@ -1,6 +1,14 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import type { Region } from "@/features/region/types/region.types";
 
+export type MyPageHome = {
+  nickname: string;
+  profileImageUrl: string | null;
+  birthDate: string;
+  activityRegion: Region;
+  hasBookmark: boolean;
+};
+
 export type MyProfile = {
   id: number;
   name: string;

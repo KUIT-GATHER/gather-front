@@ -1,0 +1,104 @@
+import { useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router";
+
+import { ActivityCalendarSection } from "@/features/my/components/ActivityCalendarSection";
+
+import bookmarkIcon from "@/features/my/assets/bookmark.svg";
+import profileImage from "@/features/my/assets/profile.png";
+import profileEditIcon from "@/features/my/assets/profileedit.svg";
+import settingIcon from "@/features/my/assets/setting.svg";
+import { useMyPageHomeQuery } from "@/features/my/hooks/useMyPageHomeQuery";
+
+import { SettingsBottomSheet } from "@/features/my/components/SettingsBottomSheet";
+
+import createCompleteIcon from "@/shared/assets/puzzle/create-complete.svg";
+
+function PuzzleMark() {
+  return (
+    <img
+      src={createCompleteIcon}
+      alt=""
+      aria-hidden="true"
+      className="h-12 w-12 shrink-0 -rotate-[-15.95deg] object-contain"
+    />
+  );
+}
+export function MyPageScreen() {
+  const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const homeQuery = useMyPageHomeQuery();
+  const home = homeQuery.data;
+  const displayName = home?.nickname ?? "김민우";
+  const displayBirthDate =
+    home?.birthDate.split("-").join(". ") ?? "2002. 07. 20";
+
+  return (
+    <div className="mx-auto min-h-[calc(100dvh-5rem)] max-w-app bg-bg">
+      <header className="flex h-[70px] items-center justify-between px-5.5">
+        <h1 className="text-title-20">마이페이지</h1>
+        <div className="flex items-center gap-5">
+          <button
+            type="button"
+            aria-label={
+              home?.hasBookmark ? "북마크 보기" : "저장된 북마크 없음"
+            }
+            disabled={!home?.hasBookmark}
+            className="p-0.5 disabled:opacity-40"
+          >
+            <img src={bookmarkIcon} alt="" className="h-[18px] w-3.5" />
+          </button>
+          <button
+            type="button"
+            aria-label="설정"
+            className="p-0.5"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <img src={settingIcon} alt="" className="size-6" />
+          </button>
+        </div>
+      </header>
+
+      <main className="px-5.5 pb-6">
+        <section
+          className="mt-3 flex items-center gap-5"
+          aria-label="내 프로필"
+        >
+          <img
+            src={home?.profileImageUrl || profileImage}
+            alt={`${displayName} 프로필`}
+            className="size-[82px] rounded-full object-cover"
+          />
+          <div>
+            <button
+              type="button"
+              className="flex items-center gap-2"
+              onClick={() => navigate("/my/profile/edit")}
+            >
+              <span className="text-title-20">{displayName}</span>
+              <img src={profileEditIcon} alt="" className="size-[29px]" />
+            </button>
+            <p className="mt-1 text-body-14 text-text-gray-400">
+              {home?.activityRegion.name ?? "강남구"}{" "}
+              <span className="mx-1">·</span> {displayBirthDate}
+            </p>
+          </div>
+        </section>
+
+        <button
+          type="button"
+          className="mt-7 flex h-[68px] w-full items-center rounded-xl border border-stroke bg-white px-5 text-left"
+        >
+          <PuzzleMark />
+          <span className="ml-3 flex-1 text-body-15-semibold">
+            지금까지 12번 함께했어요
+          </span>
+          <ChevronRight className="size-6 text-text-gray-400" />
+        </button>
+
+        <ActivityCalendarSection />
+      </main>
+      <SettingsBottomSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </div>
+  );
+}

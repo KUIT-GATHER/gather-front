@@ -39,13 +39,13 @@ function getProfile(userId: number) {
 
   const profile: MockProfile = {
     id: userId,
-    name: "김민우",
-    nickname: userId === 1 ? "Gather_min" : `Gather_${userId}`,
-    introduction: "함께 봉사하고 싶습니다.",
-    birthDate: "2002-06-30",
+    name: "동진",
+    nickname: userId === 1 ? "가더" : `Gather_${userId}`,
+    introduction: "함께 봉사하는 걸 좋아해요.",
+    birthDate: "2000-01-01",
     gender: "MALE",
     activityRegionId: 41,
-    interestCategories: ["ENVIRONMENT", "EDUCATION"],
+    interestCategories: ["ENVIRONMENT", "COMMUNITY"],
   };
   profiles.set(userId, profile);
   return profile;
@@ -78,6 +78,76 @@ function getPendingUploadCount(userId: number) {
 }
 
 export const myProfileHandlers = [
+  http.get("*/api/v1/mypage/home", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) return createUnauthorizedResponse();
+
+    const profile = getProfile(userId);
+    return HttpResponse.json({
+      success: true,
+      data: {
+        nickname: profile.nickname,
+        profileImageUrl: profileImageUrls.get(userId) ?? null,
+        birthDate: profile.birthDate,
+        activityRegion: regionById.get(profile.activityRegionId),
+        hasBookmark: userId === 1,
+      },
+      error: null,
+    });
+  }),
+  http.get("*/api/v1/mypage/activities", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) return createUnauthorizedResponse();
+
+    const yearMonth = new URL(request.url).searchParams.get("yearMonth");
+    if (!yearMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(yearMonth)) {
+      return errorResponse(
+        "VALIDATION_ERROR",
+        "요청 값이 올바르지 않습니다.",
+        400,
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          participationId: 1,
+          postingId: 1,
+          title: "한강 쓰레기 줍기",
+          actStartDate: "2026-07-20",
+          actEndDate: "2026-07-20",
+          actStartTime: "11:00",
+          actEndTime: "12:00",
+          actPlace: "광진구",
+          status: "APPLIED",
+        },
+        {
+          participationId: 2,
+          postingId: 2,
+          title: "남양주 유기견 봉사",
+          actStartDate: "2026-07-20",
+          actEndDate: "2026-07-20",
+          actStartTime: "16:00",
+          actEndTime: "19:00",
+          actPlace: "마포구",
+          status: "APPLIED",
+        },
+        {
+          participationId: 3,
+          postingId: 3,
+          title: "공원 환경정화 봉사",
+          actStartDate: "2026-07-25",
+          actEndDate: "2026-07-25",
+          actStartTime: "09:00",
+          actEndTime: "12:00",
+          actPlace: "서울숲공원",
+          status: "APPLIED",
+        },
+      ],
+      error: null,
+    });
+  }),
   http.get("*/api/v1/users/me", ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
