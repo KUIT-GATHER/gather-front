@@ -32,6 +32,7 @@ import { TeamDetailPostsPage } from "@/pages/teams/TeamDetailPostsPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
+import { ProfileEditPage } from "@/pages/my/ProfileEditPage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
@@ -129,6 +130,10 @@ export const router = createBrowserRouter([
               {
                 path: "/notifications",
                 element: <NotificationPage />,
+              },
+              {
+                path: "/my/profile/edit",
+                element: <ProfileEditPage />,
               },
             ],
           },
