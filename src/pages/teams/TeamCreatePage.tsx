@@ -178,7 +178,10 @@ export function TeamCreatePage() {
     ? regionById.get(selectedRegion.parentId)
     : undefined;
   const isFormLocked = createPhase !== "editing";
-  const areImageControlsDisabled = isFormLocked;
+  const areImageControlsDisabled =
+    createPhase === "creating" ||
+    createPhase === "uploading" ||
+    createPhase === "applying";
 
   useEffect(
     () => () => {
@@ -767,7 +770,9 @@ export function TeamCreatePage() {
               <Button
                 type="button"
                 fullWidth
-                disabled={uploadMeetingImagesMutation.isPending}
+                disabled={
+                  uploadMeetingImagesMutation.isPending || images.length === 0
+                }
                 onClick={() => void retryImageUpload()}
               >
                 사진 업로드 다시 시도
