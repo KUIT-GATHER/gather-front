@@ -129,7 +129,7 @@ export function TeamCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-xl border border-stroke bg-white px-3 py-4 text-left focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
+      className="flex w-full items-center gap-4 rounded-xl border border-stroke bg-white px-3 py-4 text-left transition-colors duration-200 hover:border-point-green hover:bg-[#f0f6f0] active:border-point-green active:bg-[#f0f6f0] focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
     >
       <img
         src={imageSrc}
