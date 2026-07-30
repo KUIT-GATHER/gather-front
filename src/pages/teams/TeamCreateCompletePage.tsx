@@ -1,7 +1,7 @@
 import { Navigate, useNavigate, useSearchParams } from "react-router";
 
 import closeIcon from "@/assets/icons/X.svg";
-import createCompleteIcon from "@/assets/team/create-complete.svg";
+import createCompleteIcon from "@/shared/assets/puzzle/create-complete.svg";
 import Button from "@/shared/ui/Button";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
