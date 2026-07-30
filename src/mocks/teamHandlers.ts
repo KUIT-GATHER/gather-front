@@ -12,6 +12,15 @@ import type {
   MeetingMember,
   MeetingMemberRole,
 } from "@/features/team/types/team.types";
+import {
+  MAX_MEETING_IMAGE_COUNT,
+  MAX_MEETING_IMAGE_SIZE_BYTES,
+  isMeetingImageMimeType,
+} from "@/features/team/lib/meetingImageValidation";
+import type {
+  MeetingImagePresignedUrlRequest,
+  MeetingImageUpdateRequest,
+} from "@/features/team/types/meetingImage.types";
 
 const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = new Set([
@@ -73,6 +82,25 @@ const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
   ],
 ]);
 const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>();
+const pendingMeetingImageUploads = new Map<
+  string,
+  {
+    meetingId: number;
+    ownerId: number;
+    objectKey: string;
+    publicUrl: string;
+    contentType: string;
+    fileSize: number;
+    uploaded: boolean;
+    applied: boolean;
+  }
+>();
+const meetingImageUrlsByMeetingId = new Map<number, string[]>();
+const uploadedMockObjects = new Map<
+  string,
+  { meetingId: number; publicUrl: string; uploadId: string }
+>();
+let nextMeetingImageUploadId = 1;
 
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   1: [
@@ -430,6 +458,20 @@ function findMeeting(meetingId: number) {
   return getMockMeetings().find((team) => team.meetingId === meetingId);
 }
 
+function createMeetingImageForbiddenResponse() {
+  return createMeetingErrorResponse(
+    "MEETING_IMAGE_FORBIDDEN",
+    "모임장만 사진을 등록할 수 있습니다.",
+    403,
+  );
+}
+
+function getPendingUploadCount(meetingId: number) {
+  return [...pendingMeetingImageUploads.values()].filter(
+    (upload) => upload.meetingId === meetingId && !upload.applied,
+  ).length;
+}
+
 export const teamHandlers = [
   http.get("*/api/v1/meetings/my", ({ request }) => {
     const userId = getMockUserId(request);
@@ -646,6 +688,221 @@ export const teamHandlers = [
     return HttpResponse.json({
       success: true,
       data: toMeetingListItem(meeting),
+      error: null,
+    });
+  }),
+
+  http.post(
+    "*/api/v1/meetings/:meetingId/images/presigned-url",
+    async ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const meeting = findMeeting(meetingId);
+
+      if (!meeting) {
+        return createMeetingNotFoundResponse();
+      }
+
+      if (meeting.hostId !== userId) {
+        return createMeetingImageForbiddenResponse();
+      }
+
+      const body =
+        (await request.json()) as Partial<MeetingImagePresignedUrlRequest>;
+      const contentType = body.contentType;
+      const fileSize = body.fileSize;
+
+      if (!contentType || !isMeetingImageMimeType(contentType)) {
+        return createMeetingErrorResponse(
+          "UNSUPPORTED_MEETING_IMAGE_TYPE",
+          "지원하지 않는 이미지 형식입니다.",
+          400,
+        );
+      }
+
+      if (
+        typeof fileSize !== "number" ||
+        fileSize < 0 ||
+        fileSize > MAX_MEETING_IMAGE_SIZE_BYTES
+      ) {
+        return createMeetingErrorResponse(
+          "MEETING_IMAGE_SIZE_EXCEEDED",
+          "이미지 크기가 제한을 초과했습니다.",
+          400,
+        );
+      }
+
+      if (getPendingUploadCount(meetingId) >= MAX_MEETING_IMAGE_COUNT) {
+        return createMeetingErrorResponse(
+          "MEETING_IMAGE_UPLOAD_LIMIT_EXCEEDED",
+          "대기 중인 이미지 업로드 요청이 너무 많습니다.",
+          429,
+        );
+      }
+
+      const uploadId = String(nextMeetingImageUploadId++);
+      const extension = contentType.split("/")[1];
+      const objectKey = `meetings/${meetingId}/mock-${uploadId}.${extension}`;
+      const publicUrl = `https://mock-s3.gather.local/${objectKey}`;
+
+      pendingMeetingImageUploads.set(uploadId, {
+        meetingId,
+        ownerId: userId,
+        objectKey,
+        publicUrl,
+        contentType,
+        fileSize,
+        uploaded: false,
+        applied: false,
+      });
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          uploadUrl: `http://localhost:5173/__mock-s3/meeting-images/${uploadId}`,
+          objectKey,
+          publicUrl,
+          expiresInSeconds: 300,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.put(
+    "*/__mock-s3/meeting-images/:uploadId",
+    async ({ params, request }) => {
+      const upload = pendingMeetingImageUploads.get(String(params.uploadId));
+
+      if (!upload) {
+        return new HttpResponse(null, { status: 404 });
+      }
+
+      if (upload.uploaded) {
+        return new HttpResponse(null, { status: 412 });
+      }
+
+      if (
+        request.headers.get("Content-Type") !== upload.contentType ||
+        request.headers.get("If-None-Match") !== "*"
+      ) {
+        return new HttpResponse(null, { status: 400 });
+      }
+
+      const fileSize = (await request.arrayBuffer()).byteLength;
+
+      if (fileSize !== upload.fileSize) {
+        return new HttpResponse(null, { status: 400 });
+      }
+
+      upload.uploaded = true;
+      uploadedMockObjects.set(upload.objectKey, {
+        meetingId: upload.meetingId,
+        publicUrl: upload.publicUrl,
+        uploadId: String(params.uploadId),
+      });
+
+      return new HttpResponse(null, { status: 200 });
+    },
+  ),
+
+  http.patch(
+    "*/api/v1/meetings/:meetingId/images",
+    async ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const meeting = findMeeting(meetingId);
+
+      if (!meeting) {
+        return createMeetingNotFoundResponse();
+      }
+
+      if (meeting.hostId !== userId) {
+        return createMeetingImageForbiddenResponse();
+      }
+
+      const body = (await request.json()) as Partial<MeetingImageUpdateRequest>;
+      const objectKeys = body.objectKeys;
+
+      if (
+        !Array.isArray(objectKeys) ||
+        objectKeys.length > MAX_MEETING_IMAGE_COUNT
+      ) {
+        return createMeetingErrorResponse(
+          "MEETING_IMAGE_COUNT_EXCEEDED",
+          "모임 사진은 최대 3장까지 등록할 수 있습니다.",
+          400,
+        );
+      }
+
+      if (new Set(objectKeys).size !== objectKeys.length) {
+        return createMeetingErrorResponse(
+          "MEETING_IMAGE_CONFLICT",
+          "동일한 사진을 중복 등록할 수 없습니다.",
+          409,
+        );
+      }
+
+      const uploadedObjects = objectKeys.map((objectKey) =>
+        uploadedMockObjects.get(objectKey),
+      );
+
+      if (
+        uploadedObjects.some(
+          (uploadedObject) =>
+            !uploadedObject || uploadedObject.meetingId !== meetingId,
+        )
+      ) {
+        return createMeetingErrorResponse(
+          "MEETING_IMAGE_OBJECT_NOT_FOUND",
+          "업로드된 이미지를 찾을 수 없습니다.",
+          404,
+        );
+      }
+
+      objectKeys.forEach((objectKey) => {
+        const upload = [...pendingMeetingImageUploads.values()].find(
+          (pendingUpload) => pendingUpload.objectKey === objectKey,
+        );
+
+        if (upload) {
+          upload.applied = true;
+        }
+      });
+
+      const imageUrls = uploadedObjects.map(
+        (uploadedObject) => uploadedObject!.publicUrl,
+      );
+      meetingImageUrlsByMeetingId.set(meetingId, imageUrls);
+
+      return HttpResponse.json({
+        success: true,
+        data: { imageUrls },
+        error: null,
+      });
+    },
+  ),
+
+  http.get("*/api/v1/meetings/:meetingId/images", ({ params }) => {
+    const meetingId = Number(params.meetingId);
+
+    if (!findMeeting(meetingId)) {
+      return createMeetingNotFoundResponse();
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: { imageUrls: meetingImageUrlsByMeetingId.get(meetingId) ?? [] },
       error: null,
     });
   }),
