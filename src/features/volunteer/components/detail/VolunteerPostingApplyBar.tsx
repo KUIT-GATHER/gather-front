@@ -1,35 +1,83 @@
+import type { VolunteerPostingParticipationAction } from "@/features/volunteer/types/volunteer.types";
 import Button from "@/shared/ui/Button";
 
 type VolunteerPostingApplyBarProps = {
-  applied?: boolean;
-  disabled?: boolean;
-  isPending?: boolean;
-  onApply?: () => void;
+  participationAction: VolunteerPostingParticipationAction;
+  disabled: boolean;
+  isApplyPending: boolean;
+  isCancelPending: boolean;
+  errorMessage?: string;
+  onApply: () => void;
+  onCancel: () => void;
 };
 
 export function VolunteerPostingApplyBar({
-  applied = false,
-  disabled = false,
-  isPending = false,
+  participationAction,
+  disabled,
+  isApplyPending,
+  isCancelPending,
+  errorMessage,
   onApply,
+  onCancel,
 }: VolunteerPostingApplyBarProps) {
-  const isButtonDisabled = applied || disabled || isPending;
+  const isPending = isApplyPending || isCancelPending;
+  const canApply = participationAction === "APPLY";
+  const canCancel = participationAction === "CANCEL";
+  const canClick = canApply || canCancel;
+  const isButtonDisabled = isPending || !canClick || (canApply && disabled);
+  const isNeutralButton = canCancel || participationAction === "NONE";
+  const buttonVariant =
+    participationAction === "COMPLETE"
+      ? "dark"
+      : isNeutralButton
+        ? "neutral"
+        : "primary";
+  const buttonClassName =
+    participationAction === "COMPLETE"
+      ? "h-12 text-base font-normal disabled:bg-icon disabled:text-text2"
+      : isNeutralButton
+        ? "h-12"
+        : "h-12 text-base font-normal";
+
+  const buttonLabel = (() => {
+    if (isApplyPending) {
+      return "신청 중";
+    }
+
+    if (isCancelPending) {
+      return "신청 취소 중";
+    }
+
+    switch (participationAction) {
+      case "APPLY":
+        return disabled ? "신청 마감된 공고예요" : "신청하기";
+      case "CANCEL":
+        return "신청 취소하기";
+      case "COMPLETE":
+        return "봉사 완료";
+      default:
+        return "완료된 봉사입니다";
+    }
+  })();
 
   return (
     <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-app -translate-x-1/2 bg-bg px-5.5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+      {errorMessage ? (
+        <p
+          role="alert"
+          className="mb-2 text-center text-body-14 text-point-red"
+        >
+          {errorMessage}
+        </p>
+      ) : null}
       <Button
         fullWidth
+        variant={buttonVariant}
         disabled={isButtonDisabled}
-        onClick={onApply}
-        className="h-12 text-base font-normal"
+        onClick={canCancel ? onCancel : onApply}
+        className={buttonClassName}
       >
-        {isPending
-          ? "신청 중"
-          : applied
-            ? "이미 신청한 봉사입니다"
-            : disabled
-              ? "신청 경로 준비 중"
-              : "신청하기"}
+        {buttonLabel}
       </Button>
     </div>
   );

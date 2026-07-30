@@ -50,7 +50,8 @@ export type VolunteerPosting = {
   createdAt: string | null;
   updatedAt: string | null;
   bookmarked: boolean;
-  applied: boolean;
+  participationStatus: VolunteerPostingParticipationStatus | null;
+  participationAction: VolunteerPostingParticipationAction;
 };
 
 export type VolunteerPostingListItem = {
@@ -112,6 +113,12 @@ export type VolunteerPostingParticipationStatus =
   | "CONFIRMED"
   | "COMPLETED"
   | "REVIEWED";
+
+export type VolunteerPostingParticipationAction =
+  | "APPLY"
+  | "CANCEL"
+  | "COMPLETE"
+  | "NONE";
 
 export type VolunteerPostingParticipationResponse = {
   participationId: number;

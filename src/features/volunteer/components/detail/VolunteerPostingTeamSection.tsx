@@ -10,12 +10,14 @@ import { VolunteerPostingTeamCard } from "./VolunteerPostingTeamCard";
 
 type VolunteerPostingTeamSectionProps = {
   postingId: number;
+  showCreateTeamButton: boolean;
   className?: string;
   onCreateTeam: () => void;
 };
 
 export function VolunteerPostingTeamSection({
   postingId,
+  showCreateTeamButton,
   className,
   onCreateTeam,
 }: VolunteerPostingTeamSectionProps) {
@@ -77,19 +79,21 @@ export function VolunteerPostingTeamSection({
         </ul>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onCreateTeam}
-        className={cn(
-          "mt-6 flex h-12.5 w-full items-center justify-center gap-3 rounded-xl",
-          "border border-dashed border-point-green bg-[#F8FBF8] text-[16px] leading-[19.5px] font-semibold text-text-green-600",
-          "transition hover:bg-point-green/10",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
-        )}
-      >
-        <img src={teamPlusIcon} alt="" className="h-3.5 w-3.5" />
-        <span>이 봉사로 팀 만들기</span>
-      </button>
+      {showCreateTeamButton ? (
+        <button
+          type="button"
+          onClick={onCreateTeam}
+          className={cn(
+            "mt-6 flex h-12.5 w-full items-center justify-center gap-3 rounded-xl",
+            "border border-dashed border-point-green bg-[#F8FBF8] text-[16px] leading-[19.5px] font-semibold text-text-green-600",
+            "transition hover:bg-point-green/10",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+          )}
+        >
+          <img src={teamPlusIcon} alt="" className="h-3.5 w-3.5" />
+          <span>이 봉사로 팀 만들기</span>
+        </button>
+      ) : null}
     </section>
   );
 }

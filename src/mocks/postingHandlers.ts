@@ -63,6 +63,10 @@ const mockPostings = [...postings.data, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
 const participatedPostingIds = new Map<number, number>();
 
+function getMockPostingParticipationAction(postingId: number) {
+  return participatedPostingIds.has(postingId) ? "CANCEL" : "APPLY";
+}
+
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
 
@@ -418,14 +422,14 @@ export const postingHandlers = [
         ({
           meetingId,
           name,
-          category,
+          categories,
           currentMemberCount,
           maxMember,
           status,
         }) => ({
           meetingId,
           name,
-          category,
+          category: categories[0],
           currentMemberCount,
           maxMember,
           status,
@@ -470,7 +474,10 @@ export const postingHandlers = [
       data: {
         ...posting,
         bookmarked: bookmarkedPostingIds.has(postingId),
-        applied: participatedPostingIds.has(postingId),
+        participationStatus: participatedPostingIds.has(postingId)
+          ? "APPLIED"
+          : null,
+        participationAction: getMockPostingParticipationAction(postingId),
       },
       error: null,
     });
@@ -522,6 +529,20 @@ export const postingHandlers = [
       );
     }
 
+    if (posting.status !== "RECRUITING") {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "POSTING_CLOSED",
+            message: "마감된 봉사공고입니다.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
     const participationId = participatedPostingIds.size + 1;
     participatedPostingIds.set(postingId, participationId);
 
@@ -532,6 +553,32 @@ export const postingHandlers = [
         status: "APPLIED",
         applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
       },
+      error: null,
+    });
+  }),
+
+  http.delete("*/api/v1/postings/:postingId/participations", ({ params }) => {
+    const postingId = Number(params.postingId);
+
+    if (!participatedPostingIds.has(postingId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "PARTICIPATION_NOT_FOUND",
+            message: "신청 내역을 찾을 수 없습니다.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    participatedPostingIds.delete(postingId);
+
+    return HttpResponse.json({
+      success: true,
+      data: null,
       error: null,
     });
   }),

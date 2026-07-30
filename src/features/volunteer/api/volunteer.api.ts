@@ -161,3 +161,9 @@ export function applyVolunteerPostingParticipation(postingId: number) {
     },
   );
 }
+
+export function cancelVolunteerPostingParticipation(postingId: number) {
+  return fetchClient<null>(`${POSTING_ENDPOINT}/${postingId}/participations`, {
+    method: "DELETE",
+  });
+}
