@@ -14,7 +14,16 @@ import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
 import { SingleDateCalendar } from "@/features/team/components/SingleDateCalendar";
 import { TimeWheelPicker } from "@/features/team/components/TimeWheelPicker";
 import { useCreateMeetingMutation } from "@/features/team/hooks/useCreateMeetingMutation";
+import { useUploadMeetingImagesMutation } from "@/features/team/hooks/useUploadMeetingImagesMutation";
+import { ensureMeetingCreated } from "@/features/team/lib/meetingCreateWorkflow";
 import { buildMeetingCreateDateTimePayload } from "@/features/team/lib/meetingCreatePayload";
+import { getMeetingImageUploadErrorMessage } from "@/features/team/lib/meetingImageUpload";
+import {
+  getMeetingImageSelectionErrorMessage,
+  MAX_MEETING_IMAGE_COUNT,
+  validateMeetingImageSelection,
+} from "@/features/team/lib/meetingImageValidation";
+import type { LocalMeetingImage } from "@/features/team/types/meetingImage.types";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
 import {
   combineLocalDateAndTime,
@@ -31,14 +40,15 @@ import Textarea from "@/shared/ui/Textarea";
 
 const NAME_MAX_LENGTH = 15;
 const DESCRIPTION_MAX_LENGTH = 200;
-const MAX_IMAGES = 3;
 const MAX_MEMBER = 100;
 const PARTICIPATION_CONDITION_MAX_LENGTH = 150;
 
-type ImagePreview = {
-  file: File;
-  url: string;
-};
+type MeetingCreatePhase =
+  | "editing"
+  | "creating"
+  | "uploading"
+  | "applying"
+  | "uploadFailed";
 
 type FormErrors = Partial<
   Record<
@@ -80,9 +90,11 @@ export function TeamCreatePage() {
   const isPostingBased = Number.isInteger(postingId) && postingId > 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageSliderRef = useRef<HTMLDivElement>(null);
-  const imageUrlsRef = useRef<string[]>([]);
+  const imageUrlsRef = useRef(new Set<string>());
+  const workflowInFlightRef = useRef(false);
   const regionsQuery = useRegionsQuery();
   const createMeetingMutation = useCreateMeetingMutation();
+  const uploadMeetingImagesMutation = useUploadMeetingImagesMutation();
   const postingQuery = useVolunteerPostingDetail(
     isPostingBased ? postingId : undefined,
   );
@@ -94,8 +106,17 @@ export function TeamCreatePage() {
   const [deadline, setDeadline] = useState("");
   const [participationCondition, setParticipationCondition] = useState("");
   const [isTimeRecognized, setIsTimeRecognized] = useState(true);
-  const [images, setImages] = useState<ImagePreview[]>([]);
+  const [images, setImages] = useState<LocalMeetingImage[]>([]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [createdMeetingId, setCreatedMeetingId] = useState<number | null>(null);
+  const [createPhase, setCreatePhase] = useState<MeetingCreatePhase>("editing");
+  const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(
+    null,
+  );
+  const [imageSelectionError, setImageSelectionError] = useState<string | null>(
+    null,
+  );
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isRegionSheetOpen, setIsRegionSheetOpen] = useState(false);
   const [isDeadlineSheetOpen, setIsDeadlineSheetOpen] = useState(false);
@@ -156,10 +177,13 @@ export function TeamCreatePage() {
   const selectedRegionParent = selectedRegion?.parentId
     ? regionById.get(selectedRegion.parentId)
     : undefined;
+  const isFormLocked = createPhase !== "editing";
+  const areImageControlsDisabled = isFormLocked;
 
   useEffect(
     () => () => {
       imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      imageUrlsRef.current.clear();
     },
     [],
   );
@@ -169,30 +193,44 @@ export function TeamCreatePage() {
   };
 
   const handleImageChange = (files: FileList | null) => {
-    if (!files) return;
+    try {
+      if (!files) return;
 
-    const availableCount = MAX_IMAGES - images.length;
-    const nextImages = Array.from(files)
-      .filter((file) => file.type.startsWith("image/"))
-      .slice(0, availableCount)
-      .map((file) => {
-        const url = URL.createObjectURL(file);
-        imageUrlsRef.current.push(url);
-        return { file, url };
+      const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
+        existingImages: images,
+        files: Array.from(files),
+      });
+      const nextImages = acceptedFiles.map((file) => {
+        const previewUrl = URL.createObjectURL(file);
+        imageUrlsRef.current.add(previewUrl);
+
+        return {
+          id: crypto.randomUUID(),
+          file,
+          previewUrl,
+        };
       });
 
-    setImages((current) => [...current, ...nextImages]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+      if (nextImages.length > 0) {
+        setImages((current) => [...current, ...nextImages]);
+      }
+
+      setImageSelectionError(
+        rejectedReasons.length > 0
+          ? getMeetingImageSelectionErrorMessage(rejectedReasons)
+          : null,
+      );
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const removeImage = (index: number) => {
     setImages((current) => {
       const target = current[index];
       if (target) {
-        URL.revokeObjectURL(target.url);
-        imageUrlsRef.current = imageUrlsRef.current.filter(
-          (url) => url !== target.url,
-        );
+        URL.revokeObjectURL(target.previewUrl);
+        imageUrlsRef.current.delete(target.previewUrl);
       }
       return current.filter((_, imageIndex) => imageIndex !== index);
     });
@@ -255,9 +293,87 @@ export function TeamCreatePage() {
     return Object.keys(nextErrors).length === 0;
   };
 
+  const navigateToCompletePage = (meetingId: number) => {
+    const completeSearchParams = new URLSearchParams({
+      meetingId: String(meetingId),
+    });
+    if (isPostingBased) {
+      completeSearchParams.set("volunteerPostingId", String(postingId));
+    }
+    navigate(`/teams/new/complete?${completeSearchParams.toString()}`, {
+      replace: true,
+    });
+  };
+
+  const uploadImagesForMeeting = async (
+    meetingId: number,
+    imagesToUpload: LocalMeetingImage[],
+  ) => {
+    if (imagesToUpload.length === 0) {
+      navigateToCompletePage(meetingId);
+      return;
+    }
+
+    setCreatePhase("uploading");
+    setUploadingImageIndex(null);
+    setImageUploadError(null);
+
+    try {
+      await uploadMeetingImagesMutation.mutateAsync({
+        meetingId,
+        images: imagesToUpload,
+        onUploadStart: (index) => {
+          setCreatePhase("uploading");
+          setUploadingImageIndex(index);
+        },
+        onImageUploaded: (imageId, objectKey) => {
+          setImages((current) =>
+            current.map((image) =>
+              image.id === imageId
+                ? { ...image, uploadedObjectKey: objectKey }
+                : image,
+            ),
+          );
+        },
+        onApplying: () => {
+          setCreatePhase("applying");
+          setUploadingImageIndex(null);
+        },
+      });
+      navigateToCompletePage(meetingId);
+    } catch (error) {
+      setCreatePhase("uploadFailed");
+      setUploadingImageIndex(null);
+      setImageUploadError(getMeetingImageUploadErrorMessage(error));
+    }
+  };
+
+  const retryImageUpload = async () => {
+    if (createdMeetingId === null || workflowInFlightRef.current) return;
+
+    workflowInFlightRef.current = true;
+    try {
+      await uploadImagesForMeeting(createdMeetingId, images);
+    } finally {
+      workflowInFlightRef.current = false;
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!validate() || resolvedCategories.length === 0) return;
+
+    if (createdMeetingId !== null) {
+      await retryImageUpload();
+      return;
+    }
+
+    if (
+      workflowInFlightRef.current ||
+      !validate() ||
+      resolvedCategories.length === 0
+    ) {
+      return;
+    }
 
     const deadlineDate = parseLocalDateTimeInput(resolvedDeadline);
     if (
@@ -295,32 +411,35 @@ export function TeamCreatePage() {
       return;
     }
 
+    workflowInFlightRef.current = true;
+    setCreatePhase("creating");
+
     try {
-      const meeting = await createMeetingMutation.mutateAsync({
-        name: name.trim(),
-        description: description.trim(),
-        maxMember: Math.min(
-          maxMemberLimit,
-          Math.max(2, Number.parseInt(maxMember, 10) || 2),
-        ),
-        regionId: Number(resolvedRegionId),
-        categories: resolvedCategories,
-        participationCondition: participationCondition.trim() || null,
-        volunteerPostingId: isPostingBased ? postingId : null,
-        ...dateTimePayload,
+      const meetingId = await ensureMeetingCreated({
+        createdMeetingId,
+        createMeeting: () =>
+          createMeetingMutation.mutateAsync({
+            name: name.trim(),
+            description: description.trim(),
+            maxMember: Math.min(
+              maxMemberLimit,
+              Math.max(2, Number.parseInt(maxMember, 10) || 2),
+            ),
+            regionId: Number(resolvedRegionId),
+            categories: resolvedCategories,
+            participationCondition: participationCondition.trim() || null,
+            volunteerPostingId: isPostingBased ? postingId : null,
+            ...dateTimePayload,
+          }),
       });
 
-      const completeSearchParams = new URLSearchParams({
-        meetingId: String(meeting.meetingId),
-      });
-      if (isPostingBased) {
-        completeSearchParams.set("volunteerPostingId", String(postingId));
-      }
-      navigate(`/teams/new/complete?${completeSearchParams.toString()}`, {
-        replace: true,
-      });
+      setCreatedMeetingId(meetingId);
+      await uploadImagesForMeeting(meetingId, images);
     } catch {
+      setCreatePhase("editing");
       // Mutation state renders the request error below the form.
+    } finally {
+      workflowInFlightRef.current = false;
     }
   };
 
@@ -343,6 +462,13 @@ export function TeamCreatePage() {
           </p>
         </div>
       )}
+
+      {createdMeetingId !== null ? (
+        <p className="mt-4 rounded-xl border border-button bg-[#f8fbf8] px-3 py-2.5 text-sm leading-5 text-text-gray-400">
+          모임이 생성되어 입력 내용을 수정할 수 없어요. 사진 등록을 완료하거나
+          사진 없이 완료해 주세요.
+        </p>
+      ) : null}
 
       <form className="mt-5 flex flex-col gap-6" onSubmit={handleSubmit}>
         {isPostingBased ? (
@@ -367,6 +493,7 @@ export function TeamCreatePage() {
           <Input
             id="meeting-name"
             value={name}
+            disabled={isFormLocked}
             maxLength={NAME_MAX_LENGTH}
             invalid={Boolean(errors.name)}
             placeholder="모임 이름을 입력해 주세요."
@@ -387,6 +514,7 @@ export function TeamCreatePage() {
           <Textarea
             id="meeting-description"
             value={description}
+            disabled={isFormLocked}
             maxLength={DESCRIPTION_MAX_LENGTH}
             invalid={Boolean(errors.description)}
             placeholder="모임을 소개해주세요."
@@ -401,22 +529,36 @@ export function TeamCreatePage() {
           <button
             type="button"
             className="flex w-full items-center gap-3 rounded-xl border border-dashed border-[#90d79d] bg-[#f8fbf8] px-4 py-3 text-left text-base font-semibold text-[#18bd77] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={images.length >= MAX_IMAGES}
+            disabled={
+              areImageControlsDisabled ||
+              images.length >= MAX_MEETING_IMAGE_COUNT
+            }
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus aria-hidden="true" className="size-6" />
             <span id="meeting-image-label">
-              사진 첨부 (선택, 최대 {MAX_IMAGES}장)
+              사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
             </span>
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={areImageControlsDisabled}
             multiple
             className="sr-only"
             onChange={(event) => handleImageChange(event.target.files)}
           />
+          {imageSelectionError ? (
+            <p role="alert" className="mt-2 text-sm text-point-red">
+              {imageSelectionError}
+            </p>
+          ) : null}
+          {createPhase === "uploadFailed" ? (
+            <p role="alert" className="mt-2 text-sm text-point-red">
+              모임은 생성됐지만 사진 업로드에 실패했어요. {imageUploadError}
+            </p>
+          ) : null}
           {images.length > 0 ? (
             <div className="mt-5">
               <div
@@ -427,17 +569,18 @@ export function TeamCreatePage() {
               >
                 {images.map((image, index) => (
                   <div
-                    key={image.url}
+                    key={image.id}
                     className="relative min-w-full snap-start overflow-hidden rounded-2xl"
                   >
                     <img
-                      src={image.url}
+                      src={image.previewUrl}
                       alt={`첨부 사진 ${index + 1}`}
                       className="h-41 w-full object-cover"
                     />
                     <button
                       type="button"
                       aria-label={`첨부 사진 ${index + 1} 삭제`}
+                      disabled={areImageControlsDisabled}
                       className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full bg-white/80 text-text-gray-400 shadow-sm backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-button/50"
                       onClick={() => removeImage(index)}
                     >
@@ -456,12 +599,13 @@ export function TeamCreatePage() {
               >
                 {images.map((image, index) => (
                   <button
-                    key={image.url}
+                    key={image.id}
                     type="button"
                     aria-label={`${index + 1}번째 사진 보기`}
                     aria-current={
                       index === activeImageIndex ? "true" : undefined
                     }
+                    disabled={areImageControlsDisabled}
                     className={`size-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-button/50 ${
                       index === activeImageIndex
                         ? "bg-[#18bd77]"
@@ -481,7 +625,7 @@ export function TeamCreatePage() {
         >
           <button
             type="button"
-            disabled={isPostingBased}
+            disabled={isPostingBased || isFormLocked}
             className="relative flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 text-sm font-medium text-text focus:border-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:opacity-100"
             onClick={() => setIsRegionSheetOpen(true)}
           >
@@ -509,6 +653,7 @@ export function TeamCreatePage() {
             min={2}
             max={maxMemberLimit}
             value={maxMember}
+            disabled={isFormLocked}
             onChange={(event) => setMaxMember(event.target.value)}
           />
         </FormField>
@@ -521,6 +666,7 @@ export function TeamCreatePage() {
               type="button"
               role="switch"
               aria-checked={isTimeRecognized}
+              disabled={isFormLocked}
               className={`flex h-6 w-11 items-center rounded-full px-0.5 transition ${isTimeRecognized ? "justify-end bg-icon" : "justify-start bg-stroke"}`}
               onClick={() => setIsTimeRecognized((current) => !current)}
             >
@@ -540,6 +686,7 @@ export function TeamCreatePage() {
                 type="button"
                 aria-pressed={resolvedCategories.includes(value)}
                 aria-label={`${POSTING_CATEGORY_LABEL[value]} 카테고리`}
+                disabled={isFormLocked}
                 className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                 onClick={() => {
                   setCategories((current) =>
@@ -572,6 +719,7 @@ export function TeamCreatePage() {
           <button
             id="meeting-deadline"
             type="button"
+            disabled={isFormLocked}
             className={`flex h-12 w-full items-center justify-between rounded-xl border bg-white px-4 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-button/40 ${errors.deadline ? "border-point-red" : "border-stroke"}`}
             onClick={() => {
               setDraftDeadline(
@@ -600,6 +748,7 @@ export function TeamCreatePage() {
             id="participation-condition"
             value={participationCondition}
             maxLength={PARTICIPATION_CONDITION_MAX_LENGTH}
+            disabled={isFormLocked}
             placeholder={
               "만 19세 이상\n매주 토요일 11:00~12:30 진행\n건대입구역 2번출구 앞에서 만나요"
             }
@@ -607,25 +756,55 @@ export function TeamCreatePage() {
             onChange={(event) => setParticipationCondition(event.target.value)}
           />
         </FormField>
-        {createMeetingMutation.isError ? (
+        {createMeetingMutation.isError && createdMeetingId === null ? (
           <p role="alert" className="text-sm text-point-red">
             모임을 만들지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.
           </p>
         ) : null}
         <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-app border-t border-stroke bg-bg/95 px-5.5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur">
-          <Button
-            type="submit"
-            fullWidth
-            disabled={createMeetingMutation.isPending}
-          >
-            {createMeetingMutation.isPending
-              ? "모임 만드는 중..."
-              : "모임 만들기 완료"}
-          </Button>
+          {createPhase === "uploadFailed" ? (
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                fullWidth
+                disabled={uploadMeetingImagesMutation.isPending}
+                onClick={() => void retryImageUpload()}
+              >
+                사진 업로드 다시 시도
+              </Button>
+              <Button
+                type="button"
+                variant="primaryOutline"
+                fullWidth
+                disabled={uploadMeetingImagesMutation.isPending}
+                onClick={() => {
+                  if (createdMeetingId !== null) {
+                    navigateToCompletePage(createdMeetingId);
+                  }
+                }}
+              >
+                사진 없이 완료
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="submit"
+              fullWidth
+              disabled={createPhase !== "editing"}
+            >
+              {createPhase === "creating"
+                ? "모임 만드는 중..."
+                : createPhase === "uploading"
+                  ? `사진 업로드 중... (${(uploadingImageIndex ?? 0) + 1}/${images.length})`
+                  : createPhase === "applying"
+                    ? "사진 등록 중..."
+                    : "모임 만들기 완료"}
+            </Button>
+          )}
         </div>
       </form>
       <RegionSelectionSheet
-        open={!isPostingBased && isRegionSheetOpen}
+        open={!isPostingBased && !isFormLocked && isRegionSheetOpen}
         onOpenChange={setIsRegionSheetOpen}
         title="활동 지역"
         value={resolvedRegionId ? Number(resolvedRegionId) : undefined}
@@ -635,7 +814,7 @@ export function TeamCreatePage() {
         }}
       />
       <BottomSheet
-        open={isDeadlineSheetOpen}
+        open={!isFormLocked && isDeadlineSheetOpen}
         onOpenChange={setIsDeadlineSheetOpen}
         title="신청 마감일"
         className="max-h-[min(96dvh,55rem)] rounded-t-[40px] bg-bg"
@@ -643,6 +822,7 @@ export function TeamCreatePage() {
         leadingAction={
           <button
             type="button"
+            disabled={isFormLocked}
             className="inline-flex h-11 items-center gap-1 text-xs font-medium text-point-red"
             onClick={() => setDraftDeadline(new Date())}
           >
@@ -655,6 +835,7 @@ export function TeamCreatePage() {
             <Button
               fullWidth
               className="max-w-[315px] active:bg-icon"
+              disabled={isFormLocked}
               onClick={() => {
                 const nextDeadline = formatLocalDateTimeForInput(draftDeadline);
 
