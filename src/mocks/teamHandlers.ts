@@ -727,7 +727,7 @@ export const teamHandlers = [
 
       if (
         typeof fileSize !== "number" ||
-        fileSize < 0 ||
+        fileSize <= 0 ||
         fileSize > MAX_MEETING_IMAGE_SIZE_BYTES
       ) {
         return createMeetingErrorResponse(

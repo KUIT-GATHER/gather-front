@@ -34,6 +34,16 @@ describe("validateMeetingImageSelection", () => {
     expect(result.rejectedReasons).toEqual(["unsupportedType"]);
   });
 
+  it("0바이트 이미지는 거절한다", () => {
+    const result = validateMeetingImageSelection({
+      existingImages: [],
+      files: [createFile("empty.jpg", "image/jpeg", 0)],
+    });
+
+    expect(result.acceptedFiles).toEqual([]);
+    expect(result.rejectedReasons).toEqual(["emptyFile"]);
+  });
+
   it("정확히 5MB 파일은 허용하고 초과 파일은 거절한다", () => {
     const result = validateMeetingImageSelection({
       existingImages: [],

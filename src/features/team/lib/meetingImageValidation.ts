@@ -11,6 +11,7 @@ export const MAX_MEETING_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 type MeetingImageValidationReason =
   | "unsupportedType"
+  | "emptyFile"
   | "fileTooLarge"
   | "duplicate"
   | "countExceeded";
@@ -49,6 +50,11 @@ export function validateMeetingImageSelection({
       continue;
     }
 
+    if (file.size <= 0) {
+      rejectedReasons.push("emptyFile");
+      continue;
+    }
+
     if (file.size > MAX_MEETING_IMAGE_SIZE_BYTES) {
       rejectedReasons.push("fileTooLarge");
       continue;
@@ -81,6 +87,10 @@ export function getMeetingImageSelectionErrorMessage(
 ) {
   if (rejectedReasons.includes("unsupportedType")) {
     return "JPEG, PNG, WebP 형식의 사진만 첨부할 수 있어요.";
+  }
+
+  if (rejectedReasons.includes("emptyFile")) {
+    return "비어 있는 사진 파일은 첨부할 수 없어요.";
   }
 
   if (rejectedReasons.includes("fileTooLarge")) {
