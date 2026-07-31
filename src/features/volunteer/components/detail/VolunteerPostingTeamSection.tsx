@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 
 import teamPlusIcon from "@/assets/volunteer/teamplus.svg";
 import { useAuthStore } from "@/features/auth/store/auth.store";
-import { useVolunteerPostingMeetingsQuery } from "@/features/volunteer/hooks/useVolunteerPostingMeetingsQuery";
+import { useVolunteerPostingMeetingsQuery } from "@/features/volunteer/hooks/detail/useVolunteerPostingMeetingsQuery";
 import { cn } from "@/shared/lib/cn";
 import Skeleton from "@/shared/ui/Skeleton";
 

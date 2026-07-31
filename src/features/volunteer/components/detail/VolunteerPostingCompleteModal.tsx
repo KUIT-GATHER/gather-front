@@ -21,7 +21,7 @@ const hourOptions = Array.from(
 const ITEM_HEIGHT = 40;
 const WHEEL_PADDING = 80;
 
-type VolunteerPostingCompleteSheetProps = {
+type VolunteerPostingCompleteModalProps = {
   open: boolean;
   recognizedMinutes: number;
   isPending: boolean;
@@ -104,7 +104,7 @@ function WheelColumn({
   );
 }
 
-export function VolunteerPostingCompleteSheet({
+export function VolunteerPostingCompleteModal({
   open,
   recognizedMinutes,
   isPending,
@@ -112,7 +112,7 @@ export function VolunteerPostingCompleteSheet({
   onOpenChange,
   onRecognizedMinutesChange,
   onConfirm,
-}: VolunteerPostingCompleteSheetProps) {
+}: VolunteerPostingCompleteModalProps) {
   const hours = Math.floor(recognizedMinutes / 60);
   const minutes = recognizedMinutes % 60;
   const isValid = isValidRecognizedMinutes(recognizedMinutes);

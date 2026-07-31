@@ -21,7 +21,7 @@ import {
   validateMeetingImageSelection,
 } from "@/features/team/lib/meetingImageValidation";
 import type { LocalMeetingImage } from "@/features/team/types/meetingImage.types";
-import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/useVolunteerPostingDetail";
+import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/detail/useVolunteerPostingDetail";
 import {
   combineLocalDateAndTime,
   formatLocalDateTimeForInput,
