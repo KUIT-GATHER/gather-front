@@ -43,6 +43,10 @@ export function NotificationScreen() {
   const unreadInCurrentCategory =
     unreadCountQuery.data?.[category === "ACTIVITY" ? "activity" : "meeting"] ??
     notifications.filter((notification) => !notification.read).length;
+  const isListMutationPending =
+    readMutation.isPending ||
+    readAllMutation.isPending ||
+    deleteMutation.isPending;
 
   const changeCategory = (nextCategory: NotificationCategory) => {
     const nextSearchParams = new URLSearchParams(searchParams);
@@ -99,9 +103,7 @@ export function NotificationScreen() {
           <button
             type="button"
             className="min-h-11 px-3 text-body-14 text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:text-text-gray-100"
-            disabled={
-              unreadInCurrentCategory === 0 || readAllMutation.isPending
-            }
+            disabled={unreadInCurrentCategory === 0 || isListMutationPending}
             onClick={() => readAllMutation.mutate(category)}
           >
             전체 읽음
@@ -115,14 +117,7 @@ export function NotificationScreen() {
         onOpenNotificationChange={setOpenNotificationId}
         onNotificationClick={handleNotificationClick}
         onDelete={handleDelete}
-        readPendingId={
-          readMutation.isPending ? (readMutation.variables?.id ?? null) : null
-        }
-        deletePendingId={
-          deleteMutation.isPending
-            ? (deleteMutation.variables?.id ?? null)
-            : null
-        }
+        isMutationPending={isListMutationPending}
       />
 
       <NotificationSettingsSheet

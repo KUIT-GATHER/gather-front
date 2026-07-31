@@ -27,7 +27,7 @@ export function NotificationItem({
     >
       <span className="sr-only">{readStatus}</span>
       <span className="min-w-0">
-        <span className="block break-keep text-body-15-semibold font-medium text-text">
+        <span className="block break-words text-body-15-semibold font-medium text-text">
           {notification.message}
         </span>
         <time

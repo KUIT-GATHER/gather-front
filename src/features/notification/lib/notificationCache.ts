@@ -84,19 +84,6 @@ export function removeNotificationFromCache(
   };
 }
 
-export function getCachedUnreadNotificationCount(
-  data: NotificationInfiniteData | undefined,
-) {
-  return (
-    data?.pages.reduce(
-      (count, page) =>
-        count +
-        page.content.filter((notification) => !notification.read).length,
-      0,
-    ) ?? 0
-  );
-}
-
 export function updateUnreadCount(
   count: NotificationUnreadCount | undefined,
   category: "ACTIVITY" | "MEETING",

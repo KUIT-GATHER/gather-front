@@ -19,8 +19,7 @@ type NotificationListProps = {
   onOpenNotificationChange: (notificationId: number | null) => void;
   onNotificationClick: (notification: Notification) => void;
   onDelete: (notification: Notification) => void;
-  readPendingId: number | null;
-  deletePendingId: number | null;
+  isMutationPending: boolean;
 };
 
 export function NotificationList({
@@ -29,8 +28,7 @@ export function NotificationList({
   onOpenNotificationChange,
   onNotificationClick,
   onDelete,
-  readPendingId,
-  deletePendingId,
+  isMutationPending,
 }: NotificationListProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const notifications = query.data?.pages.flatMap((page) => page.content) ?? [];
@@ -102,11 +100,11 @@ export function NotificationList({
                 onOpenNotificationChange(open ? notification.id : null)
               }
               onDelete={() => onDelete(notification)}
-              deleteDisabled={deletePendingId === notification.id}
+              deleteDisabled={isMutationPending}
             >
               <NotificationItem
                 notification={notification}
-                disabled={readPendingId === notification.id}
+                disabled={isMutationPending}
                 onClick={() => onNotificationClick(notification)}
               />
             </SwipeActionRow>
