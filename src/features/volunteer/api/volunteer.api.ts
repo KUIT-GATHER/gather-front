@@ -5,6 +5,8 @@ import type {
   VolunteerPostingBookmarkResponse,
   VolunteerPostingListItem,
   VolunteerPostingListParams,
+  VolunteerPostingMeetingListParams,
+  VolunteerPostingMeetingPage,
   VolunteerPostingPage,
   VolunteerPostingParticipationResponse,
 } from "@/features/volunteer/types/volunteer.types";
@@ -86,6 +88,27 @@ function buildPostingEndpoint(postingId: number) {
   return `${POSTING_ENDPOINT}/${postingId}`;
 }
 
+function buildPostingMeetingsEndpoint(
+  postingId: number,
+  params: VolunteerPostingMeetingListParams = {},
+) {
+  const searchParams = new URLSearchParams();
+  const page = params.page ?? 0;
+  const size = params.size ?? 10;
+
+  setQueryParam(searchParams, "page", page);
+  setQueryParam(searchParams, "size", size);
+
+  params.sort?.forEach((sort) => {
+    appendQueryParam(searchParams, "sort", sort);
+  });
+
+  const query = searchParams.toString();
+  const endpoint = `${POSTING_ENDPOINT}/${postingId}/meetings`;
+
+  return query ? `${endpoint}?${query}` : endpoint;
+}
+
 export function getVolunteerPostings(params?: VolunteerPostingListParams) {
   return fetchClient<VolunteerPostingPage>(
     buildPostingListEndpoint(params),
@@ -101,6 +124,15 @@ export function getRecommendedVolunteerPostings() {
 
 export function getVolunteerPosting(postingId: number) {
   return fetchClient<VolunteerPosting>(buildPostingEndpoint(postingId));
+}
+
+export function getVolunteerPostingMeetings(
+  postingId: number,
+  params?: VolunteerPostingMeetingListParams,
+) {
+  return fetchClient<VolunteerPostingMeetingPage>(
+    buildPostingMeetingsEndpoint(postingId, params),
+  );
 }
 
 export function getVolunteerPostingRecommendedKeywords() {
@@ -135,4 +167,10 @@ export function applyVolunteerPostingParticipation(postingId: number) {
       method: "POST",
     },
   );
+}
+
+export function cancelVolunteerPostingParticipation(postingId: number) {
+  return fetchClient<null>(`${POSTING_ENDPOINT}/${postingId}/participations`, {
+    method: "DELETE",
+  });
 }

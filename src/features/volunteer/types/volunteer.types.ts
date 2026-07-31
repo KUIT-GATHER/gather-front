@@ -1,4 +1,5 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
+import type { MeetingStatus } from "@/features/team/types/team.types";
 
 export type VolunteerPostingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 
@@ -49,6 +50,8 @@ export type VolunteerPosting = {
   createdAt: string | null;
   updatedAt: string | null;
   bookmarked: boolean;
+  participationStatus: VolunteerPostingParticipationStatus | null;
+  participationAction: VolunteerPostingParticipationAction;
 };
 
 export type VolunteerPostingListItem = {
@@ -75,6 +78,31 @@ export type VolunteerPostingPage = {
   size: number;
 };
 
+export type VolunteerPostingMeeting = {
+  meetingId: number;
+  name: string;
+  category: PostingCategory;
+  currentMemberCount: number;
+  maxMember: number;
+  status: MeetingStatus;
+  member: boolean;
+  host: boolean;
+};
+
+export type VolunteerPostingMeetingPage = {
+  content: VolunteerPostingMeeting[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
+export type VolunteerPostingMeetingListParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
+};
+
 export type VolunteerPostingBookmarkResponse = {
   postingId: number;
   bookmarked: boolean;
@@ -85,6 +113,12 @@ export type VolunteerPostingParticipationStatus =
   | "CONFIRMED"
   | "COMPLETED"
   | "REVIEWED";
+
+export type VolunteerPostingParticipationAction =
+  | "APPLY"
+  | "CANCEL"
+  | "COMPLETE"
+  | "NONE";
 
 export type VolunteerPostingParticipationResponse = {
   participationId: number;
