@@ -17,12 +17,15 @@ import type {
   MeetingPostListParams,
 } from "../types/team.types";
 
+type RecommendationScope = "guest" | "member";
+
 export const teamKeys = {
   all: ["meetings"] as const,
   lists: () => [...teamKeys.all, "list"] as const,
   list: (params: MeetingListParams = {}) =>
     [...teamKeys.lists(), params] as const,
-  recommended: () => [...teamKeys.all, "recommended"] as const,
+  recommended: (scope: RecommendationScope) =>
+    [...teamKeys.all, "recommended", scope] as const,
   infiniteList: (params: MeetingInfiniteParams = {}) =>
     [...teamKeys.lists(), "infinite", params] as const,
   my: () => [...teamKeys.all, "my"] as const,
@@ -65,9 +68,9 @@ export const teamQueries = {
       queryFn: () => getMeetings(params),
     }),
 
-  recommended: () =>
+  recommended: (scope: RecommendationScope) =>
     queryOptions({
-      queryKey: teamKeys.recommended(),
+      queryKey: teamKeys.recommended(scope),
       queryFn: getRecommendedMeetings,
     }),
 

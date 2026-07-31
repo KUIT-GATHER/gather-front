@@ -5,6 +5,7 @@ import alarmIcon from "@/assets/icons/Alarm.svg";
 import arrowIcon from "@/assets/icons/Arrow.svg";
 import filterIcon from "@/assets/icons/Filter.svg";
 import gatherIcon from "@/assets/volunteer/Gather.svg";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
@@ -64,12 +65,15 @@ function HomeSectionState({
 export function HomeScreen() {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const authInitialized = useAuthStore((state) => state.authInitialized);
   const regionsQuery = useRegionsQuery();
   const postingsQuery = useRecommendedVolunteerPostingsQuery();
   const meetingsQuery = useRecommendedMeetingsQuery();
 
   const postings = postingsQuery.data ?? [];
   const meetings = meetingsQuery.data ?? [];
+  const isPostingsLoading = !authInitialized || postingsQuery.isLoading;
+  const isMeetingsLoading = !authInitialized || meetingsQuery.isLoading;
   const regionNameById = useMemo(
     () =>
       new Map(
@@ -125,10 +129,11 @@ export function HomeScreen() {
 
           <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
-              isLoading={postingsQuery.isLoading}
+              isLoading={isPostingsLoading}
               isError={postingsQuery.isError}
               isEmpty={
-                !postingsQuery.isLoading &&
+                authInitialized &&
+                !isPostingsLoading &&
                 !postingsQuery.isError &&
                 postings.length === 0
               }
@@ -166,10 +171,11 @@ export function HomeScreen() {
 
           <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
-              isLoading={meetingsQuery.isLoading}
+              isLoading={isMeetingsLoading}
               isError={meetingsQuery.isError}
               isEmpty={
-                !meetingsQuery.isLoading &&
+                authInitialized &&
+                !isMeetingsLoading &&
                 !meetingsQuery.isError &&
                 meetings.length === 0
               }

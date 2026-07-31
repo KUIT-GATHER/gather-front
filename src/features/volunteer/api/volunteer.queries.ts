@@ -14,6 +14,8 @@ import type {
   VolunteerPostingMeetingListParams,
 } from "../types/volunteer.types";
 
+type RecommendationScope = "guest" | "member";
+
 function withPage(
   params: VolunteerPostingInfiniteParams,
   page: number,
@@ -36,7 +38,8 @@ export const volunteerPostingKeys = {
   lists: () => [...volunteerPostingKeys.all, "list"] as const,
   list: (params: VolunteerPostingListParams = {}) =>
     [...volunteerPostingKeys.lists(), params] as const,
-  recommended: () => [...volunteerPostingKeys.all, "recommended"] as const,
+  recommended: (scope: RecommendationScope) =>
+    [...volunteerPostingKeys.all, "recommended", scope] as const,
   infiniteList: (params: VolunteerPostingInfiniteParams = {}) =>
     [...volunteerPostingKeys.lists(), "infinite", params] as const,
   details: () => [...volunteerPostingKeys.all, "detail"] as const,
@@ -68,9 +71,9 @@ export const volunteerPostingQueries = {
       queryFn: () => getVolunteerPostings(params),
     }),
 
-  recommended: () =>
+  recommended: (scope: RecommendationScope) =>
     queryOptions({
-      queryKey: volunteerPostingKeys.recommended(),
+      queryKey: volunteerPostingKeys.recommended(scope),
       queryFn: getRecommendedVolunteerPostings,
     }),
 
