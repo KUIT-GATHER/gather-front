@@ -6,6 +6,7 @@ import arrowIcon from "@/assets/icons/Arrow.svg";
 import filterIcon from "@/assets/icons/Filter.svg";
 import gatherIcon from "@/assets/volunteer/Gather.svg";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useUnreadNotificationCountQuery } from "@/features/notification/hooks/useUnreadNotificationCountQuery";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
@@ -66,12 +67,18 @@ export function HomeScreen() {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const authInitialized = useAuthStore((state) => state.authInitialized);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const unreadCountQuery = useUnreadNotificationCountQuery(
+    authInitialized && isAuthenticated,
+  );
   const regionsQuery = useRegionsQuery();
   const postingsQuery = useRecommendedVolunteerPostingsQuery();
   const meetingsQuery = useRecommendedMeetingsQuery();
 
   const postings = postingsQuery.data ?? [];
   const meetings = meetingsQuery.data ?? [];
+  const unreadTotal = unreadCountQuery.data?.total ?? 0;
+  const unreadBadgeLabel = unreadTotal > 99 ? "99+" : String(unreadTotal);
   const isPostingsLoading = !authInitialized || postingsQuery.isLoading;
   const isMeetingsLoading = !authInitialized || meetingsQuery.isLoading;
   const regionNameById = useMemo(
@@ -100,9 +107,11 @@ export function HomeScreen() {
                 <span className="relative block size-6">
                   <img src={alarmIcon} alt="" className="block size-6" />
 
-                  <span className="pointer-events-none absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full bg-[#F76073] text-[9px] leading-none text-white">
-                    1
-                  </span>
+                  {unreadTotal > 0 ? (
+                    <span className="pointer-events-none absolute -right-1.5 -top-1.5 flex min-w-4 items-center justify-center rounded-full bg-point-red px-1 text-[9px] leading-4 text-white">
+                      {unreadBadgeLabel}
+                    </span>
+                  ) : null}
                 </span>
               }
               size="medium"
