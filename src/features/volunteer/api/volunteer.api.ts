@@ -3,6 +3,7 @@ import { fetchClient } from "@/shared/api/fetchClient";
 import type {
   VolunteerPosting,
   VolunteerPostingBookmarkResponse,
+  VolunteerPostingListItem,
   VolunteerPostingListParams,
   VolunteerPostingMeetingListParams,
   VolunteerPostingMeetingPage,
@@ -112,6 +113,12 @@ export function getVolunteerPostings(params?: VolunteerPostingListParams) {
   return fetchClient<VolunteerPostingPage>(
     buildPostingListEndpoint(params),
     publicOptions,
+  );
+}
+
+export function getRecommendedVolunteerPostings() {
+  return fetchClient<VolunteerPostingListItem[]>(
+    `${POSTING_ENDPOINT}/recommended`,
   );
 }
 
