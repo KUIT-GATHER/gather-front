@@ -36,15 +36,14 @@ export const notificationQueries = {
 
         return nextPage < lastPage.totalPages ? nextPage : undefined;
       },
-      refetchInterval: NOTIFICATION_REFETCH_INTERVAL,
-      refetchIntervalInBackground: false,
       refetchOnWindowFocus: true,
     }),
 
-  settings: () =>
+  settings: (enabled: boolean) =>
     queryOptions({
       queryKey: notificationKeys.settings(),
       queryFn: getNotificationSettings,
+      enabled,
     }),
 
   unreadCount: () =>

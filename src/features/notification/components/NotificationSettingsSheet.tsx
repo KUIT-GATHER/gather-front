@@ -133,7 +133,7 @@ export function NotificationSettingsSheet({
   onOpenChange,
 }: NotificationSettingsSheetProps) {
   const [view, setView] = useState<SettingsView>("menu");
-  const settingsQuery = useNotificationSettingsQuery();
+  const settingsQuery = useNotificationSettingsQuery(open);
 
   const closeSheet = (nextOpen: boolean) => {
     if (!nextOpen) {

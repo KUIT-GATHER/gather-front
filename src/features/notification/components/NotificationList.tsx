@@ -19,7 +19,9 @@ type NotificationListProps = {
   onOpenNotificationChange: (notificationId: number | null) => void;
   onNotificationClick: (notification: Notification) => void;
   onDelete: (notification: Notification) => void;
-  isMutationPending: boolean;
+  isReadAllPending: boolean;
+  readPendingNotificationId: number | null;
+  deletePendingNotificationId: number | null;
 };
 
 export function NotificationList({
@@ -28,10 +30,23 @@ export function NotificationList({
   onOpenNotificationChange,
   onNotificationClick,
   onDelete,
-  isMutationPending,
+  isReadAllPending,
+  readPendingNotificationId,
+  deletePendingNotificationId,
 }: NotificationListProps) {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isError,
+    isFetchNextPageError,
+    isFetchingNextPage,
+    isLoading,
+    isSuccess,
+    refetch,
+  } = query;
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const notifications = query.data?.pages.flatMap((page) => page.content) ?? [];
+  const notifications = data?.pages.flatMap((page) => page.content) ?? [];
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -44,11 +59,11 @@ export function NotificationList({
       ([entry]) => {
         if (
           entry.isIntersecting &&
-          query.hasNextPage &&
-          !query.isFetchingNextPage &&
-          !query.isFetchNextPageError
+          hasNextPage &&
+          !isFetchingNextPage &&
+          !isFetchNextPageError
         ) {
-          void query.fetchNextPage();
+          void fetchNextPage();
         }
       },
       { rootMargin: "240px" },
@@ -56,10 +71,10 @@ export function NotificationList({
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [query]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError]);
 
-  const isInitialLoading = query.isLoading && notifications.length === 0;
-  const isInitialError = query.isError && notifications.length === 0;
+  const isInitialLoading = isLoading && notifications.length === 0;
+  const isInitialError = isError && notifications.length === 0;
 
   if (isInitialLoading) {
     return <LoadingState label="알림을 불러오는 중" className="min-h-55" />;
@@ -73,7 +88,7 @@ export function NotificationList({
         primaryAction={{
           label: "다시 시도",
           onClick: () => {
-            void query.refetch();
+            void refetch();
           },
         }}
         className="pt-16"
@@ -81,7 +96,7 @@ export function NotificationList({
     );
   }
 
-  if (query.isSuccess && notifications.length === 0) {
+  if (isSuccess && notifications.length === 0) {
     return (
       <div className="flex min-h-[calc(100dvh-12rem)] items-center justify-center">
         <p className="text-body-14 text-text-gray-100">알림 없음</p>
@@ -100,11 +115,17 @@ export function NotificationList({
                 onOpenNotificationChange(open ? notification.id : null)
               }
               onDelete={() => onDelete(notification)}
-              deleteDisabled={isMutationPending}
+              deleteDisabled={
+                isReadAllPending ||
+                deletePendingNotificationId === notification.id
+              }
             >
               <NotificationItem
                 notification={notification}
-                disabled={isMutationPending}
+                disabled={
+                  isReadAllPending ||
+                  readPendingNotificationId === notification.id
+                }
                 onClick={() => onNotificationClick(notification)}
               />
             </SwipeActionRow>
@@ -113,10 +134,10 @@ export function NotificationList({
       </ul>
 
       <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
-      {query.isFetchingNextPage ? (
+      {isFetchingNextPage ? (
         <LoadingState label="알림을 더 불러오는 중" className="min-h-24" />
       ) : null}
-      {query.isFetchNextPageError ? (
+      {isFetchNextPageError ? (
         <div className="py-6 text-center">
           <p className="text-sm text-text-gray-400">
             알림을 더 불러오지 못했어요.
@@ -124,7 +145,7 @@ export function NotificationList({
           <button
             type="button"
             className="mt-2 rounded-lg px-3 py-2 text-sm font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-            onClick={() => void query.fetchNextPage()}
+            onClick={() => void fetchNextPage()}
           >
             다시 시도
           </button>

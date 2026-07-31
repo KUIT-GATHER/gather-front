@@ -236,10 +236,5 @@ export function useUpdateNotificationSettingsMutation() {
     onSuccess: (settings) => {
       queryClient.setQueryData(notificationKeys.settings(), settings);
     },
-    onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: notificationKeys.settings(),
-      });
-    },
   });
 }

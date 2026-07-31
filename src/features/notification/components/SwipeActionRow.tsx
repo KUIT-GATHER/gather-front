@@ -45,6 +45,14 @@ export function SwipeActionRow({
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      setOffset(open ? -ACTION_WIDTH : 0);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [open]);
+
+  useEffect(() => {
     if (!open) {
       return;
     }
@@ -60,7 +68,10 @@ export function SwipeActionRow({
     return () => document.removeEventListener("pointerdown", closeWhenOutside);
   }, [onOpenChange, open]);
 
-  const finishGesture = (event: PointerEvent<HTMLDivElement>) => {
+  const finishGesture = (
+    event: PointerEvent<HTMLDivElement>,
+    wasCancelled = false,
+  ) => {
     const gesture = gestureRef.current;
 
     if (gesture.pointerId !== event.pointerId) {
@@ -73,13 +84,16 @@ export function SwipeActionRow({
 
     setIsDragging(false);
 
-    if (gesture.direction === "horizontal") {
-      const shouldOpen = gesture.offset <= -OPEN_THRESHOLD;
+    const shouldOpen = wasCancelled
+      ? open
+      : gesture.direction === "horizontal"
+        ? gesture.offset <= -OPEN_THRESHOLD
+        : open;
 
+    setOffset(shouldOpen ? -ACTION_WIDTH : 0);
+
+    if (shouldOpen !== open) {
       onOpenChange(shouldOpen);
-      setOffset(shouldOpen ? -ACTION_WIDTH : 0);
-    } else {
-      setOffset(open ? -ACTION_WIDTH : 0);
     }
 
     if (gesture.swiped) {
@@ -94,21 +108,31 @@ export function SwipeActionRow({
   };
 
   const displayedOffset = isDragging ? offset : open ? -ACTION_WIDTH : 0;
+  const isDeleteActionVisible = open || (isDragging && displayedOffset < 0);
 
   return (
     <div ref={rootRef} className="relative overflow-hidden">
-      <div className="absolute inset-y-0 right-0 flex w-20 items-stretch bg-point-red">
-        <button
-          type="button"
-          className="flex w-full items-center justify-center text-text2 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
-          aria-label="알림 삭제"
-          disabled={deleteDisabled}
-          onFocus={() => onOpenChange(true)}
-          onClick={onDelete}
+      {isDeleteActionVisible ? (
+        <div
+          className="absolute inset-y-0 right-0 flex w-20 items-stretch bg-point-red"
+          aria-hidden={!open}
         >
-          <Trash2 className="size-5" aria-hidden="true" />
-        </button>
-      </div>
+          <button
+            type="button"
+            className={cn(
+              "flex w-full items-center justify-center text-text2 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white",
+              !open && "pointer-events-none",
+            )}
+            aria-label="알림 삭제"
+            aria-hidden={!open}
+            tabIndex={open ? 0 : -1}
+            disabled={deleteDisabled || !open}
+            onClick={onDelete}
+          >
+            <Trash2 className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
 
       <div
         className={cn(
@@ -131,6 +155,7 @@ export function SwipeActionRow({
             swiped: false,
           };
           event.currentTarget.setPointerCapture(event.pointerId);
+          setOffset(open ? -ACTION_WIDTH : 0);
           setIsDragging(true);
         }}
         onPointerMove={(event) => {
@@ -168,7 +193,7 @@ export function SwipeActionRow({
           setOffset(nextOffset);
         }}
         onPointerUp={finishGesture}
-        onPointerCancel={finishGesture}
+        onPointerCancel={(event) => finishGesture(event, true)}
         onClickCapture={(event) => {
           if (!ignoreClickRef.current) {
             return;

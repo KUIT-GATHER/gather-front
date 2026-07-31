@@ -1,6 +1,7 @@
 import { formatNotificationCreatedAt } from "@/features/notification/lib/formatNotificationCreatedAt";
 
 import type { Notification } from "@/features/notification/types/notification.types";
+import { cn } from "@/shared/lib/cn";
 
 type NotificationItemProps = {
   notification: Notification;
@@ -18,16 +19,17 @@ export function NotificationItem({
   return (
     <button
       type="button"
-      className={`flex w-full px-5.5 py-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed ${
-        notification.read ? "bg-white" : "bg-point-green/15"
-      }`}
+      className={cn(
+        "flex w-full px-5.5 py-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed",
+        notification.read ? "bg-white" : "bg-point-green/15",
+      )}
       aria-label={`${readStatus}: ${notification.message}`}
       disabled={disabled}
       onClick={onClick}
     >
       <span className="sr-only">{readStatus}</span>
       <span className="min-w-0">
-        <span className="block break-words text-body-15-semibold font-medium text-text">
+        <span className="block break-words text-body-15-semibold text-text">
           {notification.message}
         </span>
         <time

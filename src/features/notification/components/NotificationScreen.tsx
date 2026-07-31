@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Settings } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 
+import { notificationKeys } from "@/features/notification/api/notification.queries";
 import { NotificationList } from "@/features/notification/components/NotificationList";
 import { NotificationSettingsSheet } from "@/features/notification/components/NotificationSettingsSheet";
 import { NotificationTabs } from "@/features/notification/components/NotificationTabs";
@@ -16,6 +18,7 @@ import { getNotificationTargetPath } from "@/features/notification/lib/notificat
 import type {
   Notification,
   NotificationCategory,
+  NotificationUnreadCount,
 } from "@/features/notification/types/notification.types";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -27,6 +30,7 @@ function getNotificationCategory(value: string | null): NotificationCategory {
 
 export function NotificationScreen() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [openNotificationId, setOpenNotificationId] = useState<number | null>(
@@ -38,15 +42,44 @@ export function NotificationScreen() {
   const readMutation = useReadNotificationMutation();
   const readAllMutation = useReadAllNotificationsMutation();
   const deleteMutation = useDeleteNotificationMutation();
+  const previousUnreadCountRef = useRef<NotificationUnreadCount | undefined>(
+    undefined,
+  );
   const notifications =
     notificationsQuery.data?.pages.flatMap((page) => page.content) ?? [];
   const unreadInCurrentCategory =
     unreadCountQuery.data?.[category === "ACTIVITY" ? "activity" : "meeting"] ??
     notifications.filter((notification) => !notification.read).length;
-  const isListMutationPending =
-    readMutation.isPending ||
-    readAllMutation.isPending ||
-    deleteMutation.isPending;
+  const readPendingNotificationId = readMutation.isPending
+    ? (readMutation.variables?.id ?? null)
+    : null;
+  const deletePendingNotificationId = deleteMutation.isPending
+    ? (deleteMutation.variables?.id ?? null)
+    : null;
+
+  useEffect(() => {
+    const unreadCount = unreadCountQuery.data;
+
+    if (!unreadCount) {
+      return;
+    }
+
+    const previousUnreadCount = previousUnreadCountRef.current;
+    previousUnreadCountRef.current = unreadCount;
+
+    const countKey = category === "ACTIVITY" ? "activity" : "meeting";
+
+    if (
+      !previousUnreadCount ||
+      previousUnreadCount[countKey] === unreadCount[countKey]
+    ) {
+      return;
+    }
+
+    void queryClient.invalidateQueries({
+      queryKey: notificationKeys.infinite(category),
+    });
+  }, [category, queryClient, unreadCountQuery.data]);
 
   const changeCategory = (nextCategory: NotificationCategory) => {
     const nextSearchParams = new URLSearchParams(searchParams);
@@ -67,13 +100,11 @@ export function NotificationScreen() {
       return;
     }
 
-    readMutation.mutate(notification, {
-      onSettled: () => {
-        if (targetPath) {
-          navigate(targetPath);
-        }
-      },
-    });
+    readMutation.mutate(notification);
+
+    if (targetPath) {
+      navigate(targetPath);
+    }
   };
 
   const handleDelete = (notification: Notification) => {
@@ -103,7 +134,12 @@ export function NotificationScreen() {
           <button
             type="button"
             className="min-h-11 px-3 text-body-14 text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:text-text-gray-100"
-            disabled={unreadInCurrentCategory === 0 || isListMutationPending}
+            disabled={
+              unreadInCurrentCategory === 0 ||
+              readAllMutation.isPending ||
+              readMutation.isPending ||
+              deleteMutation.isPending
+            }
             onClick={() => readAllMutation.mutate(category)}
           >
             전체 읽음
@@ -117,7 +153,9 @@ export function NotificationScreen() {
         onOpenNotificationChange={setOpenNotificationId}
         onNotificationClick={handleNotificationClick}
         onDelete={handleDelete}
-        isMutationPending={isListMutationPending}
+        isReadAllPending={readAllMutation.isPending}
+        readPendingNotificationId={readPendingNotificationId}
+        deletePendingNotificationId={deletePendingNotificationId}
       />
 
       <NotificationSettingsSheet

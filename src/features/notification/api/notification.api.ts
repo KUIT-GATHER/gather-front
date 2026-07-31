@@ -1,6 +1,7 @@
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
+  Notification,
   NotificationCategory,
   NotificationPage,
   NotificationSettings,
@@ -37,9 +38,10 @@ export function getNotifications(params: GetNotificationsParams) {
 }
 
 export function markNotificationAsRead(notificationId: number) {
-  return fetchClient(`${NOTIFICATION_ENDPOINT}/${notificationId}/read`, {
-    method: "PATCH",
-  });
+  return fetchClient<Notification>(
+    `${NOTIFICATION_ENDPOINT}/${notificationId}/read`,
+    { method: "PATCH" },
+  );
 }
 
 export function markAllNotificationsAsRead(category: NotificationCategory) {
