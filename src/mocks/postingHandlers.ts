@@ -1,5 +1,7 @@
 import { HttpResponse, http } from "msw";
 
+import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
+
 import postings from "./data/postings.json";
 import regions from "./data/regions.json";
 import teams from "./data/teams.json";
@@ -37,6 +39,16 @@ type PostingMeetingSort = {
   field: PostingMeetingSortField;
   direction: "asc" | "desc";
 };
+type MockPostingParticipationStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "REVIEWED";
+type MockPostingParticipation = {
+  participationId: number;
+  status: MockPostingParticipationStatus;
+  recognizedMinutes?: number;
+};
 
 const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
   const id = index + 3;
@@ -61,10 +73,62 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
 
 const mockPostings = [...postings.data, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
-const participatedPostingIds = new Map<number, number>();
+const participatedPostingIds = new Map<number, MockPostingParticipation>([
+  [1, { participationId: 1, status: "CONFIRMED" }],
+]);
+
+function parseMockLocalDate(value: string | null | undefined) {
+  if (!value) {
+    return undefined;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const [, year, month, day] = match;
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
+
+  return date.getFullYear() === Number(year) &&
+    date.getMonth() === Number(month) - 1 &&
+    date.getDate() === Number(day)
+    ? date
+    : undefined;
+}
+
+function isMockPostingActivityEnded(postingId: number) {
+  const posting = mockPostings.find((item) => item.id === postingId);
+  const endDate = parseMockLocalDate(
+    posting?.actEndDate ?? posting?.actStartDate,
+  );
+
+  if (!endDate) {
+    return false;
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return endDate.getTime() <= today.getTime();
+}
 
 function getMockPostingParticipationAction(postingId: number) {
-  return participatedPostingIds.has(postingId) ? "CANCEL" : "APPLY";
+  const participation = participatedPostingIds.get(postingId);
+
+  if (!participation) {
+    return "APPLY";
+  }
+
+  switch (participation.status) {
+    case "APPLIED":
+    case "CONFIRMED":
+      return isMockPostingActivityEnded(postingId) ? "COMPLETE" : "CANCEL";
+    case "COMPLETED":
+    case "REVIEWED":
+      return "NONE";
+  }
 }
 
 function getOptionalNumberParam(url: URL, key: string) {
@@ -474,9 +538,8 @@ export const postingHandlers = [
       data: {
         ...posting,
         bookmarked: bookmarkedPostingIds.has(postingId),
-        participationStatus: participatedPostingIds.has(postingId)
-          ? "APPLIED"
-          : null,
+        participationStatus:
+          participatedPostingIds.get(postingId)?.status ?? null,
         participationAction: getMockPostingParticipationAction(postingId),
       },
       error: null,
@@ -544,7 +607,10 @@ export const postingHandlers = [
     }
 
     const participationId = participatedPostingIds.size + 1;
-    participatedPostingIds.set(postingId, participationId);
+    participatedPostingIds.set(postingId, {
+      participationId,
+      status: "APPLIED",
+    });
 
     return HttpResponse.json({
       success: true,
@@ -557,10 +623,175 @@ export const postingHandlers = [
     });
   }),
 
+  http.patch(
+    "*/api/v1/postings/:postingId/participations/complete",
+    ({ params }) => {
+      const postingId = Number(params.postingId);
+      const posting = mockPostings.find((item) => item.id === postingId);
+      const participation = participatedPostingIds.get(postingId);
+
+      if (!posting) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_NOT_FOUND",
+              message: "봉사공고를 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      if (!participation) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_NOT_FOUND",
+              message: "신청 내역을 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      if (
+        participation.status === "COMPLETED" ||
+        participation.status === "REVIEWED"
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_ALREADY_COMPLETED",
+              message: "이미 완료 처리된 참여입니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      if (!isMockPostingActivityEnded(postingId)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_COMPLETE_NOT_ALLOWED",
+              message: "활동종료일이 지나야 완료 처리를 할 수 있습니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      participatedPostingIds.set(postingId, {
+        ...participation,
+        status: "COMPLETED",
+      });
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
+
+  http.patch(
+    "*/api/v1/postings/:postingId/participations/hours",
+    async ({ params, request }) => {
+      const postingId = Number(params.postingId);
+      const participation = participatedPostingIds.get(postingId);
+      const body = (await request.json().catch(() => null)) as {
+        recognizedMinutes?: unknown;
+      } | null;
+      const recognizedMinutes = body?.recognizedMinutes;
+
+      if (
+        typeof recognizedMinutes !== "number" ||
+        !isValidRecognizedMinutes(recognizedMinutes)
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "요청 값이 올바르지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      if (!participation) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_NOT_FOUND",
+              message: "신청 내역을 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      if (
+        participation.status !== "COMPLETED" &&
+        participation.status !== "REVIEWED"
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_HOURS_NOT_ALLOWED",
+              message: "완료 처리된 참여만 인정시간을 입력할 수 있습니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      if (participation.recognizedMinutes !== undefined) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_HOURS_ALREADY_SUBMITTED",
+              message: "이미 인정시간을 입력했습니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      participatedPostingIds.set(postingId, {
+        ...participation,
+        recognizedMinutes,
+      });
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
+
   http.delete("*/api/v1/postings/:postingId/participations", ({ params }) => {
     const postingId = Number(params.postingId);
+    const participation = participatedPostingIds.get(postingId);
 
-    if (!participatedPostingIds.has(postingId)) {
+    if (!participation) {
       return HttpResponse.json(
         {
           success: false,
@@ -571,6 +802,24 @@ export const postingHandlers = [
           },
         },
         { status: 404 },
+      );
+    }
+
+    if (
+      participation.status === "COMPLETED" ||
+      participation.status === "REVIEWED"
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "PARTICIPATION_CANCEL_NOT_ALLOWED",
+            message:
+              "이력 보존을 위해 완료되었거나 후기가 작성된 신청은 취소할 수 없습니다.",
+          },
+        },
+        { status: 409 },
       );
     }
 

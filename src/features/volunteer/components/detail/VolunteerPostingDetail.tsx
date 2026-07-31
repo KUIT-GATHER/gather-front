@@ -5,7 +5,14 @@ import { useAuthStore } from "@/features/auth/store/auth.store";
 import {
   useApplyVolunteerPostingParticipationMutation,
   useCancelVolunteerPostingParticipationMutation,
+  useCompleteVolunteerPostingParticipationMutation,
+  useSubmitVolunteerPostingRecognizedMinutesMutation,
 } from "@/features/volunteer/hooks/useApplyVolunteerPostingParticipationMutation";
+import {
+  isValidRecognizedMinutes,
+  MAX_RECOGNIZED_MINUTES,
+  RECOGNIZED_MINUTES_UNIT,
+} from "@/features/volunteer/lib/recognizedMinutes";
 import {
   useAddVolunteerPostingBookmarkMutation,
   useRemoveVolunteerPostingBookmarkMutation,
@@ -19,6 +26,8 @@ import LoadingState from "@/shared/ui/LoadingState";
 
 import { VolunteerPostingApplyBar } from "./VolunteerPostingApplyBar";
 import { VolunteerPostingApplyConfirmSheet } from "./VolunteerPostingApplyConfirmSheet";
+import { VolunteerPostingCompleteSuccessDialog } from "./VolunteerPostingCompleteSuccessDialog";
+import { VolunteerPostingCompleteSheet } from "./VolunteerPostingCompleteSheet";
 import { VolunteerPostingConditionCard } from "./VolunteerPostingConditionCard";
 import { VolunteerPostingHeader } from "./VolunteerPostingHeader";
 import { VolunteerPostingHero } from "./VolunteerPostingHero";
@@ -33,6 +42,11 @@ const DEFAULT_APPLY_ERROR_MESSAGE =
   "신청 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
 const DEFAULT_CANCEL_ERROR_MESSAGE =
   "신청 취소 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
+const DEFAULT_COMPLETE_ERROR_MESSAGE =
+  "완료 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
+const DEFAULT_RECOGNIZED_MINUTES_ERROR_MESSAGE =
+  "인정시간 저장 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
+const RECOGNIZED_MINUTES_VALIDATION_ERROR_MESSAGE = `인정시간은 ${RECOGNIZED_MINUTES_UNIT}분 단위로 ${MAX_RECOGNIZED_MINUTES / 60}시간 이하까지 입력할 수 있어요.`;
 
 function getApplyErrorMessage(error: unknown) {
   if (!(error instanceof ApiError)) {
@@ -68,19 +82,71 @@ function getCancelErrorMessage(error: unknown) {
   }
 }
 
+function getCompleteErrorMessage(error: unknown) {
+  if (!(error instanceof ApiError)) {
+    return DEFAULT_COMPLETE_ERROR_MESSAGE;
+  }
+
+  switch (error.code) {
+    case API_ERROR_CODE.PARTICIPATION_NOT_FOUND:
+      return "신청 내역을 찾을 수 없어요.";
+    case API_ERROR_CODE.PARTICIPATION_ALREADY_COMPLETED:
+      return "이미 완료 처리된 봉사예요.";
+    case API_ERROR_CODE.PARTICIPATION_COMPLETE_NOT_ALLOWED:
+      return "활동 종료일이 지나야 완료할 수 있어요.";
+    case API_ERROR_CODE.POSTING_NOT_FOUND:
+      return "봉사 공고를 찾을 수 없어요.";
+    default:
+      return DEFAULT_COMPLETE_ERROR_MESSAGE;
+  }
+}
+
+function getRecognizedMinutesErrorMessage(error: unknown) {
+  if (!(error instanceof ApiError)) {
+    return DEFAULT_RECOGNIZED_MINUTES_ERROR_MESSAGE;
+  }
+
+  switch (error.code) {
+    case API_ERROR_CODE.VALIDATION_ERROR:
+      return RECOGNIZED_MINUTES_VALIDATION_ERROR_MESSAGE;
+    case API_ERROR_CODE.PARTICIPATION_NOT_FOUND:
+      return "신청 내역을 찾을 수 없어요.";
+    case API_ERROR_CODE.PARTICIPATION_HOURS_NOT_ALLOWED:
+      return "완료 처리된 봉사만 인정시간을 입력할 수 있어요.";
+    case API_ERROR_CODE.PARTICIPATION_HOURS_ALREADY_SUBMITTED:
+      return "이미 인정시간을 입력했어요.";
+    default:
+      return DEFAULT_RECOGNIZED_MINUTES_ERROR_MESSAGE;
+  }
+}
+
 export function VolunteerPostingDetail({
   postingId,
 }: VolunteerPostingDetailProps) {
   const navigate = useNavigate();
   const [isApplySheetOpen, setIsApplySheetOpen] = useState(false);
+  const [isCompleteSheetOpen, setIsCompleteSheetOpen] = useState(false);
+  const [isCompleteSuccessDialogOpen, setIsCompleteSuccessDialogOpen] =
+    useState(false);
+  const [recognizedMinutes, setRecognizedMinutes] = useState(0);
+  const [completedRecognizedMinutes, setCompletedRecognizedMinutes] =
+    useState(0);
+  const [isCompletionProcessed, setIsCompletionProcessed] = useState(false);
   const [applyErrorMessage, setApplyErrorMessage] = useState<string>();
   const [cancelErrorMessage, setCancelErrorMessage] = useState<string>();
+  const [completeErrorMessage, setCompleteErrorMessage] = useState<string>();
+  const [recognizedMinutesErrorMessage, setRecognizedMinutesErrorMessage] =
+    useState<string>();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const postingQuery = useVolunteerPostingDetail(postingId);
   const applyMutation =
     useApplyVolunteerPostingParticipationMutation(postingId);
   const cancelMutation =
     useCancelVolunteerPostingParticipationMutation(postingId);
+  const completeMutation =
+    useCompleteVolunteerPostingParticipationMutation(postingId);
+  const submitRecognizedMinutesMutation =
+    useSubmitVolunteerPostingRecognizedMinutesMutation(postingId);
   const addBookmarkMutation = useAddVolunteerPostingBookmarkMutation(postingId);
   const removeBookmarkMutation =
     useRemoveVolunteerPostingBookmarkMutation(postingId);
@@ -147,6 +213,9 @@ export function VolunteerPostingDetail({
 
   const posting = postingQuery.data;
   const canCancelParticipation = posting?.participationAction === "CANCEL";
+  const canCompleteParticipation = posting?.participationAction === "COMPLETE";
+  const isCompleteFlowPending =
+    completeMutation.isPending || submitRecognizedMinutesMutation.isPending;
 
   const handleApplyClick = () => {
     if (!posting) {
@@ -223,6 +292,116 @@ export function VolunteerPostingDetail({
         setCancelErrorMessage(getCancelErrorMessage(error));
       },
     });
+  };
+
+  const handleCompleteClick = () => {
+    if (!posting || !canCompleteParticipation) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: {
+          from: `/volunteers/${posting.id}`,
+        },
+      });
+      return;
+    }
+
+    setCompleteErrorMessage(undefined);
+    setRecognizedMinutesErrorMessage(undefined);
+    setApplyErrorMessage(undefined);
+    setCancelErrorMessage(undefined);
+    setRecognizedMinutes(0);
+    setIsCompletionProcessed(false);
+    setIsCompleteSheetOpen(true);
+  };
+
+  const submitRecognizedMinutes = () => {
+    submitRecognizedMinutesMutation.mutate(recognizedMinutes, {
+      onSuccess: () => {
+        setCompletedRecognizedMinutes(recognizedMinutes);
+        setIsCompleteSuccessDialogOpen(true);
+        setIsCompleteSheetOpen(false);
+        setIsCompletionProcessed(false);
+        setRecognizedMinutes(0);
+        setCompleteErrorMessage(undefined);
+        setRecognizedMinutesErrorMessage(undefined);
+      },
+      onError: (error) => {
+        if (
+          error instanceof ApiError &&
+          (error.code === API_ERROR_CODE.PARTICIPATION_NOT_FOUND ||
+            error.code === API_ERROR_CODE.PARTICIPATION_HOURS_NOT_ALLOWED ||
+            error.code === API_ERROR_CODE.PARTICIPATION_HOURS_ALREADY_SUBMITTED)
+        ) {
+          void postingQuery.refetch();
+        }
+
+        setRecognizedMinutesErrorMessage(
+          getRecognizedMinutesErrorMessage(error),
+        );
+      },
+    });
+  };
+
+  const handleCompleteConfirm = () => {
+    setCompleteErrorMessage(undefined);
+    setRecognizedMinutesErrorMessage(undefined);
+
+    if (!isValidRecognizedMinutes(recognizedMinutes)) {
+      setRecognizedMinutesErrorMessage(
+        RECOGNIZED_MINUTES_VALIDATION_ERROR_MESSAGE,
+      );
+      return;
+    }
+
+    if (isCompletionProcessed) {
+      submitRecognizedMinutes();
+      return;
+    }
+
+    completeMutation.mutate(undefined, {
+      onSuccess: () => {
+        setIsCompletionProcessed(true);
+        submitRecognizedMinutes();
+      },
+      onError: (error) => {
+        if (
+          error instanceof ApiError &&
+          error.code === API_ERROR_CODE.PARTICIPATION_ALREADY_COMPLETED
+        ) {
+          setIsCompletionProcessed(true);
+          submitRecognizedMinutes();
+          void postingQuery.refetch();
+          return;
+        }
+
+        if (
+          error instanceof ApiError &&
+          error.code === API_ERROR_CODE.PARTICIPATION_NOT_FOUND
+        ) {
+          void postingQuery.refetch();
+        }
+
+        setCompleteErrorMessage(getCompleteErrorMessage(error));
+      },
+    });
+  };
+
+  const handleCompleteSheetOpenChange = (open: boolean) => {
+    if (!open && isCompleteFlowPending) {
+      return;
+    }
+
+    setIsCompleteSheetOpen(open);
+
+    if (!open) {
+      setCompleteErrorMessage(undefined);
+      setRecognizedMinutesErrorMessage(undefined);
+      setIsCompletionProcessed(false);
+      setRecognizedMinutes(0);
+    }
   };
 
   const handleCreateTeam = () => {
@@ -305,9 +484,11 @@ export function VolunteerPostingDetail({
         }
         isApplyPending={applyMutation.isPending}
         isCancelPending={cancelMutation.isPending}
+        isCompletePending={isCompleteFlowPending}
         errorMessage={cancelErrorMessage}
         onApply={handleApplyClick}
         onCancel={handleCancelClick}
+        onComplete={handleCompleteClick}
       />
 
       <VolunteerPostingApplyConfirmSheet
@@ -322,6 +503,24 @@ export function VolunteerPostingDetail({
           }
         }}
         onConfirm={handleApplyConfirm}
+      />
+
+      <VolunteerPostingCompleteSheet
+        open={isCompleteSheetOpen}
+        recognizedMinutes={recognizedMinutes}
+        isPending={isCompleteFlowPending}
+        errorMessage={completeErrorMessage ?? recognizedMinutesErrorMessage}
+        onOpenChange={handleCompleteSheetOpenChange}
+        onRecognizedMinutesChange={setRecognizedMinutes}
+        onConfirm={handleCompleteConfirm}
+      />
+
+      <VolunteerPostingCompleteSuccessDialog
+        open={isCompleteSuccessDialogOpen}
+        recognizedMinutes={completedRecognizedMinutes}
+        onConfirm={() => {
+          setIsCompleteSuccessDialogOpen(false);
+        }}
       />
     </article>
   );
