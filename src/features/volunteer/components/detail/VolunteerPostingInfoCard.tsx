@@ -63,7 +63,6 @@ export function VolunteerPostingInfoCard({
   const activityPeriod = formatVolunteerPeriod(
     posting.actStartDate,
     posting.actEndDate,
-    posting.actWkdy,
   );
   const activityTime = formatVolunteerTimeRange(
     posting.actStartTime,

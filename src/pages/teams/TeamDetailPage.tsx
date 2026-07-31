@@ -1,8 +1,12 @@
-import { Outlet, useParams } from "react-router";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router";
 
 import { TeamDetailScreen } from "@/features/team/components/detail/TeamDetailScreen";
 import { TeamDetailProvider } from "@/features/team/components/detail/TeamDetailProvider";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import {
+  useAddMeetingBookmarkMutation,
+  useRemoveMeetingBookmarkMutation,
+} from "@/features/team/hooks/useMeetingBookmarkMutation";
 import { useMeetingDetailQuery } from "@/features/team/hooks/useMeetingDetailQuery";
 import { useMeetingHomeQuery } from "@/features/team/hooks/useMeetingHomeQuery";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -10,11 +14,18 @@ import LoadingState from "@/shared/ui/LoadingState";
 
 export function TeamDetailPage() {
   const { teamId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const authInitialized = useAuthStore((state) => state.authInitialized);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const meetingId = Number(teamId);
   const hasValidMeetingId = Number.isInteger(meetingId) && meetingId > 0;
   const safeMeetingId = hasValidMeetingId ? meetingId : 0;
+  const addBookmarkMutation = useAddMeetingBookmarkMutation(safeMeetingId);
+  const removeBookmarkMutation =
+    useRemoveMeetingBookmarkMutation(safeMeetingId);
+  const isBookmarkPending =
+    addBookmarkMutation.isPending || removeBookmarkMutation.isPending;
   const homeQuery = useMeetingHomeQuery(safeMeetingId, {
     enabled: hasValidMeetingId && authInitialized,
     isAuthenticated,
@@ -81,6 +92,23 @@ export function TeamDetailPage() {
 
   const isJoined = homeQuery.data.member || homeQuery.data.host;
   const isHost = homeQuery.data.host;
+  const handleBookmarkToggle = () => {
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: {
+          from: `${location.pathname}${location.search}${location.hash}`,
+        },
+      });
+      return;
+    }
+
+    if (detailQuery.data.bookmarked) {
+      removeBookmarkMutation.mutate();
+      return;
+    }
+
+    addBookmarkMutation.mutate();
+  };
 
   return (
     <TeamDetailProvider
@@ -97,6 +125,9 @@ export function TeamDetailPage() {
           home={homeQuery.data}
           isJoined={isJoined}
           isHost={isHost}
+          isBookmarked={detailQuery.data.bookmarked}
+          isBookmarkPending={isBookmarkPending}
+          onBookmarkToggle={handleBookmarkToggle}
         >
           <Outlet />
         </TeamDetailScreen>

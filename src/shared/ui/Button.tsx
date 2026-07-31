@@ -6,6 +6,7 @@ type ButtonVariant =
   | "primary"
   | "primaryOutline"
   | "dark"
+  | "neutral"
   | "danger"
   | "dangerOutline";
 type ButtonSize = "large" | "medium" | "pill" | "next";
@@ -25,6 +26,9 @@ const variantClasses: Record<ButtonVariant, string> = {
     "border border-button bg-transparent text-text-gray-400 hover:bg-button/8",
 
   dark: "bg-icon text-text2 hover:brightness-95",
+
+  neutral:
+    "bg-stroke text-text-gray-400 hover:brightness-95 disabled:bg-stroke disabled:text-text-gray-400",
 
   danger: "border border-point-red bg-point-red text-text2 hover:brightness-95",
 
