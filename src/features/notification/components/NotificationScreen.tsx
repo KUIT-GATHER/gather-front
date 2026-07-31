@@ -56,6 +56,10 @@ export function NotificationScreen() {
   const deletePendingNotificationId = deleteMutation.isPending
     ? (deleteMutation.variables?.id ?? null)
     : null;
+  const isNotificationMutationPending =
+    readMutation.isPending ||
+    readAllMutation.isPending ||
+    deleteMutation.isPending;
 
   useEffect(() => {
     const unreadCount = unreadCountQuery.data;
@@ -66,6 +70,10 @@ export function NotificationScreen() {
 
     const previousUnreadCount = previousUnreadCountRef.current;
     previousUnreadCountRef.current = unreadCount;
+
+    if (isNotificationMutationPending) {
+      return;
+    }
 
     const countKey = category === "ACTIVITY" ? "activity" : "meeting";
 
@@ -79,7 +87,12 @@ export function NotificationScreen() {
     void queryClient.invalidateQueries({
       queryKey: notificationKeys.infinite(category),
     });
-  }, [category, queryClient, unreadCountQuery.data]);
+  }, [
+    category,
+    isNotificationMutationPending,
+    queryClient,
+    unreadCountQuery.data,
+  ]);
 
   const changeCategory = (nextCategory: NotificationCategory) => {
     const nextSearchParams = new URLSearchParams(searchParams);
