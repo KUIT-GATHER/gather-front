@@ -40,12 +40,12 @@ export function VolunteerPostingHeader({
           <img
             src={ArrowIcon}
             alt=""
-            className="size-7 rotate-180"
+            className="size-9 rotate-180"
             aria-hidden="true"
           />
         </button>
 
-        <h1 className="min-w-0 flex-1 truncate text-body-15-semibold text-text">
+        <h1 className="min-w-0 flex-1 truncate text-[20px] leading-5 font-semibold text-text">
           {title}
         </h1>
 

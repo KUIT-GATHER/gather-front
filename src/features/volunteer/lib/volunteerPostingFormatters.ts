@@ -26,11 +26,13 @@ function parseLocalDate(value: string | null) {
 }
 
 function formatDateParts(date: Date) {
-  const year = String(date.getFullYear()).slice(-2);
+  const year = String(date.getFullYear());
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekday = weekdays[date.getDay()];
 
-  return `${year}.${month}.${day}`;
+  return `${year}.${month}.${day}(${weekday})`;
 }
 
 export function formatVolunteerDate(value: string | null) {
@@ -57,7 +59,6 @@ export function formatVolunteerHomeDate(value: string | null) {
 export function formatVolunteerPeriod(
   startDate: string | null,
   endDate: string | null,
-  weekday?: string | null,
 ) {
   const formattedStartDate = formatVolunteerDate(startDate);
   const formattedEndDate = formatVolunteerDate(endDate);
@@ -73,22 +74,102 @@ export function formatVolunteerPeriod(
       ? `${formattedStartDate} ~ ${formattedEndDate}`
       : (formattedStartDate ?? formattedEndDate);
 
-  return weekday ? `${period} (${weekday})` : period;
+  return period;
+}
+
+function normalizeVolunteerTime(value: string | null) {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const match = /^(\d{1,2})(?::(\d{1,2}))?(?::\d{1,2})?$/.exec(normalizedValue);
+
+  if (!match) {
+    return {
+      label: normalizedValue,
+      minutes: null,
+    };
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] ?? 0);
+
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return {
+      label: normalizedValue,
+      minutes: null,
+    };
+  }
+
+  return {
+    label: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0",
+    )}`,
+    minutes: hours * 60 + minutes,
+  };
+}
+
+function formatVolunteerDuration(
+  startMinutes: number | null,
+  endMinutes: number | null,
+) {
+  if (startMinutes === null || endMinutes === null) {
+    return null;
+  }
+
+  const durationMinutes = endMinutes - startMinutes;
+
+  if (durationMinutes <= 0) {
+    return null;
+  }
+
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+
+  if (minutes === 0) {
+    return `${hours}h`;
+  }
+
+  if (hours === 0) {
+    return `${minutes}m`;
+  }
+
+  return `${hours}h ${minutes}m`;
 }
 
 export function formatVolunteerTimeRange(
   startTime: string | null,
   endTime: string | null,
 ) {
-  if (!startTime && !endTime) {
+  const normalizedStartTime = normalizeVolunteerTime(startTime);
+  const normalizedEndTime = normalizeVolunteerTime(endTime);
+
+  if (!normalizedStartTime && !normalizedEndTime) {
     return null;
   }
 
-  if (!startTime || !endTime) {
-    return startTime ?? endTime;
+  if (!normalizedStartTime || !normalizedEndTime) {
+    return (normalizedStartTime ?? normalizedEndTime)?.label ?? null;
   }
 
-  return `${startTime} ~ ${endTime}`;
+  const duration = formatVolunteerDuration(
+    normalizedStartTime.minutes,
+    normalizedEndTime.minutes,
+  );
+
+  return `${normalizedStartTime.label} ~ ${normalizedEndTime.label}${
+    duration ? `(${duration})` : ""
+  }`;
 }
 
 export function getVolunteerDDay(value: string | null) {

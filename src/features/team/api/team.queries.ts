@@ -8,6 +8,7 @@ import {
   getMeetings,
   getMyMeetings,
 } from "@/features/team/api/team.api";
+import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 
 import type {
   MeetingInfiniteParams,
@@ -27,6 +28,8 @@ export const teamKeys = {
   create: () => [...teamKeys.all, "create"] as const,
   details: () => [...teamKeys.all, "detail"] as const,
   detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
+  images: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "images"] as const,
   detailForViewer: (meetingId: number, isAuthenticated: boolean) =>
     [
       ...teamKeys.detail(meetingId),
@@ -94,5 +97,11 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.postList(meetingId, params),
       queryFn: () => getMeetingPosts(meetingId, params),
+    }),
+
+  images: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.images(meetingId),
+      queryFn: () => getMeetingImages(meetingId),
     }),
 };
