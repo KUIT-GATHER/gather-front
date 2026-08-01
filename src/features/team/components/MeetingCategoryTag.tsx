@@ -1,9 +1,9 @@
-import CommunityPuzzle from "../assets/category-tags/community.svg";
-import CulturePuzzle from "../assets/category-tags/culture.svg";
-import EducationPuzzle from "../assets/category-tags/education.svg";
-import EnvironmentPuzzle from "../assets/category-tags/environment.svg";
-import OverseasPuzzle from "../assets/category-tags/overseas.svg";
-import WelfarePuzzle from "../assets/category-tags/welfare.svg";
+import CommunityPuzzle from "../../../shared/assets/category-tags/community.svg";
+import CulturePuzzle from "../../../shared/assets/category-tags/culture.svg";
+import EducationPuzzle from "../../../shared/assets/category-tags/education.svg";
+import EnvironmentPuzzle from "../../../shared/assets/category-tags/environment.svg";
+import OverseasPuzzle from "../../../shared/assets/category-tags/overseas.svg";
+import WelfarePuzzle from "../../../shared/assets/category-tags/welfare.svg";
 
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
