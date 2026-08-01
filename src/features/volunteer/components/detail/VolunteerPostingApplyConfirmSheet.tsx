@@ -89,8 +89,6 @@ export function VolunteerPostingApplyConfirmSheet({
       </div>
 
       <p className="mt-2 text-[13px] leading-[21.125px] font-normal text-text-gray-400">
-        신청 후 외부 링크로 이동하거나 현장 참여가 필요할 수 있어요.
-        <br />
         활동 조건을 다시 한번 확인해 주세요.
       </p>
 

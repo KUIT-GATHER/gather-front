@@ -1,16 +1,23 @@
 import ArrowIcon from "@/assets/icons/Arrow.svg";
+import { MeetingBookmarkButton } from "@/features/team/components/detail/shared/MeetingBookmarkButton";
 import type { TeammateViewerRole } from "@/features/team/types/team.types";
 
 type TeammateHeaderProps = {
   title: string;
   viewerRole: TeammateViewerRole;
   onBack: () => void;
+  isBookmarked: boolean;
+  isBookmarkPending: boolean;
+  onBookmarkToggle: () => void;
 };
 
 export function TeammateHeader({
   title,
   viewerRole,
   onBack,
+  isBookmarked,
+  isBookmarkPending,
+  onBookmarkToggle,
 }: TeammateHeaderProps) {
   const roleLabel = viewerRole === "leader" ? "팀장" : "팀원";
 
@@ -34,6 +41,12 @@ export function TeammateHeader({
         <h1 className="min-w-0 flex-1 truncate text-[20px] leading-7 font-semibold not-italic text-text">
           {title}
         </h1>
+
+        <MeetingBookmarkButton
+          isBookmarked={isBookmarked}
+          isPending={isBookmarkPending}
+          onToggle={onBookmarkToggle}
+        />
 
         <span className="shrink-0 rounded-lg border border-[#6d6970] bg-white px-3 py-1 text-[14px] leading-5 text-[#6d6970]">
           {roleLabel}

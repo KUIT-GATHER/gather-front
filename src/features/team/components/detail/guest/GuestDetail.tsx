@@ -9,6 +9,9 @@ import { GuestTabs } from "./GuestTabs";
 
 type GuestDetailProps = {
   home: MeetingHome;
+  isBookmarked: boolean;
+  isBookmarkPending: boolean;
+  onBookmarkToggle: () => void;
   children: ReactNode;
 };
 
@@ -18,12 +21,24 @@ function isJoinDisabled(home: MeetingHome) {
   );
 }
 
-export function GuestDetail({ home, children }: GuestDetailProps) {
+export function GuestDetail({
+  home,
+  isBookmarked,
+  isBookmarkPending,
+  onBookmarkToggle,
+  children,
+}: GuestDetailProps) {
   const navigate = useNavigate();
 
   return (
     <article className="min-h-dvh pb-[calc(env(safe-area-inset-bottom)+6.5rem)]">
-      <GuestHeader title={home.name} onBack={() => navigate(-1)} />
+      <GuestHeader
+        title={home.name}
+        onBack={() => navigate(-1)}
+        isBookmarked={isBookmarked}
+        isBookmarkPending={isBookmarkPending}
+        onBookmarkToggle={onBookmarkToggle}
+      />
       <GuestTabs meetingId={home.meetingId} />
 
       {children}

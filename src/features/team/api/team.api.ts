@@ -127,6 +127,10 @@ export async function getMeetings(params?: MeetingListParams) {
   };
 }
 
+export function getRecommendedMeetings() {
+  return fetchClient<MeetingListItem[]>(`${MEETING_ENDPOINT}/recommended`);
+}
+
 export function getMeetingRecommendedKeywords() {
   return fetchClient<string[]>(
     `${MEETING_ENDPOINT}/keywords/recommended`,

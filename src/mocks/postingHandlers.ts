@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 
 import postings from "./data/postings.json";
 import regions from "./data/regions.json";
+import teams from "./data/teams.json";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = [
@@ -31,6 +32,11 @@ type PostingSort = {
   field: PostingSortField;
   direction: "asc" | "desc";
 };
+type PostingMeetingSortField = "createdAt";
+type PostingMeetingSort = {
+  field: PostingMeetingSortField;
+  direction: "asc" | "desc";
+};
 
 const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
   const id = index + 3;
@@ -56,6 +62,10 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
 const mockPostings = [...postings.data, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
 const participatedPostingIds = new Map<number, number>();
+
+function getMockPostingParticipationAction(postingId: number) {
+  return participatedPostingIds.has(postingId) ? "CANCEL" : "APPLY";
+}
 
 function getOptionalNumberParam(url: URL, key: string) {
   const rawValue = url.searchParams.get(key);
@@ -119,6 +129,32 @@ function parseSorts(url: URL): PostingSort[] | null {
   }, []);
 }
 
+function parsePostingMeetingSorts(url: URL): PostingMeetingSort[] | null {
+  const rawSorts = url.searchParams.getAll("sort");
+
+  if (rawSorts.length === 0) {
+    return [{ field: "createdAt", direction: "desc" }];
+  }
+
+  return rawSorts.reduce<PostingMeetingSort[] | null>((sorts, rawSort) => {
+    if (!sorts) {
+      return null;
+    }
+
+    const [field, direction = "asc"] = rawSort.split(",");
+
+    if (
+      field !== "createdAt" ||
+      (direction !== "asc" && direction !== "desc")
+    ) {
+      return null;
+    }
+
+    sorts.push({ field, direction });
+    return sorts;
+  }, []);
+}
+
 function sortPostings(
   items: (typeof postings.data)[number][],
   sorts: PostingSort[],
@@ -135,6 +171,23 @@ function sortPostings(
         typeof leftValue === "number" && typeof rightValue === "number"
           ? leftValue - rightValue
           : String(leftValue).localeCompare(String(rightValue));
+
+      if (comparison !== 0) {
+        return direction === "asc" ? comparison : -comparison;
+      }
+    }
+
+    return 0;
+  });
+}
+
+function sortPostingMeetings(
+  items: (typeof teams.data)[number][],
+  sorts: PostingMeetingSort[],
+) {
+  return [...items].sort((left, right) => {
+    for (const { direction } of sorts) {
+      const comparison = left.meetingId - right.meetingId;
 
       if (comparison !== 0) {
         return direction === "asc" ? comparison : -comparison;
@@ -322,6 +375,82 @@ export const postingHandlers = [
     });
   }),
 
+  http.get("*/api/v1/postings/:postingId/meetings", ({ params, request }) => {
+    const postingId = Number(params.postingId);
+    const posting = mockPostings.find((item) => item.id === postingId);
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("page") ?? 0);
+    const size = Number(url.searchParams.get("size") ?? 10);
+    const sorts = parsePostingMeetingSorts(url);
+
+    if (!posting) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "POSTING_NOT_FOUND",
+            message: "Posting not found.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    if (!sorts) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid sort parameter.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const items = sortPostingMeetings(
+      teams.data.filter((team) => team.volunteerPostingId === postingId),
+      sorts,
+    );
+    const startIndex = page * size;
+    const content = items
+      .slice(startIndex, startIndex + size)
+      .map(
+        ({
+          meetingId,
+          name,
+          categories,
+          currentMemberCount,
+          maxMember,
+          status,
+        }) => ({
+          meetingId,
+          name,
+          category: categories[0],
+          currentMemberCount,
+          maxMember,
+          status,
+          member: false,
+          host: false,
+        }),
+      );
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        totalElements: items.length,
+        totalPages: Math.ceil(items.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/postings/:postingId", ({ params }) => {
     const postingId = Number(params.postingId);
     const posting = mockPostings.find((item) => item.id === postingId);
@@ -345,6 +474,10 @@ export const postingHandlers = [
       data: {
         ...posting,
         bookmarked: bookmarkedPostingIds.has(postingId),
+        participationStatus: participatedPostingIds.has(postingId)
+          ? "APPLIED"
+          : null,
+        participationAction: getMockPostingParticipationAction(postingId),
       },
       error: null,
     });
@@ -396,6 +529,20 @@ export const postingHandlers = [
       );
     }
 
+    if (posting.status !== "RECRUITING") {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "POSTING_CLOSED",
+            message: "마감된 봉사공고입니다.",
+          },
+        },
+        { status: 409 },
+      );
+    }
+
     const participationId = participatedPostingIds.size + 1;
     participatedPostingIds.set(postingId, participationId);
 
@@ -406,6 +553,32 @@ export const postingHandlers = [
         status: "APPLIED",
         applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
       },
+      error: null,
+    });
+  }),
+
+  http.delete("*/api/v1/postings/:postingId/participations", ({ params }) => {
+    const postingId = Number(params.postingId);
+
+    if (!participatedPostingIds.has(postingId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "PARTICIPATION_NOT_FOUND",
+            message: "신청 내역을 찾을 수 없습니다.",
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    participatedPostingIds.delete(postingId);
+
+    return HttpResponse.json({
+      success: true,
+      data: null,
       error: null,
     });
   }),
