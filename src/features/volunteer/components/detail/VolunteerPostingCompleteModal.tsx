@@ -18,8 +18,9 @@ const hourOptions = Array.from(
   { length: MAX_RECOGNIZED_HOURS + 1 },
   (_, index) => index,
 );
-const ITEM_HEIGHT = 40;
-const WHEEL_PADDING = 80;
+const ITEM_HEIGHT = 48;
+const WHEEL_TOP_PADDING = 48;
+const WHEEL_BOTTOM_PADDING = 144;
 
 type VolunteerPostingCompleteModalProps = {
   open: boolean;
@@ -60,7 +61,7 @@ function WheelColumn({
         ref={ref}
         role="listbox"
         aria-label={label}
-        className="h-50 snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="h-60 snap-y snap-mandatory scroll-pt-12 scroll-pb-36 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={(event) => {
           const index = Math.max(
             0,
@@ -76,7 +77,7 @@ function WheelColumn({
           }
         }}
       >
-        <div style={{ height: WHEEL_PADDING }} aria-hidden="true" />
+        <div style={{ height: WHEEL_TOP_PADDING }} aria-hidden="true" />
         {options.map((option) => {
           const selected = option === value;
 
@@ -87,10 +88,10 @@ function WheelColumn({
               role="option"
               aria-selected={selected}
               className={cn(
-                "flex h-10 w-full snap-center items-center justify-center rounded-xl text-[18px] leading-7 transition",
+                "flex h-12 w-full snap-start items-center justify-center rounded-xl text-[16px] leading-5.5 transition",
                 selected
-                  ? "bg-stroke font-medium text-text"
-                  : "font-normal text-text-gray-100",
+                  ? "bg-text-gray-100 text-[20px] leading-7 font-medium text-text"
+                  : "text-[20px] leading-7 font-normal text-[#A0A0A0]",
               )}
               onClick={() => onChange(option)}
             >
@@ -98,7 +99,7 @@ function WheelColumn({
             </button>
           );
         })}
-        <div style={{ height: WHEEL_PADDING }} aria-hidden="true" />
+        <div style={{ height: WHEEL_BOTTOM_PADDING }} aria-hidden="true" />
       </div>
     </div>
   );
@@ -145,13 +146,13 @@ export function VolunteerPostingCompleteModal({
             }
           }}
           aria-busy={isPending}
-          className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2.75rem)] max-w-78 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-point-green bg-white px-5 pt-7 pb-4 outline-none"
+          className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2.75rem)] max-w-78 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-point-green bg-white px-6 pt-10.5 pb-6 outline-none"
         >
           <div className="text-center">
-            <Dialog.Title className="text-[16px] leading-6 font-semibold text-text">
+            <Dialog.Title className="text-[20px] leading-7 font-semibold text-text">
               봉사 시간을 입력해주세요
             </Dialog.Title>
-            <Dialog.Description className="mt-2 text-[13px] leading-5 font-normal text-text-gray-100">
+            <Dialog.Description className="mt-2 text-[16px] leading-5.5 text-[#A0A0A0]">
               1365에서 인정받은
               <br />
               실제 봉사 시간을 선택해주세요
@@ -159,7 +160,7 @@ export function VolunteerPostingCompleteModal({
           </div>
 
           <div className="mt-5 px-1">
-            <div className="grid grid-cols-2 gap-2 text-center text-body-14 text-text-gray-100">
+            <div className="grid grid-cols-2 gap-2 text-center text-[16px] leading-5.5 text-[#A0A0A0]">
               <span>시간</span>
               <span>분</span>
             </div>
@@ -195,7 +196,7 @@ export function VolunteerPostingCompleteModal({
             </p>
           ) : null}
 
-          <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <Button
               fullWidth
               variant="neutral"
