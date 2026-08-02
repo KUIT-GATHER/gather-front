@@ -134,12 +134,23 @@ export type MeetingPost = MeetingPostSummary & {
   updatedAt: string;
 };
 
-export type MeetingPostCreateRequest = {
+type MeetingPostCreateBaseRequest = {
   title: string;
   content: string;
-  type: MeetingPostType;
-  recruitCapacity?: number | null;
 };
+
+export type MeetingPostCreateGeneralRequest = MeetingPostCreateBaseRequest & {
+  type: Exclude<MeetingPostType, "RECRUIT">;
+};
+
+export type MeetingPostCreateRecruitRequest = MeetingPostCreateBaseRequest & {
+  type: "RECRUIT";
+  recruitCapacity: number;
+};
+
+export type MeetingPostCreateRequest =
+  | MeetingPostCreateGeneralRequest
+  | MeetingPostCreateRecruitRequest;
 
 export type MeetingPostUpdateRequest = {
   title: string;

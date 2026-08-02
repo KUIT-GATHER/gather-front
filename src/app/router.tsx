@@ -28,8 +28,8 @@ import { TeamCreateCompletePage } from "@/pages/teams/TeamCreateCompletePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
 import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
-import { TeamDetailPostPage } from "@/pages/teams/TeamDetailPostPage";
-import { TeamDetailPostsPage } from "@/pages/teams/TeamDetailPostsPage";
+import { TeamPostDetailPage } from "@/pages/teams/TeamPostDetailPage";
+import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
@@ -109,8 +109,8 @@ export const router = createBrowserRouter([
             element: <TeamDetailPage />,
             children: [
               { index: true, element: <TeamDetailHomePage /> },
-              { path: "posts", element: <TeamDetailPostsPage /> },
-              { path: "posts/:postId", element: <TeamDetailPostPage /> },
+              { path: "posts", element: <TeamDetailPostListPage /> },
+              { path: "posts/:postId", element: <TeamPostDetailPage /> },
               { path: "activity", element: <TeamDetailActivityPage /> },
             ],
           },

@@ -2,26 +2,10 @@ import { Link } from "react-router";
 
 import CommentIcon from "@/assets/icons/Comment.svg";
 import HeartIcon from "@/assets/icons/Heart.svg";
-import {
-  MEETING_POST_TYPE_BADGE_CLASS_NAMES,
-  MEETING_POST_TYPE_LABELS,
-} from "@/features/team/constants/meetingPost.constants";
+import { formatMeetingPostDate } from "@/features/team/lib/formatMeetingPostDate";
 import type { MeetingPostSummary } from "@/features/team/types/team.types";
-import { cn } from "@/shared/lib/cn";
 
-function formatPostDate(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}.${month}.${day}`;
-}
+import { MeetingPostTypeBadge } from "../shared/MeetingPostTypeBadge";
 
 type SharedMeetingBoardPostCardProps = {
   meetingId: number;
@@ -68,16 +52,12 @@ export function SharedMeetingBoardPostCard({
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span
-            className={cn(
-              "shrink-0 rounded-[30px] px-2.5 py-1 text-[14px] leading-4 font-medium",
-              MEETING_POST_TYPE_BADGE_CLASS_NAMES[post.type],
-            )}
-          >
-            {MEETING_POST_TYPE_LABELS[post.type]}
-          </span>
+          <MeetingPostTypeBadge
+            type={post.type}
+            className="shrink-0 text-[14px] font-medium"
+          />
           <span className="shrink-0 text-[14px] leading-5 font-medium text-text-gray-100">
-            {formatPostDate(post.createdAt)}
+            {formatMeetingPostDate(post.createdAt)}
           </span>
           <span className="min-w-0 truncate text-[14px] leading-5 font-medium text-text">
             {post.authorNickname}

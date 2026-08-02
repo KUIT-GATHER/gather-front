@@ -1,6 +1,6 @@
 import { Navigate, useLocation, useParams } from "react-router";
 
-import { MeetingPostDetail } from "@/features/team/components/board/MeetingPostDetail";
+import { MeetingPostDetail } from "@/features/team/components/board/post/MeetingPostDetail";
 import { useMeetingPostQuery } from "@/features/team/hooks/useMeetingPostQuery";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import { ApiError } from "@/shared/api/apiError";
@@ -39,7 +39,7 @@ function getPostDetailError(error: unknown) {
   };
 }
 
-export function TeamDetailPostPage() {
+export function TeamPostDetailPage() {
   const { postId } = useParams();
   const location = useLocation();
   const { authInitialized, isAuthenticated, meetingId } =

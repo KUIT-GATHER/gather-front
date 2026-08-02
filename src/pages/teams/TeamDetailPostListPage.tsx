@@ -1,11 +1,11 @@
 import { Navigate, useLocation } from "react-router";
 
-import { GuestBoard } from "@/features/team/components/board/GuestBoard";
-import { SharedMeetingBoard } from "@/features/team/components/board/SharedMeetingBoard";
+import { GuestBoard } from "@/features/team/components/board/list/GuestBoard";
+import { SharedMeetingBoard } from "@/features/team/components/board/list/SharedMeetingBoard";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import LoadingState from "@/shared/ui/LoadingState";
 
-export function TeamDetailPostsPage() {
+export function TeamDetailPostListPage() {
   const location = useLocation();
   const { authInitialized, home, isAuthenticated, isJoined } =
     useTeamDetailContext();
