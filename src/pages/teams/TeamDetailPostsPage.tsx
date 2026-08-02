@@ -36,6 +36,10 @@ export function TeamDetailPostsPage() {
   }
 
   return (
-    <SharedMeetingBoard meetingId={home.meetingId} meetingName={home.name} />
+    <SharedMeetingBoard
+      meetingId={home.meetingId}
+      meetingName={home.name}
+      canWrite
+    />
   );
 }

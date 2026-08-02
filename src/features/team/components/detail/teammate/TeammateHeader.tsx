@@ -1,10 +1,15 @@
 import ArrowIcon from "@/assets/icons/Arrow.svg";
+import SettingsIcon from "@/assets/icons/Settings.svg";
 import { MeetingBookmarkButton } from "@/features/team/components/detail/shared/MeetingBookmarkButton";
 import type { TeammateViewerRole } from "@/features/team/types/team.types";
+import { cn } from "@/shared/lib/cn";
+
+type TeammateHeaderAction = "bookmark" | "settings" | "none";
 
 type TeammateHeaderProps = {
   title: string;
   viewerRole: TeammateViewerRole;
+  action: TeammateHeaderAction;
   onBack: () => void;
   isBookmarked: boolean;
   isBookmarkPending: boolean;
@@ -14,12 +19,25 @@ type TeammateHeaderProps = {
 export function TeammateHeader({
   title,
   viewerRole,
+  action,
   onBack,
   isBookmarked,
   isBookmarkPending,
   onBookmarkToggle,
 }: TeammateHeaderProps) {
   const roleLabel = viewerRole === "leader" ? "팀장" : "팀원";
+  const roleBadge = (
+    <span
+      className={cn(
+        "shrink-0 rounded-lg border border-[#6d6970] px-2.5 py-0.75 text-[14px] leading-5",
+        viewerRole === "leader"
+          ? "bg-[#6D6970] text-text2"
+          : "bg-white text-[#6d6970]",
+      )}
+    >
+      {roleLabel}
+    </span>
+  );
 
   return (
     <header className="sticky top-0 z-40 bg-bg pt-[env(safe-area-inset-top)]">
@@ -42,15 +60,26 @@ export function TeammateHeader({
           {title}
         </h1>
 
-        <MeetingBookmarkButton
-          isBookmarked={isBookmarked}
-          isPending={isBookmarkPending}
-          onToggle={onBookmarkToggle}
-        />
+        {action === "bookmark" ? (
+          <MeetingBookmarkButton
+            isBookmarked={isBookmarked}
+            isPending={isBookmarkPending}
+            onToggle={onBookmarkToggle}
+          />
+        ) : null}
 
-        <span className="shrink-0 rounded-lg border border-[#6d6970] bg-white px-3 py-1 text-[14px] leading-5 text-[#6d6970]">
-          {roleLabel}
-        </span>
+        {roleBadge}
+
+        {action === "settings" ? (
+          <button
+            type="button"
+            aria-label="모임 설정"
+            disabled
+            className="grid size-8 shrink-0 place-items-center rounded-full text-text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-default"
+          >
+            <img src={SettingsIcon} alt="" className="size-5.3" />
+          </button>
+        ) : null}
       </div>
     </header>
   );
