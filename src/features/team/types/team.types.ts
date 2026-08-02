@@ -127,3 +127,21 @@ export type MeetingPostSummary = {
   commentCount: number;
   createdAt: string;
 };
+
+export type MeetingPost = MeetingPostSummary & {
+  meetingId: number;
+  recruitCapacity: number | null;
+  updatedAt: string;
+};
+
+export type MeetingPostCreateRequest = {
+  title: string;
+  content: string;
+  type: MeetingPostType;
+  recruitCapacity?: number | null;
+};
+
+export type MeetingPostUpdateRequest = {
+  title: string;
+  content: string;
+};

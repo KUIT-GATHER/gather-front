@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
+  getMeetingPost,
   getMeeting,
   getMeetingHome,
   getMeetingPosts,
@@ -50,6 +51,14 @@ export const teamKeys = {
     [...teamKeys.detail(meetingId), "posts"] as const,
   postList: (meetingId: number, params: MeetingPostListParams = {}) =>
     [...teamKeys.posts(meetingId), params] as const,
+  post: (meetingId: number, postId: number) =>
+    [...teamKeys.posts(meetingId), "detail", postId] as const,
+  createPost: (meetingId: number) =>
+    [...teamKeys.posts(meetingId), "create"] as const,
+  updatePost: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "update"] as const,
+  deletePost: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "delete"] as const,
   bookmark: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "bookmark"] as const,
 };
@@ -108,6 +117,12 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.postList(meetingId, params),
       queryFn: () => getMeetingPosts(meetingId, params),
+    }),
+
+  post: (meetingId: number, postId: number) =>
+    queryOptions({
+      queryKey: teamKeys.post(meetingId, postId),
+      queryFn: () => getMeetingPost(meetingId, postId),
     }),
 
   images: (meetingId: number) =>

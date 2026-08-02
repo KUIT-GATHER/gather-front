@@ -9,8 +9,11 @@ import type {
   MeetingListItem,
   MeetingListParams,
   MeetingPage,
+  MeetingPost,
+  MeetingPostCreateRequest,
   MeetingPostListParams,
   MeetingPostSummary,
+  MeetingPostUpdateRequest,
   MyMeetingListItem,
 } from "@/features/team/types/team.types";
 
@@ -116,6 +119,10 @@ function buildMeetingPostsEndpoint(
   return query ? `${endpoint}?${query}` : endpoint;
 }
 
+function buildMeetingPostEndpoint(meetingId: number, postId: number) {
+  return `${MEETING_ENDPOINT}/${meetingId}/posts/${postId}`;
+}
+
 export async function getMeetings(params?: MeetingListParams) {
   const page = await fetchClient<
     Omit<MeetingPage, "content"> & { content: MeetingListItemResponse[] }
@@ -174,6 +181,37 @@ export function getMeetingPosts(
   return fetchClient<MeetingPostSummary[]>(
     buildMeetingPostsEndpoint(meetingId, params),
   );
+}
+
+export function getMeetingPost(meetingId: number, postId: number) {
+  return fetchClient<MeetingPost>(buildMeetingPostEndpoint(meetingId, postId));
+}
+
+export function createMeetingPost(
+  meetingId: number,
+  payload: MeetingPostCreateRequest,
+) {
+  return fetchClient<MeetingPost>(buildMeetingPostsEndpoint(meetingId), {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateMeetingPost(
+  meetingId: number,
+  postId: number,
+  payload: MeetingPostUpdateRequest,
+) {
+  return fetchClient<MeetingPost>(buildMeetingPostEndpoint(meetingId, postId), {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteMeetingPost(meetingId: number, postId: number) {
+  return fetchClient<null>(buildMeetingPostEndpoint(meetingId, postId), {
+    method: "DELETE",
+  });
 }
 
 export async function joinMeeting(meetingId: number) {
