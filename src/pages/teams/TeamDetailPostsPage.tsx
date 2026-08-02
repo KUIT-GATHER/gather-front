@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router";
 
-import { GuestBoard } from "@/features/team/components/detail/guest/GuestBoard";
-import { SharedMeetingBoard } from "@/features/team/components/detail/shared/SharedMeetingBoard";
+import { GuestBoard } from "@/features/team/components/board/GuestBoard";
+import { SharedMeetingBoard } from "@/features/team/components/board/SharedMeetingBoard";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import LoadingState from "@/shared/ui/LoadingState";
 

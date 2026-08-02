@@ -1,7 +1,7 @@
 import type { MeetingHome } from "@/features/team/types/team.types";
 
 import { GuestBoardAccessNotice } from "./GuestBoardAccessNotice";
-import { SharedMeetingBoard } from "../shared/SharedMeetingBoard";
+import { SharedMeetingBoard } from "./SharedMeetingBoard";
 
 type GuestBoardProps = {
   home: MeetingHome;
