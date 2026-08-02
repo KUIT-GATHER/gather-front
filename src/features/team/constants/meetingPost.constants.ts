@@ -13,3 +13,13 @@ export const MEETING_POST_TYPES: readonly MeetingPostType[] = [
   "RECRUIT",
   "FREE",
 ];
+
+export const MEETING_POST_TYPE_BADGE_CLASS_NAMES: Record<
+  MeetingPostType,
+  string
+> = {
+  NOTICE: "bg-[#FFD6DB] text-point-red",
+  REVIEW: "bg-[#DCECDF] text-button",
+  RECRUIT: "bg-[#FFF3FF] text-[#D197D1]",
+  FREE: "bg-stroke/70 text-text-gray-400",
+};

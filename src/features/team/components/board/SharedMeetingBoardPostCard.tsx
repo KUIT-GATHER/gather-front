@@ -1,7 +1,13 @@
+import { Link } from "react-router";
+
 import CommentIcon from "@/assets/icons/Comment.svg";
 import HeartIcon from "@/assets/icons/Heart.svg";
-import { MEETING_POST_TYPE_LABELS } from "@/features/team/constants/meetingPost.constants";
+import {
+  MEETING_POST_TYPE_BADGE_CLASS_NAMES,
+  MEETING_POST_TYPE_LABELS,
+} from "@/features/team/constants/meetingPost.constants";
 import type { MeetingPostSummary } from "@/features/team/types/team.types";
+import { cn } from "@/shared/lib/cn";
 
 function formatPostDate(value: string) {
   const date = new Date(value);
@@ -18,10 +24,12 @@ function formatPostDate(value: string) {
 }
 
 type SharedMeetingBoardPostCardProps = {
+  meetingId: number;
   post: MeetingPostSummary;
 };
 
 export function SharedMeetingBoardPostCard({
+  meetingId,
   post,
 }: SharedMeetingBoardPostCardProps) {
   return (
@@ -42,8 +50,8 @@ export function SharedMeetingBoardPostCard({
         >
           {post.content}
         </p>
-        <span
-          aria-hidden="true"
+        <Link
+          to={`/teams/${meetingId}/posts/${post.postId}`}
           className="shrink-0 text-text"
           style={{
             textDecorationLine: "underline",
@@ -55,12 +63,17 @@ export function SharedMeetingBoardPostCard({
           }}
         >
           더보기
-        </span>
+        </Link>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 rounded-[30px] bg-point-red/15 px-2.5 py-1 text-[14px] leading-4 font-medium text-point-red">
+          <span
+            className={cn(
+              "shrink-0 rounded-[30px] px-2.5 py-1 text-[14px] leading-4 font-medium",
+              MEETING_POST_TYPE_BADGE_CLASS_NAMES[post.type],
+            )}
+          >
             {MEETING_POST_TYPE_LABELS[post.type]}
           </span>
           <span className="shrink-0 text-[14px] leading-5 font-medium text-text-gray-100">

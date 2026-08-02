@@ -216,7 +216,7 @@ const meetingPosts = [
     commentCount: 2,
     createdAt: "2026-07-24T18:10:00",
   },
-] as const;
+];
 
 function createMeetingNotFoundResponse() {
   return HttpResponse.json(
@@ -226,6 +226,20 @@ function createMeetingNotFoundResponse() {
       error: {
         code: "MEETING_NOT_FOUND",
         message: "모임을 찾을 수 없습니다.",
+      },
+    },
+    { status: 404 },
+  );
+}
+
+function createPostNotFoundResponse() {
+  return HttpResponse.json(
+    {
+      success: false,
+      data: null,
+      error: {
+        code: "POST_NOT_FOUND",
+        message: "게시글을 찾을 수 없습니다.",
       },
     },
     { status: 404 },
@@ -1114,6 +1128,100 @@ export const teamHandlers = [
 
     return HttpResponse.json({ success: true, data: posts, error: null });
   }),
+
+  http.get(
+    "*/api/v1/meetings/:meetingId/posts/:postId",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = meetingPosts.find(
+        (meetingPost) =>
+          meetingPost.meetingId === meetingId && meetingPost.postId === postId,
+      );
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      const isJoined = getMembershipRole(userId, meetingId) !== null;
+
+      if (!isJoined && post.type !== "NOTICE" && post.type !== "REVIEW") {
+        return createMeetingErrorResponse(
+          "POST_ACCESS_DENIED",
+          "접근할 수 없는 게시글입니다.",
+          403,
+        );
+      }
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          ...post,
+          recruitCapacity: post.type === "RECRUIT" ? 3 : null,
+          updatedAt: post.createdAt,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.delete(
+    "*/api/v1/meetings/:meetingId/posts/:postId",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const postIndex = meetingPosts.findIndex(
+        (meetingPost) =>
+          meetingPost.meetingId === meetingId && meetingPost.postId === postId,
+      );
+
+      if (postIndex === -1) {
+        return createPostNotFoundResponse();
+      }
+
+      const post = meetingPosts[postIndex];
+
+      if (post.authorId !== userId && team.hostId !== userId) {
+        return createMeetingErrorResponse(
+          "POST_FORBIDDEN",
+          "게시글을 삭제할 권한이 없습니다.",
+          403,
+        );
+      }
+
+      meetingPosts.splice(postIndex, 1);
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
 
   http.post("*/api/v1/meetings/:meetingId/join", ({ params, request }) => {
     const userId = getMockUserId(request);

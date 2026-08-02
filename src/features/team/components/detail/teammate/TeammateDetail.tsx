@@ -30,6 +30,9 @@ export function TeammateDetail({
   const location = useLocation();
   const navigate = useNavigate();
   const isBoardPage = location.pathname.endsWith("/posts");
+  const isPostDetailPage = location.pathname.startsWith(
+    `/teams/${home.meetingId}/posts/`,
+  );
   const isHomePage = location.pathname === `/teams/${home.meetingId}`;
   const headerAction =
     isBoardPage && viewerRole === "leader"
@@ -39,7 +42,13 @@ export function TeammateDetail({
         : "none";
 
   return (
-    <article className="min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]">
+    <article
+      className={
+        isPostDetailPage
+          ? "min-h-dvh pb-8"
+          : "min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      }
+    >
       <TeammateHeader
         title={home.name}
         viewerRole={viewerRole}
@@ -49,11 +58,11 @@ export function TeammateDetail({
         isBookmarkPending={isBookmarkPending}
         onBookmarkToggle={onBookmarkToggle}
       />
-      <TeammateTabs meetingId={home.meetingId} />
+      {isPostDetailPage ? null : <TeammateTabs meetingId={home.meetingId} />}
 
       {children}
 
-      <MobileBottomNavigation />
+      {isPostDetailPage ? null : <MobileBottomNavigation />}
     </article>
   );
 }

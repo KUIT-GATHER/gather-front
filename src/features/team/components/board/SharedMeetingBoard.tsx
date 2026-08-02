@@ -100,7 +100,7 @@ export function SharedMeetingBoard({
         <ul className="mt-3 flex flex-col gap-3">
           {posts.map((post) => (
             <li key={post.postId}>
-              <SharedMeetingBoardPostCard post={post} />
+              <SharedMeetingBoardPostCard meetingId={meetingId} post={post} />
             </li>
           ))}
         </ul>

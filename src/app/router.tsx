@@ -28,6 +28,7 @@ import { TeamCreateCompletePage } from "@/pages/teams/TeamCreateCompletePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
 import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
+import { TeamDetailPostPage } from "@/pages/teams/TeamDetailPostPage";
 import { TeamDetailPostsPage } from "@/pages/teams/TeamDetailPostsPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
@@ -109,6 +110,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <TeamDetailHomePage /> },
               { path: "posts", element: <TeamDetailPostsPage /> },
+              { path: "posts/:postId", element: <TeamDetailPostPage /> },
               { path: "activity", element: <TeamDetailActivityPage /> },
             ],
           },
