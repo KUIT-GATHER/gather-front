@@ -1,7 +1,13 @@
 import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
-import { mockUsers, type MockUser, getMockUserById } from "./data/mockUsers";
+import {
+  addMockUser,
+  getMockUserById,
+  getNextMockUserId,
+  mockUsers,
+  type MockUser,
+} from "./data/mockUsers";
 import {
   createMockAccessToken,
   createMockRefreshToken,
@@ -58,28 +64,23 @@ const MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN =
   "mock-kakao-already-registered-signup-token";
 const MOCK_INVALID_KAKAO_SIGNUP_TOKEN = "mock-kakao-invalid-signup-token";
 
-function getCookie(request: Request, name: string) {
-  const cookie = request.headers.get("Cookie");
-
-  if (!cookie) {
-    return null;
-  }
-
-  return (
-    cookie
-      .split(";")
-      .map((part) => part.trim())
-      .find((part) => part.startsWith(`${name}=`))
-      ?.split("=")[1] ?? null
-  );
-}
-
 function createRefreshTokenCookie(refreshToken: string) {
-  return `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}; HttpOnly; Path=/api/v1/auth; SameSite=Lax`;
+  return [
+    `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`,
+    "HttpOnly",
+    "Path=/",
+    "SameSite=Lax",
+  ].join("; ");
 }
 
 function createExpiredRefreshTokenCookie() {
-  return `${REFRESH_TOKEN_COOKIE_NAME}=; HttpOnly; Path=/api/v1/auth; SameSite=Lax; Max-Age=0`;
+  return [
+    `${REFRESH_TOKEN_COOKIE_NAME}=`,
+    "HttpOnly",
+    "Path=/",
+    "SameSite=Lax",
+    "Max-Age=0",
+  ].join("; ");
 }
 
 export const authHandlers = [
@@ -441,7 +442,7 @@ export const authHandlers = [
     }
 
     const newUser: MockUser = {
-      id: mockUsers.length + 1,
+      id: getNextMockUserId(),
       name: body.name,
       birthDate: body.birthDate,
       gender: body.gender,
@@ -454,7 +455,7 @@ export const authHandlers = [
       interestCategories: body.interestCategories,
     };
 
-    mockUsers.push(newUser);
+    addMockUser(newUser);
 
     return HttpResponse.json(
       {
@@ -728,7 +729,7 @@ export const authHandlers = [
       );
     }
 
-    const userId = mockUsers.length + 1;
+    const userId = getNextMockUserId();
     const user: MockUser = {
       id: userId,
       name: body.name,
@@ -744,7 +745,7 @@ export const authHandlers = [
     };
     const refreshToken = createMockRefreshToken(userId);
 
-    mockUsers.push(user);
+    addMockUser(user);
 
     return HttpResponse.json(
       {
@@ -824,8 +825,8 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/reissue", async ({ request }) => {
-    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
+  http.post("*/api/v1/auth/reissue", ({ cookies }) => {
+    const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
 
     if (!refreshToken) {
       return HttpResponse.json(
