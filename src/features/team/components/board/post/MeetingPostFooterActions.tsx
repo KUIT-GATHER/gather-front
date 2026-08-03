@@ -54,7 +54,7 @@ export function MeetingPostFooterActions({
 
   return (
     <>
-      <div className="mt-7 border-t border-stroke pt-4">
+      <div className="mt-4 border-t border-stroke pt-5">
         <div className="flex items-center justify-between gap-4 text-text-gray-400">
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-2">

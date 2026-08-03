@@ -9,7 +9,7 @@ type MeetingPostDetailProps = {
 
 export function MeetingPostDetail({ post }: MeetingPostDetailProps) {
   return (
-    <section className="px-5.5 pt-2 pb-8">
+    <section className="px-5.5 pb-8">
       <MeetingPostMainBoard post={post} />
 
       <MeetingPostComment

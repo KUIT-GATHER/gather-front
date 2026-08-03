@@ -16,6 +16,8 @@ export function SharedMeetingBoardPostCard({
   meetingId,
   post,
 }: SharedMeetingBoardPostCardProps) {
+  const firstImageUrl = post.imageUrls[0];
+
   return (
     <article className="rounded-xl border border-stroke bg-white px-3 pt-5 pb-3">
       <h3 className="line-clamp-1 text-[15px] leading-5 font-semibold text-text">
@@ -49,6 +51,14 @@ export function SharedMeetingBoardPostCard({
           더보기
         </Link>
       </div>
+
+      {firstImageUrl ? (
+        <img
+          src={firstImageUrl}
+          alt={`${post.title} 이미지`}
+          className="mt-3 w-full rounded-xl object-cover"
+        />
+      ) : null}
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">

@@ -1,5 +1,8 @@
 import { HttpResponse, http } from "msw";
 
+import mockPostImageOne from "@/assets/icons/Temp-volunteer-posting.svg";
+import mockPostImageThree from "@/assets/onboarding/onboarding-step2-center.svg";
+import mockPostImageTwo from "@/assets/onboarding/onboarding-step1-center.svg";
 import teams from "./data/teams.json";
 import { getMockUserById } from "./data/mockUsers";
 
@@ -172,6 +175,11 @@ const uploadedMockObjects = new Map<
   { meetingId: number; publicUrl: string; uploadId: string }
 >();
 let nextMeetingImageUploadId = 1;
+const mockPostImageUrls = [
+  mockPostImageOne,
+  mockPostImageTwo,
+  mockPostImageThree,
+] as const;
 
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   1: [
@@ -199,7 +207,7 @@ const meetingPosts: MockMeetingPost[] = [
     content: "아이들과 이야기 나누며 책을 읽고 따뜻한 시간을 보냈어요.",
     authorId: 1,
     authorNickname: "가더",
-    imageUrls: [],
+    imageUrls: [...mockPostImageUrls],
     likeCount: 15,
     commentCount: 5,
     likedUserIds: [1],
@@ -213,7 +221,7 @@ const meetingPosts: MockMeetingPost[] = [
     content: "다음 주 활동에 함께해 주세요.",
     authorId: 1,
     authorNickname: "가더",
-    imageUrls: [],
+    imageUrls: [mockPostImageOne],
     likeCount: 7,
     commentCount: 2,
     likedUserIds: [],

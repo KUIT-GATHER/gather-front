@@ -8,6 +8,7 @@ import type { MeetingPost } from "@/features/team/types/team.types";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import { BoardActionMenuPanel } from "../shared/BoardActionMenuPanel";
+import { MeetingPostImageCarousel } from "./MeetingPostImageCarousel";
 import { MeetingPostTypeBadge } from "../shared/MeetingPostTypeBadge";
 
 type MeetingPostMainBoardProps = {
@@ -98,7 +99,7 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
               items={[
                 {
                   label: "게시글 삭제",
-                  disabled: true,
+                  disabled: !post.canDelete || deletePostMutation.isPending,
                   onClick: handleDeleteClick,
                 },
                 { label: "게시글 수정" },
@@ -118,7 +119,7 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
         {post.content}
       </p>
 
-      {/* 사진 추후 추가 예정 */}
+      <MeetingPostImageCarousel imageUrls={post.imageUrls} title={post.title} />
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
