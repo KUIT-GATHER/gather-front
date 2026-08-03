@@ -3,10 +3,14 @@ import { HttpResponse, http } from "msw";
 import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
 
 import postings from "./data/postings.json";
+import { getMockUserById } from "./data/mockUsers";
 import regions from "./data/regions.json";
 import teams from "./data/teams.json";
+import { getMockUserId } from "./lib/mockAuth";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
+const RECOMMENDATION_COUNT = 5;
+const RECOMMENDATION_DEADLINE_WINDOW_DAYS = 30;
 const POSTING_CATEGORIES = [
   "ENVIRONMENT",
   "EDUCATION",
@@ -151,6 +155,103 @@ function isMockPostingActivityEnded(postingId: number) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   return endDate.getTime() <= today.getTime();
+}
+
+function isMockPostingRecruiting(posting: (typeof postings.data)[number]) {
+  const deadline = parseMockLocalDate(posting.noticeEndDate);
+
+  if (posting.status !== "RECRUITING" || !deadline) {
+    return false;
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return deadline.getTime() >= today.getTime();
+}
+
+function getMockPostingRecommendationScore(
+  posting: (typeof postings.data)[number],
+  preferredCategories: readonly string[],
+) {
+  const deadline = parseMockLocalDate(posting.noticeEndDate);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const daysUntilDeadline = deadline
+    ? Math.round((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    : RECOMMENDATION_DEADLINE_WINDOW_DAYS;
+  const categoryScore = preferredCategories.includes(posting.category) ? 1 : 0;
+  const deadlineScore = Math.max(
+    0,
+    Math.min(
+      1,
+      (RECOMMENDATION_DEADLINE_WINDOW_DAYS - daysUntilDeadline) /
+        RECOMMENDATION_DEADLINE_WINDOW_DAYS,
+    ),
+  );
+
+  return categoryScore * 0.7 + deadlineScore * 0.3;
+}
+
+function toVolunteerPostingListItem(posting: (typeof postings.data)[number]) {
+  const {
+    id,
+    title,
+    status,
+    recruitOrg,
+    actStartDate,
+    actEndDate,
+    actPlace,
+    recruitCount,
+    applicantCount,
+    regionId,
+    regionName,
+    category,
+    noticeEndDate,
+  } = posting;
+
+  return {
+    id,
+    title,
+    status,
+    recruitOrg,
+    actStartDate,
+    actEndDate,
+    actPlace,
+    recruitCount,
+    applicantCount,
+    regionId,
+    regionName,
+    category,
+    noticeEndDate,
+  };
+}
+
+function getRecommendedMockPostings(userId: number | null) {
+  const user = userId === null ? null : getMockUserById(userId);
+  const preferredCategories = user?.interestCategories ?? [];
+  const appliedPostingIds = user?.id === 1 ? participatedPostingIds : null;
+
+  return mockPostings
+    .filter(isMockPostingRecruiting)
+    .filter((posting) => !appliedPostingIds?.has(posting.id))
+    .sort((left, right) => {
+      const scoreComparison =
+        getMockPostingRecommendationScore(right, preferredCategories) -
+        getMockPostingRecommendationScore(left, preferredCategories);
+
+      if (scoreComparison !== 0) {
+        return scoreComparison;
+      }
+
+      const deadlineComparison = String(left.noticeEndDate).localeCompare(
+        String(right.noticeEndDate),
+      );
+
+      return deadlineComparison !== 0 ? deadlineComparison : left.id - right.id;
+    })
+    .slice(0, RECOMMENDATION_COUNT)
+    .map(toVolunteerPostingListItem);
 }
 
 function getMockPostingParticipationAction(postingId: number) {
@@ -441,37 +542,7 @@ export const postingHandlers = [
     const startIndex = page * size;
     const content = sortedItems
       .slice(startIndex, startIndex + size)
-      .map(
-        ({
-          id,
-          title,
-          status,
-          recruitOrg,
-          actStartDate,
-          actEndDate,
-          actPlace,
-          recruitCount,
-          applicantCount,
-          regionId,
-          regionName,
-          category,
-          noticeEndDate,
-        }) => ({
-          id,
-          title,
-          status,
-          recruitOrg,
-          actStartDate,
-          actEndDate,
-          actPlace,
-          recruitCount,
-          applicantCount,
-          regionId,
-          regionName,
-          category,
-          noticeEndDate,
-        }),
-      );
+      .map(toVolunteerPostingListItem);
 
     return HttpResponse.json({
       success: true,
@@ -482,6 +553,14 @@ export const postingHandlers = [
         page,
         size,
       },
+      error: null,
+    });
+  }),
+
+  http.get("*/api/v1/postings/recommended", ({ request }) => {
+    return HttpResponse.json({
+      success: true,
+      data: getRecommendedMockPostings(getMockUserId(request)),
       error: null,
     });
   }),

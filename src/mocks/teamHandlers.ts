@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 
 import teams from "./data/teams.json";
+import { getMockUserById } from "./data/mockUsers";
 
 import {
   createUnauthorizedResponse,
@@ -23,6 +24,8 @@ import type {
 } from "@/features/team/types/meetingImage.types";
 
 const MEETING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
+const RECOMMENDATION_COUNT = 5;
+const RECOMMENDATION_DEADLINE_WINDOW_DAYS = 30;
 const POSTING_CATEGORIES = new Set([
   "ENVIRONMENT",
   "EDUCATION",
@@ -70,6 +73,51 @@ type MockMeeting = {
   participationCondition: string | null;
   memo: string | null;
 };
+
+function formatMockDate(offsetDays: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offsetDays);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatMockDateTime(value: string, offsetDays: number) {
+  const time = value.split("T")[1];
+
+  return `${formatMockDate(offsetDays)}T${time}`;
+}
+
+const recruitmentDeadlineOffsets = new Map([
+  [1, 1],
+  [2, 3],
+  [3, 5],
+  [5, 7],
+  [7, 10],
+  [8, 14],
+  [9, 21],
+]);
+const baseMockMeetings = teams.data.map((team) => {
+  const deadlineOffset = recruitmentDeadlineOffsets.get(team.meetingId);
+
+  if (team.status !== "RECRUITING" || deadlineOffset === undefined) {
+    return team;
+  }
+
+  return {
+    ...team,
+    deadline: formatMockDateTime(team.deadline, deadlineOffset),
+    activityStartAt: formatMockDateTime(
+      team.activityStartAt,
+      deadlineOffset + 2,
+    ),
+    activityEndAt: formatMockDateTime(team.activityEndAt, deadlineOffset + 2),
+  };
+});
 
 const createdMeetings: MockMeeting[] = [];
 const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
@@ -279,6 +327,32 @@ function isMeetingRecruiting(team: MockMeeting) {
   );
 }
 
+function getMockMeetingRecommendationScore(
+  team: MockMeeting,
+  preferredCategories: readonly string[],
+) {
+  const deadline = new Date(team.deadline);
+  const now = new Date();
+  const daysUntilDeadline = Math.round(
+    (deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const categoryScore = team.categories.some((category) =>
+    preferredCategories.includes(category),
+  )
+    ? 1
+    : 0;
+  const deadlineScore = Math.max(
+    0,
+    Math.min(
+      1,
+      (RECOMMENDATION_DEADLINE_WINDOW_DAYS - daysUntilDeadline) /
+        RECOMMENDATION_DEADLINE_WINDOW_DAYS,
+    ),
+  );
+
+  return categoryScore * 0.7 + deadlineScore * 0.3;
+}
+
 function parseLocalDateStart(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return undefined;
@@ -369,7 +443,37 @@ function sortMeetingsWithPostingFirst(
 }
 
 function getMockMeetings() {
-  return [...(teams.data as MockMeeting[]), ...createdMeetings];
+  return [...(baseMockMeetings as MockMeeting[]), ...createdMeetings];
+}
+
+function getRecommendedMockMeetings(userId: number | null) {
+  const user = userId === null ? null : getMockUserById(userId);
+  const preferredCategories = user?.interestCategories ?? [];
+  const joinedMeetingIds = user
+    ? new Set(membershipsByUserId.get(user.id)?.keys() ?? [])
+    : new Set<number>();
+
+  return getMockMeetings()
+    .filter(isMeetingRecruiting)
+    .filter((team) => !joinedMeetingIds.has(team.meetingId))
+    .sort((left, right) => {
+      const scoreComparison =
+        getMockMeetingRecommendationScore(right, preferredCategories) -
+        getMockMeetingRecommendationScore(left, preferredCategories);
+
+      if (scoreComparison !== 0) {
+        return scoreComparison;
+      }
+
+      const deadlineComparison =
+        new Date(left.deadline).getTime() - new Date(right.deadline).getTime();
+
+      return deadlineComparison !== 0
+        ? deadlineComparison
+        : left.meetingId - right.meetingId;
+    })
+    .slice(0, RECOMMENDATION_COUNT)
+    .map(toMeetingListItem);
 }
 
 function getMembershipRole(userId: number, meetingId: number) {
@@ -488,6 +592,14 @@ export const teamHandlers = [
     });
 
     return HttpResponse.json({ success: true, data, error: null });
+  }),
+
+  http.get("*/api/v1/meetings/recommended", ({ request }) => {
+    return HttpResponse.json({
+      success: true,
+      data: getRecommendedMockMeetings(getMockUserId(request)),
+      error: null,
+    });
   }),
 
   http.get("*/api/v1/meetings/keywords/recommended", () => {
