@@ -1,6 +1,8 @@
 import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
+import { getMockParticipations } from "./data/mockParticipations";
+import { mockPostings } from "./data/mockPostings";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
@@ -77,6 +79,11 @@ function getPendingUploadCount(userId: number) {
   ).length;
 }
 
+function formatMockTime(time: string | null) {
+  if (!time) return "";
+  return time.includes(":") ? time : `${time.padStart(2, "0")}:00`;
+}
+
 export const myProfileHandlers = [
   http.get("*/api/v1/mypage/home", ({ request }) => {
     const userId = getMockUserId(request);
@@ -108,43 +115,42 @@ export const myProfileHandlers = [
       );
     }
 
+    const [year, month] = yearMonth.split("-").map(Number);
+    const monthStart = `${yearMonth}-01`;
+    const monthEnd = `${yearMonth}-${new Date(year, month, 0).getDate()}`;
+    const activities = getMockParticipations(userId).flatMap(
+      (participation) => {
+        const posting = mockPostings.find(
+          (item) => item.id === participation.postingId,
+        );
+
+        if (
+          !posting ||
+          posting.actEndDate < monthStart ||
+          posting.actStartDate > monthEnd
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            participationId: participation.participationId,
+            postingId: posting.id,
+            title: posting.title,
+            actStartDate: posting.actStartDate,
+            actEndDate: posting.actEndDate,
+            actStartTime: formatMockTime(posting.actStartTime),
+            actEndTime: formatMockTime(posting.actEndTime),
+            actPlace: posting.actPlace,
+            status: participation.status,
+          },
+        ];
+      },
+    );
+
     return HttpResponse.json({
       success: true,
-      data: [
-        {
-          participationId: 1,
-          postingId: 1,
-          title: "한강 쓰레기 줍기",
-          actStartDate: "2026-07-20",
-          actEndDate: "2026-07-20",
-          actStartTime: "11:00",
-          actEndTime: "12:00",
-          actPlace: "광진구",
-          status: "APPLIED",
-        },
-        {
-          participationId: 2,
-          postingId: 2,
-          title: "남양주 유기견 봉사",
-          actStartDate: "2026-07-20",
-          actEndDate: "2026-07-20",
-          actStartTime: "16:00",
-          actEndTime: "19:00",
-          actPlace: "마포구",
-          status: "APPLIED",
-        },
-        {
-          participationId: 3,
-          postingId: 3,
-          title: "공원 환경정화 봉사",
-          actStartDate: "2026-07-25",
-          actEndDate: "2026-07-25",
-          actStartTime: "09:00",
-          actEndTime: "12:00",
-          actPlace: "서울숲공원",
-          status: "APPLIED",
-        },
-      ],
+      data: activities,
       error: null,
     });
   }),

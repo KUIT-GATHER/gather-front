@@ -1,8 +1,15 @@
 import { HttpResponse, http } from "msw";
 
 import postings from "./data/postings.json";
+import { mockPostings } from "./data/mockPostings";
+import {
+  addMockParticipation,
+  findMockParticipation,
+  removeMockParticipation,
+} from "./data/mockParticipations";
 import regions from "./data/regions.json";
 import teams from "./data/teams.json";
+import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const POSTING_CATEGORIES = [
@@ -38,33 +45,15 @@ type PostingMeetingSort = {
   direction: "asc" | "desc";
 };
 
-const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
-  const id = index + 3;
-
-  return {
-    ...postings.data[0],
-    id,
-    title: `봉사공고 무한스크롤 테스트 ${id}`,
-    status: "RECRUITING",
-    recruitOrg: `테스트 모집기관 ${id}`,
-    actStartDate: `2026-08-${String((index % 20) + 1).padStart(2, "0")}`,
-    actEndDate: `2026-08-${String((index % 20) + 1).padStart(2, "0")}`,
-    noticeStartDate: `2026-07-${String((index % 20) + 1).padStart(2, "0")}`,
-    noticeEndDate: `2026-07-${String((index % 20) + 8).padStart(2, "0")}`,
-    recruitCount: 10 + (index % 5),
-    applicantCount: (index * 3) % 11,
-    category: POSTING_CATEGORIES[index % POSTING_CATEGORIES.length],
-    createdAt: `2026-07-${String((index % 20) + 1).padStart(2, "0")}T09:00:00`,
-    updatedAt: `2026-07-${String((index % 20) + 1).padStart(2, "0")}T10:00:00`,
-  };
-});
-
-const mockPostings = [...postings.data, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
-const participatedPostingIds = new Map<number, number>();
 
-function getMockPostingParticipationAction(postingId: number) {
-  return participatedPostingIds.has(postingId) ? "CANCEL" : "APPLY";
+function getMockPostingParticipationAction(
+  userId: number | null,
+  postingId: number,
+) {
+  return userId && findMockParticipation(userId, postingId)
+    ? "CANCEL"
+    : "APPLY";
 }
 
 function getOptionalNumberParam(url: URL, key: string) {
@@ -199,6 +188,47 @@ function sortPostingMeetings(
 }
 
 export const postingHandlers = [
+  http.get("*/api/v1/postings/bookmarks", ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("page") ?? 0);
+    const size = Number(url.searchParams.get("size") ?? 20);
+    const category = url.searchParams.get("category");
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const noticeStartDate = url.searchParams.get("noticeStartDate");
+    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    let items = mockPostings.filter((posting) =>
+      bookmarkedPostingIds.has(posting.id),
+    );
+
+    if (category) {
+      items = items.filter((posting) => posting.category === category);
+    }
+    if (regionId !== undefined) {
+      const regionIds = getRegionIdsIncludingChildren([regionId]);
+      items = items.filter((posting) => regionIds.has(posting.regionId));
+    }
+    if (noticeStartDate) {
+      items = items.filter(
+        (posting) => posting.noticeStartDate >= noticeStartDate,
+      );
+    }
+    if (noticeEndDate) {
+      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content: items.slice(page * size, (page + 1) * size),
+        totalElements: items.length,
+        totalPages: Math.ceil(items.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/postings", ({ request }) => {
     const url = new URL(request.url);
 
@@ -451,9 +481,10 @@ export const postingHandlers = [
     });
   }),
 
-  http.get("*/api/v1/postings/:postingId", ({ params }) => {
+  http.get("*/api/v1/postings/:postingId", ({ params, request }) => {
     const postingId = Number(params.postingId);
     const posting = mockPostings.find((item) => item.id === postingId);
+    const userId = getMockUserId(request);
 
     if (!posting) {
       return HttpResponse.json(
@@ -474,10 +505,12 @@ export const postingHandlers = [
       data: {
         ...posting,
         bookmarked: bookmarkedPostingIds.has(postingId),
-        participationStatus: participatedPostingIds.has(postingId)
-          ? "APPLIED"
-          : null,
-        participationAction: getMockPostingParticipationAction(postingId),
+        participationStatus:
+          userId && findMockParticipation(userId, postingId) ? "APPLIED" : null,
+        participationAction: getMockPostingParticipationAction(
+          userId,
+          postingId,
+        ),
       },
       error: null,
     });
@@ -497,91 +530,100 @@ export const postingHandlers = [
     });
   }),
 
-  http.post("*/api/v1/postings/:postingId/participations", ({ params }) => {
-    const postingId = Number(params.postingId);
-    const posting = mockPostings.find((item) => item.id === postingId);
+  http.post(
+    "*/api/v1/postings/:postingId/participations",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    if (!posting) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "POSTING_NOT_FOUND",
-            message: "Posting not found.",
+      const postingId = Number(params.postingId);
+      const posting = mockPostings.find((item) => item.id === postingId);
+
+      if (!posting) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_NOT_FOUND",
+              message: "Posting not found.",
+            },
           },
-        },
-        { status: 404 },
-      );
-    }
+          { status: 404 },
+        );
+      }
 
-    if (participatedPostingIds.has(postingId)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "PARTICIPATION_DUPLICATE",
-            message: "Already applied to this posting.",
+      if (findMockParticipation(userId, postingId)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_DUPLICATE",
+              message: "Already applied to this posting.",
+            },
           },
-        },
-        { status: 409 },
-      );
-    }
+          { status: 409 },
+        );
+      }
 
-    if (posting.status !== "RECRUITING") {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "POSTING_CLOSED",
-            message: "마감된 봉사공고입니다.",
+      if (posting.status !== "RECRUITING") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_CLOSED",
+              message: "마감된 봉사공고입니다.",
+            },
           },
+          { status: 409 },
+        );
+      }
+
+      const participation = addMockParticipation(userId, postingId);
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          participationId: participation.participationId,
+          status: participation.status,
+          applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
         },
-        { status: 409 },
-      );
-    }
+        error: null,
+      });
+    },
+  ),
 
-    const participationId = participatedPostingIds.size + 1;
-    participatedPostingIds.set(postingId, participationId);
+  http.delete(
+    "*/api/v1/postings/:postingId/participations",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        participationId,
-        status: "APPLIED",
-        applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
-      },
-      error: null,
-    });
-  }),
+      const postingId = Number(params.postingId);
 
-  http.delete("*/api/v1/postings/:postingId/participations", ({ params }) => {
-    const postingId = Number(params.postingId);
-
-    if (!participatedPostingIds.has(postingId)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "PARTICIPATION_NOT_FOUND",
-            message: "신청 내역을 찾을 수 없습니다.",
+      if (!removeMockParticipation(userId, postingId)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_NOT_FOUND",
+              message: "신청 내역을 찾을 수 없습니다.",
+            },
           },
-        },
-        { status: 404 },
-      );
-    }
+          { status: 404 },
+        );
+      }
 
-    participatedPostingIds.delete(postingId);
-
-    return HttpResponse.json({
-      success: true,
-      data: null,
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
 
   http.delete("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
     const postingId = Number(params.postingId);
