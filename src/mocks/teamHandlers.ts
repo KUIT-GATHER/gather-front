@@ -473,6 +473,34 @@ function getPendingUploadCount(meetingId: number) {
 }
 
 export const teamHandlers = [
+  http.get("*/api/v1/meetings/bookmarks", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
+    const url = new URL(request.url);
+    const page = getPageParam(url);
+    const size = getSizeParam(url);
+    const bookmarkedIds =
+      bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+    const items = getMockMeetings()
+      .filter((meeting) => bookmarkedIds.has(meeting.meetingId))
+      .map(toMeetingListItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content: items.slice(page * size, (page + 1) * size),
+        totalElements: items.length,
+        totalPages: Math.ceil(items.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/meetings/my", ({ request }) => {
     const userId = getMockUserId(request);
 

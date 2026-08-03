@@ -127,6 +127,17 @@ export async function getMeetings(params?: MeetingListParams) {
   };
 }
 
+export async function getBookmarkedMeetings() {
+  const page = await fetchClient<
+    Omit<MeetingPage, "content"> & { content: MeetingListItemResponse[] }
+  >(`${MEETING_ENDPOINT}/bookmarks?page=0&size=20`);
+
+  return {
+    ...page,
+    content: page.content.map(normalizeMeetingCategories),
+  };
+}
+
 export function getRecommendedMeetings() {
   return fetchClient<MeetingListItem[]>(`${MEETING_ENDPOINT}/recommended`);
 }
