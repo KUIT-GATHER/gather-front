@@ -4,7 +4,7 @@ import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
   formatVolunteerLocation,
-  getVolunteerDDay,
+  getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
 import { cn } from "@/shared/lib/cn";
@@ -26,10 +26,10 @@ export function VolunteerPostingCard({
     variant === "compact"
       ? formatVolunteerHomeDate(posting.actStartDate)
       : formatVolunteerDate(posting.actStartDate);
-  const activityDDay = getVolunteerDDay(posting.actStartDate);
-  const urgentActivityDDay =
-    activityDDay === "D-day" || /^D-[1-7]$/.test(activityDDay ?? "")
-      ? activityDDay
+  const recruitmentDDay = getRecruitmentDDay(posting.noticeEndDate);
+  const urgentRecruitmentDDay =
+    recruitmentDDay === "D-day" || /^D-[1-7]$/.test(recruitmentDDay ?? "")
+      ? recruitmentDDay
       : null;
 
   if (variant === "compact") {
@@ -77,22 +77,22 @@ export function VolunteerPostingCard({
             {posting.recruitOrg}
           </p>
         ) : null}
-        {location || activityDate || urgentActivityDDay ? (
+        {location || activityDate || urgentRecruitmentDDay ? (
           <p className="mt-1 line-clamp-2 text-sm text-text-gray-300">
             {[location, activityDate].filter(Boolean).join(" · ")}
-            {urgentActivityDDay ? (
+            {urgentRecruitmentDDay ? (
               <span
                 className={cn(
                   "text-point-red",
-                  (urgentActivityDDay === "D-day" ||
-                    urgentActivityDDay === "D-1" ||
-                    urgentActivityDDay === "D-2" ||
-                    urgentActivityDDay === "D-3") &&
+                  (urgentRecruitmentDDay === "D-day" ||
+                    urgentRecruitmentDDay === "D-1" ||
+                    urgentRecruitmentDDay === "D-2" ||
+                    urgentRecruitmentDDay === "D-3") &&
                     "font-semibold",
                 )}
               >
                 {location || activityDate ? " · " : ""}
-                {urgentActivityDDay}
+                {urgentRecruitmentDDay}
               </span>
             ) : null}
           </p>

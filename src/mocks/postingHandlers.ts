@@ -38,8 +38,47 @@ type PostingMeetingSort = {
   direction: "asc" | "desc";
 };
 
+function formatMockDate(offsetDays: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offsetDays);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+const baseMockPostings = postings.data.map((posting) => {
+  if (posting.id === 1) {
+    return {
+      ...posting,
+      actStartDate: formatMockDate(7),
+      actEndDate: formatMockDate(7),
+      noticeStartDate: formatMockDate(-14),
+      noticeEndDate: formatMockDate(0),
+    };
+  }
+
+  if (posting.id === 2) {
+    return {
+      ...posting,
+      actStartDate: formatMockDate(2),
+      actEndDate: formatMockDate(2),
+      noticeStartDate: formatMockDate(-14),
+      noticeEndDate: formatMockDate(-1),
+    };
+  }
+
+  return posting;
+});
+
+const recruitmentDeadlineOffsets = [1, 3, 7, 8, 10, 14, 21, 30, 45, 60, 90];
+
 const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
   const id = index + 3;
+  const recruitmentDeadlineOffset = recruitmentDeadlineOffsets[index];
 
   return {
     ...postings.data[0],
@@ -47,10 +86,10 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
     title: `봉사공고 무한스크롤 테스트 ${id}`,
     status: "RECRUITING",
     recruitOrg: `테스트 모집기관 ${id}`,
-    actStartDate: `2026-08-${String((index % 20) + 1).padStart(2, "0")}`,
-    actEndDate: `2026-08-${String((index % 20) + 1).padStart(2, "0")}`,
-    noticeStartDate: `2026-07-${String((index % 20) + 1).padStart(2, "0")}`,
-    noticeEndDate: `2026-07-${String((index % 20) + 8).padStart(2, "0")}`,
+    actStartDate: formatMockDate(recruitmentDeadlineOffset + 2),
+    actEndDate: formatMockDate(recruitmentDeadlineOffset + 2),
+    noticeStartDate: formatMockDate(-7),
+    noticeEndDate: formatMockDate(recruitmentDeadlineOffset),
     recruitCount: 10 + (index % 5),
     applicantCount: (index * 3) % 11,
     category: POSTING_CATEGORIES[index % POSTING_CATEGORIES.length],
@@ -59,7 +98,7 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
   };
 });
 
-const mockPostings = [...postings.data, ...additionalMockPostings];
+const mockPostings = [...baseMockPostings, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
 const participatedPostingIds = new Map<number, number>();
 
@@ -155,15 +194,26 @@ function parsePostingMeetingSorts(url: URL): PostingMeetingSort[] | null {
   }, []);
 }
 
+function getPostingStatusPriority(status: string) {
+  return status === "RECRUITING" ? 0 : 1;
+}
+
 function sortPostings(
   items: (typeof postings.data)[number][],
   sorts: PostingSort[],
+  applyStatusPriority: boolean,
 ) {
-  if (sorts.length === 0) {
-    return items;
-  }
-
   return [...items].sort((left, right) => {
+    if (applyStatusPriority) {
+      const statusComparison =
+        getPostingStatusPriority(left.status) -
+        getPostingStatusPriority(right.status);
+
+      if (statusComparison !== 0) {
+        return statusComparison;
+      }
+    }
+
     for (const { field, direction } of sorts) {
       const leftValue = left[field];
       const rightValue = right[field];
@@ -177,7 +227,7 @@ function sortPostings(
       }
     }
 
-    return 0;
+    return right.id - left.id;
   });
 }
 
@@ -304,9 +354,14 @@ export const postingHandlers = [
       );
     }
 
-    items = items.filter(
-      (posting) => posting.status === (status ?? "RECRUITING"),
-    );
+    if (status) {
+      items = items.filter((posting) => posting.status === status);
+    } else {
+      items = items.filter(
+        (posting) =>
+          posting.status === "RECRUITING" || posting.status === "CLOSED",
+      );
+    }
 
     if (noticeStartDate) {
       items = items.filter(
@@ -318,7 +373,7 @@ export const postingHandlers = [
       items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
     }
 
-    const sortedItems = sortPostings(items, sorts);
+    const sortedItems = sortPostings(items, sorts, status === null);
     const startIndex = page * size;
     const content = sortedItems
       .slice(startIndex, startIndex + size)
