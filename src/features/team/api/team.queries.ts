@@ -114,9 +114,16 @@ export const teamQueries = {
     }),
 
   posts: (meetingId: number, params: MeetingPostListParams = {}) =>
-    queryOptions({
+    infiniteQueryOptions({
       queryKey: teamKeys.postList(meetingId, params),
-      queryFn: () => getMeetingPosts(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMeetingPosts(meetingId, { ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
     }),
 
   post: (meetingId: number, postId: number) =>

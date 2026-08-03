@@ -12,12 +12,13 @@ import type {
   MeetingPost,
   MeetingPostCreateRequest,
   MeetingPostListParams,
-  MeetingPostSummary,
+  MeetingPostPage,
   MeetingPostUpdateRequest,
   MyMeetingListItem,
 } from "@/features/team/types/team.types";
 
 const MEETING_ENDPOINT = "/api/v1/meetings";
+const DEFAULT_MEETING_POST_SORT = ["createdAt,desc", "id,desc"] as const;
 const publicOptions = {
   skipAuth: true,
   withCredentials: false,
@@ -110,8 +111,20 @@ function buildMeetingPostsEndpoint(
   params: MeetingPostListParams = {},
 ) {
   const searchParams = new URLSearchParams();
+  const page = params.page ?? 0;
+  const size = params.size ?? 20;
+  const sorts =
+    params.sort && params.sort.length > 0
+      ? params.sort
+      : DEFAULT_MEETING_POST_SORT;
 
   setQueryParam(searchParams, "type", params.type);
+  setQueryParam(searchParams, "page", page);
+  setQueryParam(searchParams, "size", size);
+
+  sorts.forEach((sort) => {
+    appendQueryParam(searchParams, "sort", sort);
+  });
 
   const query = searchParams.toString();
   const endpoint = `${MEETING_ENDPOINT}/${meetingId}/posts`;
@@ -178,7 +191,7 @@ export function getMeetingPosts(
   meetingId: number,
   params?: MeetingPostListParams,
 ) {
-  return fetchClient<MeetingPostSummary[]>(
+  return fetchClient<MeetingPostPage>(
     buildMeetingPostsEndpoint(meetingId, params),
   );
 }

@@ -114,6 +114,9 @@ export type MeetingBookmarkResponse = {
 
 export type MeetingPostListParams = {
   type?: MeetingPostType;
+  page?: number;
+  size?: number;
+  sort?: string[];
 };
 
 export type MeetingPostSummary = {
@@ -123,15 +126,27 @@ export type MeetingPostSummary = {
   content: string;
   authorId: number;
   authorNickname: string;
+  imageUrls: string[];
   likeCount: number;
   commentCount: number;
+  liked: boolean;
   createdAt: string;
 };
 
 export type MeetingPost = MeetingPostSummary & {
   meetingId: number;
   recruitCapacity: number | null;
+  canEdit: boolean;
+  canDelete: boolean;
   updatedAt: string;
+};
+
+export type MeetingPostPage = {
+  content: MeetingPostSummary[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
 };
 
 type MeetingPostCreateBaseRequest = {

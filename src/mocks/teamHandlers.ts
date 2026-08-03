@@ -12,6 +12,7 @@ import type {
   MeetingCreateRequest,
   MeetingMember,
   MeetingMemberRole,
+  MeetingPostType,
 } from "@/features/team/types/team.types";
 import {
   MAX_MEETING_IMAGE_COUNT,
@@ -48,10 +49,17 @@ const SORTABLE_MEETING_FIELDS = [
   "createdAt",
   "updatedAt",
 ] as const;
+const MEETING_POST_TYPES = new Set(["NOTICE", "REVIEW", "RECRUIT", "FREE"]);
+const SORTABLE_MEETING_POST_FIELDS = ["createdAt", "id"] as const;
 
 type MeetingSortField = (typeof SORTABLE_MEETING_FIELDS)[number];
 type MeetingSort = {
   field: MeetingSortField;
+  direction: "asc" | "desc";
+};
+type MeetingPostSortField = (typeof SORTABLE_MEETING_POST_FIELDS)[number];
+type MeetingPostSort = {
+  field: MeetingPostSortField;
   direction: "asc" | "desc";
 };
 
@@ -72,6 +80,21 @@ type MockMeeting = {
   volunteerPostingId: number | null;
   participationCondition: string | null;
   memo: string | null;
+};
+
+type MockMeetingPost = {
+  postId: number;
+  meetingId: number;
+  type: MeetingPostType;
+  title: string;
+  content: string;
+  authorId: number;
+  authorNickname: string;
+  imageUrls: string[];
+  likeCount: number;
+  commentCount: number;
+  likedUserIds: number[];
+  createdAt: string;
 };
 
 function formatMockDate(offsetDays: number) {
@@ -167,7 +190,7 @@ const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   ],
 };
 
-const meetingPosts = [
+const meetingPosts: MockMeetingPost[] = [
   {
     postId: 1,
     meetingId: 1,
@@ -176,8 +199,10 @@ const meetingPosts = [
     content: "아이들과 이야기 나누며 책을 읽고 따뜻한 시간을 보냈어요.",
     authorId: 1,
     authorNickname: "가더",
+    imageUrls: [],
     likeCount: 15,
     commentCount: 5,
+    likedUserIds: [1],
     createdAt: "2026-05-11T19:30:00",
   },
   {
@@ -188,8 +213,10 @@ const meetingPosts = [
     content: "다음 주 활동에 함께해 주세요.",
     authorId: 1,
     authorNickname: "가더",
+    imageUrls: [],
     likeCount: 7,
     commentCount: 2,
+    likedUserIds: [],
     createdAt: "2026-07-24T18:10:00",
   },
   {
@@ -200,8 +227,10 @@ const meetingPosts = [
     content: "편한 복장과 물을 준비해 주세요.",
     authorId: 101,
     authorNickname: "팀원 1",
+    imageUrls: [],
     likeCount: 4,
     commentCount: 1,
+    likedUserIds: [1],
     createdAt: "2026-07-25T18:10:00",
   },
   {
@@ -212,8 +241,10 @@ const meetingPosts = [
     content: "처음 참여했는데 편하게 함께할 수 있었어요.",
     authorId: 2,
     authorNickname: "이하늘",
+    imageUrls: [],
     likeCount: 7,
     commentCount: 2,
+    likedUserIds: [],
     createdAt: "2026-07-24T18:10:00",
   },
 ];
@@ -288,6 +319,12 @@ function getSizeParam(url: URL) {
   return size !== undefined && size > 0 ? size : 10;
 }
 
+function getMeetingPostSizeParam(url: URL) {
+  const size = getOptionalNumberParam(url, "size");
+
+  return size !== undefined && size > 0 ? size : 20;
+}
+
 function parseSorts(url: URL): MeetingSort[] | null {
   const rawSorts = url.searchParams.getAll("sort");
 
@@ -314,6 +351,35 @@ function parseSorts(url: URL): MeetingSort[] | null {
   }, []);
 }
 
+function parseMeetingPostSorts(url: URL): MeetingPostSort[] | null {
+  const rawSorts = url.searchParams.getAll("sort");
+
+  if (rawSorts.length === 0) {
+    return [
+      { field: "createdAt", direction: "desc" },
+      { field: "id", direction: "desc" },
+    ];
+  }
+
+  return rawSorts.reduce<MeetingPostSort[] | null>((sorts, rawSort) => {
+    if (!sorts) {
+      return null;
+    }
+
+    const [field, direction = "asc"] = rawSort.split(",");
+
+    if (
+      !SORTABLE_MEETING_POST_FIELDS.includes(field as MeetingPostSortField) ||
+      (direction !== "asc" && direction !== "desc")
+    ) {
+      return null;
+    }
+
+    sorts.push({ field: field as MeetingPostSortField, direction });
+    return sorts;
+  }, []);
+}
+
 function getSortValue(team: MockMeeting, field: MeetingSortField) {
   if (field === "id" || field === "createdAt" || field === "updatedAt") {
     return team.meetingId;
@@ -324,6 +390,13 @@ function getSortValue(team: MockMeeting, field: MeetingSortField) {
   }
 
   return team[field];
+}
+
+function getMeetingPostSortValue(
+  post: MockMeetingPost,
+  field: MeetingPostSortField,
+) {
+  return field === "id" ? post.postId : post.createdAt;
 }
 
 function isMeetingRecruiting(team: MockMeeting) {
@@ -454,6 +527,56 @@ function sortMeetingsWithPostingFirst(
 
     return 0;
   });
+}
+
+function sortMeetingPosts(items: MockMeetingPost[], sorts: MeetingPostSort[]) {
+  return [...items].sort((left, right) => {
+    for (const { field, direction } of sorts) {
+      const leftValue = getMeetingPostSortValue(left, field);
+      const rightValue = getMeetingPostSortValue(right, field);
+      const comparison =
+        typeof leftValue === "number" && typeof rightValue === "number"
+          ? leftValue - rightValue
+          : String(leftValue).localeCompare(String(rightValue));
+
+      if (comparison !== 0) {
+        return direction === "asc" ? comparison : -comparison;
+      }
+    }
+
+    return 0;
+  });
+}
+
+function toMeetingPostSummary(post: MockMeetingPost, viewerUserId: number) {
+  return {
+    postId: post.postId,
+    type: post.type,
+    title: post.title,
+    content: post.content,
+    authorId: post.authorId,
+    authorNickname: post.authorNickname,
+    imageUrls: post.imageUrls,
+    likeCount: post.likeCount,
+    commentCount: post.commentCount,
+    liked: post.likedUserIds.includes(viewerUserId),
+    createdAt: post.createdAt,
+  };
+}
+
+function toMeetingPostDetail(
+  post: MockMeetingPost,
+  viewerUserId: number,
+  team: MockMeeting,
+) {
+  return {
+    ...toMeetingPostSummary(post, viewerUserId),
+    meetingId: post.meetingId,
+    recruitCapacity: post.type === "RECRUIT" ? 3 : null,
+    canEdit: post.authorId === viewerUserId,
+    canDelete: post.authorId === viewerUserId || team.hostId === viewerUserId,
+    updatedAt: post.createdAt,
+  };
 }
 
 function getMockMeetings() {
@@ -1093,18 +1216,15 @@ export const teamHandlers = [
     const team = findMeeting(meetingId);
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
+    const page = getPageParam(url);
+    const size = getMeetingPostSizeParam(url);
+    const sorts = parseMeetingPostSorts(url);
 
     if (!team) {
       return createMeetingNotFoundResponse();
     }
 
-    if (
-      type &&
-      type !== "NOTICE" &&
-      type !== "REVIEW" &&
-      type !== "RECRUIT" &&
-      type !== "FREE"
-    ) {
+    if (type && !MEETING_POST_TYPES.has(type)) {
       return HttpResponse.json(
         {
           success: false,
@@ -1118,15 +1238,47 @@ export const teamHandlers = [
       );
     }
 
-    const isJoined = getMembershipRole(userId, meetingId) !== null;
-    const posts = meetingPosts
-      .filter((post) => post.meetingId === meetingId)
-      .filter(
-        (post) => isJoined || post.type === "NOTICE" || post.type === "REVIEW",
-      )
-      .filter((post) => !type || post.type === type);
+    if (!sorts) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid post sort.",
+          },
+        },
+        { status: 400 },
+      );
+    }
 
-    return HttpResponse.json({ success: true, data: posts, error: null });
+    const isJoined = getMembershipRole(userId, meetingId) !== null;
+    const posts = sortMeetingPosts(
+      meetingPosts
+        .filter((post) => post.meetingId === meetingId)
+        .filter(
+          (post) =>
+            isJoined || post.type === "NOTICE" || post.type === "REVIEW",
+        )
+        .filter((post) => !type || post.type === type),
+      sorts,
+    );
+    const startIndex = page * size;
+    const content = posts
+      .slice(startIndex, startIndex + size)
+      .map((post) => toMeetingPostSummary(post, userId));
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        totalElements: posts.length,
+        totalPages: Math.ceil(posts.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
   }),
 
   http.get(
@@ -1167,11 +1319,7 @@ export const teamHandlers = [
 
       return HttpResponse.json({
         success: true,
-        data: {
-          ...post,
-          recruitCapacity: post.type === "RECRUIT" ? 3 : null,
-          updatedAt: post.createdAt,
-        },
+        data: toMeetingPostDetail(post, userId, team),
         error: null,
       });
     },

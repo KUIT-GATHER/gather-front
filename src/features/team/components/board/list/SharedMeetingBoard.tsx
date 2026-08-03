@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import PenIcon from "@/assets/icons/Pen.svg";
 import {
@@ -35,15 +35,40 @@ export function SharedMeetingBoard({
   const [selectedType, setSelectedType] = useState<MeetingPostType | undefined>(
     undefined,
   );
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const postListParams = useMemo(
     () => (selectedType ? { type: selectedType } : {}),
     [selectedType],
   );
   const postsQuery = useMeetingPostsQuery(meetingId, postListParams);
-  const posts = postsQuery.data ?? [];
+  const posts = postsQuery.data?.pages.flatMap((page) => page.content) ?? [];
+  const isInitialLoading = postsQuery.isLoading && posts.length === 0;
+  const isInitialError = postsQuery.isError && posts.length === 0;
   const resolvedEmptyMessage = selectedType
     ? "해당 분류의 게시글이 존재하지 않습니다"
     : emptyMessage;
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (
+          entry.isIntersecting &&
+          postsQuery.hasNextPage &&
+          !postsQuery.isFetchingNextPage &&
+          !postsQuery.isFetchNextPageError
+        ) {
+          void postsQuery.fetchNextPage();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [postsQuery]);
 
   return (
     <section
@@ -78,11 +103,11 @@ export function SharedMeetingBoard({
         })}
       </div>
 
-      {postsQuery.isLoading ? (
+      {isInitialLoading ? (
         <LoadingState label="게시글을 불러오는 중" className="min-h-65" />
       ) : null}
 
-      {postsQuery.isError ? (
+      {isInitialError ? (
         <ErrorState
           title="게시글을 불러오지 못했어요"
           description="잠시 후 다시 확인해 주세요."
@@ -104,6 +129,32 @@ export function SharedMeetingBoard({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {posts.length > 0 ? (
+        <>
+          <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
+          {postsQuery.isFetchingNextPage ? (
+            <LoadingState
+              label="게시글을 더 불러오는 중"
+              className="min-h-24"
+            />
+          ) : null}
+          {postsQuery.isFetchNextPageError ? (
+            <div className="py-6 text-center">
+              <p className="text-sm text-text-gray-400">
+                게시글을 더 불러오지 못했어요.
+              </p>
+              <button
+                type="button"
+                className="mt-2 rounded-lg px-3 py-2 text-sm font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                onClick={() => void postsQuery.fetchNextPage()}
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : null}
+        </>
       ) : null}
 
       {canWrite ? (
