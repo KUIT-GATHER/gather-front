@@ -6,9 +6,11 @@ type VolunteerPostingApplyBarProps = {
   disabled: boolean;
   isApplyPending: boolean;
   isCancelPending: boolean;
+  isCompletePending: boolean;
   errorMessage?: string;
   onApply: () => void;
   onCancel: () => void;
+  onComplete: () => void;
 };
 
 export function VolunteerPostingApplyBar({
@@ -16,14 +18,17 @@ export function VolunteerPostingApplyBar({
   disabled,
   isApplyPending,
   isCancelPending,
+  isCompletePending,
   errorMessage,
   onApply,
   onCancel,
+  onComplete,
 }: VolunteerPostingApplyBarProps) {
-  const isPending = isApplyPending || isCancelPending;
+  const isPending = isApplyPending || isCancelPending || isCompletePending;
   const canApply = participationAction === "APPLY";
   const canCancel = participationAction === "CANCEL";
-  const canClick = canApply || canCancel;
+  const canComplete = participationAction === "COMPLETE";
+  const canClick = canApply || canCancel || canComplete;
   const isButtonDisabled = isPending || !canClick || (canApply && disabled);
   const isNeutralButton = canCancel || participationAction === "NONE";
   const buttonVariant =
@@ -46,6 +51,10 @@ export function VolunteerPostingApplyBar({
 
     if (isCancelPending) {
       return "신청 취소 중";
+    }
+
+    if (isCompletePending) {
+      return "완료 처리 중";
     }
 
     switch (participationAction) {
@@ -74,7 +83,7 @@ export function VolunteerPostingApplyBar({
         fullWidth
         variant={buttonVariant}
         disabled={isButtonDisabled}
-        onClick={canCancel ? onCancel : onApply}
+        onClick={canCancel ? onCancel : canComplete ? onComplete : onApply}
         className={buttonClassName}
       >
         {buttonLabel}
