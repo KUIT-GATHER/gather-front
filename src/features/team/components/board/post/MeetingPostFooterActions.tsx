@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 
 import CommentIcon from "@/assets/icons/Comment.svg";
-import HeartIcon from "@/assets/icons/Heart.svg";
+import FilledHeartIcon from "@/assets/icons/Filledheart.svg";
 import LinkCopyIcon from "@/assets/icons/Linkcopy.svg";
+import UnfilledHeartIcon from "@/assets/icons/Unfilledheart.svg";
+import { cn } from "@/shared/lib/cn";
 
 type MeetingPostFooterActionsProps = {
   likeCount: number;
   commentCount: number;
+  isLiked: boolean;
+  isLikePending?: boolean;
+  onLikeToggle: () => void;
 };
 
 async function copyTextToClipboard(text: string) {
@@ -30,6 +35,9 @@ async function copyTextToClipboard(text: string) {
 export function MeetingPostFooterActions({
   likeCount,
   commentCount,
+  isLiked,
+  isLikePending = false,
+  onLikeToggle,
 }: MeetingPostFooterActionsProps) {
   const [copyToastId, setCopyToastId] = useState(0);
 
@@ -57,17 +65,27 @@ export function MeetingPostFooterActions({
       <div className="mt-4 border-t border-stroke pt-5">
         <div className="flex items-center justify-between gap-4 text-text-gray-400">
           <div className="flex items-center gap-4">
-            <span className="inline-flex items-center gap-2">
+            <button
+              type="button"
+              aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+              aria-pressed={isLiked}
+              disabled={isLikePending}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                "disabled:cursor-not-allowed disabled:opacity-60",
+              )}
+              onClick={onLikeToggle}
+            >
               <img
                 aria-hidden="true"
-                src={HeartIcon}
+                src={isLiked ? FilledHeartIcon : UnfilledHeartIcon}
                 alt=""
                 className="h-4 w-[17.778px]"
               />
               <span className="text-[16px] leading-5 font-medium">
                 {likeCount}
               </span>
-            </span>
+            </button>
 
             <span className="inline-flex items-center gap-2">
               <img

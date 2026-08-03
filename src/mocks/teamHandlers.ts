@@ -54,6 +54,7 @@ const SORTABLE_MEETING_FIELDS = [
 ] as const;
 const MEETING_POST_TYPES = new Set(["NOTICE", "REVIEW", "RECRUIT", "FREE"]);
 const SORTABLE_MEETING_POST_FIELDS = ["createdAt", "id"] as const;
+const SORTABLE_MEETING_POST_COMMENT_FIELDS = ["createdAt"] as const;
 
 type MeetingSortField = (typeof SORTABLE_MEETING_FIELDS)[number];
 type MeetingSort = {
@@ -63,6 +64,12 @@ type MeetingSort = {
 type MeetingPostSortField = (typeof SORTABLE_MEETING_POST_FIELDS)[number];
 type MeetingPostSort = {
   field: MeetingPostSortField;
+  direction: "asc" | "desc";
+};
+type MeetingPostCommentSortField =
+  (typeof SORTABLE_MEETING_POST_COMMENT_FIELDS)[number];
+type MeetingPostCommentSort = {
+  field: MeetingPostCommentSortField;
   direction: "asc" | "desc";
 };
 
@@ -98,6 +105,17 @@ type MockMeetingPost = {
   commentCount: number;
   likedUserIds: number[];
   createdAt: string;
+};
+
+type MockMeetingPostComment = {
+  commentId: number;
+  meetingId: number;
+  postId: number;
+  authorId: number;
+  authorNickname: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 function formatMockDate(offsetDays: number) {
@@ -209,7 +227,7 @@ const meetingPosts: MockMeetingPost[] = [
     authorNickname: "가더",
     imageUrls: [...mockPostImageUrls],
     likeCount: 15,
-    commentCount: 5,
+    commentCount: 2,
     likedUserIds: [1],
     createdAt: "2026-05-11T19:30:00",
   },
@@ -223,7 +241,7 @@ const meetingPosts: MockMeetingPost[] = [
     authorNickname: "가더",
     imageUrls: [mockPostImageOne],
     likeCount: 7,
-    commentCount: 2,
+    commentCount: 0,
     likedUserIds: [],
     createdAt: "2026-07-24T18:10:00",
   },
@@ -237,7 +255,7 @@ const meetingPosts: MockMeetingPost[] = [
     authorNickname: "팀원 1",
     imageUrls: [],
     likeCount: 4,
-    commentCount: 1,
+    commentCount: 0,
     likedUserIds: [1],
     createdAt: "2026-07-25T18:10:00",
   },
@@ -251,11 +269,35 @@ const meetingPosts: MockMeetingPost[] = [
     authorNickname: "이하늘",
     imageUrls: [],
     likeCount: 7,
-    commentCount: 2,
+    commentCount: 0,
     likedUserIds: [],
     createdAt: "2026-07-24T18:10:00",
   },
 ];
+
+const meetingPostComments: MockMeetingPostComment[] = [
+  {
+    commentId: 1,
+    meetingId: 1,
+    postId: 1,
+    authorId: 102,
+    authorNickname: "박서준",
+    content: "수고 많으셨습니다!",
+    createdAt: "2026-05-15T10:00:00",
+    updatedAt: "2026-05-15T10:00:00",
+  },
+  {
+    commentId: 2,
+    meetingId: 1,
+    postId: 1,
+    authorId: 103,
+    authorNickname: "최민호",
+    content: "다음에도 기대돼요:)",
+    createdAt: "2026-05-16T10:00:00",
+    updatedAt: "2026-05-16T10:00:00",
+  },
+];
+let nextMeetingPostCommentId = 3;
 
 function createMeetingNotFoundResponse() {
   return HttpResponse.json(
@@ -388,6 +430,36 @@ function parseMeetingPostSorts(url: URL): MeetingPostSort[] | null {
   }, []);
 }
 
+function parseMeetingPostCommentSorts(
+  url: URL,
+): MeetingPostCommentSort[] | null {
+  const rawSorts = url.searchParams.getAll("sort");
+
+  if (rawSorts.length === 0) {
+    return [{ field: "createdAt", direction: "asc" }];
+  }
+
+  return rawSorts.reduce<MeetingPostCommentSort[] | null>((sorts, rawSort) => {
+    if (!sorts) {
+      return null;
+    }
+
+    const [field, direction = "asc"] = rawSort.split(",");
+
+    if (
+      !SORTABLE_MEETING_POST_COMMENT_FIELDS.includes(
+        field as MeetingPostCommentSortField,
+      ) ||
+      (direction !== "asc" && direction !== "desc")
+    ) {
+      return null;
+    }
+
+    sorts.push({ field: field as MeetingPostCommentSortField, direction });
+    return sorts;
+  }, []);
+}
+
 function getSortValue(team: MockMeeting, field: MeetingSortField) {
   if (field === "id" || field === "createdAt" || field === "updatedAt") {
     return team.meetingId;
@@ -405,6 +477,13 @@ function getMeetingPostSortValue(
   field: MeetingPostSortField,
 ) {
   return field === "id" ? post.postId : post.createdAt;
+}
+
+function getMeetingPostCommentSortValue(
+  comment: MockMeetingPostComment,
+  field: MeetingPostCommentSortField,
+) {
+  return comment[field];
 }
 
 function isMeetingRecruiting(team: MockMeeting) {
@@ -556,6 +635,25 @@ function sortMeetingPosts(items: MockMeetingPost[], sorts: MeetingPostSort[]) {
   });
 }
 
+function sortMeetingPostComments(
+  items: MockMeetingPostComment[],
+  sorts: MeetingPostCommentSort[],
+) {
+  return [...items].sort((left, right) => {
+    for (const { field, direction } of sorts) {
+      const leftValue = getMeetingPostCommentSortValue(left, field);
+      const rightValue = getMeetingPostCommentSortValue(right, field);
+      const comparison = String(leftValue).localeCompare(String(rightValue));
+
+      if (comparison !== 0) {
+        return direction === "asc" ? comparison : -comparison;
+      }
+    }
+
+    return 0;
+  });
+}
+
 function toMeetingPostSummary(post: MockMeetingPost, viewerUserId: number) {
   return {
     postId: post.postId,
@@ -584,6 +682,24 @@ function toMeetingPostDetail(
     canEdit: post.authorId === viewerUserId,
     canDelete: post.authorId === viewerUserId || team.hostId === viewerUserId,
     updatedAt: post.createdAt,
+  };
+}
+
+function toMeetingPostCommentResponse(
+  comment: MockMeetingPostComment,
+  viewerUserId: number,
+  team: MockMeeting,
+) {
+  return {
+    commentId: comment.commentId,
+    authorId: comment.authorId,
+    authorNickname: comment.authorNickname,
+    content: comment.content,
+    createdAt: comment.createdAt,
+    updatedAt: comment.updatedAt,
+    canEdit: comment.authorId === viewerUserId,
+    canDelete:
+      comment.authorId === viewerUserId || team.hostId === viewerUserId,
   };
 }
 
@@ -705,6 +821,23 @@ function toMeetingListItem(team: MockMeeting) {
 
 function findMeeting(meetingId: number) {
   return getMockMeetings().find((team) => team.meetingId === meetingId);
+}
+
+function findMeetingPost(meetingId: number, postId: number) {
+  return meetingPosts.find(
+    (meetingPost) =>
+      meetingPost.meetingId === meetingId && meetingPost.postId === postId,
+  );
+}
+
+function canReadMeetingPost(
+  userId: number,
+  meetingId: number,
+  post: MockMeetingPost,
+) {
+  const isJoined = getMembershipRole(userId, meetingId) !== null;
+
+  return isJoined || post.type === "NOTICE" || post.type === "REVIEW";
 }
 
 function createMeetingImageForbiddenResponse() {
@@ -1288,6 +1421,343 @@ export const teamHandlers = [
       error: null,
     });
   }),
+
+  http.post(
+    "*/api/v1/meetings/:meetingId/posts/:postId/likes",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      if (getMembershipRole(userId, meetingId) === null) {
+        return createMeetingErrorResponse(
+          "MEETING_MEMBER_REQUIRED",
+          "모임 가입자만 이용할 수 있습니다.",
+          403,
+        );
+      }
+
+      const likedIndex = post.likedUserIds.indexOf(userId);
+      const liked = likedIndex === -1;
+
+      if (liked) {
+        post.likedUserIds.push(userId);
+        post.likeCount += 1;
+      } else {
+        post.likedUserIds.splice(likedIndex, 1);
+        post.likeCount = Math.max(0, post.likeCount - 1);
+      }
+
+      return HttpResponse.json({
+        success: true,
+        data: { liked, likeCount: post.likeCount },
+        error: null,
+      });
+    },
+  ),
+
+  http.get(
+    "*/api/v1/meetings/:meetingId/posts/:postId/comments",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+      const url = new URL(request.url);
+      const page = getPageParam(url);
+      const size = getMeetingPostSizeParam(url);
+      const sorts = parseMeetingPostCommentSorts(url);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      if (!canReadMeetingPost(userId, meetingId, post)) {
+        return createMeetingErrorResponse(
+          "POST_ACCESS_DENIED",
+          "접근할 수 없는 게시글입니다.",
+          403,
+        );
+      }
+
+      if (!sorts) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid comment sort.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const comments = sortMeetingPostComments(
+        meetingPostComments.filter(
+          (comment) =>
+            comment.meetingId === meetingId && comment.postId === postId,
+        ),
+        sorts,
+      );
+      const startIndex = page * size;
+      const content = comments
+        .slice(startIndex, startIndex + size)
+        .map((comment) => toMeetingPostCommentResponse(comment, userId, team));
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          content,
+          totalElements: comments.length,
+          totalPages: Math.ceil(comments.length / size),
+          page,
+          size,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.post(
+    "*/api/v1/meetings/:meetingId/posts/:postId/comments",
+    async ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      if (getMembershipRole(userId, meetingId) === null) {
+        return createMeetingErrorResponse(
+          "MEETING_MEMBER_REQUIRED",
+          "모임 가입자만 댓글을 작성할 수 있습니다.",
+          403,
+        );
+      }
+
+      const body = (await request.json()) as { content?: unknown };
+      const content =
+        typeof body.content === "string" ? body.content.trim() : "";
+
+      if (!content || content.length > 500) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid comment content.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const now = new Date().toISOString().slice(0, 19);
+      const user = getMockUserById(userId);
+      const comment: MockMeetingPostComment = {
+        commentId: nextMeetingPostCommentId++,
+        meetingId,
+        postId,
+        authorId: userId,
+        authorNickname: user?.nickname ?? "나",
+        content,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      meetingPostComments.push(comment);
+      post.commentCount += 1;
+
+      return HttpResponse.json(
+        {
+          success: true,
+          data: toMeetingPostCommentResponse(comment, userId, team),
+          error: null,
+        },
+        { status: 201 },
+      );
+    },
+  ),
+
+  http.patch(
+    "*/api/v1/meetings/:meetingId/posts/:postId/comments/:commentId",
+    async ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const commentId = Number(params.commentId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      const comment = meetingPostComments.find(
+        (meetingPostComment) =>
+          meetingPostComment.meetingId === meetingId &&
+          meetingPostComment.postId === postId &&
+          meetingPostComment.commentId === commentId,
+      );
+
+      if (!comment) {
+        return createMeetingErrorResponse(
+          "COMMENT_NOT_FOUND",
+          "댓글을 찾을 수 없습니다.",
+          404,
+        );
+      }
+
+      if (comment.authorId !== userId) {
+        return createMeetingErrorResponse(
+          "COMMENT_FORBIDDEN",
+          "댓글을 수정할 권한이 없습니다.",
+          403,
+        );
+      }
+
+      const body = (await request.json()) as { content?: unknown };
+      const content =
+        typeof body.content === "string" ? body.content.trim() : "";
+
+      if (!content || content.length > 500) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid comment content.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      comment.content = content;
+      comment.updatedAt = new Date().toISOString().slice(0, 19);
+
+      return HttpResponse.json({
+        success: true,
+        data: toMeetingPostCommentResponse(comment, userId, team),
+        error: null,
+      });
+    },
+  ),
+
+  http.delete(
+    "*/api/v1/meetings/:meetingId/posts/:postId/comments/:commentId",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const commentId = Number(params.commentId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      const commentIndex = meetingPostComments.findIndex(
+        (comment) =>
+          comment.meetingId === meetingId &&
+          comment.postId === postId &&
+          comment.commentId === commentId,
+      );
+
+      if (commentIndex === -1) {
+        return createMeetingErrorResponse(
+          "COMMENT_NOT_FOUND",
+          "댓글을 찾을 수 없습니다.",
+          404,
+        );
+      }
+
+      const comment = meetingPostComments[commentIndex];
+
+      if (comment.authorId !== userId && team.hostId !== userId) {
+        return createMeetingErrorResponse(
+          "COMMENT_FORBIDDEN",
+          "댓글을 삭제할 권한이 없습니다.",
+          403,
+        );
+      }
+
+      meetingPostComments.splice(commentIndex, 1);
+      post.commentCount = Math.max(0, post.commentCount - 1);
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
 
   http.get(
     "*/api/v1/meetings/:meetingId/posts/:postId",

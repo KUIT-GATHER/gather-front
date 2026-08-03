@@ -9,13 +9,10 @@ type MeetingPostDetailProps = {
 
 export function MeetingPostDetail({ post }: MeetingPostDetailProps) {
   return (
-    <section className="px-5.5 pb-8">
+    <section className="px-5.5 pb-[calc(env(safe-area-inset-bottom)+7rem)]">
       <MeetingPostMainBoard post={post} />
 
-      <MeetingPostComment
-        likeCount={post.likeCount}
-        commentCount={post.commentCount}
-      />
+      <MeetingPostComment post={post} />
     </section>
   );
 }

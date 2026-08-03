@@ -149,6 +149,44 @@ export type MeetingPostPage = {
   size: number;
 };
 
+export type MeetingPostLikeResponse = {
+  liked: boolean;
+  likeCount: number;
+};
+
+export type MeetingPostCommentListParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
+};
+
+export type MeetingPostComment = {
+  commentId: number;
+  authorId: number;
+  authorNickname: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+export type MeetingPostCommentPage = {
+  content: MeetingPostComment[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
+export type MeetingPostCommentCreateRequest = {
+  content: string;
+};
+
+export type MeetingPostCommentUpdateRequest = {
+  content: string;
+};
+
 type MeetingPostCreateBaseRequest = {
   title: string;
   content: string;

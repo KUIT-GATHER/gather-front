@@ -1,7 +1,8 @@
 import { Link } from "react-router";
 
 import CommentIcon from "@/assets/icons/Comment.svg";
-import HeartIcon from "@/assets/icons/Heart.svg";
+import FilledHeartIcon from "@/assets/icons/Filledheart.svg";
+import UnfilledHeartIcon from "@/assets/icons/Unfilledheart.svg";
 import { formatMeetingPostDate } from "@/features/team/lib/formatMeetingPostDate";
 import type { MeetingPostSummary } from "@/features/team/types/team.types";
 
@@ -78,7 +79,7 @@ export function SharedMeetingBoardPostCard({
           <span className="inline-flex items-center gap-1">
             <img
               aria-hidden="true"
-              src={HeartIcon}
+              src={post.liked ? FilledHeartIcon : UnfilledHeartIcon}
               alt=""
               className="h-3 w-[13.333px]"
             />
