@@ -116,9 +116,13 @@ export function getVolunteerPostings(params?: VolunteerPostingListParams) {
   );
 }
 
-export function getBookmarkedVolunteerPostings() {
+export function getBookmarkedVolunteerPostings(
+  params: VolunteerPostingListParams = {},
+) {
+  const query = buildPostingListQuery(params);
+
   return fetchClient<VolunteerPostingPage>(
-    `${POSTING_ENDPOINT}/bookmarks?page=0&size=20`,
+    `${POSTING_ENDPOINT}/bookmarks?${query}`,
   );
 }
 
