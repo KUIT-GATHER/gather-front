@@ -5,8 +5,9 @@ import { getMyPageHome } from "@/features/my/api/myPage.api";
 export const myPageKeys = {
   all: ["mypage"] as const,
   home: () => [...myPageKeys.all, "home"] as const,
+  activitiesAll: () => [...myPageKeys.all, "activities"] as const,
   activities: (yearMonth: string) =>
-    [...myPageKeys.all, "activities", yearMonth] as const,
+    [...myPageKeys.activitiesAll(), yearMonth] as const,
 };
 
 export const myPageQueries = {

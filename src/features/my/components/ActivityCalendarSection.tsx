@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 
 import { useMyActivitiesQuery } from "@/features/my/hooks/useMyActivitiesQuery";
 import type { MyPageActivity } from "@/features/my/types/myActivity.types";
+import { useCancelVolunteerPostingParticipationMutation } from "@/features/volunteer/hooks/useApplyVolunteerPostingParticipationMutation";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -21,8 +22,24 @@ function formatActivityDate(dateKey: string) {
   return `${year}.${pad(month)}.${pad(day)} (${DAY_LABELS[date.getDay()]})`;
 }
 
+function getActivityStatusLabel(status: string) {
+  switch (status) {
+    case "APPLIED":
+    case "CONFIRMED":
+      return "신청중";
+    case "COMPLETED":
+    case "REVIEWED":
+      return "봉사 완료";
+    default:
+      return status;
+  }
+}
+
 function ActivityCard({ activity }: { activity: MyPageActivity }) {
   const navigate = useNavigate();
+  const cancelMutation = useCancelVolunteerPostingParticipationMutation(
+    activity.postingId,
+  );
 
   return (
     <article className="flex h-[145px] flex-col justify-center gap-3 rounded-xl border border-[#d9d9d9] bg-white px-3 py-4">
@@ -37,17 +54,17 @@ function ActivityCard({ activity }: { activity: MyPageActivity }) {
           </p>
         </div>
         <span className="shrink-0 rounded-[10px] bg-text-gray-400 px-2 py-0.5 text-body-14 text-text2">
-          {activity.status === "APPLIED" ? "신청 완료" : activity.status}
+          {getActivityStatusLabel(activity.status)}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          disabled
-          title="신청 취소 API 연동 전입니다."
+          disabled={cancelMutation.isPending}
+          onClick={() => cancelMutation.mutate()}
           className="h-9 rounded-[10px] border border-[#c5c5c5] text-[15px] font-medium text-[#5c5c5c]"
         >
-          신청 취소
+          {cancelMutation.isPending ? "취소 중" : "신청 취소"}
         </button>
         <button
           type="button"
