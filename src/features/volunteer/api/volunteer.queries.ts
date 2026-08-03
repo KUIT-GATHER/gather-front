@@ -60,6 +60,10 @@ export const volunteerPostingKeys = {
     ] as const,
   participation: (postingId: number) =>
     [...volunteerPostingKeys.detail(postingId), "participation"] as const,
+  participationComplete: (postingId: number) =>
+    [...volunteerPostingKeys.participation(postingId), "complete"] as const,
+  participationHours: (postingId: number) =>
+    [...volunteerPostingKeys.participation(postingId), "hours"] as const,
   recommendedKeywords: () =>
     [...volunteerPostingKeys.all, "recommendedKeywords"] as const,
 };
