@@ -7,6 +7,7 @@ import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
+import type { MyActivityRecord } from "@/features/my/types/myActivity.types";
 
 const PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -34,6 +35,64 @@ const profiles = new Map<number, MockProfile>();
 const profileImageUrls = new Map<number, string>();
 const pendingUploads = new Map<string, PendingProfileImageUpload>();
 let nextUploadId = 1;
+
+const mockActivityRecords: MyActivityRecord[] = [
+  {
+    participationId: 1,
+    postingId: 10,
+    title: "어린이 독서 지도",
+    category: "EDUCATION",
+    actStartDate: "2026-04-10",
+    actEndDate: "2026-04-10",
+    actPlace: "책읽는 친구들",
+    timeCertifiable: true,
+    recognizedMinutes: 120,
+  },
+  {
+    participationId: 2,
+    postingId: 11,
+    title: "공원 나무 심기",
+    category: "ENVIRONMENT",
+    actStartDate: "2026-03-15",
+    actEndDate: "2026-03-15",
+    actPlace: "그린 서울",
+    timeCertifiable: true,
+    recognizedMinutes: 180,
+  },
+  {
+    participationId: 3,
+    postingId: 12,
+    title: "유기견 산책 봉사",
+    category: "WELFARE",
+    actStartDate: "2026-02-10",
+    actEndDate: "2026-02-10",
+    actPlace: "남양주 보호소",
+    timeCertifiable: true,
+    recognizedMinutes: 240,
+  },
+  {
+    participationId: 4,
+    postingId: 13,
+    title: "문화재 보존 활동",
+    category: "CULTURE",
+    actStartDate: "2026-01-24",
+    actEndDate: "2026-01-24",
+    actPlace: "서울 문화재단",
+    timeCertifiable: true,
+    recognizedMinutes: 600,
+  },
+  {
+    participationId: 5,
+    postingId: 14,
+    title: "지역 아동 행사 지원",
+    category: "COMMUNITY",
+    actStartDate: "2025-12-20",
+    actEndDate: "2025-12-20",
+    actPlace: "광진구 주민센터",
+    timeCertifiable: false,
+    recognizedMinutes: null,
+  },
+];
 
 function getProfile(userId: number) {
   const existing = profiles.get(userId);
@@ -151,6 +210,62 @@ export const myProfileHandlers = [
     return HttpResponse.json({
       success: true,
       data: activities,
+      error: null,
+    });
+  }),
+  http.get("*/api/v1/mypage/activities/summary", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) return createUnauthorizedResponse();
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        totalCompletedCount: mockActivityRecords.length,
+        totalRecognizedMinutes: mockActivityRecords.reduce(
+          (sum, activity) => sum + (activity.recognizedMinutes ?? 0),
+          0,
+        ),
+        timeCertifiableCompletedCount: mockActivityRecords.filter(
+          (activity) => activity.timeCertifiable,
+        ).length,
+        categoryBlocks: [
+          "ENVIRONMENT",
+          "EDUCATION",
+          "WELFARE",
+          "CULTURE",
+          "COMMUNITY",
+          "OVERSEAS",
+        ].map((category) => ({
+          category,
+          count: mockActivityRecords.filter(
+            (activity) => activity.category === category,
+          ).length,
+        })),
+      },
+      error: null,
+    });
+  }),
+  http.get("*/api/v1/mypage/activities/records", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) return createUnauthorizedResponse();
+
+    const params = new URL(request.url).searchParams;
+    const category = params.get("category");
+    const page = Math.max(0, Number(params.get("page")) || 0);
+    const size = Math.max(1, Number(params.get("size")) || 20);
+    const filtered = category
+      ? mockActivityRecords.filter((activity) => activity.category === category)
+      : mockActivityRecords;
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content: filtered.slice(page * size, (page + 1) * size),
+        totalElements: filtered.length,
+        totalPages: Math.ceil(filtered.length / size),
+        page,
+        size,
+      },
       error: null,
     });
   }),

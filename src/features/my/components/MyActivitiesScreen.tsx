@@ -1,4 +1,5 @@
 ﻿import { ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import activityBadgeIcon from "@/features/my/assets/activity-badge.svg";
@@ -7,16 +8,17 @@ import activityHeartIcon from "@/features/my/assets/activity-heart.svg";
 import activityNoteIcon from "@/features/my/assets/activity-note.svg";
 import { MeetingCategoryTag } from "@/features/team/components/MeetingCategoryTag";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import {
-  POSTING_CATEGORIES,
-  type PostingCategory,
-} from "@/features/category/types/postingCategory.types";
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import communityPuzzle from "@/features/my/assets/activity-puzzle/community.svg";
 import culturePuzzle from "@/features/my/assets/activity-puzzle/culture.svg";
 import educationPuzzle from "@/features/my/assets/activity-puzzle/education.svg";
 import environmentPuzzle from "@/features/my/assets/activity-puzzle/environment.svg";
 import overseasPuzzle from "@/features/my/assets/activity-puzzle/overseas.svg";
 import welfarePuzzle from "@/features/my/assets/activity-puzzle/welfare.svg";
+import {
+  useMyActivityRecordsQuery,
+  useMyActivitySummaryQuery,
+} from "@/features/my/hooks/useMyActivitiesQuery";
 import PageHeader from "@/shared/ui/PageHeader";
 
 const PUZZLE_CATEGORIES: PostingCategory[] = [
@@ -39,15 +41,6 @@ const PUZZLE_ICON: Record<PostingCategory, string> = {
   OVERSEAS: overseasPuzzle,
 };
 
-const PUZZLE_COUNT: Record<PostingCategory, string> = {
-  ENVIRONMENT: "03",
-  EDUCATION: "02",
-  WELFARE: "01",
-  CULTURE: "01",
-  COMMUNITY: "01",
-  OVERSEAS: "01",
-};
-
 const PUZZLE_COUNT_COLOR: Record<PostingCategory, string> = {
   ENVIRONMENT: "text-[#558681]",
   EDUCATION: "text-[#545c8a]",
@@ -57,44 +50,38 @@ const PUZZLE_COUNT_COLOR: Record<PostingCategory, string> = {
   OVERSEAS: "text-[#677f98]",
 };
 
-const COMPLETED_ACTIVITIES = [
-  {
-    id: 1,
-    title: "어린이 독서 지도",
-    date: "2026.04.10 (토)",
-    organization: "책읽는 친구들",
-    category: "EDUCATION",
-  },
-  {
-    id: 2,
-    title: "공원 나무 심기",
-    date: "2026.03.15 (토)",
-    organization: "그린 서울",
-    category: "ENVIRONMENT",
-  },
-  {
-    id: 3,
-    title: "유기견 산책 봉사",
-    date: "2026.05.10 (일)",
-    organization: "남양주 보호소",
-    category: "ENVIRONMENT",
-  },
-] satisfies Array<{
-  id: number;
-  title: string;
-  date: string;
-  organization: string;
-  category: PostingCategory;
-}>;
+const PUZZLE_LINE_COLOR: Record<PostingCategory, string> = {
+  ENVIRONMENT: "bg-[#558681]",
+  EDUCATION: "bg-[#545c8a]",
+  WELFARE: "bg-[#815e81]",
+  CULTURE: "bg-[#8e7e59]",
+  COMMUNITY: "bg-[#828d84]",
+  OVERSEAS: "bg-[#677f98]",
+};
 
 const ACTIVITY_BORDER: Record<PostingCategory, string> = {
-  ENVIRONMENT: "border-[#5fb7ad]",
-  EDUCATION: "border-[#6270bc]",
-  WELFARE: "border-[#c375c3]",
-  CULTURE: "border-[#e8b847]",
-  COMMUNITY: "border-[#90bd99]",
-  OVERSEAS: "border-[#78aee5]",
+  ENVIRONMENT: "border-[#82d3ca]",
+  EDUCATION: "border-[#828ed2]",
+  WELFARE: "border-[#d197d1]",
+  CULTURE: "border-[#fade9e]",
+  COMMUNITY: "border-[#dcecdf]",
+  OVERSEAS: "border-[#a6ccf4]",
 };
+
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+function formatDate(date: string | null) {
+  if (!date) return "일시 미정";
+  const parsed = new Date(`${date}T00:00:00`);
+  return `${date.replaceAll("-", ".")} (${WEEKDAYS[parsed.getDay()]})`;
+}
+
+function formatMinutes(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (!hours) return `${remainder}분`;
+  return remainder ? `${hours}시간 ${remainder}분` : `${hours}시간`;
+}
 
 function StatIcon({
   src,
@@ -116,6 +103,42 @@ function StatIcon({
 
 export function MyActivitiesScreen() {
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] =
+    useState<PostingCategory | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const summaryQuery = useMyActivitySummaryQuery();
+  const recordsQuery = useMyActivityRecordsQuery(selectedCategory);
+  const summary = summaryQuery.data;
+  const records =
+    recordsQuery.data?.pages.flatMap((page) => page.content) ?? [];
+  const categoryCounts = new Map(
+    summary?.categoryBlocks.map(({ category, count }) => [category, count]),
+  );
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (
+          entry.isIntersecting &&
+          recordsQuery.hasNextPage &&
+          !recordsQuery.isFetchingNextPage
+        ) {
+          void recordsQuery.fetchNextPage();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [
+    recordsQuery.fetchNextPage,
+    recordsQuery.hasNextPage,
+    recordsQuery.isFetchingNextPage,
+  ]);
 
   return (
     <div className="mx-auto min-h-dvh max-w-app bg-bg px-5.5 pb-10">
@@ -135,7 +158,9 @@ export function MyActivitiesScreen() {
                 iconClassName="size-9"
               />
               <div className="text-center">
-                <strong className="block text-title-18">19시간</strong>
+                <strong className="block text-title-18">
+                  {formatMinutes(summary?.totalRecognizedMinutes ?? 0)}
+                </strong>
                 <span className="mt-1 block text-base font-medium text-text-green-500">
                   봉사 시간
                 </span>
@@ -150,7 +175,9 @@ export function MyActivitiesScreen() {
                   iconClassName="size-5"
                 />
                 <div>
-                  <strong className="block text-body-15-semibold">5건</strong>
+                  <strong className="block text-body-15-semibold">
+                    {summary?.totalCompletedCount ?? 0}건
+                  </strong>
                   <span className="text-body-14 font-medium text-text-green-500">
                     총 활동
                   </span>
@@ -163,7 +190,9 @@ export function MyActivitiesScreen() {
                   iconClassName="h-[22px] w-5"
                 />
                 <div>
-                  <strong className="block text-body-15-semibold">4건</strong>
+                  <strong className="block text-body-15-semibold">
+                    {summary?.timeCertifiableCompletedCount ?? 0}건
+                  </strong>
                   <span className="text-body-14 font-medium text-text-green-500">
                     시간 인증
                   </span>
@@ -207,13 +236,13 @@ export function MyActivitiesScreen() {
                   style={{ left: PUZZLE_LEFT[index] }}
                 >
                   <span
-                    className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-body-14 font-medium ${index % 2 === 0 ? "top-[174px]" : "top-0"}`}
+                    className={`absolute left-[29px] -translate-x-1/2 whitespace-nowrap text-body-14 font-medium ${index % 2 === 0 ? "top-[174px]" : "top-0"}`}
                   >
                     {POSTING_CATEGORY_LABEL[category]}
                   </span>
                   <span
                     aria-hidden="true"
-                    className={`absolute left-1/2 h-[60px] w-px -translate-x-1/2 bg-stroke ${index % 2 === 0 ? "top-[106px]" : "top-[22px]"}`}
+                    className={`absolute left-[29px] h-[60px] w-[0.5px] -translate-x-1/2 ${PUZZLE_LINE_COLOR[category]} ${index % 2 === 0 ? "top-[106px]" : "top-[22px]"}`}
                   />
                   <div
                     className={`absolute h-[71.864px] w-[71.87px] ${index % 2 === 0 ? "top-[51px]" : "top-[65px]"}`}
@@ -227,7 +256,10 @@ export function MyActivitiesScreen() {
                     <span
                       className={`absolute text-[15px] font-medium ${index % 2 === 0 ? "left-1 top-[17px]" : "left-9 top-[39px]"} ${PUZZLE_COUNT_COLOR[category]}`}
                     >
-                      {PUZZLE_COUNT[category]}
+                      {String(categoryCounts.get(category) ?? 0).padStart(
+                        2,
+                        "0",
+                      )}
                     </span>
                   </div>
                 </div>
@@ -238,38 +270,76 @@ export function MyActivitiesScreen() {
         <section className="mt-9" aria-label="완료한 활동 목록">
           <div className="-mx-5.5 overflow-x-auto px-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex w-max gap-2">
-              <span className="inline-flex h-11 items-center rounded-[30px] bg-text-gray-400 px-4 text-xs font-semibold text-text2">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(null)}
+                className={`inline-flex h-11 items-center rounded-[30px] px-4 text-xs font-semibold ${
+                  selectedCategory === null
+                    ? "bg-text-gray-400 text-text2"
+                    : "border border-stroke bg-white text-text-gray-400"
+                }`}
+              >
                 전체
-              </span>
-              {POSTING_CATEGORIES.map((category) => (
-                <MeetingCategoryTag
+              </button>
+              {PUZZLE_CATEGORIES.map((category) => (
+                <button
                   key={category}
-                  category={category}
-                  selected={false}
-                />
+                  type="button"
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  <MeetingCategoryTag
+                    category={category}
+                    selected={selectedCategory === category}
+                  />
+                </button>
               ))}
             </div>
           </div>
 
           <div className="mt-5 space-y-5">
-            {COMPLETED_ACTIVITIES.map((activity) => (
+            {records.map((activity) => (
               <article
-                key={activity.id}
-                className={`flex min-h-[74px] items-start justify-between gap-3 rounded-xl border bg-white px-3 py-4 ${ACTIVITY_BORDER[activity.category]}`}
+                key={activity.participationId}
+                className={`flex h-[73px] items-start justify-between gap-3 rounded-xl border bg-white px-3 py-4 ${ACTIVITY_BORDER[activity.category]}`}
               >
                 <div className="min-w-0">
                   <h3 className="truncate text-body-15-semibold">
                     {activity.title}
                   </h3>
                   <p className="mt-2 truncate text-body-14 text-text-gray-100">
-                    {activity.date} {activity.organization}
+                    {formatDate(activity.actStartDate)}{" "}
+                    {activity.actPlace ?? "장소 미정"}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-[10px] bg-text-gray-400 px-2 py-0.5 text-body-14 text-text2">
-                  시간 인증
+                  {activity.recognizedMinutes === null
+                    ? "미인증"
+                    : formatMinutes(activity.recognizedMinutes)}
                 </span>
               </article>
             ))}
+            {recordsQuery.isLoading ? (
+              <p className="py-6 text-center text-body-14 text-text-gray-100">
+                활동 기록을 불러오는 중이에요.
+              </p>
+            ) : null}
+            {recordsQuery.isError && records.length === 0 ? (
+              <button
+                type="button"
+                onClick={() => void recordsQuery.refetch()}
+                className="w-full py-6 text-center text-body-14 text-text-gray-400"
+              >
+                활동 기록을 불러오지 못했어요. 다시 시도
+              </button>
+            ) : null}
+            {!recordsQuery.isLoading &&
+            !recordsQuery.isError &&
+            records.length === 0 ? (
+              <p className="py-6 text-center text-body-14 text-text-gray-100">
+                완료한 활동이 없어요.
+              </p>
+            ) : null}
+            <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
           </div>
         </section>
       </main>

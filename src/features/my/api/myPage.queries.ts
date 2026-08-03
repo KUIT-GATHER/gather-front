@@ -8,6 +8,9 @@ export const myPageKeys = {
   activitiesAll: () => [...myPageKeys.all, "activities"] as const,
   activities: (yearMonth: string) =>
     [...myPageKeys.activitiesAll(), yearMonth] as const,
+  activitySummary: () => [...myPageKeys.activitiesAll(), "summary"] as const,
+  activityRecords: (category: string | null) =>
+    [...myPageKeys.activitiesAll(), "records", category] as const,
 };
 
 export const myPageQueries = {
