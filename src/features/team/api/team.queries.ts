@@ -1,6 +1,8 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
+  getMeetingPost,
+  getMeetingPostComments,
   getMeeting,
   getMeetingHome,
   getMeetingPosts,
@@ -14,6 +16,7 @@ import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 import type {
   MeetingInfiniteParams,
   MeetingListParams,
+  MeetingPostCommentListParams,
   MeetingPostListParams,
 } from "../types/team.types";
 
@@ -50,6 +53,29 @@ export const teamKeys = {
     [...teamKeys.detail(meetingId), "posts"] as const,
   postList: (meetingId: number, params: MeetingPostListParams = {}) =>
     [...teamKeys.posts(meetingId), params] as const,
+  post: (meetingId: number, postId: number) =>
+    [...teamKeys.posts(meetingId), "detail", postId] as const,
+  postComments: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "comments"] as const,
+  postCommentList: (
+    meetingId: number,
+    postId: number,
+    params: MeetingPostCommentListParams = {},
+  ) => [...teamKeys.postComments(meetingId, postId), params] as const,
+  createPost: (meetingId: number) =>
+    [...teamKeys.posts(meetingId), "create"] as const,
+  updatePost: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "update"] as const,
+  deletePost: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "delete"] as const,
+  togglePostLike: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "like"] as const,
+  createPostComment: (meetingId: number, postId: number) =>
+    [...teamKeys.postComments(meetingId, postId), "create"] as const,
+  updatePostComment: (meetingId: number, postId: number, commentId: number) =>
+    [...teamKeys.postComments(meetingId, postId), "update", commentId] as const,
+  deletePostComment: (meetingId: number, postId: number, commentId: number) =>
+    [...teamKeys.postComments(meetingId, postId), "delete", commentId] as const,
   bookmark: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "bookmark"] as const,
 };
@@ -105,9 +131,42 @@ export const teamQueries = {
     }),
 
   posts: (meetingId: number, params: MeetingPostListParams = {}) =>
-    queryOptions({
+    infiniteQueryOptions({
       queryKey: teamKeys.postList(meetingId, params),
-      queryFn: () => getMeetingPosts(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMeetingPosts(meetingId, { ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  post: (meetingId: number, postId: number) =>
+    queryOptions({
+      queryKey: teamKeys.post(meetingId, postId),
+      queryFn: () => getMeetingPost(meetingId, postId),
+    }),
+
+  postComments: (
+    meetingId: number,
+    postId: number,
+    params: MeetingPostCommentListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.postCommentList(meetingId, postId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMeetingPostComments(meetingId, postId, {
+          ...params,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
     }),
 
   images: (meetingId: number) =>

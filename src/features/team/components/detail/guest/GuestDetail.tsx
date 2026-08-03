@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 import type { MeetingHome } from "@/features/team/types/team.types";
 
@@ -28,10 +28,20 @@ export function GuestDetail({
   onBookmarkToggle,
   children,
 }: GuestDetailProps) {
+  const location = useLocation();
   const navigate = useNavigate();
+  const isPostDetailPage = location.pathname.startsWith(
+    `/teams/${home.meetingId}/posts/`,
+  );
 
   return (
-    <article className="min-h-dvh pb-[calc(env(safe-area-inset-bottom)+6.5rem)]">
+    <article
+      className={
+        isPostDetailPage
+          ? "min-h-dvh pb-8"
+          : "min-h-dvh pb-[calc(env(safe-area-inset-bottom)+6.5rem)]"
+      }
+    >
       <GuestHeader
         title={home.name}
         onBack={() => navigate(-1)}
@@ -39,15 +49,17 @@ export function GuestDetail({
         isBookmarkPending={isBookmarkPending}
         onBookmarkToggle={onBookmarkToggle}
       />
-      <GuestTabs meetingId={home.meetingId} />
+      {isPostDetailPage ? null : <GuestTabs meetingId={home.meetingId} />}
 
       {children}
 
-      <GuestJoinBar
-        disabled={isJoinDisabled(home)}
-        meetingId={home.meetingId}
-        meetingName={home.name}
-      />
+      {isPostDetailPage ? null : (
+        <GuestJoinBar
+          disabled={isJoinDisabled(home)}
+          meetingId={home.meetingId}
+          meetingName={home.name}
+        />
+      )}
     </article>
   );
 }

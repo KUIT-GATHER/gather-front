@@ -114,6 +114,9 @@ export type MeetingBookmarkResponse = {
 
 export type MeetingPostListParams = {
   type?: MeetingPostType;
+  page?: number;
+  size?: number;
+  sort?: string[];
 };
 
 export type MeetingPostSummary = {
@@ -123,7 +126,86 @@ export type MeetingPostSummary = {
   content: string;
   authorId: number;
   authorNickname: string;
+  imageUrls: string[];
   likeCount: number;
   commentCount: number;
+  liked: boolean;
   createdAt: string;
+};
+
+export type MeetingPost = MeetingPostSummary & {
+  meetingId: number;
+  recruitCapacity: number | null;
+  canEdit: boolean;
+  canDelete: boolean;
+  updatedAt: string;
+};
+
+export type MeetingPostPage = {
+  content: MeetingPostSummary[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
+export type MeetingPostLikeResponse = {
+  liked: boolean;
+  likeCount: number;
+};
+
+export type MeetingPostCommentListParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
+};
+
+export type MeetingPostComment = {
+  commentId: number;
+  authorId: number;
+  authorNickname: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+export type MeetingPostCommentPage = {
+  content: MeetingPostComment[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
+export type MeetingPostCommentCreateRequest = {
+  content: string;
+};
+
+export type MeetingPostCommentUpdateRequest = {
+  content: string;
+};
+
+type MeetingPostCreateBaseRequest = {
+  title: string;
+  content: string;
+};
+
+export type MeetingPostCreateGeneralRequest = MeetingPostCreateBaseRequest & {
+  type: Exclude<MeetingPostType, "RECRUIT">;
+};
+
+export type MeetingPostCreateRecruitRequest = MeetingPostCreateBaseRequest & {
+  type: "RECRUIT";
+  recruitCapacity: number;
+};
+
+export type MeetingPostCreateRequest =
+  | MeetingPostCreateGeneralRequest
+  | MeetingPostCreateRecruitRequest;
+
+export type MeetingPostUpdateRequest = {
+  title: string;
+  content: string;
 };
