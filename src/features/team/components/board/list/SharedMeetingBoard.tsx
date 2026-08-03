@@ -19,6 +19,7 @@ type SharedMeetingBoardProps = {
   notice?: ReactNode;
   emptyMessage?: string;
   availableTypes?: readonly MeetingPostType[];
+  showTypeFilter?: boolean;
   canWrite?: boolean;
   onWriteClick?: () => void;
 };
@@ -29,22 +30,25 @@ export function SharedMeetingBoard({
   notice,
   emptyMessage = "현재 작성된 게시글이 존재하지 않습니다",
   availableTypes = MEETING_POST_TYPES,
+  showTypeFilter = true,
   canWrite = false,
   onWriteClick,
 }: SharedMeetingBoardProps) {
+  const hasTypeFilter = showTypeFilter && availableTypes.length > 0;
   const [selectedType, setSelectedType] = useState<MeetingPostType | undefined>(
     undefined,
   );
+  const selectedPostType = hasTypeFilter ? selectedType : undefined;
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const postListParams = useMemo(
-    () => (selectedType ? { type: selectedType } : {}),
-    [selectedType],
+    () => (selectedPostType ? { type: selectedPostType } : {}),
+    [selectedPostType],
   );
   const postsQuery = useMeetingPostsQuery(meetingId, postListParams);
   const posts = postsQuery.data?.pages.flatMap((page) => page.content) ?? [];
   const isInitialLoading = postsQuery.isLoading && posts.length === 0;
   const isInitialError = postsQuery.isError && posts.length === 0;
-  const resolvedEmptyMessage = selectedType
+  const resolvedEmptyMessage = selectedPostType
     ? "해당 분류의 게시글이 존재하지 않습니다"
     : emptyMessage;
 
@@ -77,85 +81,92 @@ export function SharedMeetingBoard({
     >
       {notice}
 
-      <div
-        className={cn("flex gap-2 overflow-x-auto pb-1", notice ? "mt-4" : "")}
-        aria-label="게시글 분류"
-      >
-        {availableTypes.map((type) => {
-          const isSelected = selectedType === type;
+      {hasTypeFilter ? (
+        <div
+          className={cn(
+            "flex gap-2 overflow-x-auto pb-1",
+            notice ? "mt-4" : "",
+          )}
+          aria-label="게시글 분류"
+        >
+          {availableTypes.map((type) => {
+            const isSelected = selectedType === type;
 
-          return (
-            <button
-              key={type}
-              type="button"
-              aria-pressed={isSelected}
-              className={cn(
-                "h-8 shrink-0 rounded-[40px] border-[0.5px] border-text-gray-400 px-3.5 text-[14px] leading-4 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
-                isSelected
-                  ? "bg-text-gray-400 text-white"
-                  : "bg-white text-text-gray-400 active:bg-button/8",
-              )}
-              onClick={() => setSelectedType(isSelected ? undefined : type)}
-            >
-              {MEETING_POST_TYPE_LABELS[type]}
-            </button>
-          );
-        })}
-      </div>
-
-      {isInitialLoading ? (
-        <LoadingState label="게시글을 불러오는 중" className="min-h-65" />
-      ) : null}
-
-      {isInitialError ? (
-        <ErrorState
-          title="게시글을 불러오지 못했어요"
-          description="잠시 후 다시 확인해 주세요."
-          className="min-h-65 justify-center"
-        />
-      ) : null}
-
-      {postsQuery.isSuccess && posts.length === 0 ? (
-        <p className="flex min-h-75 items-center justify-center text-center text-[18px] leading-5 font-medium text-text-gray-400">
-          {resolvedEmptyMessage}
-        </p>
-      ) : null}
-
-      {posts.length > 0 ? (
-        <ul className="mt-3 flex flex-col gap-3">
-          {posts.map((post) => (
-            <li key={post.postId}>
-              <SharedMeetingBoardPostCard meetingId={meetingId} post={post} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {posts.length > 0 ? (
-        <>
-          <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
-          {postsQuery.isFetchingNextPage ? (
-            <LoadingState
-              label="게시글을 더 불러오는 중"
-              className="min-h-24"
-            />
-          ) : null}
-          {postsQuery.isFetchNextPageError ? (
-            <div className="py-6 text-center">
-              <p className="text-sm text-text-gray-400">
-                게시글을 더 불러오지 못했어요.
-              </p>
+            return (
               <button
+                key={type}
                 type="button"
-                className="mt-2 rounded-lg px-3 py-2 text-sm font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-                onClick={() => void postsQuery.fetchNextPage()}
+                aria-pressed={isSelected}
+                className={cn(
+                  "h-8 shrink-0 rounded-[40px] border-[0.5px] border-text-gray-400 px-3.5 text-[14px] leading-4 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                  isSelected
+                    ? "bg-text-gray-400 text-white"
+                    : "bg-white text-text-gray-400 active:bg-button/8",
+                )}
+                onClick={() => setSelectedType(isSelected ? undefined : type)}
               >
-                다시 시도
+                {MEETING_POST_TYPE_LABELS[type]}
               </button>
-            </div>
-          ) : null}
-        </>
+            );
+          })}
+        </div>
       ) : null}
+
+      <div className={cn(!hasTypeFilter && notice ? "mt-4" : "")}>
+        {isInitialLoading ? (
+          <LoadingState label="게시글을 불러오는 중" className="min-h-65" />
+        ) : null}
+
+        {isInitialError ? (
+          <ErrorState
+            title="게시글을 불러오지 못했어요"
+            description="잠시 후 다시 확인해 주세요."
+            className="min-h-65 justify-center"
+          />
+        ) : null}
+
+        {postsQuery.isSuccess && posts.length === 0 ? (
+          <p className="flex min-h-75 items-center justify-center text-center text-[18px] leading-5 font-medium text-text-gray-400">
+            {resolvedEmptyMessage}
+          </p>
+        ) : null}
+
+        {posts.length > 0 ? (
+          <ul className="mt-3 flex flex-col gap-3">
+            {posts.map((post) => (
+              <li key={post.postId}>
+                <SharedMeetingBoardPostCard meetingId={meetingId} post={post} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {posts.length > 0 ? (
+          <>
+            <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
+            {postsQuery.isFetchingNextPage ? (
+              <LoadingState
+                label="게시글을 더 불러오는 중"
+                className="min-h-24"
+              />
+            ) : null}
+            {postsQuery.isFetchNextPageError ? (
+              <div className="py-6 text-center">
+                <p className="text-sm text-text-gray-400">
+                  게시글을 더 불러오지 못했어요.
+                </p>
+                <button
+                  type="button"
+                  className="mt-2 rounded-lg px-3 py-2 text-sm font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                  onClick={() => void postsQuery.fetchNextPage()}
+                >
+                  다시 시도
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </div>
 
       {canWrite ? (
         <button

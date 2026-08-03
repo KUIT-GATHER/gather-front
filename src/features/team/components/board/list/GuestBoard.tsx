@@ -14,6 +14,7 @@ export function GuestBoard({ home }: GuestBoardProps) {
       meetingName={home.name}
       notice={<GuestBoardAccessNotice />}
       availableTypes={["NOTICE", "REVIEW"]}
+      showTypeFilter={false}
       emptyMessage="현재 작성된 활동 후기가 존재하지 않습니다"
     />
   );
