@@ -40,11 +40,9 @@ export function MyPageScreen() {
         <div className="flex items-center gap-5">
           <button
             type="button"
-            aria-label={
-              home?.hasBookmark ? "북마크 보기" : "저장된 북마크 없음"
-            }
-            disabled={!home?.hasBookmark}
-            className="p-0.5 disabled:opacity-40"
+            aria-label="찜한 활동 보기"
+            className="p-0.5"
+            onClick={() => navigate("/my/bookmarks")}
           >
             <img src={bookmarkIcon} alt="" className="h-[18px] w-3.5" />
           </button>
@@ -88,6 +86,7 @@ export function MyPageScreen() {
         <button
           type="button"
           className="mt-7 flex h-[68px] w-full items-center rounded-xl border border-stroke bg-white px-5 text-left"
+          onClick={() => navigate("/my/activities")}
         >
           <PuzzleMark />
           <span className="ml-3 flex-1 text-body-15-semibold">

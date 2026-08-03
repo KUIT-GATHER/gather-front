@@ -32,6 +32,9 @@ import { TeamDetailPostsPage } from "@/pages/teams/TeamDetailPostsPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
+import { MyActivitiesPage } from "@/pages/my/MyActivitiesPage";
+import { MyBadgesPage } from "@/pages/my/MyBadgesPage";
+import { MyBookmarksPage } from "@/pages/my/MyBookmarksPage";
 import { ProfileEditPage } from "@/pages/my/ProfileEditPage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
@@ -134,6 +137,18 @@ export const router = createBrowserRouter([
               {
                 path: "/my/profile/edit",
                 element: <ProfileEditPage />,
+              },
+              {
+                path: "/my/activities",
+                element: <MyActivitiesPage />,
+              },
+              {
+                path: "/my/badges",
+                element: <MyBadgesPage />,
+              },
+              {
+                path: "/my/bookmarks",
+                element: <MyBookmarksPage />,
               },
             ],
           },
