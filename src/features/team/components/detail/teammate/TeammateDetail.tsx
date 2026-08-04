@@ -40,6 +40,16 @@ export function TeammateDetail({
       : isHomePage
         ? "bookmark"
         : "none";
+  const isSettingsPage = location.pathname.startsWith(
+    `/teams/${home.meetingId}/settings`,
+  );
+  const settingsBasePath = `/teams/${home.meetingId}/settings`;
+
+  const isSettingsRootPage = location.pathname === settingsBasePath;
+
+  const isSettingsSubPage = location.pathname.startsWith(
+    `${settingsBasePath}/`,
+  );
 
   return (
     <article
@@ -49,16 +59,25 @@ export function TeammateDetail({
           : "min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]"
       }
     >
-      <TeammateHeader
-        title={home.name}
-        viewerRole={viewerRole}
-        action={headerAction}
-        onBack={() => navigate(-1)}
-        isBookmarked={isBookmarked}
-        isBookmarkPending={isBookmarkPending}
-        onBookmarkToggle={onBookmarkToggle}
-      />
-      {isPostDetailPage ? null : <TeammateTabs meetingId={home.meetingId} />}
+      {isSettingsSubPage ? null : (
+        <TeammateHeader
+          title={home.name}
+          viewerRole={viewerRole}
+          action={headerAction}
+          showSettingsInsteadOfRole={isHomePage && viewerRole === "leader"}
+          onBack={() => navigate(-1)}
+          onSettingsClick={() => {
+            navigate(`/teams/${home.meetingId}/settings`);
+          }}
+          isBookmarked={isBookmarked}
+          isBookmarkPending={isBookmarkPending}
+          onBookmarkToggle={onBookmarkToggle}
+        />
+      )}
+
+      {isPostDetailPage || isSettingsRootPage || isSettingsSubPage ? null : (
+        <TeammateTabs meetingId={home.meetingId} />
+      )}
 
       {children}
 
