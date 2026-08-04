@@ -55,8 +55,9 @@ export function ProfileEditScreen() {
   const uploadImageMutation = useUploadProfileImageMutation();
   const [isRegionSheetOpen, setIsRegionSheetOpen] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
-    null,
+  const profileImagePreview = useMemo(
+    () => (profileImageFile ? URL.createObjectURL(profileImageFile) : null),
+    [profileImageFile],
   );
   const [imageError, setImageError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -107,15 +108,10 @@ export function ProfileEditScreen() {
   }, [profileQuery.data, reset]);
 
   useEffect(() => {
-    if (!profileImageFile) {
-      setProfileImagePreview(null);
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(profileImageFile);
-    setProfileImagePreview(previewUrl);
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [profileImageFile]);
+    return () => {
+      if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    };
+  }, [profileImagePreview]);
 
   const regionById = useMemo(
     () =>

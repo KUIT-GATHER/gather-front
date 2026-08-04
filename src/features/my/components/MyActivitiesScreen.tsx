@@ -108,6 +108,7 @@ export function MyActivitiesScreen() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const summaryQuery = useMyActivitySummaryQuery();
   const recordsQuery = useMyActivityRecordsQuery(selectedCategory);
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = recordsQuery;
   const summary = summaryQuery.data;
   const records =
     recordsQuery.data?.pages.flatMap((page) => page.content) ?? [];
@@ -121,12 +122,8 @@ export function MyActivitiesScreen() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (
-          entry.isIntersecting &&
-          recordsQuery.hasNextPage &&
-          !recordsQuery.isFetchingNextPage
-        ) {
-          void recordsQuery.fetchNextPage();
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          void fetchNextPage();
         }
       },
       { rootMargin: "240px" },
@@ -134,11 +131,7 @@ export function MyActivitiesScreen() {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [
-    recordsQuery.fetchNextPage,
-    recordsQuery.hasNextPage,
-    recordsQuery.isFetchingNextPage,
-  ]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <div className="mx-auto min-h-dvh max-w-app bg-bg px-5.5 pb-10">

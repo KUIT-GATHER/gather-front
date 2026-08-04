@@ -497,7 +497,9 @@ export const teamHandlers = [
             category as (typeof meeting.categories)[number],
           ),
       )
-      .filter((meeting) => regionId === undefined || meeting.regionId === regionId)
+      .filter(
+        (meeting) => regionId === undefined || meeting.regionId === regionId,
+      )
       .filter(
         (meeting) =>
           (!activityStartDate && !activityEndDate) ||
