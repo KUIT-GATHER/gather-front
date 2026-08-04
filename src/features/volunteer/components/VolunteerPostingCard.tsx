@@ -3,7 +3,7 @@ import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
   formatVolunteerLocation,
-  getVolunteerDDay,
+  getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
 import { ActivityListCard } from "@/shared/ui/ActivityListCard";
@@ -25,10 +25,10 @@ export function VolunteerPostingCard({
     variant === "compact"
       ? formatVolunteerHomeDate(posting.actStartDate)
       : formatVolunteerDate(posting.actStartDate);
-  const activityDDay = getVolunteerDDay(posting.actStartDate);
-  const urgentActivityDDay =
-    activityDDay === "D-day" || /^D-[1-7]$/.test(activityDDay ?? "")
-      ? activityDDay
+  const recruitmentDDay = getRecruitmentDDay(posting.noticeEndDate);
+  const urgentRecruitmentDDay =
+    recruitmentDDay === "D-day" || /^D-[1-7]$/.test(recruitmentDDay ?? "")
+      ? recruitmentDDay
       : null;
 
   if (variant === "compact") {
@@ -61,7 +61,7 @@ export function VolunteerPostingCard({
       title={posting.title}
       description={posting.recruitOrg}
       metadata={[location, activityDate]}
-      dDay={urgentActivityDDay}
+      dDay={urgentRecruitmentDDay}
       categories={[posting.category]}
       onClick={onClick}
     />

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { teamQueries } from "@/features/team/api/team.queries";
 
@@ -8,5 +8,5 @@ export function useMeetingPostsQuery(
   meetingId: number,
   params: MeetingPostListParams = {},
 ) {
-  return useQuery(teamQueries.posts(meetingId, params));
+  return useInfiniteQuery(teamQueries.posts(meetingId, params));
 }

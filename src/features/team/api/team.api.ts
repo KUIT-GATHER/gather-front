@@ -9,12 +9,23 @@ import type {
   MeetingListItem,
   MeetingListParams,
   MeetingPage,
+  MeetingPost,
+  MeetingPostComment,
+  MeetingPostCommentCreateRequest,
+  MeetingPostCommentListParams,
+  MeetingPostCommentPage,
+  MeetingPostCommentUpdateRequest,
+  MeetingPostCreateRequest,
+  MeetingPostLikeResponse,
   MeetingPostListParams,
-  MeetingPostSummary,
+  MeetingPostPage,
+  MeetingPostUpdateRequest,
   MyMeetingListItem,
 } from "@/features/team/types/team.types";
 
 const MEETING_ENDPOINT = "/api/v1/meetings";
+const DEFAULT_MEETING_POST_SORT = ["createdAt,desc", "id,desc"] as const;
+const DEFAULT_MEETING_POST_COMMENT_SORT = ["createdAt,asc"] as const;
 const publicOptions = {
   skipAuth: true,
   withCredentials: false,
@@ -107,13 +118,67 @@ function buildMeetingPostsEndpoint(
   params: MeetingPostListParams = {},
 ) {
   const searchParams = new URLSearchParams();
+  const page = params.page ?? 0;
+  const size = params.size ?? 20;
+  const sorts =
+    params.sort && params.sort.length > 0
+      ? params.sort
+      : DEFAULT_MEETING_POST_SORT;
 
   setQueryParam(searchParams, "type", params.type);
+  setQueryParam(searchParams, "page", page);
+  setQueryParam(searchParams, "size", size);
+
+  sorts.forEach((sort) => {
+    appendQueryParam(searchParams, "sort", sort);
+  });
 
   const query = searchParams.toString();
   const endpoint = `${MEETING_ENDPOINT}/${meetingId}/posts`;
 
   return query ? `${endpoint}?${query}` : endpoint;
+}
+
+function buildMeetingPostEndpoint(meetingId: number, postId: number) {
+  return `${MEETING_ENDPOINT}/${meetingId}/posts/${postId}`;
+}
+
+function buildMeetingPostCommentsEndpoint(
+  meetingId: number,
+  postId: number,
+  params: MeetingPostCommentListParams = {},
+) {
+  const searchParams = new URLSearchParams();
+  const page = params.page ?? 0;
+  const size = params.size ?? 20;
+  const sorts =
+    params.sort && params.sort.length > 0
+      ? params.sort
+      : DEFAULT_MEETING_POST_COMMENT_SORT;
+
+  setQueryParam(searchParams, "page", page);
+  setQueryParam(searchParams, "size", size);
+
+  sorts.forEach((sort) => {
+    appendQueryParam(searchParams, "sort", sort);
+  });
+
+  const query = searchParams.toString();
+  const endpoint = `${buildMeetingPostEndpoint(meetingId, postId)}/comments`;
+
+  return query ? `${endpoint}?${query}` : endpoint;
+}
+
+function buildMeetingPostCommentEndpoint(
+  meetingId: number,
+  postId: number,
+  commentId: number,
+) {
+  return `${buildMeetingPostEndpoint(meetingId, postId)}/comments/${commentId}`;
+}
+
+function buildMeetingPostLikesEndpoint(meetingId: number, postId: number) {
+  return `${buildMeetingPostEndpoint(meetingId, postId)}/likes`;
 }
 
 export async function getMeetings(params?: MeetingListParams) {
@@ -190,9 +255,97 @@ export function getMeetingPosts(
   meetingId: number,
   params?: MeetingPostListParams,
 ) {
-  return fetchClient<MeetingPostSummary[]>(
+  return fetchClient<MeetingPostPage>(
     buildMeetingPostsEndpoint(meetingId, params),
   );
+}
+
+export function getMeetingPost(meetingId: number, postId: number) {
+  return fetchClient<MeetingPost>(buildMeetingPostEndpoint(meetingId, postId));
+}
+
+export function toggleMeetingPostLike(meetingId: number, postId: number) {
+  return fetchClient<MeetingPostLikeResponse>(
+    buildMeetingPostLikesEndpoint(meetingId, postId),
+    { method: "POST" },
+  );
+}
+
+export function getMeetingPostComments(
+  meetingId: number,
+  postId: number,
+  params?: MeetingPostCommentListParams,
+) {
+  return fetchClient<MeetingPostCommentPage>(
+    buildMeetingPostCommentsEndpoint(meetingId, postId, params),
+  );
+}
+
+export function createMeetingPostComment(
+  meetingId: number,
+  postId: number,
+  payload: MeetingPostCommentCreateRequest,
+) {
+  return fetchClient<MeetingPostComment>(
+    buildMeetingPostCommentsEndpoint(meetingId, postId),
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function updateMeetingPostComment(
+  meetingId: number,
+  postId: number,
+  commentId: number,
+  payload: MeetingPostCommentUpdateRequest,
+) {
+  return fetchClient<MeetingPostComment>(
+    buildMeetingPostCommentEndpoint(meetingId, postId, commentId),
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function deleteMeetingPostComment(
+  meetingId: number,
+  postId: number,
+  commentId: number,
+) {
+  return fetchClient<null>(
+    buildMeetingPostCommentEndpoint(meetingId, postId, commentId),
+    { method: "DELETE" },
+  );
+}
+
+export function createMeetingPost(
+  meetingId: number,
+  payload: MeetingPostCreateRequest,
+) {
+  return fetchClient<MeetingPost>(buildMeetingPostsEndpoint(meetingId), {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateMeetingPost(
+  meetingId: number,
+  postId: number,
+  payload: MeetingPostUpdateRequest,
+) {
+  return fetchClient<MeetingPost>(buildMeetingPostEndpoint(meetingId, postId), {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteMeetingPost(meetingId: number, postId: number) {
+  return fetchClient<null>(buildMeetingPostEndpoint(meetingId, postId), {
+    method: "DELETE",
+  });
 }
 
 export async function joinMeeting(meetingId: number) {

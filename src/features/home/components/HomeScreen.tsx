@@ -77,6 +77,10 @@ export function HomeScreen() {
 
   const postings = postingsQuery.data ?? [];
   const meetings = meetingsQuery.data ?? [];
+  const isPostingsInitialError =
+    postingsQuery.isError && postingsQuery.data === undefined;
+  const isMeetingsInitialError =
+    meetingsQuery.isError && meetingsQuery.data === undefined;
   const unreadTotal = unreadCountQuery.data?.total ?? 0;
   const unreadBadgeLabel = unreadTotal > 99 ? "99+" : String(unreadTotal);
   const isPostingsLoading = !authInitialized || postingsQuery.isLoading;
@@ -139,11 +143,11 @@ export function HomeScreen() {
           <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
               isLoading={isPostingsLoading}
-              isError={postingsQuery.isError}
+              isError={isPostingsInitialError}
               isEmpty={
                 authInitialized &&
                 !isPostingsLoading &&
-                !postingsQuery.isError &&
+                !isPostingsInitialError &&
                 postings.length === 0
               }
               emptyMessage="표시할 봉사 공고가 없어요."
@@ -181,11 +185,11 @@ export function HomeScreen() {
           <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
               isLoading={isMeetingsLoading}
-              isError={meetingsQuery.isError}
+              isError={isMeetingsInitialError}
               isEmpty={
                 authInitialized &&
                 !isMeetingsLoading &&
-                !meetingsQuery.isError &&
+                !isMeetingsInitialError &&
                 meetings.length === 0
               }
               emptyMessage="표시할 모임이 없어요."

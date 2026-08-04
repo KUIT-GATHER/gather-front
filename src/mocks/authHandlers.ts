@@ -1,6 +1,18 @@
 import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
+import {
+  addMockUser,
+  getMockUserById,
+  getNextMockUserId,
+  mockUsers,
+  type MockUser,
+} from "./data/mockUsers";
+import {
+  createMockAccessToken,
+  createMockRefreshToken,
+  getMockUserIdFromRefreshToken,
+} from "./lib/mockAuth";
 
 import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
 
@@ -52,79 +64,24 @@ const MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN =
   "mock-kakao-already-registered-signup-token";
 const MOCK_INVALID_KAKAO_SIGNUP_TOKEN = "mock-kakao-invalid-signup-token";
 
-const activeRefreshTokens = new Map<number, string>();
-
-function createAccessToken(userId: number) {
-  return `mock-access-token-${userId}-${Date.now()}`;
-}
-
-function createRefreshToken(userId: number) {
-  return `mock-refresh-token-${userId}-${Date.now()}`;
-}
-
-function findUserIdByRefreshToken(refreshToken: string) {
-  for (const [userId, activeRefreshToken] of activeRefreshTokens.entries()) {
-    if (activeRefreshToken === refreshToken) {
-      return userId;
-    }
-  }
-
-  return null;
-}
-
-function getCookie(request: Request, name: string) {
-  const cookie = request.headers.get("Cookie");
-
-  if (!cookie) {
-    return null;
-  }
-
-  return (
-    cookie
-      .split(";")
-      .map((part) => part.trim())
-      .find((part) => part.startsWith(`${name}=`))
-      ?.split("=")[1] ?? null
-  );
-}
-
 function createRefreshTokenCookie(refreshToken: string) {
-  return `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}; HttpOnly; Path=/api/v1/auth; SameSite=Lax`;
+  return [
+    `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`,
+    "HttpOnly",
+    "Path=/",
+    "SameSite=Lax",
+  ].join("; ");
 }
 
 function createExpiredRefreshTokenCookie() {
-  return `${REFRESH_TOKEN_COOKIE_NAME}=; HttpOnly; Path=/api/v1/auth; SameSite=Lax; Max-Age=0`;
+  return [
+    `${REFRESH_TOKEN_COOKIE_NAME}=`,
+    "HttpOnly",
+    "Path=/",
+    "SameSite=Lax",
+    "Max-Age=0",
+  ].join("; ");
 }
-
-type MockUser = {
-  id: number;
-  name: string;
-  birthDate: string;
-  gender: "MALE" | "FEMALE";
-  phoneNumber: string;
-  email: string;
-  password: string;
-  nickname: string;
-  introduction?: string | null;
-  activityRegionId: number;
-  interestCategories: PostingCategory[];
-};
-
-const users: MockUser[] = [
-  {
-    id: 1,
-    name: "동진",
-    birthDate: "2000-01-01",
-    gender: "MALE",
-    phoneNumber: "01012345678",
-    email: "test@example.com",
-    password: "test1234",
-    nickname: "가더",
-    introduction: "함께 봉사하는 걸 좋아해요.",
-    activityRegionId: 201,
-    interestCategories: ["ENVIRONMENT", "COMMUNITY"],
-  },
-];
 
 export const authHandlers = [
   http.post("*/api/v1/auth/phone-numbers/availability", async ({ request }) => {
@@ -151,7 +108,7 @@ export const authHandlers = [
       success: true,
       data: {
         phoneNumber,
-        available: !users.some((user) => user.phoneNumber === phoneNumber),
+        available: !mockUsers.some((user) => user.phoneNumber === phoneNumber),
       },
       error: null,
     });
@@ -175,7 +132,7 @@ export const authHandlers = [
       );
     }
 
-    if (users.some((user) => user.email === email)) {
+    if (mockUsers.some((user) => user.email === email)) {
       return HttpResponse.json(
         {
           success: false,
@@ -442,7 +399,7 @@ export const authHandlers = [
       );
     }
 
-    if (users.some((user) => user.email === email)) {
+    if (mockUsers.some((user) => user.email === email)) {
       return HttpResponse.json(
         {
           success: false,
@@ -456,7 +413,7 @@ export const authHandlers = [
       );
     }
 
-    if (users.some((user) => user.phoneNumber === phoneNumber)) {
+    if (mockUsers.some((user) => user.phoneNumber === phoneNumber)) {
       return HttpResponse.json(
         {
           success: false,
@@ -470,7 +427,7 @@ export const authHandlers = [
       );
     }
 
-    if (users.some((user) => user.nickname === body.nickname)) {
+    if (mockUsers.some((user) => user.nickname === body.nickname)) {
       return HttpResponse.json(
         {
           success: false,
@@ -485,7 +442,7 @@ export const authHandlers = [
     }
 
     const newUser: MockUser = {
-      id: users.length + 1,
+      id: getNextMockUserId(),
       name: body.name,
       birthDate: body.birthDate,
       gender: body.gender,
@@ -498,7 +455,7 @@ export const authHandlers = [
       interestCategories: body.interestCategories,
     };
 
-    users.push(newUser);
+    addMockUser(newUser);
 
     return HttpResponse.json(
       {
@@ -626,15 +583,14 @@ export const authHandlers = [
     }
 
     if (body.authorizationCode === "mock-kakao-existing-user") {
-      const refreshToken = createRefreshToken(1);
-      activeRefreshTokens.set(1, refreshToken);
+      const refreshToken = createMockRefreshToken(1);
 
       return HttpResponse.json(
         {
           success: true,
           data: {
             signupStatus: "LOGIN_COMPLETED",
-            accessToken: createAccessToken(1),
+            accessToken: createMockAccessToken(1),
             tokenType: "Bearer",
           },
           error: null,
@@ -745,7 +701,7 @@ export const authHandlers = [
       );
     }
 
-    if (users.some((user) => user.phoneNumber === body.phoneNumber)) {
+    if (mockUsers.some((user) => user.phoneNumber === body.phoneNumber)) {
       return HttpResponse.json(
         {
           success: false,
@@ -759,7 +715,7 @@ export const authHandlers = [
       );
     }
 
-    if (users.some((user) => user.nickname === body.nickname)) {
+    if (mockUsers.some((user) => user.nickname === body.nickname)) {
       return HttpResponse.json(
         {
           success: false,
@@ -773,14 +729,29 @@ export const authHandlers = [
       );
     }
 
-    const refreshToken = createRefreshToken(users.length + 1);
-    activeRefreshTokens.set(users.length + 1, refreshToken);
+    const userId = getNextMockUserId();
+    const user: MockUser = {
+      id: userId,
+      name: body.name,
+      birthDate: body.birthDate,
+      gender: body.gender,
+      phoneNumber: body.phoneNumber,
+      email: `mock-kakao-${userId}@example.com`,
+      password: "",
+      nickname: body.nickname,
+      introduction: body.introduction?.trim() || null,
+      activityRegionId: body.activityRegionId,
+      interestCategories: body.interestCategories,
+    };
+    const refreshToken = createMockRefreshToken(userId);
+
+    addMockUser(user);
 
     return HttpResponse.json(
       {
         success: true,
         data: {
-          accessToken: createAccessToken(users.length + 1),
+          accessToken: createMockAccessToken(userId),
           tokenType: "Bearer",
         },
         error: null,
@@ -817,7 +788,7 @@ export const authHandlers = [
       );
     }
 
-    const user = users.find(
+    const user = mockUsers.find(
       (user) => user.email === email && user.password === password,
     );
 
@@ -835,15 +806,13 @@ export const authHandlers = [
       );
     }
 
-    const refreshToken = createRefreshToken(user.id);
-
-    activeRefreshTokens.set(user.id, refreshToken);
+    const refreshToken = createMockRefreshToken(user.id);
 
     return HttpResponse.json(
       {
         success: true,
         data: {
-          accessToken: createAccessToken(user.id),
+          accessToken: createMockAccessToken(user.id),
           tokenType: "Bearer",
         },
         error: null,
@@ -856,8 +825,8 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/reissue", async ({ request }) => {
-    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
+  http.post("*/api/v1/auth/reissue", ({ cookies }) => {
+    const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
 
     if (!refreshToken) {
       return HttpResponse.json(
@@ -873,9 +842,9 @@ export const authHandlers = [
       );
     }
 
-    const userId = findUserIdByRefreshToken(refreshToken);
+    const userId = getMockUserIdFromRefreshToken(refreshToken);
 
-    if (!userId) {
+    if (userId === null || !getMockUserById(userId)) {
       return HttpResponse.json(
         {
           success: false,
@@ -889,15 +858,13 @@ export const authHandlers = [
       );
     }
 
-    const nextRefreshToken = createRefreshToken(userId);
-
-    activeRefreshTokens.set(userId, nextRefreshToken);
+    const nextRefreshToken = createMockRefreshToken(userId);
 
     return HttpResponse.json(
       {
         success: true,
         data: {
-          accessToken: createAccessToken(userId),
+          accessToken: createMockAccessToken(userId),
           tokenType: "Bearer",
         },
         error: null,
@@ -910,30 +877,7 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/logout", async ({ request }) => {
-    const refreshToken = getCookie(request, REFRESH_TOKEN_COOKIE_NAME);
-
-    if (!refreshToken) {
-      return HttpResponse.json(
-        {
-          success: true,
-          data: null,
-          error: null,
-        },
-        {
-          headers: {
-            "Set-Cookie": createExpiredRefreshTokenCookie(),
-          },
-        },
-      );
-    }
-
-    const userId = findUserIdByRefreshToken(refreshToken);
-
-    if (userId) {
-      activeRefreshTokens.delete(userId);
-    }
-
+  http.post("*/api/v1/auth/logout", () => {
     return HttpResponse.json(
       {
         success: true,

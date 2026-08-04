@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 
 import { useMyActivitiesQuery } from "@/features/my/hooks/useMyActivitiesQuery";
 import type { MyPageActivity } from "@/features/my/types/myActivity.types";
-import { useCancelVolunteerPostingParticipationMutation } from "@/features/volunteer/hooks/useApplyVolunteerPostingParticipationMutation";
+import { useCancelVolunteerPostingParticipationMutation } from "@/features/volunteer/hooks/detail/useVolunteerPostingParticipationMutation";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 

@@ -184,3 +184,25 @@ export function cancelVolunteerPostingParticipation(postingId: number) {
     method: "DELETE",
   });
 }
+
+export function completeVolunteerPostingParticipation(postingId: number) {
+  return fetchClient<null>(
+    `${POSTING_ENDPOINT}/${postingId}/participations/complete`,
+    {
+      method: "PATCH",
+    },
+  );
+}
+
+export function submitVolunteerPostingRecognizedMinutes(
+  postingId: number,
+  recognizedMinutes: number,
+) {
+  return fetchClient<null>(
+    `${POSTING_ENDPOINT}/${postingId}/participations/hours`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ recognizedMinutes }),
+    },
+  );
+}

@@ -24,6 +24,7 @@ type VolunteerPostingBottomSheetProps = {
   primaryAction?: VolunteerPostingBottomSheetAction;
   secondaryAction?: VolunteerPostingBottomSheetAction;
   className?: string;
+  disableClose?: boolean;
 };
 
 function renderAction(action: VolunteerPostingBottomSheetAction) {
@@ -50,6 +51,7 @@ export function VolunteerPostingBottomSheet({
   primaryAction,
   secondaryAction,
   className,
+  disableClose = false,
 }: VolunteerPostingBottomSheetProps) {
   const actionCount =
     Number(Boolean(primaryAction)) + Number(Boolean(secondaryAction));
@@ -59,6 +61,16 @@ export function VolunteerPostingBottomSheet({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-text/30" />
         <Dialog.Content
+          onEscapeKeyDown={(event) => {
+            if (disableClose) {
+              event.preventDefault();
+            }
+          }}
+          onPointerDownOutside={(event) => {
+            if (disableClose) {
+              event.preventDefault();
+            }
+          }}
           className={cn(
             "fixed right-0 bottom-0 left-0 z-50 mx-auto flex w-full max-w-app flex-col",
             "max-h-[min(85dvh,46rem)] rounded-t-3xl bg-white shadow-2xl outline-none",
@@ -75,6 +87,7 @@ export function VolunteerPostingBottomSheet({
                 icon={<img src={CloseIcon} alt="" />}
                 variant="plain"
                 className="-mt-2 -mr-2"
+                disabled={disableClose}
               />
             </Dialog.Close>
           </div>

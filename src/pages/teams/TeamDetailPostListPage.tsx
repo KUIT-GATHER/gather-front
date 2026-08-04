@@ -1,11 +1,11 @@
 import { Navigate, useLocation } from "react-router";
 
-import { GuestBoard } from "@/features/team/components/detail/guest/GuestBoard";
-import { SharedMeetingBoard } from "@/features/team/components/detail/shared/SharedMeetingBoard";
+import { GuestBoard } from "@/features/team/components/board/list/GuestBoard";
+import { SharedMeetingBoard } from "@/features/team/components/board/list/SharedMeetingBoard";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import LoadingState from "@/shared/ui/LoadingState";
 
-export function TeamDetailPostsPage() {
+export function TeamDetailPostListPage() {
   const location = useLocation();
   const { authInitialized, home, isAuthenticated, isJoined } =
     useTeamDetailContext();
@@ -36,6 +36,10 @@ export function TeamDetailPostsPage() {
   }
 
   return (
-    <SharedMeetingBoard meetingId={home.meetingId} meetingName={home.name} />
+    <SharedMeetingBoard
+      meetingId={home.meetingId}
+      meetingName={home.name}
+      canWrite
+    />
   );
 }
