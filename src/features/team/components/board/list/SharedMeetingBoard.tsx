@@ -6,7 +6,10 @@ import {
   MEETING_POST_TYPE_LABELS,
 } from "@/features/team/constants/meetingPost.constants";
 import { useMeetingPostsQuery } from "@/features/team/hooks/useMeetingPostsQuery";
-import type { MeetingPostType } from "@/features/team/types/team.types";
+import type {
+  MeetingPostListParams,
+  MeetingPostType,
+} from "@/features/team/types/team.types";
 import { cn } from "@/shared/lib/cn";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -35,22 +38,33 @@ export function SharedMeetingBoard({
   onWriteClick,
 }: SharedMeetingBoardProps) {
   const hasTypeFilter = showTypeFilter && availableTypes.length > 0;
-  const [selectedType, setSelectedType] = useState<MeetingPostType | undefined>(
-    undefined,
-  );
-  const selectedPostType = hasTypeFilter ? selectedType : undefined;
+  const [selectedTypes, setSelectedTypes] = useState<MeetingPostType[]>([]);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const postListParams = useMemo(
-    () => (selectedPostType ? { type: selectedPostType } : {}),
-    [selectedPostType],
+    (): MeetingPostListParams =>
+      hasTypeFilter && selectedTypes.length > 0 ? { types: selectedTypes } : {},
+    [hasTypeFilter, selectedTypes],
   );
   const postsQuery = useMeetingPostsQuery(meetingId, postListParams);
   const posts = postsQuery.data?.pages.flatMap((page) => page.content) ?? [];
   const isInitialLoading = postsQuery.isLoading && posts.length === 0;
   const isInitialError = postsQuery.isError && posts.length === 0;
-  const resolvedEmptyMessage = selectedPostType
+  const hasSelectedTypes = hasTypeFilter && selectedTypes.length > 0;
+  const resolvedEmptyMessage = hasSelectedTypes
     ? "해당 분류의 게시글이 존재하지 않습니다"
     : emptyMessage;
+
+  const handleTypeFilterClick = (type: MeetingPostType) => {
+    setSelectedTypes((currentTypes) => {
+      const nextTypes = currentTypes.includes(type)
+        ? currentTypes.filter((selectedType) => selectedType !== type)
+        : [...currentTypes, type];
+
+      return availableTypes.filter((availableType) =>
+        nextTypes.includes(availableType),
+      );
+    });
+  };
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -90,7 +104,7 @@ export function SharedMeetingBoard({
           aria-label="게시글 분류"
         >
           {availableTypes.map((type) => {
-            const isSelected = selectedType === type;
+            const isSelected = selectedTypes.includes(type);
 
             return (
               <button
@@ -103,7 +117,7 @@ export function SharedMeetingBoard({
                     ? "bg-text-gray-400 text-white"
                     : "bg-white text-text-gray-400 active:bg-button/8",
                 )}
-                onClick={() => setSelectedType(isSelected ? undefined : type)}
+                onClick={() => handleTypeFilterClick(type)}
               >
                 {MEETING_POST_TYPE_LABELS[type]}
               </button>

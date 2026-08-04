@@ -52,7 +52,12 @@ const SORTABLE_MEETING_FIELDS = [
   "createdAt",
   "updatedAt",
 ] as const;
-const MEETING_POST_TYPES = new Set(["NOTICE", "REVIEW", "RECRUIT", "FREE"]);
+const MEETING_POST_TYPES = new Set<MeetingPostType>([
+  "NOTICE",
+  "REVIEW",
+  "RECRUIT",
+  "FREE",
+]);
 const SORTABLE_MEETING_POST_FIELDS = ["createdAt", "id"] as const;
 const SORTABLE_MEETING_POST_COMMENT_FIELDS = ["createdAt"] as const;
 
@@ -428,6 +433,34 @@ function parseMeetingPostSorts(url: URL): MeetingPostSort[] | null {
     sorts.push({ field: field as MeetingPostSortField, direction });
     return sorts;
   }, []);
+}
+
+function isMeetingPostType(value: string): value is MeetingPostType {
+  return MEETING_POST_TYPES.has(value as MeetingPostType);
+}
+
+function parseMeetingPostTypes(url: URL): MeetingPostType[] | null {
+  const rawTypes = url.searchParams.get("types");
+
+  if (!rawTypes || rawTypes.trim() === "") {
+    return [];
+  }
+
+  return rawTypes
+    .split(",")
+    .map((type) => type.trim())
+    .filter(Boolean)
+    .reduce<MeetingPostType[] | null>((types, type) => {
+      if (!types || !isMeetingPostType(type)) {
+        return null;
+      }
+
+      if (!types.includes(type)) {
+        types.push(type);
+      }
+
+      return types;
+    }, []);
 }
 
 function parseMeetingPostCommentSorts(
@@ -1373,7 +1406,7 @@ export const teamHandlers = [
     const meetingId = Number(params.meetingId);
     const team = findMeeting(meetingId);
     const url = new URL(request.url);
-    const type = url.searchParams.get("type");
+    const postTypes = parseMeetingPostTypes(url);
     const page = getPageParam(url);
     const size = getMeetingPostSizeParam(url);
     const sorts = parseMeetingPostSorts(url);
@@ -1382,14 +1415,14 @@ export const teamHandlers = [
       return createMeetingNotFoundResponse();
     }
 
-    if (type && !MEETING_POST_TYPES.has(type)) {
+    if (!postTypes) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: "VALIDATION_ERROR",
-            message: "Invalid post type.",
+            message: "Invalid post types.",
           },
         },
         { status: 400 },
@@ -1411,6 +1444,7 @@ export const teamHandlers = [
     }
 
     const isJoined = getMembershipRole(userId, meetingId) !== null;
+    const requestedPostTypes = new Set(postTypes);
     const posts = sortMeetingPosts(
       meetingPosts
         .filter((post) => post.meetingId === meetingId)
@@ -1418,7 +1452,10 @@ export const teamHandlers = [
           (post) =>
             isJoined || post.type === "NOTICE" || post.type === "REVIEW",
         )
-        .filter((post) => !type || post.type === type),
+        .filter(
+          (post) =>
+            requestedPostTypes.size === 0 || requestedPostTypes.has(post.type),
+        ),
       sorts,
     );
     const startIndex = page * size;
