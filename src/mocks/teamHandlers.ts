@@ -685,6 +685,24 @@ function toMeetingPostDetail(
   };
 }
 
+function canEditMeetingPostComment(
+  comment: MockMeetingPostComment,
+  viewerUserId: number,
+) {
+  return comment.authorId === viewerUserId;
+}
+
+function canDeleteMeetingPostComment(
+  comment: MockMeetingPostComment,
+  viewerUserId: number,
+  team: MockMeeting,
+) {
+  return (
+    canEditMeetingPostComment(comment, viewerUserId) ||
+    team.hostId === viewerUserId
+  );
+}
+
 function toMeetingPostCommentResponse(
   comment: MockMeetingPostComment,
   viewerUserId: number,
@@ -697,9 +715,8 @@ function toMeetingPostCommentResponse(
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
-    canEdit: comment.authorId === viewerUserId,
-    canDelete:
-      comment.authorId === viewerUserId || team.hostId === viewerUserId,
+    canEdit: canEditMeetingPostComment(comment, viewerUserId),
+    canDelete: canDeleteMeetingPostComment(comment, viewerUserId, team),
   };
 }
 
@@ -1662,7 +1679,7 @@ export const teamHandlers = [
         );
       }
 
-      if (comment.authorId !== userId) {
+      if (!canEditMeetingPostComment(comment, userId)) {
         return createMeetingErrorResponse(
           "COMMENT_FORBIDDEN",
           "댓글을 수정할 권한이 없습니다.",
@@ -1740,7 +1757,7 @@ export const teamHandlers = [
 
       const comment = meetingPostComments[commentIndex];
 
-      if (comment.authorId !== userId && team.hostId !== userId) {
+      if (!canDeleteMeetingPostComment(comment, userId, team)) {
         return createMeetingErrorResponse(
           "COMMENT_FORBIDDEN",
           "댓글을 삭제할 권한이 없습니다.",
