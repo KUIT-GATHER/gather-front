@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 import { ActivityCalendarSection } from "@/features/my/components/ActivityCalendarSection";
 
@@ -11,6 +11,10 @@ import settingIcon from "@/features/my/assets/setting.svg";
 import { useMyPageHomeQuery } from "@/features/my/hooks/useMyPageHomeQuery";
 
 import { SettingsBottomSheet } from "@/features/my/components/SettingsBottomSheet";
+import {
+  NotificationSettingsSheet,
+  type NotificationSettingsView,
+} from "@/features/notification/components/NotificationSettingsSheet";
 
 import createCompleteIcon from "@/shared/assets/puzzle/create-complete.svg";
 
@@ -26,12 +30,26 @@ function PuzzleMark() {
 }
 export function MyPageScreen() {
   const navigate = useNavigate();
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [settingsOpen, setSettingsOpen] = useState(
+    () => searchParams.get("settings") === "open",
+  );
+  const [notificationSettingsView, setNotificationSettingsView] =
+    useState<Exclude<NotificationSettingsView, "menu"> | null>(null);
   const homeQuery = useMyPageHomeQuery();
   const home = homeQuery.data;
   const displayName = home?.nickname ?? "김민우";
   const displayBirthDate =
     home?.birthDate.split("-").join(". ") ?? "2002. 07. 20";
+
+  const handleSettingsOpenChange = (open: boolean) => {
+    setSettingsOpen(open);
+    if (!open && searchParams.get("settings") === "open") {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("settings");
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
 
   return (
     <div className="mx-auto min-h-[calc(100dvh-5rem)] max-w-app bg-bg">
@@ -97,7 +115,28 @@ export function MyPageScreen() {
 
         <ActivityCalendarSection />
       </main>
-      <SettingsBottomSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsBottomSheet
+        open={settingsOpen}
+        onOpenChange={handleSettingsOpenChange}
+        onOpenNotificationSettings={(view) => {
+          handleSettingsOpenChange(false);
+          setNotificationSettingsView(view);
+        }}
+      />
+      {notificationSettingsView ? (
+        <NotificationSettingsSheet
+          key={notificationSettingsView}
+          open
+          initialView={notificationSettingsView}
+          onBack={() => {
+            setNotificationSettingsView(null);
+            setSettingsOpen(true);
+          }}
+          onOpenChange={(open) => {
+            if (!open) setNotificationSettingsView(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

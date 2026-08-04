@@ -79,7 +79,7 @@ export const router = createBrowserRouter([
             element: <KakaoLoginCallbackPage />,
           },
           { path: "/signup/kakao", element: <KakaoSignupPage /> },
-          { path: "/terms", element: <TermsPage /> },
+          { path: "/terms/:type", element: <TermsPage /> },
         ],
       },
 

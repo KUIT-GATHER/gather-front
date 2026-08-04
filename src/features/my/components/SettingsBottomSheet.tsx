@@ -2,17 +2,28 @@ import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useLogoutMutation } from "@/features/auth/hooks/useLogoutMutation";
+import type { NotificationSettingsView } from "@/features/notification/components/NotificationSettingsSheet";
 import BottomSheet from "@/shared/ui/BottomSheet";
 
 type SettingsBottomSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenNotificationSettings: (
+    view: Exclude<NotificationSettingsView, "menu">,
+  ) => void;
 };
 
-function SettingLink({ children }: { children: string }) {
+function SettingLink({
+  children,
+  onClick,
+}: {
+  children: string;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="flex h-10 w-full items-center justify-between text-body-15"
     >
       {children}
@@ -24,9 +35,16 @@ function SettingLink({ children }: { children: string }) {
 export function SettingsBottomSheet({
   open,
   onOpenChange,
+  onOpenNotificationSettings,
 }: SettingsBottomSheetProps) {
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation();
+
+  const openLegalDocument = (type: "service" | "privacy") => {
+    onOpenChange(false);
+    navigate("/my?settings=open", { replace: true });
+    navigate(`/terms/${type}`);
+  };
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -45,8 +63,12 @@ export function SettingsBottomSheet({
       <section>
         <h2 className="text-title-18">안내</h2>
         <div className="mt-3">
-          <SettingLink>서비스 이용약관</SettingLink>
-          <SettingLink>개인정보 처리방침</SettingLink>
+          <SettingLink onClick={() => openLegalDocument("service")}>
+            서비스 이용약관
+          </SettingLink>
+          <SettingLink onClick={() => openLegalDocument("privacy")}>
+            개인정보 처리방침
+          </SettingLink>
           <div className="flex h-10 items-center justify-between text-body-15">
             <span>버전 정보</span>
             <span className="text-text-gray-400">1.0.0</span>
@@ -57,8 +79,12 @@ export function SettingsBottomSheet({
       <section className="mt-8">
         <h2 className="text-title-18">알림</h2>
         <div className="mt-3">
-          <SettingLink>봉사활동</SettingLink>
-          <SettingLink>모임활동</SettingLink>
+          <SettingLink onClick={() => onOpenNotificationSettings("activity")}>
+            봉사활동
+          </SettingLink>
+          <SettingLink onClick={() => onOpenNotificationSettings("meeting")}>
+            모임활동
+          </SettingLink>
         </div>
       </section>
 
