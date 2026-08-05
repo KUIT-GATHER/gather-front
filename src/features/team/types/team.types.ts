@@ -14,6 +14,7 @@ export type MeetingListItem = {
   currentMemberCount: number;
   maxMember: number;
   regionId: number;
+  regionName: string;
   categories: PostingCategory[];
   status: MeetingStatus;
   deadline: string;
@@ -97,6 +98,16 @@ export type MeetingListParams = {
   page?: number;
   size?: number;
   sort?: string[];
+};
+
+export type BookmarkedMeetingListParams = {
+  keyword?: string;
+  regionId?: number;
+  category?: PostingCategory;
+  activityStartDate?: string;
+  activityEndDate?: string;
+  page?: number;
+  size?: number;
 };
 
 export type MeetingInfiniteParams = Omit<MeetingListParams, "page">;

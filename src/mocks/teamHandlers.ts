@@ -4,6 +4,7 @@ import mockPostImageOne from "@/assets/icons/Temp-volunteer-posting.svg";
 import mockPostImageThree from "@/assets/onboarding/onboarding-step2-center.svg";
 import mockPostImageTwo from "@/assets/onboarding/onboarding-step1-center.svg";
 import teams from "./data/teams.json";
+import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
 
 import {
@@ -844,6 +845,7 @@ function toMeetingListItem(team: MockMeeting) {
     currentMemberCount: getMeetingMembers(team).length,
     maxMember: team.maxMember,
     regionId: team.regionId,
+    regionName: team.regionName,
     categories: team.categories,
     status: team.status,
     deadline: team.deadline,
@@ -897,13 +899,32 @@ export const teamHandlers = [
     const page = getPageParam(url);
     const size = getSizeParam(url);
     const category = url.searchParams.get("category");
+    const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
     const activityStartDate = url.searchParams.get("activityStartDate");
     const activityEndDate = url.searchParams.get("activityEndDate");
     const bookmarkedIds =
       bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+    const includedRegionIds =
+      regionId === undefined
+        ? null
+        : new Set(
+            regions.data
+              .filter(
+                (region) =>
+                  region.id === regionId || region.parentId === regionId,
+              )
+              .map((region) => region.id),
+          );
     const items = getMockMeetings()
       .filter((meeting) => bookmarkedIds.has(meeting.meetingId))
+      .filter(
+        (meeting) =>
+          !keyword ||
+          [meeting.name, meeting.description]
+            .filter((value): value is string => value !== null)
+            .some((value) => value.includes(keyword)),
+      )
       .filter(
         (meeting) =>
           !category ||
@@ -912,7 +933,8 @@ export const teamHandlers = [
           ),
       )
       .filter(
-        (meeting) => regionId === undefined || meeting.regionId === regionId,
+        (meeting) =>
+          includedRegionIds === null || includedRegionIds.has(meeting.regionId),
       )
       .filter(
         (meeting) =>

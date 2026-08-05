@@ -154,6 +154,16 @@ type VolunteerPostingBaseParams = {
 export type VolunteerPostingListParams = VolunteerPostingBaseParams &
   VolunteerPostingRegionFilter;
 
+export type BookmarkedVolunteerPostingListParams = {
+  regionId?: number;
+  noticeStartDate?: string;
+  noticeEndDate?: string;
+  category?: PostingCategory;
+  keyword?: string;
+  page?: number;
+  size?: number;
+};
+
 export type VolunteerPostingInfiniteParams = Omit<
   VolunteerPostingBaseParams,
   "page"

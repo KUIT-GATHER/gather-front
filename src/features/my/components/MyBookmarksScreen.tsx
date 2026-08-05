@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from "react-router";
 
 import filterIcon from "@/assets/icons/Filter.svg";
 import searchIcon from "@/assets/icons/Search.svg";
-import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { getBookmarkedMeetings } from "@/features/team/api/team.api";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { TeamFilterSheet } from "@/features/team/components/TeamFilterSheet";
@@ -61,14 +60,6 @@ export function MyBookmarksScreen() {
       getBookmarkedMeetings({ ...meetingFilter, page: 0, size: 20 }),
     enabled: selectedTab === "meetings",
   });
-  const regionsQuery = useRegionsQuery(selectedTab === "meetings");
-  const regionNameById = useMemo(
-    () =>
-      new Map(
-        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
-      ),
-    [regionsQuery.data],
-  );
   const activeQuery =
     selectedTab === "postings" ? postingsQuery : meetingsQuery;
 
@@ -141,7 +132,7 @@ export function MyBookmarksScreen() {
               <VolunteerPostingCard
                 key={posting.id}
                 posting={posting}
-                onClick={() => navigate(`/volunteer/${posting.id}`)}
+                onClick={() => navigate(`/volunteers/${posting.id}`)}
               />
             ))
           ) : (
@@ -152,7 +143,7 @@ export function MyBookmarksScreen() {
             <TeamCard
               key={meeting.meetingId}
               team={meeting}
-              regionName={regionNameById.get(meeting.regionId) ?? null}
+              regionName={meeting.regionName}
               onClick={() => navigate(`/teams/${meeting.meetingId}`)}
             />
           ))

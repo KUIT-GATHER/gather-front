@@ -570,6 +570,60 @@ export const postingHandlers = [
     });
   }),
 
+  http.get("*/api/v1/postings/bookmarks", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) return createUnauthorizedResponse();
+
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("page") ?? 0);
+    const size = Number(url.searchParams.get("size") ?? 20);
+    const keyword = url.searchParams.get("keyword")?.trim();
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const noticeStartDate = url.searchParams.get("noticeStartDate");
+    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const category = url.searchParams.get("category");
+    const includedRegionIds =
+      regionId === undefined ? null : getRegionIdsIncludingChildren([regionId]);
+
+    const items = mockPostings
+      .filter((posting) => bookmarkedPostingIds.has(posting.id))
+      .filter(
+        (posting) =>
+          !keyword ||
+          [posting.title, posting.recruitOrg].some((value) =>
+            value.includes(keyword),
+          ),
+      )
+      .filter((posting) => !category || posting.category === category)
+      .filter(
+        (posting) =>
+          includedRegionIds === null || includedRegionIds.has(posting.regionId),
+      )
+      .filter(
+        (posting) =>
+          !noticeStartDate || posting.noticeStartDate >= noticeStartDate,
+      )
+      .filter(
+        (posting) => !noticeEndDate || posting.noticeEndDate <= noticeEndDate,
+      )
+      .sort((left, right) => right.id - left.id);
+    const content = items
+      .slice(page * size, (page + 1) * size)
+      .map(toVolunteerPostingListItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        totalElements: items.length,
+        totalPages: Math.ceil(items.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/postings/recommended", ({ request }) => {
     return HttpResponse.json({
       success: true,

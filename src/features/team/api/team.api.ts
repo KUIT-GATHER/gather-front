@@ -2,6 +2,7 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
+  BookmarkedMeetingListParams,
   MeetingBookmarkResponse,
   MeetingCreateRequest,
   MeetingDetail,
@@ -192,7 +193,9 @@ export async function getMeetings(params?: MeetingListParams) {
   };
 }
 
-export async function getBookmarkedMeetings(params: MeetingListParams = {}) {
+export async function getBookmarkedMeetings(
+  params: BookmarkedMeetingListParams = {},
+) {
   const searchParams = new URLSearchParams();
   setQueryParam(searchParams, "page", params.page ?? 0);
   setQueryParam(searchParams, "size", params.size ?? 20);

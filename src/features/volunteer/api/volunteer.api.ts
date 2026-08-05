@@ -1,6 +1,7 @@
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
+  BookmarkedVolunteerPostingListParams,
   VolunteerPosting,
   VolunteerPostingBookmarkResponse,
   VolunteerPostingListItem,
@@ -117,12 +118,19 @@ export function getVolunteerPostings(params?: VolunteerPostingListParams) {
 }
 
 export function getBookmarkedVolunteerPostings(
-  params: VolunteerPostingListParams = {},
+  params: BookmarkedVolunteerPostingListParams = {},
 ) {
-  const query = buildPostingListQuery(params);
+  const searchParams = new URLSearchParams();
+  setQueryParam(searchParams, "page", params.page ?? 0);
+  setQueryParam(searchParams, "size", params.size ?? 20);
+  setQueryParam(searchParams, "regionId", params.regionId);
+  setQueryParam(searchParams, "noticeStartDate", params.noticeStartDate);
+  setQueryParam(searchParams, "noticeEndDate", params.noticeEndDate);
+  setQueryParam(searchParams, "category", params.category);
+  setQueryParam(searchParams, "keyword", params.keyword);
 
   return fetchClient<VolunteerPostingPage>(
-    `${POSTING_ENDPOINT}/bookmarks?${query}`,
+    `${POSTING_ENDPOINT}/bookmarks?${searchParams.toString()}`,
   );
 }
 
