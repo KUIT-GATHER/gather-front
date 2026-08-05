@@ -28,8 +28,8 @@ export type MyPageActivity = MyPageActivityBase &
 
 export type MyActivitySummary = {
   totalCompletedCount: number;
-  totalRecognizedMinutes?: number;
-  timeCertifiableCompletedCount?: number;
+  totalRecognizedMinutes: number;
+  timeCertifiableCompletedCount: number;
   categoryBlocks: Array<{
     category: PostingCategory;
     count: number;
@@ -44,7 +44,7 @@ export type MyActivityRecord = {
   actStartDate: string | null;
   actEndDate: string | null;
   actPlace: string | null;
-  timeCertifiable?: boolean;
+  timeCertifiable: boolean;
   recognizedMinutes: number | null;
 };
 

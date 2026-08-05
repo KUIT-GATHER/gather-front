@@ -9,6 +9,7 @@ import profileImage from "@/features/my/assets/profile.png";
 import profileEditIcon from "@/features/my/assets/profileedit.svg";
 import settingIcon from "@/features/my/assets/setting.svg";
 import { useMyPageHomeQuery } from "@/features/my/hooks/useMyPageHomeQuery";
+import { useMyActivitySummaryQuery } from "@/features/my/hooks/useMyActivitiesQuery";
 
 import { SettingsBottomSheet } from "@/features/my/components/SettingsBottomSheet";
 import {
@@ -37,7 +38,10 @@ export function MyPageScreen() {
   const [notificationSettingsView, setNotificationSettingsView] =
     useState<Exclude<NotificationSettingsView, "menu"> | null>(null);
   const homeQuery = useMyPageHomeQuery();
+  const activitySummaryQuery = useMyActivitySummaryQuery();
   const home = homeQuery.data;
+  const completedActivityCount =
+    activitySummaryQuery.data?.timeCertifiableCompletedCount ?? 0;
   const displayName = home?.nickname ?? "김민우";
   const displayBirthDate =
     home?.birthDate.split("-").join(". ") ?? "2002. 07. 20";
@@ -108,7 +112,7 @@ export function MyPageScreen() {
         >
           <PuzzleMark />
           <span className="ml-3 flex-1 text-body-15-semibold">
-            지금까지 12번 함께했어요
+            지금까지 {completedActivityCount}번 함께했어요
           </span>
           <ChevronRight className="size-6 text-text-gray-400" />
         </button>

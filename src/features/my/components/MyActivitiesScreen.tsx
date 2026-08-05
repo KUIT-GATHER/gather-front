@@ -19,6 +19,7 @@ import {
   useMyActivityRecordsQuery,
   useMyActivitySummaryQuery,
 } from "@/features/my/hooks/useMyActivitiesQuery";
+import type { MyActivityRecord } from "@/features/my/types/myActivity.types";
 import PageHeader from "@/shared/ui/PageHeader";
 
 const PUZZLE_CATEGORIES: PostingCategory[] = [
@@ -81,6 +82,14 @@ function formatMinutes(minutes: number) {
   const remainder = minutes % 60;
   if (!hours) return `${remainder}분`;
   return remainder ? `${hours}시간 ${remainder}분` : `${hours}시간`;
+}
+
+function getActivityRecognitionLabel(activity: MyActivityRecord) {
+  if (!activity.timeCertifiable || activity.recognizedMinutes === null) {
+    return "미인증";
+  }
+
+  return formatMinutes(activity.recognizedMinutes);
 }
 
 function StatIcon({
@@ -305,9 +314,7 @@ export function MyActivitiesScreen() {
                   </p>
                 </div>
                 <span className="shrink-0 rounded-[10px] bg-text-gray-400 px-2 py-0.5 text-body-14 text-text2">
-                  {activity.recognizedMinutes === null
-                    ? "미인증"
-                    : formatMinutes(activity.recognizedMinutes)}
+                  {getActivityRecognitionLabel(activity)}
                 </span>
               </article>
             ))}
