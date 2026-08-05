@@ -2,8 +2,9 @@ import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
 import { getMockParticipations } from "./data/mockParticipations";
-import { mockPostings } from "./data/mockPostings";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
+import { mockPostings } from "./postingHandlers";
+import { getJoinedMockMeetings } from "./teamHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
@@ -177,7 +178,7 @@ export const myProfileHandlers = [
     const [year, month] = yearMonth.split("-").map(Number);
     const monthStart = `${yearMonth}-01`;
     const monthEnd = `${yearMonth}-${new Date(year, month, 0).getDate()}`;
-    const activities = getMockParticipations(userId).flatMap(
+    const volunteerActivities = getMockParticipations(userId).flatMap(
       (participation) => {
         const posting = mockPostings.find(
           (item) => item.id === participation.postingId,
@@ -193,6 +194,7 @@ export const myProfileHandlers = [
 
         return [
           {
+            activityType: "VOLUNTEER" as const,
             participationId: participation.participationId,
             postingId: posting.id,
             title: posting.title,
@@ -205,6 +207,36 @@ export const myProfileHandlers = [
           },
         ];
       },
+    );
+    const meetingActivities = getJoinedMockMeetings(userId).flatMap(
+      (meeting) => {
+        if (!meeting.activityStartAt) return [];
+
+        const [actStartDate, actStartTime] = meeting.activityStartAt.split("T");
+        const [actEndDate, actEndTime] =
+          meeting.activityEndAt?.split("T") ?? [];
+        const effectiveEndDate = actEndDate ?? actStartDate;
+        if (effectiveEndDate < monthStart || actStartDate > monthEnd) return [];
+
+        return [
+          {
+            activityType: "MEETING" as const,
+            meetingId: meeting.meetingId,
+            title: meeting.name,
+            actStartDate,
+            actEndDate: actEndDate ?? null,
+            actStartTime: formatMockTime(actStartTime),
+            actEndTime: actEndTime ? formatMockTime(actEndTime) : null,
+            actPlace: null,
+            status: meeting.status,
+          },
+        ];
+      },
+    );
+    const activities = [...volunteerActivities, ...meetingActivities].sort(
+      (left, right) =>
+        left.actStartDate.localeCompare(right.actStartDate) ||
+        (left.actStartTime ?? "").localeCompare(right.actStartTime ?? ""),
     );
 
     return HttpResponse.json({

@@ -5,7 +5,9 @@ import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMin
 import postings from "./data/postings.json";
 import {
   addMockParticipation,
+  getMockParticipations,
   removeMockParticipation,
+  updateMockParticipation,
 } from "./data/mockParticipations";
 import { getMockUserById } from "./data/mockUsers";
 import regions from "./data/regions.json";
@@ -118,11 +120,18 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
   };
 });
 
-const mockPostings = [...baseMockPostings, ...additionalMockPostings];
+export const mockPostings = [...baseMockPostings, ...additionalMockPostings];
 const bookmarkedPostingIds = new Set<number>();
-const participatedPostingIds = new Map<number, MockPostingParticipation>([
-  [1, { participationId: 1, status: "CONFIRMED" }],
-]);
+const participatedPostingIds = new Map<number, MockPostingParticipation>(
+  getMockParticipations(1).map((participation) => [
+    participation.postingId,
+    {
+      participationId: participation.participationId,
+      status: participation.status,
+      recognizedMinutes: participation.recognizedMinutes,
+    },
+  ]),
+);
 
 function parseMockLocalDate(value: string | null | undefined) {
   if (!value) {
@@ -749,12 +758,12 @@ export const postingHandlers = [
         );
       }
 
-      const participationId = participatedPostingIds.size + 1;
+      const savedParticipation = addMockParticipation(userId, postingId);
+      const participationId = savedParticipation.participationId;
       participatedPostingIds.set(postingId, {
         participationId,
         status: "APPLIED",
       });
-      addMockParticipation(userId, postingId);
 
       return HttpResponse.json({
         success: true,
@@ -838,6 +847,7 @@ export const postingHandlers = [
         ...participation,
         status: "COMPLETED",
       });
+      updateMockParticipation(1, postingId, { status: "COMPLETED" });
 
       return HttpResponse.json({
         success: true,
@@ -923,6 +933,7 @@ export const postingHandlers = [
         ...participation,
         recognizedMinutes,
       });
+      updateMockParticipation(1, postingId, { recognizedMinutes });
 
       return HttpResponse.json({
         success: true,

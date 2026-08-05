@@ -1,16 +1,30 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
-export type MyPageActivity = {
-  participationId: number;
-  postingId: number;
+type MyPageActivityBase = {
   title: string;
   actStartDate: string;
-  actEndDate: string;
-  actStartTime: string;
-  actEndTime: string;
-  actPlace: string;
+  actEndDate?: string | null;
+  actStartTime?: string | null;
+  actEndTime?: string | null;
+  actPlace?: string | null;
   status: string;
 };
+
+export type MyPageActivity = MyPageActivityBase &
+  (
+    | {
+        activityType: "VOLUNTEER";
+        participationId: number;
+        postingId: number;
+        meetingId?: never;
+      }
+    | {
+        activityType: "MEETING";
+        participationId?: number | null;
+        postingId?: never;
+        meetingId: number;
+      }
+  );
 
 export type MyActivitySummary = {
   totalCompletedCount: number;

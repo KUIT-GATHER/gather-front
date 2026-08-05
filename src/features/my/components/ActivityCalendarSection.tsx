@@ -22,8 +22,27 @@ function formatActivityDate(dateKey: string) {
   return `${year}.${pad(month)}.${pad(day)} (${DAY_LABELS[date.getDay()]})`;
 }
 
-function getActivityStatusLabel(status: string) {
-  switch (status) {
+function formatActivityTime(time?: string | null) {
+  if (!time) return null;
+
+  const [hour, minute = "00"] = time.split(":");
+  return `${pad(Number(hour))}:${pad(Number(minute))}`;
+}
+
+function formatActivityTimeRange(activity: MyPageActivity) {
+  const startTime = formatActivityTime(activity.actStartTime);
+  const endTime = formatActivityTime(activity.actEndTime);
+
+  if (!startTime) return "시간 미정";
+  return endTime ? `${startTime}-${endTime}` : startTime;
+}
+
+function getActivityStatusLabel(activity: MyPageActivity) {
+  if (activity.activityType === "MEETING") {
+    return activity.status === "COMPLETED" ? "봉사 완료" : "신청중";
+  }
+
+  switch (activity.status) {
     case "APPLIED":
     case "CONFIRMED":
       return "신청중";
@@ -31,49 +50,98 @@ function getActivityStatusLabel(status: string) {
     case "REVIEWED":
       return "봉사 완료";
     default:
-      return status;
+      return activity.status;
   }
 }
 
-function ActivityCard({ activity }: { activity: MyPageActivity }) {
+function ActivityActions({
+  cancelDisabled = false,
+  cancelPending = false,
+  onCancel,
+  onDetail,
+}: {
+  cancelDisabled?: boolean;
+  cancelPending?: boolean;
+  onCancel?: () => void;
+  onDetail: () => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <button
+        type="button"
+        disabled={cancelDisabled || cancelPending}
+        onClick={onCancel}
+        className="h-9 rounded-[10px] border border-[#c5c5c5] text-[15px] font-medium text-[#5c5c5c]"
+      >
+        {cancelPending ? "취소 중" : "신청 취소"}
+      </button>
+      <button
+        type="button"
+        onClick={onDetail}
+        className="h-9 rounded-[10px] bg-[#dcecdf] text-[15px] font-medium text-[#5c5c5c]"
+      >
+        상세 보기
+      </button>
+    </div>
+  );
+}
+
+function VolunteerActivityActions({
+  activity,
+}: {
+  activity: Extract<MyPageActivity, { activityType: "VOLUNTEER" }>;
+}) {
   const navigate = useNavigate();
   const cancelMutation = useCancelVolunteerPostingParticipationMutation(
     activity.postingId,
   );
 
   return (
+    <ActivityActions
+      cancelPending={cancelMutation.isPending}
+      onCancel={() => cancelMutation.mutate()}
+      onDetail={() => navigate(`/volunteers/${activity.postingId}`)}
+    />
+  );
+}
+
+function getActivityEndDate(activity: MyPageActivity) {
+  return activity.actEndDate ?? activity.actStartDate;
+}
+
+function MeetingActivityActions({ meetingId }: { meetingId: number }) {
+  const navigate = useNavigate();
+
+  return (
+    <ActivityActions
+      cancelDisabled
+      onDetail={() => navigate(`/teams/${meetingId}`)}
+    />
+  );
+}
+
+function ActivityCard({ activity }: { activity: MyPageActivity }) {
+  return (
     <article className="flex h-[145px] flex-col justify-center gap-3 rounded-xl border border-[#d9d9d9] bg-white px-3 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-body-15-semibold">{activity.title}</h3>
           <p className="mt-2 truncate text-body-14 text-text-gray-400">
-            {formatActivityDate(activity.actStartDate)} {activity.actStartTime}-
-            {activity.actEndTime}
+            {formatActivityDate(activity.actStartDate)}{" "}
+            {formatActivityTimeRange(activity)}
             <span className="mx-2">|</span>
-            {activity.actPlace}
+            {activity.actPlace ?? "장소 미정"}
           </p>
         </div>
         <span className="shrink-0 rounded-[10px] bg-text-gray-400 px-2 py-0.5 text-body-14 text-text2">
-          {getActivityStatusLabel(activity.status)}
+          {getActivityStatusLabel(activity)}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          disabled={cancelMutation.isPending}
-          onClick={() => cancelMutation.mutate()}
-          className="h-9 rounded-[10px] border border-[#c5c5c5] text-[15px] font-medium text-[#5c5c5c]"
-        >
-          {cancelMutation.isPending ? "취소 중" : "신청 취소"}
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate(`/volunteers/${activity.postingId}`)}
-          className="h-9 rounded-[10px] bg-[#dcecdf] text-[15px] font-medium text-[#5c5c5c]"
-        >
-          상세 보기
-        </button>
-      </div>
+      {activity.activityType === "MEETING" ? (
+        <MeetingActivityActions meetingId={activity.meetingId} />
+      ) : (
+        <VolunteerActivityActions activity={activity} />
+      )}
     </article>
   );
 }
@@ -108,7 +176,8 @@ export function ActivityCalendarSection() {
       isToday: dateKey === todayKey,
       hasActivity: activities.some(
         (activity) =>
-          activity.actStartDate <= dateKey && dateKey <= activity.actEndDate,
+          activity.actStartDate <= dateKey &&
+          dateKey <= getActivityEndDate(activity),
       ),
     };
   });
@@ -116,7 +185,7 @@ export function ActivityCalendarSection() {
   const selectedActivities = activities.filter(
     (activity) =>
       activity.actStartDate <= selectedDate &&
-      selectedDate <= activity.actEndDate,
+      selectedDate <= getActivityEndDate(activity),
   );
 
   useLayoutEffect(() => {
@@ -206,7 +275,14 @@ export function ActivityCalendarSection() {
           </p>
         ) : selectedActivities.length > 0 ? (
           selectedActivities.map((activity) => (
-            <ActivityCard key={activity.participationId} activity={activity} />
+            <ActivityCard
+              key={`${activity.activityType}-${
+                activity.activityType === "MEETING"
+                  ? activity.meetingId
+                  : activity.participationId
+              }`}
+              activity={activity}
+            />
           ))
         ) : (
           <p className="py-8 text-center text-body-14 text-text-gray-400">

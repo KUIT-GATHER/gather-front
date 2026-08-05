@@ -722,6 +722,15 @@ function getMockMeetings() {
   return [...(baseMockMeetings as MockMeeting[]), ...createdMeetings];
 }
 
+export function getJoinedMockMeetings(userId: number) {
+  const joinedMeetingIds = membershipsByUserId.get(userId)?.keys() ?? [];
+  const joinedMeetingIdSet = new Set(joinedMeetingIds);
+
+  return getMockMeetings().filter((meeting) =>
+    joinedMeetingIdSet.has(meeting.meetingId),
+  );
+}
+
 function getRecommendedMockMeetings(userId: number | null) {
   const user = userId === null ? null : getMockUserById(userId);
   const preferredCategories = user?.interestCategories ?? [];
