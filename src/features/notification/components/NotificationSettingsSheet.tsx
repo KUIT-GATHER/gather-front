@@ -9,7 +9,7 @@ import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import Switch from "@/shared/ui/Switch";
 
-type SettingsView = "menu" | "activity" | "meeting";
+export type NotificationSettingsView = "menu" | "activity" | "meeting";
 type SettingsField = keyof NotificationSettings;
 
 const activitySettings: ReadonlyArray<{
@@ -40,12 +40,14 @@ const meetingSettings: ReadonlyArray<{
 type NotificationSettingsSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialView?: NotificationSettingsView;
+  onBack?: () => void;
 };
 
 function SettingsMenu({
   onChangeView,
 }: {
-  onChangeView: (view: SettingsView) => void;
+  onChangeView: (view: NotificationSettingsView) => void;
 }) {
   return (
     <section>
@@ -131,13 +133,15 @@ function SettingsDetail({
 export function NotificationSettingsSheet({
   open,
   onOpenChange,
+  initialView = "menu",
+  onBack,
 }: NotificationSettingsSheetProps) {
-  const [view, setView] = useState<SettingsView>("menu");
+  const [view, setView] = useState<NotificationSettingsView>(initialView);
   const settingsQuery = useNotificationSettingsQuery(open);
 
   const closeSheet = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setView("menu");
+      setView(initialView);
     }
 
     onOpenChange(nextOpen);
@@ -152,7 +156,7 @@ export function NotificationSettingsSheet({
       open={open}
       onOpenChange={closeSheet}
       title={title}
-      onBack={isDetailView ? () => setView("menu") : undefined}
+      onBack={isDetailView ? (onBack ?? (() => setView("menu"))) : undefined}
       className={
         isDetailView ? "h-[min(78dvh,42rem)]" : "max-h-[min(45dvh,24rem)]"
       }

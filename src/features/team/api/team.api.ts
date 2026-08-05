@@ -192,6 +192,25 @@ export async function getMeetings(params?: MeetingListParams) {
   };
 }
 
+export async function getBookmarkedMeetings(params: MeetingListParams = {}) {
+  const searchParams = new URLSearchParams();
+  setQueryParam(searchParams, "page", params.page ?? 0);
+  setQueryParam(searchParams, "size", params.size ?? 20);
+  setQueryParam(searchParams, "keyword", params.keyword);
+  setQueryParam(searchParams, "regionId", params.regionId);
+  setQueryParam(searchParams, "category", params.category);
+  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
+  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
+  const page = await fetchClient<
+    Omit<MeetingPage, "content"> & { content: MeetingListItemResponse[] }
+  >(`${MEETING_ENDPOINT}/bookmarks?${searchParams.toString()}`);
+
+  return {
+    ...page,
+    content: page.content.map(normalizeMeetingCategories),
+  };
+}
+
 export function getRecommendedMeetings() {
   return fetchClient<MeetingListItem[]>(`${MEETING_ENDPOINT}/recommended`);
 }

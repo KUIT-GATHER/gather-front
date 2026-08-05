@@ -33,6 +33,10 @@ import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
+import { MyActivitiesPage } from "@/pages/my/MyActivitiesPage";
+import { MyBadgesPage } from "@/pages/my/MyBadgesPage";
+import { MyBookmarksPage } from "@/pages/my/MyBookmarksPage";
+import { ProfileEditPage } from "@/pages/my/ProfileEditPage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
@@ -76,7 +80,7 @@ export const router = createBrowserRouter([
             element: <KakaoLoginCallbackPage />,
           },
           { path: "/signup/kakao", element: <KakaoSignupPage /> },
-          { path: "/terms", element: <TermsPage /> },
+          { path: "/terms/:type", element: <TermsPage /> },
         ],
       },
 
@@ -131,6 +135,22 @@ export const router = createBrowserRouter([
               {
                 path: "/notifications",
                 element: <NotificationPage />,
+              },
+              {
+                path: "/my/profile/edit",
+                element: <ProfileEditPage />,
+              },
+              {
+                path: "/my/activities",
+                element: <MyActivitiesPage />,
+              },
+              {
+                path: "/my/badges",
+                element: <MyBadgesPage />,
+              },
+              {
+                path: "/my/bookmarks",
+                element: <MyBookmarksPage />,
               },
             ],
           },

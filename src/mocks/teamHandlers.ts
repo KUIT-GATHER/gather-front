@@ -905,6 +905,57 @@ function getPendingUploadCount(meetingId: number) {
 }
 
 export const teamHandlers = [
+  http.get("*/api/v1/meetings/bookmarks", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
+    const url = new URL(request.url);
+    const page = getPageParam(url);
+    const size = getSizeParam(url);
+    const category = url.searchParams.get("category");
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
+    const bookmarkedIds =
+      bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+    const items = getMockMeetings()
+      .filter((meeting) => bookmarkedIds.has(meeting.meetingId))
+      .filter(
+        (meeting) =>
+          !category ||
+          meeting.categories.includes(
+            category as (typeof meeting.categories)[number],
+          ),
+      )
+      .filter(
+        (meeting) => regionId === undefined || meeting.regionId === regionId,
+      )
+      .filter(
+        (meeting) =>
+          (!activityStartDate && !activityEndDate) ||
+          overlapsActivityPeriod(
+            meeting,
+            activityStartDate ?? undefined,
+            activityEndDate ?? undefined,
+          ),
+      )
+      .map(toMeetingListItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content: items.slice(page * size, (page + 1) * size),
+        totalElements: items.length,
+        totalPages: Math.ceil(items.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/meetings/my", ({ request }) => {
     const userId = getMockUserId(request);
 
