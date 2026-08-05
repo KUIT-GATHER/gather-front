@@ -3,6 +3,7 @@ import { HttpResponse, http } from "msw";
 import mockPostImageOne from "@/assets/icons/Temp-volunteer-posting.svg";
 import mockPostImageThree from "@/assets/onboarding/onboarding-step2-center.svg";
 import mockPostImageTwo from "@/assets/onboarding/onboarding-step1-center.svg";
+import { addMockBadgeProgress, earnMockBadge } from "./badgeHandlers";
 import teams from "./data/teams.json";
 import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
@@ -1267,6 +1268,7 @@ export const teamHandlers = [
 
     createdMeetings.push(meeting);
     addMembership(userId, meetingId, "HOST");
+    earnMockBadge(userId, "TEAM_CREATED");
 
     return HttpResponse.json({
       success: true,
@@ -1808,6 +1810,7 @@ export const teamHandlers = [
 
       meetingPostComments.push(comment);
       post.commentCount += 1;
+      addMockBadgeProgress(userId, "COMMENT_10");
 
       return HttpResponse.json(
         {
@@ -2086,6 +2089,7 @@ export const teamHandlers = [
 
     addMembership(userId, meetingId, "MEMBER");
     team.currentMemberCount += 1;
+    earnMockBadge(userId, "FIRST_TEAM_JOIN");
 
     return HttpResponse.json({
       success: true,

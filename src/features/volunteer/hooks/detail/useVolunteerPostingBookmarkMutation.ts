@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { myBadgeKeys } from "@/features/my/api/myBadge.api";
 import {
   addVolunteerPostingBookmark,
   removeVolunteerPostingBookmark,
@@ -42,6 +43,7 @@ export function useAddVolunteerPostingBookmarkMutation(postingId: number) {
       void queryClient.invalidateQueries({
         queryKey: volunteerPostingKeys.bookmarkedLists(),
       });
+      void queryClient.invalidateQueries({ queryKey: myBadgeKeys.all });
     },
   });
 }
@@ -63,6 +65,7 @@ export function useRemoveVolunteerPostingBookmarkMutation(postingId: number) {
       void queryClient.invalidateQueries({
         queryKey: volunteerPostingKeys.bookmarkedLists(),
       });
+      void queryClient.invalidateQueries({ queryKey: myBadgeKeys.all });
     },
   });
 }
