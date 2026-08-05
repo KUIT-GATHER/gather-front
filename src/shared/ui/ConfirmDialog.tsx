@@ -5,7 +5,7 @@ import { cn } from "@/shared/lib/cn";
 
 export type ConfirmDialogProps = {
   open: boolean;
-  title: string;
+  title: ReactNode;
   cancelText?: string;
   confirmText?: string;
   onCancel: () => void;

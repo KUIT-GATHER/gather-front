@@ -415,6 +415,12 @@ export async function joinMeeting(meetingId: number) {
   return normalizeMeetingCategories(meeting);
 }
 
+export function leaveMeeting(meetingId: number) {
+  return fetchClient<null>(`${MEETING_ENDPOINT}/${meetingId}/members/me`, {
+    method: "DELETE",
+  });
+}
+
 export function addMeetingBookmark(meetingId: number) {
   return fetchClient<MeetingBookmarkResponse>(
     `${MEETING_ENDPOINT}/${meetingId}/bookmark`,

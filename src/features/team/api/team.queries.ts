@@ -97,6 +97,8 @@ export const teamKeys = {
     [...teamKeys.postComments(meetingId, postId), "update", commentId] as const,
   deletePostComment: (meetingId: number, postId: number, commentId: number) =>
     [...teamKeys.postComments(meetingId, postId), "delete", commentId] as const,
+  leave: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "leave"] as const,
   bookmark: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "bookmark"] as const,
 };
