@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useLogoutMutation } from "@/features/auth/hooks/useLogoutMutation";
+import { useWithdrawAccountMutation } from "@/features/auth/hooks/useWithdrawAccountMutation";
 import type { NotificationSettingsView } from "@/features/notification/components/NotificationSettingsSheet";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
@@ -41,6 +42,7 @@ export function SettingsBottomSheet({
 }: SettingsBottomSheetProps) {
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation();
+  const withdrawMutation = useWithdrawAccountMutation();
   const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
 
   const openLegalDocument = (type: "service" | "privacy") => {
@@ -52,6 +54,15 @@ export function SettingsBottomSheet({
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSettled: () => navigate("/login", { replace: true }),
+    });
+  };
+
+  const handleWithdraw = () => {
+    withdrawMutation.mutate(undefined, {
+      onSuccess: () => {
+        setWithdrawConfirmOpen(false);
+        navigate("/login", { replace: true });
+      },
     });
   };
 
@@ -129,8 +140,9 @@ export function SettingsBottomSheet({
         cancelText="취소"
         confirmText="확인"
         confirmVariant="danger"
+        isPending={withdrawMutation.isPending}
         onCancel={() => setWithdrawConfirmOpen(false)}
-        onConfirm={() => setWithdrawConfirmOpen(false)}
+        onConfirm={handleWithdraw}
       />
     </>
   );

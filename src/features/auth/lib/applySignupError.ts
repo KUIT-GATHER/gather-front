@@ -55,6 +55,17 @@ export function applySignupError({
       return;
     }
 
+    case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN: {
+      setVerifiedPhoneNumber(null);
+      moveToFieldError(
+        "basic",
+        "phoneNumber",
+        "탈퇴 후 7일간 재가입할 수 없습니다.",
+      );
+
+      return;
+    }
+
     case API_ERROR_CODE.EMAIL_NOT_VERIFIED: {
       setVerifiedEmail(null);
       moveToFieldError("account", "email", "이메일 인증을 다시 완료해 주세요.");

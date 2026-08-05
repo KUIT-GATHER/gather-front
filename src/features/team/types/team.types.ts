@@ -1,4 +1,5 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
+import type { UserStatus } from "@/shared/types/user.types";
 
 export type MeetingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 export type MeetingMemberRole = "HOST" | "MEMBER";
@@ -49,6 +50,7 @@ export type MeetingDetail = MeetingListItem & {
 export type MeetingMember = {
   userId: number;
   nickname: string;
+  userStatus?: UserStatus;
   role: MeetingMemberRole;
   host: boolean;
 };
@@ -126,6 +128,7 @@ export type MeetingPostSummary = {
   content: string;
   authorId: number;
   authorNickname: string;
+  userStatus?: UserStatus;
   imageUrls: string[];
   likeCount: number;
   commentCount: number;
@@ -164,6 +167,7 @@ export type MeetingPostComment = {
   commentId: number;
   authorId: number;
   authorNickname: string;
+  userStatus?: UserStatus;
   content: string;
   createdAt: string;
   updatedAt: string;

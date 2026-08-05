@@ -654,14 +654,26 @@ function sortMeetingPostComments(
   });
 }
 
+function getPublicUser(userId: number, nickname: string) {
+  const user = getMockUserById(userId);
+
+  return {
+    nickname: user?.userStatus === "WITHDRAWN" ? user.nickname : nickname,
+    userStatus: user?.userStatus ?? "ACTIVE",
+  } as const;
+}
+
 function toMeetingPostSummary(post: MockMeetingPost, viewerUserId: number) {
+  const author = getPublicUser(post.authorId, post.authorNickname);
+
   return {
     postId: post.postId,
     type: post.type,
     title: post.title,
     content: post.content,
     authorId: post.authorId,
-    authorNickname: post.authorNickname,
+    authorNickname: author.nickname,
+    userStatus: author.userStatus,
     imageUrls: post.imageUrls,
     likeCount: post.likeCount,
     commentCount: post.commentCount,
@@ -690,10 +702,13 @@ function toMeetingPostCommentResponse(
   viewerUserId: number,
   team: MockMeeting,
 ) {
+  const author = getPublicUser(comment.authorId, comment.authorNickname);
+
   return {
     commentId: comment.commentId,
     authorId: comment.authorId,
-    authorNickname: comment.authorNickname,
+    authorNickname: author.nickname,
+    userStatus: author.userStatus,
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
@@ -801,7 +816,15 @@ function getMeetingMembers(team: MockMeeting) {
     });
   }
 
-  return members;
+  return members.map((member) => {
+    const publicUser = getPublicUser(member.userId, member.nickname);
+
+    return {
+      ...member,
+      nickname: publicUser.nickname,
+      userStatus: publicUser.userStatus,
+    };
+  });
 }
 
 function toMeetingListItem(team: MockMeeting) {

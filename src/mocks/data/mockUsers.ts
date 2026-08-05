@@ -12,9 +12,20 @@ export type MockUser = {
   introduction?: string | null;
   activityRegionId: number;
   interestCategories: PostingCategory[];
+  userStatus?: "ACTIVE" | "WITHDRAWN";
 };
 
 export const MOCK_USERS_STORAGE_KEY = "gather:msw:users";
+const MOCK_WITHDRAWAL_COOLDOWNS_STORAGE_KEY =
+  "gather:msw:withdrawal-cooldowns";
+const WITHDRAWAL_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+type MockWithdrawalCooldown = {
+  userId: number;
+  phoneFingerprint: string;
+  kakaoFingerprint?: string;
+  expiresAt: number;
+};
 
 const defaultMockUsers: MockUser[] = [
   {
@@ -128,6 +139,81 @@ export const mockUsers: MockUser[] = [
   ...loadPersistedMockUsers(),
 ];
 
+function fingerprint(value: string) {
+  let hash = 2166136261;
+
+  for (const character of value.trim().toLowerCase()) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(36);
+}
+
+function loadWithdrawalCooldowns(): MockWithdrawalCooldown[] {
+  if (typeof localStorage === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw = localStorage.getItem(MOCK_WITHDRAWAL_COOLDOWNS_STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(
+      (item): item is MockWithdrawalCooldown =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof item.userId === "number" &&
+        typeof item.phoneFingerprint === "string" &&
+        (item.kakaoFingerprint === undefined ||
+          typeof item.kakaoFingerprint === "string") &&
+        typeof item.expiresAt === "number" &&
+        item.expiresAt > Date.now(),
+    );
+  } catch {
+    return [];
+  }
+}
+
+const withdrawalCooldowns = loadWithdrawalCooldowns();
+
+function persistWithdrawalCooldowns() {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.setItem(
+      MOCK_WITHDRAWAL_COOLDOWNS_STORAGE_KEY,
+      JSON.stringify(withdrawalCooldowns),
+    );
+  } catch {
+    // 저장소를 사용할 수 없어도 현재 탭의 메모리 쿨다운은 유지한다.
+  }
+}
+
+function anonymizeMockUser(user: MockUser) {
+  user.name = "탈퇴한 사용자";
+  user.email = `withdrawn-${user.id}@example.invalid`;
+  user.phoneNumber = `withdrawn-${user.id}`;
+  user.nickname = "탈퇴한 사용자";
+  user.introduction = null;
+  user.password = "";
+  user.userStatus = "WITHDRAWN";
+}
+
+for (const cooldown of withdrawalCooldowns) {
+  const user = mockUsers.find((candidate) => candidate.id === cooldown.userId);
+
+  if (user) {
+    anonymizeMockUser(user);
+  }
+}
+
 export function getNextMockUserId() {
   return Math.max(0, ...mockUsers.map((user) => user.id)) + 1;
 }
@@ -143,6 +229,60 @@ export function addMockUser(user: MockUser) {
       (mockUser) =>
         !defaultMockUsers.some((defaultUser) => defaultUser.id === mockUser.id),
     ),
+  );
+}
+
+export function withdrawMockUser(userId: number, kakaoAccountId?: string) {
+  const user = getMockUserById(userId);
+
+  if (!user || user.userStatus === "WITHDRAWN") {
+    return;
+  }
+
+  withdrawalCooldowns.push({
+    userId,
+    phoneFingerprint: fingerprint(user.phoneNumber),
+    kakaoFingerprint: kakaoAccountId
+      ? fingerprint(kakaoAccountId)
+      : undefined,
+    expiresAt: Date.now() + WITHDRAWAL_COOLDOWN_MS,
+  });
+  anonymizeMockUser(user);
+  persistWithdrawalCooldowns();
+  persistDynamicMockUsers(
+    mockUsers.filter(
+      (mockUser) =>
+        !defaultMockUsers.some((defaultUser) => defaultUser.id === mockUser.id),
+    ),
+  );
+}
+
+export function isWithdrawalCooldownActive({
+  phoneNumber,
+  kakaoAccountId,
+  userId,
+}: {
+  phoneNumber?: string;
+  kakaoAccountId?: string;
+  userId?: number;
+}) {
+  const now = Date.now();
+
+  for (let index = withdrawalCooldowns.length - 1; index >= 0; index -= 1) {
+    if (withdrawalCooldowns[index].expiresAt <= now) {
+      withdrawalCooldowns.splice(index, 1);
+    }
+  }
+
+  persistWithdrawalCooldowns();
+
+  return withdrawalCooldowns.some(
+    (cooldown) =>
+      cooldown.userId === userId ||
+      (phoneNumber !== undefined &&
+        cooldown.phoneFingerprint === fingerprint(phoneNumber)) ||
+      (kakaoAccountId !== undefined &&
+        cooldown.kakaoFingerprint === fingerprint(kakaoAccountId)),
   );
 }
 

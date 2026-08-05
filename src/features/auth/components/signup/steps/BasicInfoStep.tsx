@@ -64,7 +64,10 @@ export function BasicInfoStep({
           if (!data.available) {
             onVerifiedPhoneNumberChange(null);
             setError("phoneNumber", {
-              message: "이미 가입에 사용된 전화번호입니다.",
+              message:
+                data.reason === "WITHDRAWN_COOLDOWN"
+                  ? "탈퇴 후 7일간 재가입할 수 없습니다."
+                  : "이미 가입에 사용된 전화번호입니다.",
             });
             return;
           }
