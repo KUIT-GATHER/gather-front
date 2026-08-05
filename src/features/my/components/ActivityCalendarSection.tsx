@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useMyActivitiesQuery } from "@/features/my/hooks/useMyActivitiesQuery";
+import { getMeetingActivityLabel } from "@/features/my/lib/myActivity";
 import type {
   MyMeetingActivity,
   MyPageActivity,
@@ -106,11 +107,12 @@ function VolunteerActivityCard({
 
 function MeetingActivityCard({ activity }: { activity: MyMeetingActivity }) {
   const navigate = useNavigate();
-  const statusLabel =
-    activity.status === "COMPLETED" ? "모임 완료" : "활동 예정";
 
   return (
-    <ActivityCardFrame activity={activity} statusLabel={statusLabel}>
+    <ActivityCardFrame
+      activity={activity}
+      statusLabel={getMeetingActivityLabel(activity)}
+    >
       <ActivityDetailButton
         fullWidth
         onClick={() => navigate(`/teams/${activity.meetingId}`)}

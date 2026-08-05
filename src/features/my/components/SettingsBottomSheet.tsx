@@ -8,6 +8,8 @@ import type { NotificationSettingsView } from "@/features/notification/component
 import BottomSheet from "@/shared/ui/BottomSheet";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
+import packageJson from "../../../../package.json";
+
 type SettingsBottomSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -86,7 +88,7 @@ export function SettingsBottomSheet({
             </SettingLink>
             <div className="flex h-10 items-center justify-between text-body-15">
               <span>버전 정보</span>
-              <span className="text-text-gray-400">1.0.0</span>
+              <span className="text-text-gray-400">{packageJson.version}</span>
             </div>
           </div>
         </section>
