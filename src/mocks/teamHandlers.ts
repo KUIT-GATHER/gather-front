@@ -168,6 +168,38 @@ const baseMockMeetings = teams.data.map((team) => {
   };
 });
 
+const bookmarkPaginationMeetings: MockMeeting[] = Array.from(
+  { length: 21 },
+  (_, index) => ({
+    meetingId: index + 101,
+    name: `찜한 모임 무한스크롤 테스트 ${index + 1}`,
+    description:
+      "찜한 모임 목록의 다음 페이지를 확인하기 위한 mock 데이터예요.",
+    currentMemberCount: (index % 5) + 1,
+    maxMember: 10,
+    regionId: index % 2 === 0 ? 41 : 32,
+    regionName: index % 2 === 0 ? "영등포구" : "마포구",
+    categories: [
+      [
+        "ENVIRONMENT",
+        "EDUCATION",
+        "CULTURE",
+        "COMMUNITY",
+        "WELFARE",
+        "OVERSEAS",
+      ][index % 6],
+    ],
+    status: "RECRUITING",
+    deadline: formatMockDateTime("2026-08-31T18:00:00", index + 1),
+    activityStartAt: formatMockDateTime("2026-09-01T10:00:00", index + 1),
+    activityEndAt: formatMockDateTime("2026-09-01T12:00:00", index + 1),
+    hostId: index + 101,
+    volunteerPostingId: null,
+    participationCondition: null,
+    memo: null,
+  }),
+);
+
 const createdMeetings: MockMeeting[] = [];
 const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
   [
@@ -178,7 +210,9 @@ const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
     ]),
   ],
 ]);
-const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>();
+const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>([
+  [1, new Set(bookmarkPaginationMeetings.map((meeting) => meeting.meetingId))],
+]);
 const pendingMeetingImageUploads = new Map<
   string,
   {
@@ -754,7 +788,11 @@ function toMeetingPostCommentResponse(
 }
 
 function getMockMeetings() {
-  return [...(baseMockMeetings as MockMeeting[]), ...createdMeetings];
+  return [
+    ...(baseMockMeetings as MockMeeting[]),
+    ...bookmarkPaginationMeetings,
+    ...createdMeetings,
+  ];
 }
 
 function getRecommendedMockMeetings(userId: number | null) {
@@ -862,6 +900,7 @@ function toMeetingListItem(team: MockMeeting) {
     currentMemberCount: getMeetingMembers(team).length,
     maxMember: team.maxMember,
     regionId: team.regionId,
+    regionName: team.regionName,
     categories: team.categories,
     status: team.status,
     deadline: team.deadline,

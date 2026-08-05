@@ -41,7 +41,7 @@ export function useAddMeetingBookmarkMutation(meetingId: number) {
       });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({
-        queryKey: ["meetings", "bookmarked"],
+        queryKey: teamKeys.bookmarkedLists(),
       });
     },
   });
@@ -63,7 +63,7 @@ export function useRemoveMeetingBookmarkMutation(meetingId: number) {
       });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({
-        queryKey: ["meetings", "bookmarked"],
+        queryKey: teamKeys.bookmarkedLists(),
       });
     },
   });

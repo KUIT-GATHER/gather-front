@@ -80,10 +80,10 @@ export function SettingsBottomSheet({
         <h2 className="text-title-18">알림</h2>
         <div className="mt-3">
           <SettingLink onClick={() => onOpenNotificationSettings("activity")}>
-            봉사활동
+            봉사활동 알림 설정
           </SettingLink>
           <SettingLink onClick={() => onOpenNotificationSettings("meeting")}>
-            모임활동
+            모임활동 알림 설정
           </SettingLink>
         </div>
       </section>

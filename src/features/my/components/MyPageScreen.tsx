@@ -8,6 +8,7 @@ import bookmarkIcon from "@/features/my/assets/bookmark.svg";
 import profileImage from "@/features/my/assets/profile.png";
 import profileEditIcon from "@/features/my/assets/profileedit.svg";
 import settingIcon from "@/features/my/assets/setting.svg";
+import { useMyActivitySummaryQuery } from "@/features/my/hooks/useMyActivitiesQuery";
 import { useMyPageHomeQuery } from "@/features/my/hooks/useMyPageHomeQuery";
 
 import { SettingsBottomSheet } from "@/features/my/components/SettingsBottomSheet";
@@ -17,6 +18,8 @@ import {
 } from "@/features/notification/components/NotificationSettingsSheet";
 
 import createCompleteIcon from "@/shared/assets/puzzle/create-complete.svg";
+import { ErrorState } from "@/shared/ui/ErrorState";
+import LoadingState from "@/shared/ui/LoadingState";
 
 function PuzzleMark() {
   return (
@@ -28,6 +31,11 @@ function PuzzleMark() {
     />
   );
 }
+
+function formatBirthDate(value: string) {
+  return value.split("-").join(". ");
+}
+
 export function MyPageScreen() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -37,10 +45,7 @@ export function MyPageScreen() {
   const [notificationSettingsView, setNotificationSettingsView] =
     useState<Exclude<NotificationSettingsView, "menu"> | null>(null);
   const homeQuery = useMyPageHomeQuery();
-  const home = homeQuery.data;
-  const displayName = home?.nickname ?? "김민우";
-  const displayBirthDate =
-    home?.birthDate.split("-").join(". ") ?? "2002. 07. 20";
+  const activitySummaryQuery = useMyActivitySummaryQuery();
 
   const handleSettingsOpenChange = (open: boolean) => {
     setSettingsOpen(open);
@@ -76,44 +81,83 @@ export function MyPageScreen() {
       </header>
 
       <main className="px-5.5 pb-6">
-        <section
-          className="mt-3 flex items-center gap-5"
-          aria-label="내 프로필"
-        >
-          <img
-            src={home?.profileImageUrl || profileImage}
-            alt={`${displayName} 프로필`}
-            className="size-[82px] rounded-full object-cover"
+        {homeQuery.isPending ? (
+          <LoadingState
+            label="마이페이지 정보를 불러오는 중이에요."
+            className="min-h-70"
           />
-          <div>
-            <button
-              type="button"
-              className="flex items-center gap-2"
-              onClick={() => navigate("/my/profile/edit")}
+        ) : homeQuery.isError ? (
+          <ErrorState
+            className="min-h-70"
+            title="마이페이지 정보를 불러오지 못했어요"
+            description="잠시 후 다시 시도해 주세요."
+            primaryAction={{
+              label: "다시 시도",
+              onClick: () => void homeQuery.refetch(),
+            }}
+          />
+        ) : homeQuery.data ? (
+          <>
+            <section
+              className="mt-3 flex items-center gap-5"
+              aria-label="내 프로필"
             >
-              <span className="text-title-20">{displayName}</span>
-              <img src={profileEditIcon} alt="" className="size-[29px]" />
-            </button>
-            <p className="mt-1 text-body-14 text-text-gray-400">
-              {home?.activityRegion.name ?? "강남구"}{" "}
-              <span className="mx-1">·</span> {displayBirthDate}
-            </p>
-          </div>
-        </section>
+              <img
+                src={homeQuery.data.profileImageUrl || profileImage}
+                alt={`${homeQuery.data.nickname} 프로필`}
+                className="size-[82px] rounded-full object-cover"
+              />
+              <div>
+                <button
+                  type="button"
+                  className="flex items-center gap-2"
+                  onClick={() => navigate("/my/profile/edit")}
+                >
+                  <span className="text-title-20">
+                    {homeQuery.data.nickname}
+                  </span>
+                  <img src={profileEditIcon} alt="" className="size-[29px]" />
+                </button>
+                <p className="mt-1 text-body-14 text-text-gray-400">
+                  {homeQuery.data.activityRegion?.name ?? "활동 지역 미설정"}
+                  <span className="mx-1">·</span>
+                  {formatBirthDate(homeQuery.data.birthDate)}
+                </p>
+              </div>
+            </section>
 
-        <button
-          type="button"
-          className="mt-7 flex h-[68px] w-full items-center rounded-xl border border-stroke bg-white px-5 text-left"
-          onClick={() => navigate("/my/activities")}
-        >
-          <PuzzleMark />
-          <span className="ml-3 flex-1 text-body-15-semibold">
-            지금까지 12번 함께했어요
-          </span>
-          <ChevronRight className="size-6 text-text-gray-400" />
-        </button>
+            {activitySummaryQuery.isPending ? (
+              <div className="mt-7 flex h-[68px] items-center justify-center rounded-xl border border-stroke bg-white">
+                <p className="text-body-14 text-text-gray-400">
+                  활동 횟수를 불러오는 중이에요.
+                </p>
+              </div>
+            ) : activitySummaryQuery.isError ? (
+              <button
+                type="button"
+                onClick={() => void activitySummaryQuery.refetch()}
+                className="mt-7 flex h-[68px] w-full items-center justify-center rounded-xl border border-stroke bg-white text-body-14 text-text-gray-400"
+              >
+                활동 횟수를 불러오지 못했어요. 다시 시도
+              </button>
+            ) : activitySummaryQuery.data ? (
+              <button
+                type="button"
+                className="mt-7 flex h-[68px] w-full items-center rounded-xl border border-stroke bg-white px-5 text-left"
+                onClick={() => navigate("/my/activities")}
+              >
+                <PuzzleMark />
+                <span className="ml-3 flex-1 text-body-15-semibold">
+                  지금까지 {activitySummaryQuery.data.totalCompletedCount}번
+                  함께했어요
+                </span>
+                <ChevronRight className="size-6 text-text-gray-400" />
+              </button>
+            ) : null}
 
-        <ActivityCalendarSection />
+            <ActivityCalendarSection />
+          </>
+        ) : null}
       </main>
       <SettingsBottomSheet
         open={settingsOpen}

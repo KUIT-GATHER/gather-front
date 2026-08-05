@@ -1,4 +1,5 @@
 import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
+import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
 import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
@@ -6,7 +7,6 @@ import {
   getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
-import { ActivityListCard } from "@/shared/ui/ActivityListCard";
 
 type VolunteerPostingCardProps = {
   posting: VolunteerPostingListItem;

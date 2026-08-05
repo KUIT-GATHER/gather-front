@@ -5,7 +5,7 @@ export type MyPageHome = {
   nickname: string;
   profileImageUrl: string | null;
   birthDate: string;
-  activityRegion: Region;
+  activityRegion: Region | null;
   hasBookmark: boolean;
 };
 
@@ -16,7 +16,7 @@ export type MyProfile = {
   introduction: string | null;
   birthDate: string;
   gender: "MALE" | "FEMALE";
-  activityRegion: Region;
+  activityRegion: Region | null;
   interestCategories: PostingCategory[];
 };
 

@@ -40,7 +40,7 @@ export function useAddVolunteerPostingBookmarkMutation(postingId: number) {
         queryKey: volunteerPostingKeys.detail(postingId),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["volunteerPostings", "bookmarked"],
+        queryKey: volunteerPostingKeys.bookmarkedLists(),
       });
     },
   });
@@ -61,7 +61,7 @@ export function useRemoveVolunteerPostingBookmarkMutation(postingId: number) {
         queryKey: volunteerPostingKeys.detail(postingId),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["volunteerPostings", "bookmarked"],
+        queryKey: volunteerPostingKeys.bookmarkedLists(),
       });
     },
   });

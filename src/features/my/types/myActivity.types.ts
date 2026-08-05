@@ -1,21 +1,45 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
-export type MyPageActivity = {
-  participationId: number;
-  postingId: number;
+type MyPageActivityBase = {
   title: string;
   actStartDate: string;
-  actEndDate: string;
-  actStartTime: string;
-  actEndTime: string;
-  actPlace: string;
-  status: string;
+  actEndDate: string | null;
+  actStartTime: string | null;
+  actEndTime: string | null;
+  actPlace: string | null;
+  regionName: string | null;
 };
+
+export type MyVolunteerActivityStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "REVIEWED";
+
+export type MyMeetingActivityStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
+
+export type MyVolunteerActivity = MyPageActivityBase & {
+  activityType: "VOLUNTEER";
+  participationId: number;
+  postingId: number;
+  meetingId: null;
+  status: MyVolunteerActivityStatus;
+};
+
+export type MyMeetingActivity = MyPageActivityBase & {
+  activityType: "MEETING";
+  participationId: null;
+  postingId: null;
+  meetingId: number;
+  status: MyMeetingActivityStatus;
+};
+
+export type MyPageActivity = MyVolunteerActivity | MyMeetingActivity;
 
 export type MyActivitySummary = {
   totalCompletedCount: number;
-  totalRecognizedMinutes?: number;
-  timeCertifiableCompletedCount?: number;
+  totalRecognizedMinutes: number;
+  timeCertifiableCompletedCount: number;
   categoryBlocks: Array<{
     category: PostingCategory;
     count: number;

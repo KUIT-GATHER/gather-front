@@ -1,7 +1,7 @@
 import {
   ActivityFilterSheet,
   type ActivityFilter,
-} from "@/features/activity-filter/components/ActivityFilterSheet";
+} from "@/features/activity/components/ActivityFilterSheet";
 import type { VolunteerPostingFilter } from "@/features/volunteer/types/volunteerPostingFilter.types";
 
 type VolunteerPostingFilterSheetProps = {
@@ -46,6 +46,7 @@ export function VolunteerPostingFilterSheet({
       open={open}
       onOpenChange={onOpenChange}
       filter={value}
+      dateLabel="모집 기간"
       onApply={(next) => onApply(toVolunteerPostingFilter(next))}
     />
   );

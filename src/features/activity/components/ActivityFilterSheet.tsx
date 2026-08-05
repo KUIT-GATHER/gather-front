@@ -22,7 +22,7 @@ import {
   formatTeamDateRange,
   getTeamDateFilterFromRange,
   getTeamDateRangeFromValues,
-} from "@/features/activity-filter/lib/activityFilterDateRange";
+} from "@/features/activity/lib/activityFilterDateRange";
 
 import Button from "@/shared/ui/Button";
 import BottomSheet from "@/shared/ui/BottomSheet";
@@ -69,6 +69,7 @@ type ActivityFilterSheetProps = {
   onOpenChange: (open: boolean) => void;
   filter: ActivityFilter;
   onApply: (filter: ActivityFilter) => void;
+  dateLabel?: string;
 };
 
 function createDraft(filter: ActivityFilter): FilterDraft {
@@ -113,6 +114,7 @@ export function ActivityFilterSheet({
   onOpenChange,
   filter,
   onApply,
+  dateLabel = "활동 기간",
 }: ActivityFilterSheetProps) {
   const [view, setView] = useState<FilterView>("main");
   const [draft, setDraft] = useState<FilterDraft>(() => createDraft(filter));
@@ -206,8 +208,17 @@ export function ActivityFilterSheet({
     onOpenChange(false);
   };
 
+  const resetFilter = () => {
+    setDraft({});
+    setDateSelection(undefined);
+    setRegionSelectionId(undefined);
+    setActiveLevel1RegionId(undefined);
+    onApply({});
+    onOpenChange(false);
+  };
+
   const title =
-    view === "date" ? "활동 기간" : view === "region" ? "지역" : "필터";
+    view === "date" ? dateLabel : view === "region" ? "지역" : "필터";
   const onBack =
     view === "date" || view === "region" ? () => setView("main") : undefined;
 
@@ -254,7 +265,15 @@ export function ActivityFilterSheet({
         </Button>
       </div>
     ) : (
-      <div className="mx-auto w-full max-w-[315px]">
+      <div className="mx-auto grid w-full max-w-[315px] grid-cols-2 gap-3">
+        <Button
+          fullWidth
+          variant="primaryOutline"
+          className="active:bg-button/8"
+          onClick={resetFilter}
+        >
+          초기화
+        </Button>
         <Button fullWidth className="active:bg-icon" onClick={applyFilter}>
           설정하기
         </Button>
@@ -305,7 +324,7 @@ export function ActivityFilterSheet({
           </section>
 
           <section>
-            <h2 className="text-title-18 text-text">날짜</h2>
+            <h2 className="text-title-18 text-text">{dateLabel}</h2>
             <button
               type="button"
               className="mt-3 flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-stroke bg-white px-4 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
@@ -317,7 +336,7 @@ export function ActivityFilterSheet({
                     draft.dateRange.startDate,
                     draft.dateRange.endDate,
                   )
-                : "활동 기간 선택"}
+                : `${dateLabel} 선택`}
             </button>
           </section>
 
