@@ -3,6 +3,7 @@ import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
   BookmarkedMeetingListItem,
+  BookmarkedMeetingListParams,
   BookmarkedMeetingPage,
   MeetingBookmarkResponse,
   MeetingCreateRequest,
@@ -199,7 +200,9 @@ export async function getMeetings(params?: MeetingListParams) {
   };
 }
 
-export async function getBookmarkedMeetings(params: MeetingListParams = {}) {
+export async function getBookmarkedMeetings(
+  params: BookmarkedMeetingListParams = {},
+) {
   const searchParams = new URLSearchParams();
   setQueryParam(searchParams, "page", params.page ?? 0);
   setQueryParam(searchParams, "size", params.size ?? 20);

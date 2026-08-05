@@ -13,7 +13,7 @@ import type {
 import { cn } from "@/shared/lib/cn";
 
 type TeamCardProps = {
-  team: MeetingListItem;
+  team: Omit<MeetingListItem, "regionName">;
   onClick: () => void;
   variant?: "list" | "compact" | "my";
   regionName?: string | null;

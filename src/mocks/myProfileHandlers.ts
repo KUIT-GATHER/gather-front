@@ -2,8 +2,8 @@ import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
 import { getMockParticipations } from "./data/mockParticipations";
-import { mockPostings } from "./data/mockPostings";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
+import { mockPostings } from "./postingHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";

@@ -33,7 +33,10 @@ function getCallbackError(error: unknown): CallbackError {
     return "suspended";
   }
 
-  if (error.code === API_ERROR_CODE.WITHDRAWN_USER) {
+  if (
+    error.code === API_ERROR_CODE.WITHDRAWN_USER ||
+    error.code === API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN
+  ) {
     return "withdrawn";
   }
 
@@ -65,8 +68,8 @@ const callbackErrorContent: Record<
     action: "login",
   },
   withdrawn: {
-    title: "탈퇴한 계정입니다.",
-    description: "탈퇴한 계정은 카카오 로그인으로 이용할 수 없습니다.",
+    title: "지금은 다시 가입할 수 없어요.",
+    description: "탈퇴 후 7일간 재가입할 수 없습니다.",
     action: "login",
   },
 };

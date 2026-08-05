@@ -4,6 +4,7 @@ import mockPostImageOne from "@/assets/icons/Temp-volunteer-posting.svg";
 import mockPostImageThree from "@/assets/onboarding/onboarding-step2-center.svg";
 import mockPostImageTwo from "@/assets/onboarding/onboarding-step1-center.svg";
 import teams from "./data/teams.json";
+import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
 
 import {
@@ -721,14 +722,26 @@ function sortMeetingPostComments(
   });
 }
 
+function getPublicUser(userId: number, nickname: string) {
+  const user = getMockUserById(userId);
+
+  return {
+    nickname: user?.userStatus === "WITHDRAWN" ? user.nickname : nickname,
+    userStatus: user?.userStatus ?? "ACTIVE",
+  } as const;
+}
+
 function toMeetingPostSummary(post: MockMeetingPost, viewerUserId: number) {
+  const author = getPublicUser(post.authorId, post.authorNickname);
+
   return {
     postId: post.postId,
     type: post.type,
     title: post.title,
     content: post.content,
     authorId: post.authorId,
-    authorNickname: post.authorNickname,
+    authorNickname: author.nickname,
+    userStatus: author.userStatus,
     imageUrls: post.imageUrls,
     likeCount: post.likeCount,
     commentCount: post.commentCount,
@@ -775,10 +788,13 @@ function toMeetingPostCommentResponse(
   viewerUserId: number,
   team: MockMeeting,
 ) {
+  const author = getPublicUser(comment.authorId, comment.authorNickname);
+
   return {
     commentId: comment.commentId,
     authorId: comment.authorId,
-    authorNickname: comment.authorNickname,
+    authorNickname: author.nickname,
+    userStatus: author.userStatus,
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
@@ -793,6 +809,15 @@ function getMockMeetings() {
     ...bookmarkPaginationMeetings,
     ...createdMeetings,
   ];
+}
+
+export function getJoinedMockMeetings(userId: number) {
+  const joinedMeetingIds = membershipsByUserId.get(userId)?.keys() ?? [];
+  const joinedMeetingIdSet = new Set(joinedMeetingIds);
+
+  return getMockMeetings().filter((meeting) =>
+    joinedMeetingIdSet.has(meeting.meetingId),
+  );
 }
 
 function getRecommendedMockMeetings(userId: number | null) {
@@ -889,7 +914,15 @@ function getMeetingMembers(team: MockMeeting) {
     });
   }
 
-  return members;
+  return members.map((member) => {
+    const publicUser = getPublicUser(member.userId, member.nickname);
+
+    return {
+      ...member,
+      nickname: publicUser.nickname,
+      userStatus: publicUser.userStatus,
+    };
+  });
 }
 
 function toMeetingListItem(team: MockMeeting) {
@@ -954,13 +987,32 @@ export const teamHandlers = [
     const page = getPageParam(url);
     const size = getSizeParam(url);
     const category = url.searchParams.get("category");
+    const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
     const activityStartDate = url.searchParams.get("activityStartDate");
     const activityEndDate = url.searchParams.get("activityEndDate");
     const bookmarkedIds =
       bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+    const includedRegionIds =
+      regionId === undefined
+        ? null
+        : new Set(
+            regions.data
+              .filter(
+                (region) =>
+                  region.id === regionId || region.parentId === regionId,
+              )
+              .map((region) => region.id),
+          );
     const items = getMockMeetings()
       .filter((meeting) => bookmarkedIds.has(meeting.meetingId))
+      .filter(
+        (meeting) =>
+          !keyword ||
+          [meeting.name, meeting.description]
+            .filter((value): value is string => value !== null)
+            .some((value) => value.includes(keyword)),
+      )
       .filter(
         (meeting) =>
           !category ||
@@ -969,7 +1021,8 @@ export const teamHandlers = [
           ),
       )
       .filter(
-        (meeting) => regionId === undefined || meeting.regionId === regionId,
+        (meeting) =>
+          includedRegionIds === null || includedRegionIds.has(meeting.regionId),
       )
       .filter(
         (meeting) =>

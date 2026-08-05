@@ -5,12 +5,15 @@ import {
   addMockUser,
   getMockUserById,
   getNextMockUserId,
+  isWithdrawalCooldownActive,
   mockUsers,
   type MockUser,
+  withdrawMockUser,
 } from "./data/mockUsers";
 import {
   createMockAccessToken,
   createMockRefreshToken,
+  getMockUserId,
   getMockUserIdFromRefreshToken,
 } from "./lib/mockAuth";
 
@@ -57,7 +60,12 @@ const validActivityRegionIds = new Set(
 );
 const validPostingCategories = new Set<PostingCategory>(POSTING_CATEGORIES);
 
-const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+const REFRESH_TOKEN_COOKIE_NAME = "gather_refresh_token";
+const REFRESH_TOKEN_COOKIE_PATH = "/api/v1/auth";
+const accountTerminationResults = new Map<
+  number,
+  { status: "COMPLETED" | "ACCEPTED"; occurredAt: string }
+>();
 const MOCK_KAKAO_SIGNUP_TOKEN = "mock-kakao-signup-token";
 const MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN = "mock-kakao-expired-signup-token";
 const MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN =
@@ -68,7 +76,7 @@ function createRefreshTokenCookie(refreshToken: string) {
   return [
     `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`,
     "HttpOnly",
-    "Path=/",
+    `Path=${REFRESH_TOKEN_COOKIE_PATH}`,
     "SameSite=Lax",
   ].join("; ");
 }
@@ -77,10 +85,24 @@ function createExpiredRefreshTokenCookie() {
   return [
     `${REFRESH_TOKEN_COOKIE_NAME}=`,
     "HttpOnly",
-    "Path=/",
+    `Path=${REFRESH_TOKEN_COOKIE_PATH}`,
     "SameSite=Lax",
     "Max-Age=0",
   ].join("; ");
+}
+
+function createWithdrawalCooldownResponse() {
+  return HttpResponse.json(
+    {
+      success: false,
+      data: null,
+      error: {
+        code: "WITHDRAWN_ACCOUNT_COOLDOWN",
+        message: "탈퇴 후 7일간 재가입할 수 없습니다.",
+      },
+    },
+    { status: 403 },
+  );
 }
 
 export const authHandlers = [
@@ -104,11 +126,16 @@ export const authHandlers = [
       );
     }
 
+    const withdrawnCooldown = isWithdrawalCooldownActive({ phoneNumber });
+
     return HttpResponse.json({
       success: true,
       data: {
         phoneNumber,
-        available: !mockUsers.some((user) => user.phoneNumber === phoneNumber),
+        available:
+          !withdrawnCooldown &&
+          !mockUsers.some((user) => user.phoneNumber === phoneNumber),
+        ...(withdrawnCooldown ? { reason: "WITHDRAWN_COOLDOWN" } : {}),
       },
       error: null,
     });
@@ -367,6 +394,10 @@ export const authHandlers = [
       .replaceAll("-", "")
       .replaceAll(" ", "");
 
+    if (isWithdrawalCooldownActive({ phoneNumber })) {
+      return createWithdrawalCooldownResponse();
+    }
+
     if (!verifiedEmails.has(email)) {
       return HttpResponse.json(
         {
@@ -507,17 +538,7 @@ export const authHandlers = [
     }
 
     if (body.authorizationCode === "mock-kakao-withdrawn") {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "WITHDRAWN_USER",
-            message: "탈퇴한 계정입니다.",
-          },
-        },
-        { status: 403 },
-      );
+      return createWithdrawalCooldownResponse();
     }
 
     if (body.authorizationCode === "mock-kakao-unavailable") {
@@ -583,6 +604,10 @@ export const authHandlers = [
     }
 
     if (body.authorizationCode === "mock-kakao-existing-user") {
+      if (isWithdrawalCooldownActive({ userId: 1 })) {
+        return createWithdrawalCooldownResponse();
+      }
+
       const refreshToken = createMockRefreshToken(1);
 
       return HttpResponse.json(
@@ -701,6 +726,10 @@ export const authHandlers = [
       );
     }
 
+    if (isWithdrawalCooldownActive({ phoneNumber: body.phoneNumber })) {
+      return createWithdrawalCooldownResponse();
+    }
+
     if (mockUsers.some((user) => user.phoneNumber === body.phoneNumber)) {
       return HttpResponse.json(
         {
@@ -789,7 +818,8 @@ export const authHandlers = [
     }
 
     const user = mockUsers.find(
-      (user) => user.email === email && user.password === password,
+      (candidate) =>
+        candidate.email === email && candidate.password === password,
     );
 
     if (!user) {
@@ -877,7 +907,26 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/logout", () => {
+  http.post("*/api/v1/auth/logout", ({ cookies }) => {
+    const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
+    const userId = refreshToken
+      ? getMockUserIdFromRefreshToken(refreshToken)
+      : null;
+
+    if (userId === null || !getMockUserById(userId)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "INVALID_TOKEN",
+            message: "유효하지 않은 토큰입니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
     return HttpResponse.json(
       {
         success: true,
@@ -888,6 +937,68 @@ export const authHandlers = [
         headers: {
           "Set-Cookie": createExpiredRefreshTokenCookie(),
         },
+      },
+    );
+  }),
+
+  http.delete("*/api/v1/users/me", ({ request }) => {
+    const userId = getMockUserId(request);
+
+    if (userId === null) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "인증이 필요합니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const existingResult = accountTerminationResults.get(userId);
+
+    if (existingResult) {
+      return HttpResponse.json(
+        { success: true, data: existingResult, error: null },
+        {
+          status: existingResult.status === "ACCEPTED" ? 202 : 200,
+          headers: { "Set-Cookie": createExpiredRefreshTokenCookie() },
+        },
+      );
+    }
+
+    const user = getMockUserById(userId);
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "인증이 필요합니다.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const result = {
+      status: user.password ? ("COMPLETED" as const) : ("ACCEPTED" as const),
+      occurredAt: new Date().toISOString(),
+    };
+
+    accountTerminationResults.set(userId, result);
+    withdrawMockUser(userId);
+
+    return HttpResponse.json(
+      { success: true, data: result, error: null },
+      {
+        status: result.status === "ACCEPTED" ? 202 : 200,
+        headers: { "Set-Cookie": createExpiredRefreshTokenCookie() },
       },
     );
   }),

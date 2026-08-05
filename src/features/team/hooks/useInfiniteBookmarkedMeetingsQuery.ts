@@ -1,10 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { teamQueries } from "@/features/team/api/team.queries";
-import type { MeetingInfiniteParams } from "@/features/team/types/team.types";
+import type { BookmarkedMeetingInfiniteParams } from "@/features/team/types/team.types";
 
 export function useInfiniteBookmarkedMeetingsQuery(
-  params: MeetingInfiniteParams = {},
+  params: BookmarkedMeetingInfiniteParams = {},
   enabled = true,
 ) {
   return useInfiniteQuery({

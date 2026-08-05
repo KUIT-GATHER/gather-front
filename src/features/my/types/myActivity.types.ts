@@ -54,7 +54,7 @@ export type MyActivityRecord = {
   actStartDate: string | null;
   actEndDate: string | null;
   actPlace: string | null;
-  timeCertifiable?: boolean;
+  timeCertifiable: boolean;
   recognizedMinutes: number | null;
 };
 

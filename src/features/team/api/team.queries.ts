@@ -15,6 +15,7 @@ import {
 import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 
 import type {
+  BookmarkedMeetingInfiniteParams,
   MeetingInfiniteParams,
   MeetingListParams,
   MeetingPostCommentListParams,
@@ -33,7 +34,7 @@ export const teamKeys = {
     [...teamKeys.all, "recommended", scope] as const,
   infiniteList: (params: MeetingInfiniteParams = {}) =>
     [...teamKeys.lists(), "infinite", params] as const,
-  infiniteBookmarks: (params: MeetingInfiniteParams = {}) =>
+  infiniteBookmarks: (params: BookmarkedMeetingInfiniteParams = {}) =>
     [...teamKeys.bookmarkedLists(), "infinite", params] as const,
   my: () => [...teamKeys.all, "my"] as const,
   recommendedKeywords: () => [...teamKeys.all, "recommendedKeywords"] as const,
@@ -116,7 +117,7 @@ export const teamQueries = {
       },
     }),
 
-  infiniteBookmarks: (params: MeetingInfiniteParams = {}) =>
+  infiniteBookmarks: (params: BookmarkedMeetingInfiniteParams = {}) =>
     infiniteQueryOptions({
       queryKey: teamKeys.infiniteBookmarks(params),
       initialPageParam: 0,
