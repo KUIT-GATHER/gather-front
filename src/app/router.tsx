@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 
 import { RootLayout } from "@/app/layouts/RootLayout";
 import { AuthLayout } from "@/app/layouts/AuthLayout";
@@ -80,10 +80,6 @@ export const router = createBrowserRouter([
             element: <KakaoLoginCallbackPage />,
           },
           { path: "/signup/kakao", element: <KakaoSignupPage /> },
-          {
-            path: "/terms",
-            element: <Navigate to="/terms/service" replace />,
-          },
           { path: "/terms/:type", element: <TermsPage /> },
         ],
       },

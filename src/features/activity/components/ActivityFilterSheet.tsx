@@ -22,7 +22,7 @@ import {
   formatTeamDateRange,
   getTeamDateFilterFromRange,
   getTeamDateRangeFromValues,
-} from "@/features/activity-filter/lib/activityFilterDateRange";
+} from "@/features/activity/lib/activityFilterDateRange";
 
 import Button from "@/shared/ui/Button";
 import BottomSheet from "@/shared/ui/BottomSheet";

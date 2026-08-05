@@ -1,7 +1,7 @@
 import {
   ActivityFilterSheet,
   type ActivityFilter,
-} from "@/features/activity-filter/components/ActivityFilterSheet";
+} from "@/features/activity/components/ActivityFilterSheet";
 import type { VolunteerPostingFilter } from "@/features/volunteer/types/volunteerPostingFilter.types";
 
 type VolunteerPostingFilterSheetProps = {

@@ -97,6 +97,9 @@ export function SettingsBottomSheet({
         >
           {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
         </button>
+        <button type="button" className="py-1">
+          회원탈퇴
+        </button>
       </div>
     </BottomSheet>
   );
