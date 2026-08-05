@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
+  getBookmarkedVolunteerPostings,
   getRecommendedVolunteerPostings,
   getVolunteerPosting,
   getVolunteerPostingMeetings,
@@ -36,12 +37,15 @@ function withPage(
 export const volunteerPostingKeys = {
   all: ["volunteerPostings"] as const,
   lists: () => [...volunteerPostingKeys.all, "list"] as const,
+  bookmarkedLists: () => [...volunteerPostingKeys.all, "bookmarked"] as const,
   list: (params: VolunteerPostingListParams = {}) =>
     [...volunteerPostingKeys.lists(), params] as const,
   recommended: (scope: RecommendationScope) =>
     [...volunteerPostingKeys.all, "recommended", scope] as const,
   infiniteList: (params: VolunteerPostingInfiniteParams = {}) =>
     [...volunteerPostingKeys.lists(), "infinite", params] as const,
+  infiniteBookmarks: (params: VolunteerPostingInfiniteParams = {}) =>
+    [...volunteerPostingKeys.bookmarkedLists(), "infinite", params] as const,
   details: () => [...volunteerPostingKeys.all, "detail"] as const,
   detail: (postingId: number) =>
     [...volunteerPostingKeys.details(), postingId] as const,
@@ -87,6 +91,19 @@ export const volunteerPostingQueries = {
       initialPageParam: 0,
       queryFn: ({ pageParam }) =>
         getVolunteerPostings(withPage(params, pageParam)),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  infiniteBookmarks: (params: VolunteerPostingInfiniteParams = {}) =>
+    infiniteQueryOptions({
+      queryKey: volunteerPostingKeys.infiniteBookmarks(params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getBookmarkedVolunteerPostings(withPage(params, pageParam)),
       getNextPageParam: (lastPage) => {
         const nextPage = lastPage.page + 1;
 

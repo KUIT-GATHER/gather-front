@@ -1,4 +1,5 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
+import type { UserStatus } from "@/shared/types/user.types";
 
 export type MeetingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 export type MeetingMemberRole = "HOST" | "MEMBER";
@@ -13,6 +14,7 @@ export type MeetingListItem = {
   currentMemberCount: number;
   maxMember: number;
   regionId: number;
+  regionName: string;
   categories: PostingCategory[];
   status: MeetingStatus;
   deadline: string;
@@ -49,6 +51,7 @@ export type MeetingDetail = MeetingListItem & {
 export type MeetingMember = {
   userId: number;
   nickname: string;
+  userStatus?: UserStatus;
   role: MeetingMemberRole;
   host: boolean;
 };
@@ -97,7 +100,21 @@ export type MeetingListParams = {
   sort?: string[];
 };
 
+export type BookmarkedMeetingListParams = {
+  keyword?: string;
+  regionId?: number;
+  category?: PostingCategory;
+  activityStartDate?: string;
+  activityEndDate?: string;
+  page?: number;
+  size?: number;
+};
+
 export type MeetingInfiniteParams = Omit<MeetingListParams, "page">;
+export type BookmarkedMeetingInfiniteParams = Omit<
+  BookmarkedMeetingListParams,
+  "page"
+>;
 
 export type MeetingPage = {
   content: MeetingListItem[];
@@ -105,6 +122,14 @@ export type MeetingPage = {
   totalPages: number;
   page: number;
   size: number;
+};
+
+export type BookmarkedMeetingListItem = Omit<MeetingListItem, "regionName"> & {
+  regionName: string | null;
+};
+
+export type BookmarkedMeetingPage = Omit<MeetingPage, "content"> & {
+  content: BookmarkedMeetingListItem[];
 };
 
 export type MeetingBookmarkResponse = {
@@ -126,6 +151,7 @@ export type MeetingPostSummary = {
   content: string;
   authorId: number;
   authorNickname: string;
+  userStatus?: UserStatus;
   imageUrls: string[];
   likeCount: number;
   commentCount: number;
@@ -164,6 +190,7 @@ export type MeetingPostComment = {
   commentId: number;
   authorId: number;
   authorNickname: string;
+  userStatus?: UserStatus;
   content: string;
   createdAt: string;
   updatedAt: string;

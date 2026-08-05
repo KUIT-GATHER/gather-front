@@ -52,6 +52,15 @@ export function applyKakaoSignupError({
       onDuplicatePhoneNumber();
       return "keep" as const;
 
+    case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN:
+      setVerifiedPhoneNumber(null);
+      moveToFieldError(
+        "basic",
+        "phoneNumber",
+        "탈퇴 후 7일간 재가입할 수 없습니다.",
+      );
+      return "keep" as const;
+
     case API_ERROR_CODE.DUPLICATE_NICKNAME:
       moveToFieldError("profile", "nickname", "이미 사용 중인 닉네임입니다.");
       return "keep" as const;

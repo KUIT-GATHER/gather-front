@@ -4,6 +4,7 @@ import mockPostImageOne from "@/assets/icons/Temp-volunteer-posting.svg";
 import mockPostImageThree from "@/assets/onboarding/onboarding-step2-center.svg";
 import mockPostImageTwo from "@/assets/onboarding/onboarding-step1-center.svg";
 import teams from "./data/teams.json";
+import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
 
 import {
@@ -173,6 +174,38 @@ const baseMockMeetings = teams.data.map((team) => {
   };
 });
 
+const bookmarkPaginationMeetings: MockMeeting[] = Array.from(
+  { length: 21 },
+  (_, index) => ({
+    meetingId: index + 101,
+    name: `찜한 모임 무한스크롤 테스트 ${index + 1}`,
+    description:
+      "찜한 모임 목록의 다음 페이지를 확인하기 위한 mock 데이터예요.",
+    currentMemberCount: (index % 5) + 1,
+    maxMember: 10,
+    regionId: index % 2 === 0 ? 41 : 32,
+    regionName: index % 2 === 0 ? "영등포구" : "마포구",
+    categories: [
+      [
+        "ENVIRONMENT",
+        "EDUCATION",
+        "CULTURE",
+        "COMMUNITY",
+        "WELFARE",
+        "OVERSEAS",
+      ][index % 6],
+    ],
+    status: "RECRUITING",
+    deadline: formatMockDateTime("2026-08-31T18:00:00", index + 1),
+    activityStartAt: formatMockDateTime("2026-09-01T10:00:00", index + 1),
+    activityEndAt: formatMockDateTime("2026-09-01T12:00:00", index + 1),
+    hostId: index + 101,
+    volunteerPostingId: null,
+    participationCondition: null,
+    memo: null,
+  }),
+);
+
 const createdMeetings: MockMeeting[] = [];
 const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
   [
@@ -183,7 +216,9 @@ const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
     ]),
   ],
 ]);
-const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>();
+const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>([
+  [1, new Set(bookmarkPaginationMeetings.map((meeting) => meeting.meetingId))],
+]);
 const pendingMeetingImageUploads = new Map<
   string,
   {
@@ -731,14 +766,26 @@ function sortMeetingPostComments(
   });
 }
 
+function getPublicUser(userId: number, nickname: string) {
+  const user = getMockUserById(userId);
+
+  return {
+    nickname: user?.userStatus === "WITHDRAWN" ? user.nickname : nickname,
+    userStatus: user?.userStatus ?? "ACTIVE",
+  } as const;
+}
+
 function toMeetingPostSummary(post: MockMeetingPost, viewerUserId: number) {
+  const author = getPublicUser(post.authorId, post.authorNickname);
+
   return {
     postId: post.postId,
     type: post.type,
     title: post.title,
     content: post.content,
     authorId: post.authorId,
-    authorNickname: post.authorNickname,
+    authorNickname: author.nickname,
+    userStatus: author.userStatus,
     imageUrls: post.imageUrls,
     likeCount: post.likeCount,
     commentCount: post.commentCount,
@@ -785,10 +832,13 @@ function toMeetingPostCommentResponse(
   viewerUserId: number,
   team: MockMeeting,
 ) {
+  const author = getPublicUser(comment.authorId, comment.authorNickname);
+
   return {
     commentId: comment.commentId,
     authorId: comment.authorId,
-    authorNickname: comment.authorNickname,
+    authorNickname: author.nickname,
+    userStatus: author.userStatus,
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
@@ -798,7 +848,20 @@ function toMeetingPostCommentResponse(
 }
 
 function getMockMeetings() {
-  return [...(baseMockMeetings as MockMeeting[]), ...createdMeetings];
+  return [
+    ...(baseMockMeetings as MockMeeting[]),
+    ...bookmarkPaginationMeetings,
+    ...createdMeetings,
+  ];
+}
+
+export function getJoinedMockMeetings(userId: number) {
+  const joinedMeetingIds = membershipsByUserId.get(userId)?.keys() ?? [];
+  const joinedMeetingIdSet = new Set(joinedMeetingIds);
+
+  return getMockMeetings().filter((meeting) =>
+    joinedMeetingIdSet.has(meeting.meetingId),
+  );
 }
 
 function getRecommendedMockMeetings(userId: number | null) {
@@ -895,7 +958,15 @@ function getMeetingMembers(team: MockMeeting) {
     });
   }
 
-  return members;
+  return members.map((member) => {
+    const publicUser = getPublicUser(member.userId, member.nickname);
+
+    return {
+      ...member,
+      nickname: publicUser.nickname,
+      userStatus: publicUser.userStatus,
+    };
+  });
 }
 
 function toMeetingListItem(team: MockMeeting) {
@@ -906,6 +977,7 @@ function toMeetingListItem(team: MockMeeting) {
     currentMemberCount: getMeetingMembers(team).length,
     maxMember: team.maxMember,
     regionId: team.regionId,
+    regionName: team.regionName,
     categories: team.categories,
     status: team.status,
     deadline: team.deadline,
@@ -959,13 +1031,32 @@ export const teamHandlers = [
     const page = getPageParam(url);
     const size = getSizeParam(url);
     const category = url.searchParams.get("category");
+    const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
     const activityStartDate = url.searchParams.get("activityStartDate");
     const activityEndDate = url.searchParams.get("activityEndDate");
     const bookmarkedIds =
       bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+    const includedRegionIds =
+      regionId === undefined
+        ? null
+        : new Set(
+            regions.data
+              .filter(
+                (region) =>
+                  region.id === regionId || region.parentId === regionId,
+              )
+              .map((region) => region.id),
+          );
     const items = getMockMeetings()
       .filter((meeting) => bookmarkedIds.has(meeting.meetingId))
+      .filter(
+        (meeting) =>
+          !keyword ||
+          [meeting.name, meeting.description]
+            .filter((value): value is string => value !== null)
+            .some((value) => value.includes(keyword)),
+      )
       .filter(
         (meeting) =>
           !category ||
@@ -974,7 +1065,8 @@ export const teamHandlers = [
           ),
       )
       .filter(
-        (meeting) => regionId === undefined || meeting.regionId === regionId,
+        (meeting) =>
+          includedRegionIds === null || includedRegionIds.has(meeting.regionId),
       )
       .filter(
         (meeting) =>

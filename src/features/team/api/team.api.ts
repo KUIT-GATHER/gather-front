@@ -2,6 +2,9 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
+  BookmarkedMeetingListItem,
+  BookmarkedMeetingListParams,
+  BookmarkedMeetingPage,
   MeetingBookmarkResponse,
   MeetingActivityListParams,
   MeetingCreateRequest,
@@ -40,6 +43,11 @@ type MeetingCategoryResponse = {
 };
 
 type MeetingListItemResponse = Omit<MeetingListItem, "categories"> &
+  MeetingCategoryResponse;
+type BookmarkedMeetingListItemResponse = Omit<
+  BookmarkedMeetingListItem,
+  "categories"
+> &
   MeetingCategoryResponse;
 type MeetingDetailResponse = Omit<MeetingDetail, "categories"> &
   MeetingCategoryResponse;
@@ -217,7 +225,9 @@ export async function getMeetings(params?: MeetingListParams) {
   };
 }
 
-export async function getBookmarkedMeetings(params: MeetingListParams = {}) {
+export async function getBookmarkedMeetings(
+  params: BookmarkedMeetingListParams = {},
+) {
   const searchParams = new URLSearchParams();
   setQueryParam(searchParams, "page", params.page ?? 0);
   setQueryParam(searchParams, "size", params.size ?? 20);
@@ -227,7 +237,9 @@ export async function getBookmarkedMeetings(params: MeetingListParams = {}) {
   setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
   setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
   const page = await fetchClient<
-    Omit<MeetingPage, "content"> & { content: MeetingListItemResponse[] }
+    Omit<BookmarkedMeetingPage, "content"> & {
+      content: BookmarkedMeetingListItemResponse[];
+    }
   >(`${MEETING_ENDPOINT}/bookmarks?${searchParams.toString()}`);
 
   return {

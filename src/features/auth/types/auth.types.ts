@@ -7,6 +7,7 @@ export type PhoneAvailabilityRequest = {
 export type PhoneAvailabilityResponse = {
   phoneNumber: string;
   available: boolean;
+  reason?: "WITHDRAWN_COOLDOWN";
 };
 
 export type SendEmailVerificationRequest = {
@@ -76,6 +77,11 @@ export type SignupResponse = {
 export type TokenResponse = {
   accessToken: string;
   tokenType: "Bearer";
+};
+
+export type WithdrawAccountResponse = {
+  status: "COMPLETED" | "ACCEPTED";
+  occurredAt: string;
 };
 
 export type KakaoLoginRequest = {
