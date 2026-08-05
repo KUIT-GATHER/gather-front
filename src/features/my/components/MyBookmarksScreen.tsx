@@ -60,8 +60,10 @@ export function MyBookmarksScreen() {
     selectedTab === "postings"
       ? postingsQuery.isPending
       : meetingsQuery.isPending;
-  const activeIsError =
-    selectedTab === "postings" ? postingsQuery.isError : meetingsQuery.isError;
+  const activeIsInitialError =
+    selectedTab === "postings"
+      ? postingsQuery.isError && postings.length === 0
+      : meetingsQuery.isError && meetings.length === 0;
   const activeHasNextPage =
     selectedTab === "postings"
       ? postingsQuery.hasNextPage
@@ -70,6 +72,10 @@ export function MyBookmarksScreen() {
     selectedTab === "postings"
       ? postingsQuery.isFetchingNextPage
       : meetingsQuery.isFetchingNextPage;
+  const activeIsFetchNextPageError =
+    selectedTab === "postings"
+      ? postingsQuery.isFetchNextPageError
+      : meetingsQuery.isFetchNextPageError;
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -107,6 +113,14 @@ export function MyBookmarksScreen() {
       void postingsQuery.refetch();
     } else {
       void meetingsQuery.refetch();
+    }
+  };
+
+  const retryNextPage = () => {
+    if (selectedTab === "postings") {
+      void postingsQuery.fetchNextPage();
+    } else {
+      void meetingsQuery.fetchNextPage();
     }
   };
 
@@ -164,7 +178,7 @@ export function MyBookmarksScreen() {
       <main className="space-y-3 px-5.5 py-5">
         {activeIsPending ? (
           <LoadingState label="찜한 활동을 불러오는 중" className="min-h-55" />
-        ) : activeIsError ? (
+        ) : activeIsInitialError ? (
           <ErrorState
             title="찜한 활동을 불러오지 못했어요"
             description="잠시 후 다시 확인해 주세요."
@@ -195,13 +209,22 @@ export function MyBookmarksScreen() {
           <EmptyState title="찜한 모임이 없어요" />
         )}
 
-        {!activeIsPending && !activeIsError ? (
+        {!activeIsPending && !activeIsInitialError ? (
           <>
             {activeIsFetchingNextPage ? (
               <LoadingState
                 label="다음 활동을 불러오는 중"
                 className="min-h-20"
               />
+            ) : null}
+            {activeIsFetchNextPageError ? (
+              <button
+                type="button"
+                onClick={retryNextPage}
+                className="w-full py-4 text-center text-body-14 text-text-gray-400"
+              >
+                추가 활동을 불러오지 못했어요. 다시 시도
+              </button>
             ) : null}
             <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
           </>
