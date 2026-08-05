@@ -107,6 +107,14 @@ export type MeetingPage = {
   size: number;
 };
 
+export type BookmarkedMeetingListItem = MeetingListItem & {
+  regionName: string | null;
+};
+
+export type BookmarkedMeetingPage = Omit<MeetingPage, "content"> & {
+  content: BookmarkedMeetingListItem[];
+};
+
 export type MeetingBookmarkResponse = {
   meetingId: number;
   bookmarked: boolean;

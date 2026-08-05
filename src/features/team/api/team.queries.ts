@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
+  getBookmarkedMeetings,
   getMeetingPost,
   getMeetingPostComments,
   getMeeting,
@@ -25,12 +26,15 @@ type RecommendationScope = "guest" | "member";
 export const teamKeys = {
   all: ["meetings"] as const,
   lists: () => [...teamKeys.all, "list"] as const,
+  bookmarkedLists: () => [...teamKeys.all, "bookmarked"] as const,
   list: (params: MeetingListParams = {}) =>
     [...teamKeys.lists(), params] as const,
   recommended: (scope: RecommendationScope) =>
     [...teamKeys.all, "recommended", scope] as const,
   infiniteList: (params: MeetingInfiniteParams = {}) =>
     [...teamKeys.lists(), "infinite", params] as const,
+  infiniteBookmarks: (params: MeetingInfiniteParams = {}) =>
+    [...teamKeys.bookmarkedLists(), "infinite", params] as const,
   my: () => [...teamKeys.all, "my"] as const,
   recommendedKeywords: () => [...teamKeys.all, "recommendedKeywords"] as const,
   create: () => [...teamKeys.all, "create"] as const,
@@ -108,6 +112,18 @@ export const teamQueries = {
       getNextPageParam: (lastPage) => {
         const nextPage = lastPage.page + 1;
 
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  infiniteBookmarks: (params: MeetingInfiniteParams = {}) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.infiniteBookmarks(params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getBookmarkedMeetings({ ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
         return nextPage < lastPage.totalPages ? nextPage : undefined;
       },
     }),

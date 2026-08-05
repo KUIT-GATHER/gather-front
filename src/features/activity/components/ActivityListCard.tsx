@@ -2,7 +2,7 @@ import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
 
-type Props = {
+type ActivityListCardProps = {
   imageSrc: string;
   title: string;
   description?: string | null;
@@ -20,9 +20,10 @@ export function ActivityListCard({
   dDay,
   categories,
   onClick,
-}: Props) {
+}: ActivityListCardProps) {
   const details = metadata.filter(Boolean).join(" · ");
   const emphasized = dDay === "D-day" || /^D-[1-3]$/.test(dDay ?? "");
+
   return (
     <button
       type="button"

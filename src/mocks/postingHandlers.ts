@@ -96,9 +96,10 @@ const baseMockPostings = postings.data.map((posting) => {
 
 const recruitmentDeadlineOffsets = [1, 3, 7, 8, 10, 14, 21, 30, 45, 60, 90];
 
-const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
+const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
   const id = index + 3;
-  const recruitmentDeadlineOffset = recruitmentDeadlineOffsets[index];
+  const recruitmentDeadlineOffset =
+    recruitmentDeadlineOffsets[index] ?? 100 + index * 7;
 
   return {
     ...postings.data[0],
@@ -119,7 +120,9 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
 });
 
 const mockPostings = [...baseMockPostings, ...additionalMockPostings];
-const bookmarkedPostingIds = new Set<number>();
+const bookmarkedPostingIds = new Set(
+  Array.from({ length: 21 }, (_, index) => index + 3),
+);
 const participatedPostingIds = new Map<number, MockPostingParticipation>([
   [1, { participationId: 1, status: "CONFIRMED" }],
 ]);
@@ -561,6 +564,85 @@ export const postingHandlers = [
     });
   }),
 
+  http.get("*/api/v1/postings/bookmarks", ({ request }) => {
+    const userId = getMockUserId(request);
+    if (!userId) return createUnauthorizedResponse();
+
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page")) || 0);
+    const size = Math.max(1, Number(url.searchParams.get("size")) || 20);
+    const keyword = url.searchParams.get("keyword")?.trim();
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
+    const noticeStartDate = url.searchParams.get("noticeStartDate");
+    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const category = url.searchParams.get("category");
+
+    if (regionId !== undefined && regionGroupId !== undefined) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    let items = mockPostings.filter((posting) =>
+      bookmarkedPostingIds.has(posting.id),
+    );
+
+    if (keyword) {
+      items = items.filter((posting) =>
+        [posting.title, posting.recruitOrg].some((value) =>
+          value.includes(keyword),
+        ),
+      );
+    }
+    if (category) {
+      items = items.filter((posting) => posting.category === category);
+    }
+    if (regionId !== undefined) {
+      const includedRegionIds = getRegionIdsIncludingChildren([regionId]);
+      items = items.filter((posting) =>
+        includedRegionIds.has(posting.regionId),
+      );
+    }
+    if (regionGroupId !== undefined) {
+      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
+      items = items.filter((posting) =>
+        includedRegionIds.has(posting.regionId),
+      );
+    }
+    if (noticeStartDate) {
+      items = items.filter(
+        (posting) => posting.noticeStartDate >= noticeStartDate,
+      );
+    }
+    if (noticeEndDate) {
+      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
+    }
+
+    const sortedItems = sortPostings(items, [], false);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content: sortedItems
+          .slice(page * size, (page + 1) * size)
+          .map(toVolunteerPostingListItem),
+        totalElements: sortedItems.length,
+        totalPages: Math.ceil(sortedItems.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
   http.get("*/api/v1/postings/recommended", ({ request }) => {
     return HttpResponse.json({
       success: true,

@@ -70,7 +70,7 @@ export function ProfileEditScreen() {
       introduction: "",
       birthDate: "",
       gender: "MALE",
-      activityRegionId: 0,
+      activityRegionId: null,
       interestCategories: [],
     },
   });
@@ -102,7 +102,7 @@ export function ProfileEditScreen() {
       introduction: profileQuery.data.introduction ?? "",
       birthDate: profileQuery.data.birthDate,
       gender: profileQuery.data.gender,
-      activityRegionId: profileQuery.data.activityRegion.id,
+      activityRegionId: profileQuery.data.activityRegion?.id ?? null,
       interestCategories: profileQuery.data.interestCategories,
     });
   }, [profileQuery.data, reset]);
@@ -118,13 +118,14 @@ export function ProfileEditScreen() {
       new Map((regionsQuery.data ?? []).map((region) => [region.id, region])),
     [regionsQuery.data],
   );
-  const selectedRegion = regionById.get(activityRegionId);
+  const selectedRegion =
+    activityRegionId === null ? undefined : regionById.get(activityRegionId);
   const selectedRegionParent = selectedRegion?.parentId
     ? regionById.get(selectedRegion.parentId)
     : undefined;
   const regionLabel = selectedRegion
     ? getFullRegionSelectionLabel(selectedRegion, selectedRegionParent)
-    : profileQuery.data?.activityRegion.id === activityRegionId
+    : profileQuery.data?.activityRegion?.id === activityRegionId
       ? profileQuery.data.activityRegion.name
       : "활동 지역을 선택해 주세요";
   const displayedProfileImage =
@@ -137,10 +138,29 @@ export function ProfileEditScreen() {
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
 
+    if (values.activityRegionId === null) {
+      setError("activityRegionId", {
+        type: "manual",
+        message: "활동 지역을 선택해 주세요.",
+      });
+      return;
+    }
+
     try {
-      await updateProfileMutation.mutateAsync(values);
+      await updateProfileMutation.mutateAsync({
+        ...values,
+        activityRegionId: values.activityRegionId,
+      });
       if (profileImageFile) {
-        await uploadImageMutation.mutateAsync(profileImageFile);
+        try {
+          await uploadImageMutation.mutateAsync(profileImageFile);
+        } catch {
+          setProfileImageFile(null);
+          setSubmitError(
+            "프로필 정보는 저장했지만 이미지를 업로드하지 못했어요. 이미지를 다시 선택해 주세요.",
+          );
+          return;
+        }
       }
       navigate("/my", { replace: true });
     } catch (error) {
@@ -181,7 +201,10 @@ export function ProfileEditScreen() {
               void profileImageQuery.refetch();
             },
           }}
-          secondaryAction={{ label: "돌아가기", onClick: () => navigate(-1) }}
+          secondaryAction={{
+            label: "돌아가기",
+            onClick: () => navigate("/my"),
+          }}
         />
       </PageContainer>
     );
@@ -189,7 +212,7 @@ export function ProfileEditScreen() {
 
   return (
     <PageContainer className="min-h-dvh bg-bg pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
-      <PageHeader title="프로필 편집" onBack={() => navigate(-1)} sticky />
+      <PageHeader title="프로필 편집" onBack={() => navigate("/my")} sticky />
 
       <form noValidate onSubmit={submit} className="pt-2">
         <div className="flex justify-center">
@@ -212,7 +235,11 @@ export function ProfileEditScreen() {
 
                 const validationError = getProfileImageValidationError(file);
                 setImageError(validationError);
-                if (!validationError) setProfileImageFile(file);
+                if (validationError) {
+                  setProfileImageFile(null);
+                } else {
+                  setProfileImageFile(file);
+                }
                 event.target.value = "";
               }}
             />
@@ -426,7 +453,7 @@ export function ProfileEditScreen() {
         open={isRegionSheetOpen}
         onOpenChange={setIsRegionSheetOpen}
         title="활동 지역"
-        value={activityRegionId || undefined}
+        value={activityRegionId ?? undefined}
         onApply={(regionId) => {
           setValue("activityRegionId", regionId, {
             shouldDirty: true,
