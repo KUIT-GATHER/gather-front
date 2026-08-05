@@ -34,12 +34,29 @@ export function TeammateDetail({
     `/teams/${home.meetingId}/posts/`,
   );
   const isHomePage = location.pathname === `/teams/${home.meetingId}`;
+  const activitySectionTitleByPath = new Map([
+    [`/teams/${home.meetingId}/activity/recruits`, "내가 신청한 봉사"],
+    [`/teams/${home.meetingId}/activity/posts`, "작성한 게시글"],
+    [`/teams/${home.meetingId}/activity/comments`, "댓글 단 게시글"],
+  ]);
+  const activitySectionTitle = activitySectionTitleByPath.get(
+    location.pathname,
+  );
   const headerAction =
     isBoardPage && viewerRole === "leader"
       ? "settings"
       : isHomePage
         ? "bookmark"
         : "none";
+  const headerTitle = activitySectionTitle ?? home.name;
+  const handleBack = () => {
+    if (activitySectionTitle) {
+      navigate(`/teams/${home.meetingId}/activity`);
+      return;
+    }
+
+    navigate(-1);
+  };
 
   return (
     <article
@@ -50,10 +67,10 @@ export function TeammateDetail({
       }
     >
       <TeammateHeader
-        title={home.name}
+        title={headerTitle}
         viewerRole={viewerRole}
         action={headerAction}
-        onBack={() => navigate(-1)}
+        onBack={handleBack}
         isBookmarked={isBookmarked}
         isBookmarkPending={isBookmarkPending}
         onBookmarkToggle={onBookmarkToggle}

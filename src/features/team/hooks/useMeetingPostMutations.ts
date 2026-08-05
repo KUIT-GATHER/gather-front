@@ -83,6 +83,9 @@ export function useCreateMeetingPostMutation(meetingId: number) {
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivityCommentedPosts(meetingId),
+      });
     },
   });
 }
@@ -101,6 +104,9 @@ export function useUpdateMeetingPostMutation(
       queryClient.setQueryData(teamKeys.post(meetingId, postId), post);
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivityCommentedPosts(meetingId),
       });
     },
   });
