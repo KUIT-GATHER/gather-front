@@ -37,7 +37,7 @@ export function MeetingPostCommentInput({
         maxLength={500}
         value={value}
         placeholder="댓글을 입력하세요"
-        className="h-11 min-w-0 flex-1 px-4.5 text-[15px] leading-5 font-medium"
+        className="h-11 min-w-0 flex-1 px-4.5 text-[15px] leading-5 font-medium focus:border-stroke"
         onChange={(event) => onChange(event.target.value)}
       />
       <Button
@@ -45,7 +45,7 @@ export function MeetingPostCommentInput({
         variant="primaryOutline"
         size="medium"
         disabled={!canSubmit}
-        className="h-11 w-14.5 shrink-0 rounded-xl bg-white px-0 text-[15px] leading-5 font-medium disabled:border-text-gray-400 disabled:bg-white disabled:text-text-gray-400 disabled:hover:bg-white"
+        className="h-11 w-14.5 shrink-0 rounded-xl border-text-gray-400 bg-white px-0 text-[15px] leading-5 font-medium hover:bg-text-gray-400 hover:text-text2 disabled:border-text-gray-400 disabled:bg-white disabled:text-text-gray-400 disabled:hover:bg-white"
       >
         {isPending ? "등록 중" : "등록"}
       </Button>

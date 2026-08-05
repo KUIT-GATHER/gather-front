@@ -125,7 +125,7 @@ function buildMeetingPostsEndpoint(
       ? params.sort
       : DEFAULT_MEETING_POST_SORT;
 
-  setQueryParam(searchParams, "type", params.type);
+  setQueryParam(searchParams, "types", params.types?.join(","));
   setQueryParam(searchParams, "page", page);
   setQueryParam(searchParams, "size", size);
 

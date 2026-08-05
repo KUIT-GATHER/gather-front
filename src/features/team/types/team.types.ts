@@ -113,7 +113,7 @@ export type MeetingBookmarkResponse = {
 };
 
 export type MeetingPostListParams = {
-  type?: MeetingPostType;
+  types?: readonly MeetingPostType[];
   page?: number;
   size?: number;
   sort?: string[];
