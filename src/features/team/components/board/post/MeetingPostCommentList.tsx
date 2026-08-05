@@ -14,7 +14,8 @@ type MeetingPostCommentListProps = {
   isEmpty: boolean;
   isFetchingNextPage: boolean;
   isFetchNextPageError: boolean;
-  onEditingCommentChange: (commentId: number | null) => void;
+  onEditEnd: (commentId: number) => void;
+  onEditStart: (commentId: number) => void;
   onFetchNextPage: () => void;
   onLoadMoreElementChange: (element: HTMLDivElement | null) => void;
 };
@@ -29,7 +30,8 @@ export function MeetingPostCommentList({
   isEmpty,
   isFetchingNextPage,
   isFetchNextPageError,
-  onEditingCommentChange,
+  onEditEnd,
+  onEditStart,
   onFetchNextPage,
   onLoadMoreElementChange,
 }: MeetingPostCommentListProps) {
@@ -69,8 +71,8 @@ export function MeetingPostCommentList({
             postId={postId}
             comment={comment}
             isEditing={editingCommentId === comment.commentId}
-            onEditEnd={() => onEditingCommentChange(null)}
-            onEditStart={() => onEditingCommentChange(comment.commentId)}
+            onEditEnd={() => onEditEnd(comment.commentId)}
+            onEditStart={() => onEditStart(comment.commentId)}
           />
         ))}
       </ul>

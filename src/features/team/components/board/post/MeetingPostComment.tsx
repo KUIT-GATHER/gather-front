@@ -42,6 +42,12 @@ export function MeetingPostComment({ post }: MeetingPostCommentProps) {
     likeMutation.mutate();
   };
 
+  const handleEditEnd = (commentId: number) => {
+    setEditingCommentId((currentCommentId) =>
+      currentCommentId === commentId ? null : currentCommentId,
+    );
+  };
+
   return (
     <section aria-label="게시글 반응 및 댓글">
       <MeetingPostFooterActions
@@ -63,7 +69,8 @@ export function MeetingPostComment({ post }: MeetingPostCommentProps) {
           isEmpty={isEmpty}
           isFetchingNextPage={isFetchingNextPage}
           isFetchNextPageError={isFetchNextPageError}
-          onEditingCommentChange={setEditingCommentId}
+          onEditEnd={handleEditEnd}
+          onEditStart={setEditingCommentId}
           onFetchNextPage={() => void fetchNextPage()}
           onLoadMoreElementChange={setLoadMoreElement}
         />
