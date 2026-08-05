@@ -5,7 +5,7 @@ export type MyPageHome = {
   nickname: string;
   profileImageUrl: string | null;
   birthDate: string;
-  activityRegion: Region;
+  activityRegion: Region | null;
   hasBookmark: boolean;
 };
 

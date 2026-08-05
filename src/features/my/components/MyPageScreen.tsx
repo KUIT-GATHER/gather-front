@@ -42,9 +42,13 @@ export function MyPageScreen() {
   const home = homeQuery.data;
   const completedActivityCount =
     activitySummaryQuery.data?.timeCertifiableCompletedCount ?? 0;
-  const displayName = home?.nickname ?? "김민우";
-  const displayBirthDate =
-    home?.birthDate.split("-").join(". ") ?? "2002. 07. 20";
+  const displayName = home?.nickname ?? "";
+  const profileDetails = [
+    home?.activityRegion?.name,
+    home?.birthDate.split("-").join(". "),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const handleSettingsOpenChange = (open: boolean) => {
     setSettingsOpen(open);
@@ -99,8 +103,7 @@ export function MyPageScreen() {
               <img src={profileEditIcon} alt="" className="size-[29px]" />
             </button>
             <p className="mt-1 text-body-14 text-text-gray-400">
-              {home?.activityRegion.name ?? "강남구"}{" "}
-              <span className="mx-1">·</span> {displayBirthDate}
+              {profileDetails}
             </p>
           </div>
         </section>
