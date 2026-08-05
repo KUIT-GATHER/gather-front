@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { useLogoutMutation } from "@/features/auth/hooks/useLogoutMutation";
 import { useWithdrawAccountMutation } from "@/features/auth/hooks/useWithdrawAccountMutation";
 import type { NotificationSettingsView } from "@/features/notification/components/NotificationSettingsSheet";
+import { ApiError } from "@/shared/api/apiError";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
@@ -46,6 +47,7 @@ export function SettingsBottomSheet({
   const logoutMutation = useLogoutMutation();
   const withdrawMutation = useWithdrawAccountMutation();
   const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string>();
 
   const openLegalDocument = (type: "service" | "privacy") => {
     onOpenChange(false);
@@ -60,12 +62,25 @@ export function SettingsBottomSheet({
   };
 
   const handleWithdraw = () => {
+    setWithdrawError(undefined);
     withdrawMutation.mutate(undefined, {
       onSuccess: () => {
         setWithdrawConfirmOpen(false);
         navigate("/login", { replace: true });
       },
+      onError: (error) => {
+        setWithdrawError(
+          error instanceof ApiError
+            ? error.message
+            : "회원탈퇴 결과를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        );
+      },
     });
+  };
+
+  const closeWithdrawConfirm = () => {
+    setWithdrawError(undefined);
+    setWithdrawConfirmOpen(false);
   };
 
   return (
@@ -116,7 +131,10 @@ export function SettingsBottomSheet({
           </button>
           <button
             type="button"
-            onClick={() => setWithdrawConfirmOpen(true)}
+            onClick={() => {
+              setWithdrawError(undefined);
+              setWithdrawConfirmOpen(true);
+            }}
             className="py-1"
           >
             회원탈퇴
@@ -137,13 +155,21 @@ export function SettingsBottomSheet({
               회원탈퇴는 되돌릴 수 없으며,
               <br /> 탈퇴 후 7일간 재가입할 수 없습니다.
             </span>
+            {withdrawError ? (
+              <span
+                role="alert"
+                className="mt-3 block text-body-14 text-point-red"
+              >
+                {withdrawError}
+              </span>
+            ) : null}
           </>
         }
         cancelText="취소"
         confirmText="확인"
         confirmVariant="danger"
         isPending={withdrawMutation.isPending}
-        onCancel={() => setWithdrawConfirmOpen(false)}
+        onCancel={closeWithdrawConfirm}
         onConfirm={handleWithdraw}
       />
     </>

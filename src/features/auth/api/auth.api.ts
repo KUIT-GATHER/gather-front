@@ -116,5 +116,6 @@ export function withdrawAccount() {
   return fetchClient<WithdrawAccountResponse>("/api/v1/users/me", {
     method: "DELETE",
     withCredentials: true,
+    signal: AbortSignal.timeout(10_000),
   });
 }
