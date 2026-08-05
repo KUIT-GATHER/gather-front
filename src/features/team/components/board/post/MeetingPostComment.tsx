@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { useMeetingPostCommentState } from "@/features/team/hooks/useMeetingPostCommentState";
 import { useToggleMeetingPostLikeMutation } from "@/features/team/hooks/useMeetingPostMutations";
 import type { MeetingPost } from "@/features/team/types/team.types";
@@ -11,6 +13,7 @@ type MeetingPostCommentProps = {
 };
 
 export function MeetingPostComment({ post }: MeetingPostCommentProps) {
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const {
     canSubmitComment,
     commentContent,
@@ -39,6 +42,12 @@ export function MeetingPostComment({ post }: MeetingPostCommentProps) {
     likeMutation.mutate();
   };
 
+  const handleEditEnd = (commentId: number) => {
+    setEditingCommentId((currentCommentId) =>
+      currentCommentId === commentId ? null : currentCommentId,
+    );
+  };
+
   return (
     <section aria-label="게시글 반응 및 댓글">
       <MeetingPostFooterActions
@@ -54,23 +63,28 @@ export function MeetingPostComment({ post }: MeetingPostCommentProps) {
           meetingId={post.meetingId}
           postId={post.postId}
           comments={comments}
+          editingCommentId={editingCommentId}
           isInitialLoading={isInitialLoading}
           isInitialError={isInitialError}
           isEmpty={isEmpty}
           isFetchingNextPage={isFetchingNextPage}
           isFetchNextPageError={isFetchNextPageError}
+          onEditEnd={handleEditEnd}
+          onEditStart={setEditingCommentId}
           onFetchNextPage={() => void fetchNextPage()}
           onLoadMoreElementChange={setLoadMoreElement}
         />
       </div>
 
-      <MeetingPostCommentInput
-        value={commentContent}
-        canSubmit={canSubmitComment}
-        isPending={isCreatingComment}
-        onChange={setCommentContent}
-        onSubmit={submitComment}
-      />
+      {editingCommentId === null ? (
+        <MeetingPostCommentInput
+          value={commentContent}
+          canSubmit={canSubmitComment}
+          isPending={isCreatingComment}
+          onChange={setCommentContent}
+          onSubmit={submitComment}
+        />
+      ) : null}
     </section>
   );
 }

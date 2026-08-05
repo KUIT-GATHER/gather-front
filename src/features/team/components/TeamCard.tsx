@@ -1,5 +1,6 @@
 import { Settings } from "lucide-react";
 
+import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
 import {
   formatMeetingActivityDate,
   getMeetingDDay,
@@ -10,10 +11,9 @@ import type {
   MeetingMemberRole,
 } from "@/features/team/types/team.types";
 import { cn } from "@/shared/lib/cn";
-import { ActivityListCard } from "@/shared/ui/ActivityListCard";
 
 type TeamCardProps = {
-  team: MeetingListItem;
+  team: Omit<MeetingListItem, "regionName">;
   onClick: () => void;
   variant?: "list" | "compact" | "my";
   regionName?: string | null;

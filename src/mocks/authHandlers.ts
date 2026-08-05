@@ -818,7 +818,8 @@ export const authHandlers = [
     }
 
     const user = mockUsers.find(
-      (candidate) => candidate.email === email && candidate.password === password,
+      (candidate) =>
+        candidate.email === email && candidate.password === password,
     );
 
     if (!user) {

@@ -1,10 +1,21 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useMyActivitiesQuery } from "@/features/my/hooks/useMyActivitiesQuery";
-import type { MyPageActivity } from "@/features/my/types/myActivity.types";
+import type {
+  MyMeetingActivity,
+  MyPageActivity,
+  MyVolunteerActivity,
+} from "@/features/my/types/myActivity.types";
 import { useCancelVolunteerPostingParticipationMutation } from "@/features/volunteer/hooks/detail/useVolunteerPostingParticipationMutation";
+import { cn } from "@/shared/lib/cn";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -16,133 +27,143 @@ function toDateKey(year: number, month: number, day: number) {
   return `${year}-${pad(month + 1)}-${pad(day)}`;
 }
 
+function getEffectiveEndDate(activity: MyPageActivity) {
+  return activity.actEndDate ?? activity.actStartDate;
+}
+
+function isActivityOnDate(activity: MyPageActivity, dateKey: string) {
+  return (
+    activity.actStartDate <= dateKey && dateKey <= getEffectiveEndDate(activity)
+  );
+}
+
 function formatActivityDate(dateKey: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   return `${year}.${pad(month)}.${pad(day)} (${DAY_LABELS[date.getDay()]})`;
 }
 
-function formatActivityTime(time?: string | null) {
-  if (!time) return null;
-
-  const [hour, minute = "00"] = time.split(":");
-  return `${pad(Number(hour))}:${pad(Number(minute))}`;
+function formatActivityTime(startTime: string | null, endTime: string | null) {
+  if (startTime && endTime) return `${startTime}–${endTime}`;
+  return startTime ?? endTime ?? null;
 }
 
-function formatActivityTimeRange(activity: MyPageActivity) {
-  const startTime = formatActivityTime(activity.actStartTime);
-  const endTime = formatActivityTime(activity.actEndTime);
+function getActivityLocation(activity: MyPageActivity) {
+  const location =
+    activity.activityType === "VOLUNTEER"
+      ? activity.actPlace
+      : activity.regionName;
 
-  if (!startTime) return "시간 미정";
-  return endTime ? `${startTime}-${endTime}` : startTime;
+  return location?.trim() || "장소 미정";
 }
 
-function getActivityStatusLabel(activity: MyPageActivity) {
-  if (activity.activityType === "MEETING") {
-    return activity.status === "COMPLETED" ? "봉사 완료" : "신청중";
-  }
+function formatActivityMetadata(activity: MyPageActivity) {
+  const date = formatActivityDate(activity.actStartDate);
+  const time = formatActivityTime(activity.actStartTime, activity.actEndTime);
+  const schedule = time ? `${date} ${time}` : date;
 
-  switch (activity.status) {
-    case "APPLIED":
-    case "CONFIRMED":
-      return "신청중";
-    case "COMPLETED":
-    case "REVIEWED":
-      return "봉사 완료";
-    default:
-      return activity.status;
-  }
+  return [schedule, getActivityLocation(activity)].filter(Boolean).join(" | ");
 }
 
-function ActivityActions({
-  cancelDisabled = false,
-  cancelPending = false,
-  onCancel,
-  onDetail,
-}: {
-  cancelDisabled?: boolean;
-  cancelPending?: boolean;
-  onCancel?: () => void;
-  onDetail: () => void;
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      <button
-        type="button"
-        disabled={cancelDisabled || cancelPending}
-        onClick={onCancel}
-        className="h-9 rounded-[10px] border border-[#c5c5c5] text-[15px] font-medium text-[#5c5c5c]"
-      >
-        {cancelPending ? "취소 중" : "신청 취소"}
-      </button>
-      <button
-        type="button"
-        onClick={onDetail}
-        className="h-9 rounded-[10px] bg-[#dcecdf] text-[15px] font-medium text-[#5c5c5c]"
-      >
-        상세 보기
-      </button>
-    </div>
-  );
-}
-
-function VolunteerActivityActions({
+function VolunteerActivityCard({
   activity,
 }: {
-  activity: Extract<MyPageActivity, { activityType: "VOLUNTEER" }>;
+  activity: MyVolunteerActivity;
 }) {
   const navigate = useNavigate();
   const cancelMutation = useCancelVolunteerPostingParticipationMutation(
     activity.postingId,
   );
+  const isCancelable =
+    activity.status === "APPLIED" || activity.status === "CONFIRMED";
+  const statusLabel = isCancelable ? "신청중" : "봉사 완료";
 
   return (
-    <ActivityActions
-      cancelPending={cancelMutation.isPending}
-      onCancel={() => cancelMutation.mutate()}
-      onDetail={() => navigate(`/volunteers/${activity.postingId}`)}
-    />
+    <ActivityCardFrame activity={activity} statusLabel={statusLabel}>
+      {isCancelable ? (
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            disabled={cancelMutation.isPending}
+            onClick={() => cancelMutation.mutate()}
+            className="h-9 rounded-[10px] border border-stroke text-body-14 font-medium text-text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {cancelMutation.isPending ? "취소 중..." : "신청 취소"}
+          </button>
+          <ActivityDetailButton
+            onClick={() => navigate(`/volunteers/${activity.postingId}`)}
+          />
+        </div>
+      ) : (
+        <ActivityDetailButton
+          fullWidth
+          onClick={() => navigate(`/volunteers/${activity.postingId}`)}
+        />
+      )}
+    </ActivityCardFrame>
   );
 }
 
-function getActivityEndDate(activity: MyPageActivity) {
-  return activity.actEndDate ?? activity.actStartDate;
-}
-
-function MeetingActivityActions({ meetingId }: { meetingId: number }) {
+function MeetingActivityCard({ activity }: { activity: MyMeetingActivity }) {
   const navigate = useNavigate();
+  const statusLabel =
+    activity.status === "COMPLETED" ? "모임 완료" : "활동 예정";
 
   return (
-    <ActivityActions
-      cancelDisabled
-      onDetail={() => navigate(`/teams/${meetingId}`)}
-    />
+    <ActivityCardFrame activity={activity} statusLabel={statusLabel}>
+      <ActivityDetailButton
+        fullWidth
+        onClick={() => navigate(`/teams/${activity.meetingId}`)}
+      />
+    </ActivityCardFrame>
   );
 }
 
-function ActivityCard({ activity }: { activity: MyPageActivity }) {
+function ActivityCardFrame({
+  activity,
+  statusLabel,
+  children,
+}: {
+  activity: MyPageActivity;
+  statusLabel: string;
+  children: ReactNode;
+}) {
   return (
-    <article className="flex h-[145px] flex-col justify-center gap-3 rounded-xl border border-[#d9d9d9] bg-white px-3 py-4">
+    <article className="flex min-h-[145px] flex-col justify-between rounded-xl border border-stroke bg-white px-3 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-body-15-semibold">{activity.title}</h3>
           <p className="mt-2 truncate text-body-14 text-text-gray-400">
-            {formatActivityDate(activity.actStartDate)}{" "}
-            {formatActivityTimeRange(activity)}
-            <span className="mx-2">|</span>
-            {activity.actPlace ?? "장소 미정"}
+            {formatActivityMetadata(activity)}
           </p>
         </div>
         <span className="shrink-0 rounded-[10px] bg-text-gray-400 px-2 py-0.5 text-body-14 text-text2">
-          {getActivityStatusLabel(activity)}
+          {statusLabel}
         </span>
       </div>
-      {activity.activityType === "MEETING" ? (
-        <MeetingActivityActions meetingId={activity.meetingId} />
-      ) : (
-        <VolunteerActivityActions activity={activity} />
-      )}
+      {children}
     </article>
+  );
+}
+
+function ActivityDetailButton({
+  fullWidth = false,
+  onClick,
+}: {
+  fullWidth?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "h-9 rounded-[10px] bg-button/15 text-body-14 font-medium text-text-gray-400",
+        fullWidth && "w-full",
+      )}
+    >
+      상세 보기
+    </button>
   );
 }
 
@@ -169,23 +190,20 @@ export function ActivityCalendarSection() {
   const days = Array.from({ length: lastDay }, (_, index) => {
     const day = index + 1;
     const dateKey = toDateKey(year, monthIndex, day);
+
     return {
       day,
       dateKey,
       label: DAY_LABELS[new Date(year, monthIndex, day).getDay()],
       isToday: dateKey === todayKey,
-      hasActivity: activities.some(
-        (activity) =>
-          activity.actStartDate <= dateKey &&
-          dateKey <= getActivityEndDate(activity),
+      hasActivity: activities.some((activity) =>
+        isActivityOnDate(activity, dateKey),
       ),
     };
   });
 
-  const selectedActivities = activities.filter(
-    (activity) =>
-      activity.actStartDate <= selectedDate &&
-      selectedDate <= getActivityEndDate(activity),
+  const selectedActivities = activities.filter((activity) =>
+    isActivityOnDate(activity, selectedDate),
   );
 
   useLayoutEffect(() => {
@@ -239,6 +257,7 @@ export function ActivityCalendarSection() {
         <div className="flex w-max gap-3">
           {days.map((item) => {
             const isSelected = item.day === selectedDay;
+
             return (
               <button
                 ref={isSelected ? selectedButtonRef : undefined}
@@ -246,15 +265,15 @@ export function ActivityCalendarSection() {
                 type="button"
                 onClick={() => setSelectedDay(item.day)}
                 aria-pressed={isSelected}
-                className={[
+                className={cn(
                   "flex h-[59px] w-[35px] shrink-0 flex-col items-center justify-center gap-1 rounded-[17px] border text-sm",
                   item.isToday
-                    ? "border-[#2e6136] bg-[#2e6136] text-text2"
+                    ? "border-text-green-500 bg-text-green-500 text-text2"
                     : item.hasActivity
-                      ? "border-[#d9d9d9] bg-[#f0f6f0] text-text"
-                      : "border-[#d9d9d9] bg-white text-text",
-                  isSelected && !item.isToday ? "ring-2 ring-icon" : "",
-                ].join(" ")}
+                      ? "border-stroke bg-button/5 text-text"
+                      : "border-stroke bg-white text-text",
+                  isSelected && !item.isToday && "ring-2 ring-icon",
+                )}
               >
                 <span className="font-medium">{item.day}</span>
                 <span>{item.isToday ? "오늘" : item.label}</span>
@@ -270,23 +289,30 @@ export function ActivityCalendarSection() {
             일정을 불러오는 중이에요.
           </p>
         ) : activitiesQuery.isError ? (
-          <p className="py-8 text-center text-body-14 text-text-gray-400">
-            일정을 불러오지 못했어요.
-          </p>
+          <button
+            type="button"
+            onClick={() => void activitiesQuery.refetch()}
+            className="w-full py-8 text-center text-body-14 text-text-gray-400"
+          >
+            일정을 불러오지 못했어요. 다시 시도
+          </button>
         ) : selectedActivities.length > 0 ? (
-          selectedActivities.map((activity) => (
-            <ActivityCard
-              key={`${activity.activityType}-${
-                activity.activityType === "MEETING"
-                  ? activity.meetingId
-                  : activity.participationId
-              }`}
-              activity={activity}
-            />
-          ))
+          selectedActivities.map((activity) =>
+            activity.activityType === "VOLUNTEER" ? (
+              <VolunteerActivityCard
+                key={`volunteer-${activity.participationId}`}
+                activity={activity}
+              />
+            ) : (
+              <MeetingActivityCard
+                key={`meeting-${activity.meetingId}`}
+                activity={activity}
+              />
+            ),
+          )
         ) : (
           <p className="py-8 text-center text-body-14 text-text-gray-400">
-            선택한 날짜에 예정된 활동이 없어요.
+            선택한 날짜에 활동이 없어요.
           </p>
         )}
       </div>

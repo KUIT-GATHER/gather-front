@@ -1,17 +1,16 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import filterIcon from "@/assets/icons/Filter.svg";
 import searchIcon from "@/assets/icons/Search.svg";
-import { getBookmarkedMeetings } from "@/features/team/api/team.api";
+import { useInfiniteBookmarkedMeetingsQuery } from "@/features/team/hooks/useInfiniteBookmarkedMeetingsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { TeamFilterSheet } from "@/features/team/components/TeamFilterSheet";
 import {
   getTeamListFilter,
   updateTeamListSearchParams,
 } from "@/features/team/lib/teamListSearchParams";
-import { getBookmarkedVolunteerPostings } from "@/features/volunteer/api/volunteer.api";
+import { useInfiniteBookmarkedVolunteerPostingsQuery } from "@/features/volunteer/hooks/useInfiniteBookmarkedVolunteerPostingsQuery";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
 import { VolunteerPostingFilterSheet } from "@/features/volunteer/components/filter/VolunteerPostingFilterSheet";
 import {
@@ -34,6 +33,7 @@ export function MyBookmarksScreen() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const selectedTab =
     searchParams.get("tab") === "meetings" ? "meetings" : "postings";
   const postingFilter = useMemo(
@@ -44,24 +44,71 @@ export function MyBookmarksScreen() {
     () => getTeamListFilter(searchParams),
     [searchParams],
   );
-  const postingsQuery = useQuery({
-    queryKey: ["volunteerPostings", "bookmarked", postingFilter],
-    queryFn: () =>
-      getBookmarkedVolunteerPostings({
-        ...postingFilter,
-        page: 0,
-        size: 20,
-      }),
-    enabled: selectedTab === "postings",
-  });
-  const meetingsQuery = useQuery({
-    queryKey: ["meetings", "bookmarked", meetingFilter],
-    queryFn: () =>
-      getBookmarkedMeetings({ ...meetingFilter, page: 0, size: 20 }),
-    enabled: selectedTab === "meetings",
-  });
-  const activeQuery =
-    selectedTab === "postings" ? postingsQuery : meetingsQuery;
+  const postingsQuery = useInfiniteBookmarkedVolunteerPostingsQuery(
+    postingFilter,
+    selectedTab === "postings",
+  );
+  const meetingsQuery = useInfiniteBookmarkedMeetingsQuery(
+    meetingFilter,
+    selectedTab === "meetings",
+  );
+  const postings =
+    postingsQuery.data?.pages.flatMap((page) => page.content) ?? [];
+  const meetings =
+    meetingsQuery.data?.pages.flatMap((page) => page.content) ?? [];
+  const activeIsPending =
+    selectedTab === "postings"
+      ? postingsQuery.isPending
+      : meetingsQuery.isPending;
+  const activeIsError =
+    selectedTab === "postings" ? postingsQuery.isError : meetingsQuery.isError;
+  const activeHasNextPage =
+    selectedTab === "postings"
+      ? postingsQuery.hasNextPage
+      : meetingsQuery.hasNextPage;
+  const activeIsFetchingNextPage =
+    selectedTab === "postings"
+      ? postingsQuery.isFetchingNextPage
+      : meetingsQuery.isFetchingNextPage;
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (
+          entry.isIntersecting &&
+          activeHasNextPage &&
+          !activeIsFetchingNextPage
+        ) {
+          if (selectedTab === "postings") {
+            void postingsQuery.fetchNextPage();
+          } else {
+            void meetingsQuery.fetchNextPage();
+          }
+        }
+      },
+      { rootMargin: "240px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [
+    activeHasNextPage,
+    activeIsFetchingNextPage,
+    meetingsQuery,
+    postingsQuery,
+    selectedTab,
+  ]);
+
+  const retryActiveQuery = () => {
+    if (selectedTab === "postings") {
+      void postingsQuery.refetch();
+    } else {
+      void meetingsQuery.refetch();
+    }
+  };
 
   return (
     <div className="mx-auto min-h-dvh max-w-app bg-bg">
@@ -115,20 +162,17 @@ export function MyBookmarksScreen() {
         })}
       </nav>
       <main className="space-y-3 px-5.5 py-5">
-        {activeQuery.isLoading ? (
+        {activeIsPending ? (
           <LoadingState label="찜한 활동을 불러오는 중" className="min-h-55" />
-        ) : activeQuery.isError ? (
+        ) : activeIsError ? (
           <ErrorState
             title="찜한 활동을 불러오지 못했어요"
             description="잠시 후 다시 확인해 주세요."
-            primaryAction={{
-              label: "다시 시도",
-              onClick: () => void activeQuery.refetch(),
-            }}
+            primaryAction={{ label: "다시 시도", onClick: retryActiveQuery }}
           />
         ) : selectedTab === "postings" ? (
-          postingsQuery.data?.content.length ? (
-            postingsQuery.data.content.map((posting) => (
+          postings.length > 0 ? (
+            postings.map((posting) => (
               <VolunteerPostingCard
                 key={posting.id}
                 posting={posting}
@@ -138,8 +182,8 @@ export function MyBookmarksScreen() {
           ) : (
             <EmptyState title="찜한 봉사 공고가 없어요" />
           )
-        ) : meetingsQuery.data?.content.length ? (
-          meetingsQuery.data.content.map((meeting) => (
+        ) : meetings.length > 0 ? (
+          meetings.map((meeting) => (
             <TeamCard
               key={meeting.meetingId}
               team={meeting}
@@ -150,6 +194,18 @@ export function MyBookmarksScreen() {
         ) : (
           <EmptyState title="찜한 모임이 없어요" />
         )}
+
+        {!activeIsPending && !activeIsError ? (
+          <>
+            {activeIsFetchingNextPage ? (
+              <LoadingState
+                label="다음 활동을 불러오는 중"
+                className="min-h-20"
+              />
+            ) : null}
+            <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
+          </>
+        ) : null}
       </main>
       {isFilterOpen && selectedTab === "postings" ? (
         <VolunteerPostingFilterSheet

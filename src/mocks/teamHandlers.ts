@@ -53,7 +53,12 @@ const SORTABLE_MEETING_FIELDS = [
   "createdAt",
   "updatedAt",
 ] as const;
-const MEETING_POST_TYPES = new Set(["NOTICE", "REVIEW", "RECRUIT", "FREE"]);
+const MEETING_POST_TYPES = new Set<MeetingPostType>([
+  "NOTICE",
+  "REVIEW",
+  "RECRUIT",
+  "FREE",
+]);
 const SORTABLE_MEETING_POST_FIELDS = ["createdAt", "id"] as const;
 const SORTABLE_MEETING_POST_COMMENT_FIELDS = ["createdAt"] as const;
 
@@ -164,6 +169,38 @@ const baseMockMeetings = teams.data.map((team) => {
   };
 });
 
+const bookmarkPaginationMeetings: MockMeeting[] = Array.from(
+  { length: 21 },
+  (_, index) => ({
+    meetingId: index + 101,
+    name: `찜한 모임 무한스크롤 테스트 ${index + 1}`,
+    description:
+      "찜한 모임 목록의 다음 페이지를 확인하기 위한 mock 데이터예요.",
+    currentMemberCount: (index % 5) + 1,
+    maxMember: 10,
+    regionId: index % 2 === 0 ? 41 : 32,
+    regionName: index % 2 === 0 ? "영등포구" : "마포구",
+    categories: [
+      [
+        "ENVIRONMENT",
+        "EDUCATION",
+        "CULTURE",
+        "COMMUNITY",
+        "WELFARE",
+        "OVERSEAS",
+      ][index % 6],
+    ],
+    status: "RECRUITING",
+    deadline: formatMockDateTime("2026-08-31T18:00:00", index + 1),
+    activityStartAt: formatMockDateTime("2026-09-01T10:00:00", index + 1),
+    activityEndAt: formatMockDateTime("2026-09-01T12:00:00", index + 1),
+    hostId: index + 101,
+    volunteerPostingId: null,
+    participationCondition: null,
+    memo: null,
+  }),
+);
+
 const createdMeetings: MockMeeting[] = [];
 const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
   [
@@ -174,7 +211,9 @@ const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
     ]),
   ],
 ]);
-const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>();
+const bookmarkedMeetingIdsByUserId = new Map<number, Set<number>>([
+  [1, new Set(bookmarkPaginationMeetings.map((meeting) => meeting.meetingId))],
+]);
 const pendingMeetingImageUploads = new Map<
   string,
   {
@@ -429,6 +468,34 @@ function parseMeetingPostSorts(url: URL): MeetingPostSort[] | null {
     sorts.push({ field: field as MeetingPostSortField, direction });
     return sorts;
   }, []);
+}
+
+function isMeetingPostType(value: string): value is MeetingPostType {
+  return MEETING_POST_TYPES.has(value as MeetingPostType);
+}
+
+function parseMeetingPostTypes(url: URL): MeetingPostType[] | null {
+  const rawTypes = url.searchParams.get("types");
+
+  if (!rawTypes || rawTypes.trim() === "") {
+    return [];
+  }
+
+  return rawTypes
+    .split(",")
+    .map((type) => type.trim())
+    .filter(Boolean)
+    .reduce<MeetingPostType[] | null>((types, type) => {
+      if (!types || !isMeetingPostType(type)) {
+        return null;
+      }
+
+      if (!types.includes(type)) {
+        types.push(type);
+      }
+
+      return types;
+    }, []);
 }
 
 function parseMeetingPostCommentSorts(
@@ -698,6 +765,24 @@ function toMeetingPostDetail(
   };
 }
 
+function canEditMeetingPostComment(
+  comment: MockMeetingPostComment,
+  viewerUserId: number,
+) {
+  return comment.authorId === viewerUserId;
+}
+
+function canDeleteMeetingPostComment(
+  comment: MockMeetingPostComment,
+  viewerUserId: number,
+  team: MockMeeting,
+) {
+  return (
+    canEditMeetingPostComment(comment, viewerUserId) ||
+    team.hostId === viewerUserId
+  );
+}
+
 function toMeetingPostCommentResponse(
   comment: MockMeetingPostComment,
   viewerUserId: number,
@@ -713,14 +798,17 @@ function toMeetingPostCommentResponse(
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
-    canEdit: comment.authorId === viewerUserId,
-    canDelete:
-      comment.authorId === viewerUserId || team.hostId === viewerUserId,
+    canEdit: canEditMeetingPostComment(comment, viewerUserId),
+    canDelete: canDeleteMeetingPostComment(comment, viewerUserId, team),
   };
 }
 
 function getMockMeetings() {
-  return [...(baseMockMeetings as MockMeeting[]), ...createdMeetings];
+  return [
+    ...(baseMockMeetings as MockMeeting[]),
+    ...bookmarkPaginationMeetings,
+    ...createdMeetings,
+  ];
 }
 
 export function getJoinedMockMeetings(userId: number) {
@@ -1461,7 +1549,7 @@ export const teamHandlers = [
     const meetingId = Number(params.meetingId);
     const team = findMeeting(meetingId);
     const url = new URL(request.url);
-    const type = url.searchParams.get("type");
+    const postTypes = parseMeetingPostTypes(url);
     const page = getPageParam(url);
     const size = getMeetingPostSizeParam(url);
     const sorts = parseMeetingPostSorts(url);
@@ -1470,14 +1558,14 @@ export const teamHandlers = [
       return createMeetingNotFoundResponse();
     }
 
-    if (type && !MEETING_POST_TYPES.has(type)) {
+    if (!postTypes) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: "VALIDATION_ERROR",
-            message: "Invalid post type.",
+            message: "Invalid post types.",
           },
         },
         { status: 400 },
@@ -1499,6 +1587,7 @@ export const teamHandlers = [
     }
 
     const isJoined = getMembershipRole(userId, meetingId) !== null;
+    const requestedPostTypes = new Set(postTypes);
     const posts = sortMeetingPosts(
       meetingPosts
         .filter((post) => post.meetingId === meetingId)
@@ -1506,7 +1595,10 @@ export const teamHandlers = [
           (post) =>
             isJoined || post.type === "NOTICE" || post.type === "REVIEW",
         )
-        .filter((post) => !type || post.type === type),
+        .filter(
+          (post) =>
+            requestedPostTypes.size === 0 || requestedPostTypes.has(post.type),
+        ),
       sorts,
     );
     const startIndex = page * size;
@@ -1767,7 +1859,7 @@ export const teamHandlers = [
         );
       }
 
-      if (comment.authorId !== userId) {
+      if (!canEditMeetingPostComment(comment, userId)) {
         return createMeetingErrorResponse(
           "COMMENT_FORBIDDEN",
           "댓글을 수정할 권한이 없습니다.",
@@ -1845,7 +1937,7 @@ export const teamHandlers = [
 
       const comment = meetingPostComments[commentIndex];
 
-      if (comment.authorId !== userId && team.hostId !== userId) {
+      if (!canDeleteMeetingPostComment(comment, userId, team)) {
         return createMeetingErrorResponse(
           "COMMENT_FORBIDDEN",
           "댓글을 삭제할 권한이 없습니다.",

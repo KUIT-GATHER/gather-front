@@ -10,9 +10,7 @@ export const profileEditSchema = z.object({
   gender: z.enum(["MALE", "FEMALE"], {
     error: "성별을 선택해 주세요.",
   }),
-  activityRegionId: z.number({
-    error: "활동 지역을 선택해 주세요.",
-  }),
+  activityRegionId: signupCommonSchema.shape.activityRegionId,
   interestCategories: signupCommonSchema.shape.interestCategories,
 });
 

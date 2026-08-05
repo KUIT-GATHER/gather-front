@@ -1,6 +1,12 @@
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
+import {
+  getMyActivities,
+  getMyActivityRecords,
+  getMyActivitySummary,
+} from "@/features/my/api/myActivity.api";
 import { getMyPageHome } from "@/features/my/api/myPage.api";
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
 export const myPageKeys = {
   all: ["mypage"] as const,
@@ -18,5 +24,25 @@ export const myPageQueries = {
     queryOptions({
       queryKey: myPageKeys.home(),
       queryFn: getMyPageHome,
+    }),
+  activities: (yearMonth: string) =>
+    queryOptions({
+      queryKey: myPageKeys.activities(yearMonth),
+      queryFn: () => getMyActivities(yearMonth),
+    }),
+  activitySummary: () =>
+    queryOptions({
+      queryKey: myPageKeys.activitySummary(),
+      queryFn: getMyActivitySummary,
+    }),
+  activityRecords: (category: PostingCategory | null) =>
+    infiniteQueryOptions({
+      queryKey: myPageKeys.activityRecords(category),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) => getMyActivityRecords(pageParam, category),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
     }),
 };

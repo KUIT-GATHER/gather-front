@@ -3,28 +3,38 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 type MyPageActivityBase = {
   title: string;
   actStartDate: string;
-  actEndDate?: string | null;
-  actStartTime?: string | null;
-  actEndTime?: string | null;
-  actPlace?: string | null;
-  status: string;
+  actEndDate: string | null;
+  actStartTime: string | null;
+  actEndTime: string | null;
+  actPlace: string | null;
+  regionName: string | null;
 };
 
-export type MyPageActivity = MyPageActivityBase &
-  (
-    | {
-        activityType: "VOLUNTEER";
-        participationId: number;
-        postingId: number;
-        meetingId?: never;
-      }
-    | {
-        activityType: "MEETING";
-        participationId?: number | null;
-        postingId?: never;
-        meetingId: number;
-      }
-  );
+export type MyVolunteerActivityStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "REVIEWED";
+
+export type MyMeetingActivityStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
+
+export type MyVolunteerActivity = MyPageActivityBase & {
+  activityType: "VOLUNTEER";
+  participationId: number;
+  postingId: number;
+  meetingId: null;
+  status: MyVolunteerActivityStatus;
+};
+
+export type MyMeetingActivity = MyPageActivityBase & {
+  activityType: "MEETING";
+  participationId: null;
+  postingId: null;
+  meetingId: number;
+  status: MyMeetingActivityStatus;
+};
+
+export type MyPageActivity = MyVolunteerActivity | MyMeetingActivity;
 
 export type MyActivitySummary = {
   totalCompletedCount: number;

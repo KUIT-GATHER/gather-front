@@ -111,6 +111,10 @@ export type BookmarkedMeetingListParams = {
 };
 
 export type MeetingInfiniteParams = Omit<MeetingListParams, "page">;
+export type BookmarkedMeetingInfiniteParams = Omit<
+  BookmarkedMeetingListParams,
+  "page"
+>;
 
 export type MeetingPage = {
   content: MeetingListItem[];
@@ -120,13 +124,21 @@ export type MeetingPage = {
   size: number;
 };
 
+export type BookmarkedMeetingListItem = Omit<MeetingListItem, "regionName"> & {
+  regionName: string | null;
+};
+
+export type BookmarkedMeetingPage = Omit<MeetingPage, "content"> & {
+  content: BookmarkedMeetingListItem[];
+};
+
 export type MeetingBookmarkResponse = {
   meetingId: number;
   bookmarked: boolean;
 };
 
 export type MeetingPostListParams = {
-  type?: MeetingPostType;
+  types?: readonly MeetingPostType[];
   page?: number;
   size?: number;
   sort?: string[];

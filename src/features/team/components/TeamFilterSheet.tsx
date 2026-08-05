@@ -1,7 +1,7 @@
 import {
   ActivityFilterSheet,
   type ActivityFilter,
-} from "@/features/activity-filter/components/ActivityFilterSheet";
+} from "@/features/activity/components/ActivityFilterSheet";
 import type { TeamFilter } from "@/features/team/types/teamFilter.types";
 
 type TeamFilterSheetProps = {
@@ -29,6 +29,7 @@ export function TeamFilterSheet({
       open={open}
       onOpenChange={onOpenChange}
       filter={value}
+      dateLabel="활동 기간"
       onApply={(next) =>
         onApply({
           regionId: next.regionId,

@@ -16,8 +16,7 @@ export type MockUser = {
 };
 
 export const MOCK_USERS_STORAGE_KEY = "gather:msw:users";
-const MOCK_WITHDRAWAL_COOLDOWNS_STORAGE_KEY =
-  "gather:msw:withdrawal-cooldowns";
+const MOCK_WITHDRAWAL_COOLDOWNS_STORAGE_KEY = "gather:msw:withdrawal-cooldowns";
 const WITHDRAWAL_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 type MockWithdrawalCooldown = {
@@ -242,9 +241,7 @@ export function withdrawMockUser(userId: number, kakaoAccountId?: string) {
   withdrawalCooldowns.push({
     userId,
     phoneFingerprint: fingerprint(user.phoneNumber),
-    kakaoFingerprint: kakaoAccountId
-      ? fingerprint(kakaoAccountId)
-      : undefined,
+    kakaoFingerprint: kakaoAccountId ? fingerprint(kakaoAccountId) : undefined,
     expiresAt: Date.now() + WITHDRAWAL_COOLDOWN_MS,
   });
   anonymizeMockUser(user);

@@ -8,11 +8,14 @@ type MeetingPostCommentListProps = {
   meetingId: number;
   postId: number;
   comments: MeetingPostCommentType[];
+  editingCommentId: number | null;
   isInitialLoading: boolean;
   isInitialError: boolean;
   isEmpty: boolean;
   isFetchingNextPage: boolean;
   isFetchNextPageError: boolean;
+  onEditEnd: (commentId: number) => void;
+  onEditStart: (commentId: number) => void;
   onFetchNextPage: () => void;
   onLoadMoreElementChange: (element: HTMLDivElement | null) => void;
 };
@@ -21,11 +24,14 @@ export function MeetingPostCommentList({
   meetingId,
   postId,
   comments,
+  editingCommentId,
   isInitialLoading,
   isInitialError,
   isEmpty,
   isFetchingNextPage,
   isFetchNextPageError,
+  onEditEnd,
+  onEditStart,
   onFetchNextPage,
   onLoadMoreElementChange,
 }: MeetingPostCommentListProps) {
@@ -64,6 +70,9 @@ export function MeetingPostCommentList({
             meetingId={meetingId}
             postId={postId}
             comment={comment}
+            isEditing={editingCommentId === comment.commentId}
+            onEditEnd={() => onEditEnd(comment.commentId)}
+            onEditStart={() => onEditStart(comment.commentId)}
           />
         ))}
       </ul>

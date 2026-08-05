@@ -16,7 +16,7 @@ export type MyProfile = {
   introduction: string | null;
   birthDate: string;
   gender: "MALE" | "FEMALE";
-  activityRegion: Region;
+  activityRegion: Region | null;
   interestCategories: PostingCategory[];
 };
 

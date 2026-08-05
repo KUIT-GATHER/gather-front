@@ -4,11 +4,13 @@ import regions from "./data/regions.json";
 import { getMockParticipations } from "./data/mockParticipations";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 import { mockPostings } from "./postingHandlers";
-import { getJoinedMockMeetings } from "./teamHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
-import type { MyActivityRecord } from "@/features/my/types/myActivity.types";
+import type {
+  MyActivityRecord,
+  MyPageActivity,
+} from "@/features/my/types/myActivity.types";
 
 const PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -18,7 +20,7 @@ const regionById = new Map(regions.data.map((region) => [region.id, region]));
 
 type MockProfile = Omit<ProfileEditFormValues, "activityRegionId"> & {
   id: number;
-  activityRegionId: number;
+  activityRegionId: number | null;
 };
 
 type PendingProfileImageUpload = {
@@ -95,6 +97,107 @@ const mockActivityRecords: MyActivityRecord[] = [
   },
 ];
 
+const mockCalendarActivities: MyPageActivity[] = [
+  {
+    activityType: "VOLUNTEER",
+    participationId: 201,
+    postingId: 1,
+    meetingId: null,
+    title: "한강 쓰레기 줍기",
+    actStartDate: "2026-08-20",
+    actEndDate: null,
+    actStartTime: "11:00",
+    actEndTime: "12:00",
+    actPlace: "서울시 광진구",
+    regionName: null,
+    status: "APPLIED",
+  },
+  {
+    activityType: "VOLUNTEER",
+    participationId: 202,
+    postingId: 2,
+    meetingId: null,
+    title: "도서관 책 정리 봉사",
+    actStartDate: "2026-08-21",
+    actEndDate: "2026-08-22",
+    actStartTime: "13:00",
+    actEndTime: null,
+    actPlace: null,
+    regionName: null,
+    status: "CONFIRMED",
+  },
+  {
+    activityType: "VOLUNTEER",
+    participationId: 203,
+    postingId: 3,
+    meetingId: null,
+    title: "공원 나무 심기",
+    actStartDate: "2026-07-15",
+    actEndDate: "2026-07-15",
+    actStartTime: null,
+    actEndTime: "15:00",
+    actPlace: "서울숲",
+    regionName: null,
+    status: "COMPLETED",
+  },
+  {
+    activityType: "VOLUNTEER",
+    participationId: 204,
+    postingId: 4,
+    meetingId: null,
+    title: "지역 아동 행사 지원",
+    actStartDate: "2026-07-03",
+    actEndDate: "2026-07-03",
+    actStartTime: null,
+    actEndTime: null,
+    actPlace: "광진구 주민센터",
+    regionName: null,
+    status: "REVIEWED",
+  },
+  {
+    activityType: "MEETING",
+    participationId: null,
+    postingId: null,
+    meetingId: 31,
+    title: "한강 플로깅 모임",
+    actStartDate: "2026-08-20",
+    actEndDate: "2026-08-22",
+    actStartTime: "09:30",
+    actEndTime: "12:00",
+    actPlace: null,
+    regionName: "서울시 영등포구",
+    status: "RECRUITING",
+  },
+  {
+    activityType: "MEETING",
+    participationId: null,
+    postingId: null,
+    meetingId: 32,
+    title: "동네 도서관 모임",
+    actStartDate: "2026-08-24",
+    actEndDate: null,
+    actStartTime: null,
+    actEndTime: null,
+    actPlace: null,
+    regionName: "서울시 마포구",
+    status: "CLOSED",
+  },
+  {
+    activityType: "MEETING",
+    participationId: null,
+    postingId: null,
+    meetingId: 33,
+    title: "도심 하천 정화 모임",
+    actStartDate: "2026-07-12",
+    actEndDate: "2026-07-13",
+    actStartTime: "10:00",
+    actEndTime: "13:00",
+    actPlace: null,
+    regionName: "서울시 마포구",
+    status: "COMPLETED",
+  },
+];
+
 function getProfile(userId: number) {
   const existing = profiles.get(userId);
   if (existing) return existing;
@@ -121,7 +224,10 @@ function toProfileResponse(profile: MockProfile) {
     introduction: profile.introduction,
     birthDate: profile.birthDate,
     gender: profile.gender,
-    activityRegion: regionById.get(profile.activityRegionId),
+    activityRegion:
+      profile.activityRegionId === null
+        ? null
+        : regionById.get(profile.activityRegionId),
     interestCategories: profile.interestCategories,
   };
 }
@@ -140,7 +246,7 @@ function getPendingUploadCount(userId: number) {
 }
 
 function formatMockTime(time: string | null) {
-  if (!time) return "";
+  if (!time) return null;
   return time.includes(":") ? time : `${time.padStart(2, "0")}:00`;
 }
 
@@ -156,7 +262,10 @@ export const myProfileHandlers = [
         nickname: profile.nickname,
         profileImageUrl: profileImageUrls.get(userId) ?? null,
         birthDate: profile.birthDate,
-        activityRegion: regionById.get(profile.activityRegionId),
+        activityRegion:
+          profile.activityRegionId === null
+            ? null
+            : regionById.get(profile.activityRegionId),
         hasBookmark: userId === 1,
       },
       error: null,
@@ -178,66 +287,42 @@ export const myProfileHandlers = [
     const [year, month] = yearMonth.split("-").map(Number);
     const monthStart = `${yearMonth}-01`;
     const monthEnd = `${yearMonth}-${new Date(year, month, 0).getDate()}`;
-    const volunteerActivities = getMockParticipations(userId).flatMap(
-      (participation) => {
-        const posting = mockPostings.find(
-          (item) => item.id === participation.postingId,
-        );
+    const participationActivities: MyPageActivity[] = getMockParticipations(
+      userId,
+    ).flatMap((participation) => {
+      const posting = mockPostings.find(
+        (item) => item.id === participation.postingId,
+      );
 
-        if (
-          !posting ||
-          posting.actEndDate < monthStart ||
-          posting.actStartDate > monthEnd
-        ) {
-          return [];
-        }
+      if (!posting) return [];
 
-        return [
-          {
-            activityType: "VOLUNTEER" as const,
-            participationId: participation.participationId,
-            postingId: posting.id,
-            title: posting.title,
-            actStartDate: posting.actStartDate,
-            actEndDate: posting.actEndDate,
-            actStartTime: formatMockTime(posting.actStartTime),
-            actEndTime: formatMockTime(posting.actEndTime),
-            actPlace: posting.actPlace,
-            status: participation.status,
-          },
-        ];
-      },
-    );
-    const meetingActivities = getJoinedMockMeetings(userId).flatMap(
-      (meeting) => {
-        if (!meeting.activityStartAt) return [];
+      return [
+        {
+          activityType: "VOLUNTEER",
+          participationId: participation.participationId,
+          postingId: posting.id,
+          meetingId: null,
+          title: posting.title,
+          actStartDate: posting.actStartDate,
+          actEndDate: posting.actEndDate ?? null,
+          actStartTime: formatMockTime(posting.actStartTime),
+          actEndTime: formatMockTime(posting.actEndTime),
+          actPlace: posting.actPlace ?? null,
+          regionName: null,
+          status: participation.status,
+        },
+      ];
+    });
+    const activities = [
+      ...mockCalendarActivities,
+      ...participationActivities,
+    ].filter((activity) => {
+      const effectiveEndDate = activity.actEndDate ?? activity.actStartDate;
 
-        const [actStartDate, actStartTime] = meeting.activityStartAt.split("T");
-        const [actEndDate, actEndTime] =
-          meeting.activityEndAt?.split("T") ?? [];
-        const effectiveEndDate = actEndDate ?? actStartDate;
-        if (effectiveEndDate < monthStart || actStartDate > monthEnd) return [];
-
-        return [
-          {
-            activityType: "MEETING" as const,
-            meetingId: meeting.meetingId,
-            title: meeting.name,
-            actStartDate,
-            actEndDate: actEndDate ?? null,
-            actStartTime: formatMockTime(actStartTime),
-            actEndTime: actEndTime ? formatMockTime(actEndTime) : null,
-            actPlace: null,
-            status: meeting.status,
-          },
-        ];
-      },
-    );
-    const activities = [...volunteerActivities, ...meetingActivities].sort(
-      (left, right) =>
-        left.actStartDate.localeCompare(right.actStartDate) ||
-        (left.actStartTime ?? "").localeCompare(right.actStartTime ?? ""),
-    );
+      return (
+        effectiveEndDate >= monthStart && activity.actStartDate <= monthEnd
+      );
+    });
 
     return HttpResponse.json({
       success: true,
@@ -317,7 +402,11 @@ export const myProfileHandlers = [
     if (!userId) return createUnauthorizedResponse();
 
     const result = profileEditSchema.safeParse(await request.json());
-    if (!result.success || !regionById.has(result.data.activityRegionId)) {
+    if (
+      !result.success ||
+      result.data.activityRegionId === null ||
+      !regionById.has(result.data.activityRegionId)
+    ) {
       return errorResponse(
         "VALIDATION_ERROR",
         "요청 값이 올바르지 않습니다.",
