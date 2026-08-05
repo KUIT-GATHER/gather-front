@@ -1,7 +1,16 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from "react";
 
 import ExtraGrayIcon from "@/assets/icons/Extra-gray.svg";
-import { useDeleteMeetingPostCommentMutation } from "@/features/team/hooks/useMeetingPostMutations";
+import {
+  useDeleteMeetingPostCommentMutation,
+  useUpdateMeetingPostCommentMutation,
+} from "@/features/team/hooks/useMeetingPostMutations";
 import type { MeetingPostComment as MeetingPostCommentType } from "@/features/team/types/team.types";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
@@ -11,6 +20,9 @@ type MeetingPostCommentItemProps = {
   meetingId: number;
   postId: number;
   comment: MeetingPostCommentType;
+  isEditing: boolean;
+  onEditEnd: () => void;
+  onEditStart: () => void;
 };
 
 const COMMENT_MENU_HEIGHT_WITH_GAP = 132;
@@ -46,10 +58,12 @@ function CommentActionMenu({
   children,
   disabled,
   onClick,
+  onPointerDown,
 }: {
   children: ReactNode;
   disabled?: boolean;
   onClick: () => void;
+  onPointerDown?: () => void;
 }) {
   return (
     <button
@@ -58,6 +72,7 @@ function CommentActionMenu({
       disabled={disabled}
       className="grid size-6 shrink-0 place-items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-50"
       onClick={onClick}
+      onPointerDown={onPointerDown}
     >
       {children}
     </button>
@@ -68,16 +83,58 @@ export function MeetingPostCommentItem({
   meetingId,
   postId,
   comment,
+  isEditing,
+  onEditEnd,
+  onEditStart,
 }: MeetingPostCommentItemProps) {
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isActionMenuAbove, setIsActionMenuAbove] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
   const actionMenuRef = useRef<HTMLDivElement>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const shouldSkipBlurCommitRef = useRef(false);
   const deleteCommentMutation = useDeleteMeetingPostCommentMutation(
     meetingId,
     postId,
     comment.commentId,
   );
+  const updateCommentMutation = useUpdateMeetingPostCommentMutation(
+    meetingId,
+    postId,
+    comment.commentId,
+  );
+  const trimmedEditContent = editContent.trim();
+
+  useEffect(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    const textarea = editTextareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    const textarea = editTextareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [editContent, isEditing]);
 
   useEffect(() => {
     if (!isActionMenuOpen) {
@@ -113,6 +170,74 @@ export function MeetingPostCommentItem({
     setIsDeleteDialogOpen(true);
   };
 
+  const handleEditClick = () => {
+    setIsActionMenuOpen(false);
+    setEditContent(comment.content);
+    onEditStart();
+  };
+
+  const handleEditCancel = () => {
+    if (updateCommentMutation.isPending) {
+      return;
+    }
+
+    setEditContent(comment.content);
+    onEditEnd();
+  };
+
+  const commitEdit = () => {
+    if (shouldSkipBlurCommitRef.current) {
+      shouldSkipBlurCommitRef.current = false;
+      return;
+    }
+
+    if (updateCommentMutation.isPending) {
+      return;
+    }
+
+    if (!trimmedEditContent) {
+      handleEditCancel();
+      return;
+    }
+
+    if (trimmedEditContent === comment.content.trim()) {
+      onEditEnd();
+      return;
+    }
+
+    updateCommentMutation.mutate(
+      { content: trimmedEditContent },
+      {
+        onSuccess: () => {
+          onEditEnd();
+        },
+        onError: () => {
+          setEditContent(comment.content);
+          onEditEnd();
+        },
+      },
+    );
+  };
+
+  const handleEditKeyDown = (
+    event: ReactKeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitEdit();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      handleEditCancel();
+    }
+  };
+
   const handleActionMenuToggle = () => {
     if (isActionMenuOpen) {
       setIsActionMenuOpen(false);
@@ -129,6 +254,16 @@ export function MeetingPostCommentItem({
     }
 
     setIsActionMenuOpen(true);
+  };
+
+  const handleActionMenuPointerDown = () => {
+    if (!isEditing || updateCommentMutation.isPending) {
+      return;
+    }
+
+    shouldSkipBlurCommitRef.current = true;
+    setEditContent(comment.content);
+    onEditEnd();
   };
 
   const handleDeleteConfirm = () => {
@@ -150,9 +285,24 @@ export function MeetingPostCommentItem({
               <p className="truncate text-[14px] leading-5 font-semibold text-text">
                 {comment.authorNickname}
               </p>
-              <p className="mt-1 whitespace-pre-line text-[14px] leading-5 text-text">
-                {comment.content}
-              </p>
+              {isEditing ? (
+                <textarea
+                  ref={editTextareaRef}
+                  aria-label="댓글 수정 입력"
+                  maxLength={500}
+                  rows={1}
+                  value={editContent}
+                  disabled={updateCommentMutation.isPending}
+                  className="mt-1 block min-h-5 w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[14px] leading-5 font-normal whitespace-pre-wrap text-text caret-text outline-none disabled:bg-transparent disabled:text-text"
+                  onBlur={commitEdit}
+                  onChange={(event) => setEditContent(event.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                />
+              ) : (
+                <p className="mt-1 whitespace-pre-line text-[14px] leading-5 text-text">
+                  {comment.content}
+                </p>
+              )}
             </div>
 
             <div className="flex shrink-0 flex-col items-end text-text-gray-100">
@@ -161,8 +311,12 @@ export function MeetingPostCommentItem({
               </span>
               <div ref={actionMenuRef} className="relative mt-1">
                 <CommentActionMenu
-                  disabled={deleteCommentMutation.isPending}
+                  disabled={
+                    deleteCommentMutation.isPending ||
+                    updateCommentMutation.isPending
+                  }
                   onClick={handleActionMenuToggle}
+                  onPointerDown={handleActionMenuPointerDown}
                 >
                   <img
                     src={ExtraGrayIcon}
@@ -187,7 +341,9 @@ export function MeetingPostCommentItem({
                       },
                       {
                         label: "댓글 수정",
-                        disabled: true,
+                        disabled:
+                          !comment.canEdit || updateCommentMutation.isPending,
+                        onClick: handleEditClick,
                       },
                     ]}
                   />
