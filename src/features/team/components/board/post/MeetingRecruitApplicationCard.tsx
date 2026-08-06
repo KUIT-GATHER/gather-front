@@ -50,7 +50,6 @@ export function MeetingRecruitApplicationCard({
     participationButtonLabel,
     isParticipationPending,
     isParticipationError,
-    navigateToLinkedPosting,
     toggleParticipation,
   } = useMeetingRecruitApplicationCard(meetingId, postId);
 
@@ -87,15 +86,13 @@ export function MeetingRecruitApplicationCard({
           {recruit.title}
         </h3>
 
-        {navigateToLinkedPosting ? (
-          <button
-            type="button"
-            className="shrink-0 text-[14px] leading-5 text-text-gray-400 underline underline-offset-2 transition hover:text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-            onClick={navigateToLinkedPosting}
-          >
-            봉사 공고로 이동
-          </button>
-        ) : null}
+        <button
+          type="button"
+          disabled
+          className="shrink-0 cursor-not-allowed text-[14px] leading-5 text-text-gray-400 underline underline-offset-2 opacity-60"
+        >
+          봉사 공고로 이동
+        </button>
       </div>
 
       <div className="mt-6.5">

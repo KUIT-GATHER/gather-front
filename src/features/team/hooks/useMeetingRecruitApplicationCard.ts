@@ -1,9 +1,7 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router";
 
 import { useMeetingRecruitParticipationMutation } from "@/features/team/hooks/useMeetingRecruitParticipationMutation";
 import { useMeetingRecruitQuery } from "@/features/team/hooks/useMeetingRecruitQuery";
-import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import {
   formatMeetingDurationMinutes,
   formatMeetingFullDate,
@@ -78,8 +76,6 @@ export function useMeetingRecruitApplicationCard(
   meetingId: number,
   postId: number,
 ) {
-  const navigate = useNavigate();
-  const { home } = useTeamDetailContext();
   const {
     data: recruit,
     isLoading,
@@ -91,7 +87,6 @@ export function useMeetingRecruitApplicationCard(
     isPending: isParticipationPending,
     isError: isParticipationError,
   } = useMeetingRecruitParticipationMutation(meetingId, postId);
-  const linkedPostingId = home.linkedPostingId;
 
   const retryRecruit = useCallback(() => {
     void refetch();
@@ -103,11 +98,6 @@ export function useMeetingRecruitApplicationCard(
     },
     [mutate],
   );
-
-  const navigateToLinkedPosting =
-    linkedPostingId === null
-      ? undefined
-      : () => navigate(`/volunteers/${linkedPostingId}`);
 
   return {
     recruit,
@@ -125,7 +115,6 @@ export function useMeetingRecruitApplicationCard(
       : "",
     isParticipationPending,
     isParticipationError,
-    navigateToLinkedPosting,
     toggleParticipation,
   };
 }
