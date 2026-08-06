@@ -17,7 +17,8 @@ export function isDisplayableMyPageActivity(
 ): activity is MyDisplayablePageActivity {
   return (
     activity.activityType === "VOLUNTEER" ||
-    activity.postingParticipationStatus !== null
+    (activity.volunteerPostingId !== null &&
+      activity.postingParticipationStatus !== null)
   );
 }
 

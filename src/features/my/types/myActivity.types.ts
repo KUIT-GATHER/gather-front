@@ -40,9 +40,9 @@ export type MyMeetingActivity = MyPageActivityBase & {
 export type MyPageActivity = MyVolunteerActivity | MyMeetingActivity;
 
 export type MyLinkedMeetingActivity = MyMeetingActivity & {
+  volunteerPostingId: number;
   postingParticipationStatus: MyVolunteerActivityStatus;
 };
-
 export type MyDisplayablePageActivity =
   | MyVolunteerActivity
   | MyLinkedMeetingActivity;

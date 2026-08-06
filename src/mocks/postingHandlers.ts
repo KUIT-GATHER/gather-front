@@ -6,6 +6,7 @@ import { addMockBadgeProgress } from "./badgeHandlers";
 import postings from "./data/postings.json";
 import {
   addMockParticipation,
+  findMockParticipation,
   getMockParticipations,
   removeMockParticipation,
   updateMockParticipation,
@@ -1053,7 +1054,7 @@ export const postingHandlers = [
       if (!userId) return createUnauthorizedResponse();
 
       const postingId = Number(params.postingId);
-      const participation = participatedPostingIds.get(postingId);
+      const participation = findMockParticipation(userId, postingId);
 
       if (!participation) {
         return HttpResponse.json(

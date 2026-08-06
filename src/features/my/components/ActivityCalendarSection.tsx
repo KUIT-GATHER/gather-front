@@ -114,16 +114,39 @@ function MeetingActivityCard({
   activity: MyLinkedMeetingActivity;
 }) {
   const navigate = useNavigate();
+  const cancelMutation = useCancelVolunteerPostingParticipationMutation(
+    activity.volunteerPostingId,
+  );
+  const isCancelable =
+    activity.volunteerPostingId !== null &&
+    (activity.postingParticipationStatus === "APPLIED" ||
+      activity.postingParticipationStatus === "CONFIRMED");
 
   return (
     <ActivityCardFrame
       activity={activity}
       statusLabel={getMeetingActivityLabel(activity)}
     >
-      <ActivityDetailButton
-        fullWidth
-        onClick={() => navigate(`/teams/${activity.meetingId}`)}
-      />
+      {isCancelable ? (
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            disabled={cancelMutation.isPending}
+            onClick={() => cancelMutation.mutate()}
+            className="h-9 rounded-[10px] border border-stroke text-body-14 font-medium text-text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {cancelMutation.isPending ? "취소 중..." : "신청 취소"}
+          </button>
+          <ActivityDetailButton
+            onClick={() => navigate(`/teams/${activity.meetingId}`)}
+          />
+        </div>
+      ) : (
+        <ActivityDetailButton
+          fullWidth
+          onClick={() => navigate(`/teams/${activity.meetingId}`)}
+        />
+      )}
     </ActivityCardFrame>
   );
 }
