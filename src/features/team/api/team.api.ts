@@ -10,6 +10,7 @@ import type {
   MeetingCreateRequest,
   MeetingDetail,
   MeetingHome,
+  MeetingJoinRequest,
   MeetingListItem,
   MeetingListParams,
   MeetingPage,
@@ -334,6 +335,36 @@ export function getMyMeetingActivityAppliedRecruits(
   );
 }
 
+export function getMeetingJoinRequests(meetingId: number) {
+  return fetchClient<MeetingJoinRequest[]>(
+    `${MEETING_ENDPOINT}/${meetingId}/join-requests`,
+  );
+}
+
+export function approveMeetingJoinRequest(
+  meetingId: number,
+  joinRequestId: number,
+) {
+  return fetchClient<MeetingJoinRequest>(
+    `${MEETING_ENDPOINT}/${meetingId}/join-requests/${joinRequestId}/approve`,
+    {
+      method: "PATCH",
+    },
+  );
+}
+
+export function rejectMeetingJoinRequest(
+  meetingId: number,
+  joinRequestId: number,
+) {
+  return fetchClient<MeetingJoinRequest>(
+    `${MEETING_ENDPOINT}/${meetingId}/join-requests/${joinRequestId}/reject`,
+    {
+      method: "PATCH",
+    },
+  );
+}
+
 export function getMeetingPosts(
   meetingId: number,
   params?: MeetingPostListParams,
@@ -350,6 +381,20 @@ export function getMeetingPost(meetingId: number, postId: number) {
 export function getMeetingRecruit(meetingId: number, postId: number) {
   return fetchClient<MeetingRecruitDetail>(
     buildMeetingRecruitEndpoint(meetingId, postId),
+  );
+}
+
+export async function getMeetingRecruitActivities(meetingId: number) {
+  const recruitPostPage = await getMeetingPosts(meetingId, {
+    types: ["RECRUIT"],
+    page: 0,
+    size: 100,
+  });
+
+  return Promise.all(
+    recruitPostPage.content.map((post) =>
+      getMeetingRecruit(meetingId, post.postId),
+    ),
   );
 }
 

@@ -56,6 +56,16 @@ export type MeetingMember = {
   host: boolean;
 };
 
+export type MeetingJoinRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export type MeetingJoinRequest = {
+  joinRequestId: number;
+  userId: number;
+  nickname: string;
+  status: MeetingJoinRequestStatus;
+  requestedAt: string;
+};
+
 export type UpcomingActivity = {
   postingId: number;
   title: string;
