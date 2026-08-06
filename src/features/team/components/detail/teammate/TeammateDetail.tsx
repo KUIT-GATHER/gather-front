@@ -29,6 +29,7 @@ export function TeammateDetail({
 }: TeammateDetailProps) {
   const location = useLocation();
   const navigate = useNavigate();
+
   const isBoardPage = location.pathname.endsWith("/posts");
   const isPostDetailPage = location.pathname.startsWith(
     `/teams/${home.meetingId}/posts/`,
@@ -40,16 +41,16 @@ export function TeammateDetail({
       : isHomePage
         ? "bookmark"
         : "none";
-  const isSettingsPage = location.pathname.startsWith(
-    `/teams/${home.meetingId}/settings`,
-  );
-  const settingsBasePath = `/teams/${home.meetingId}/settings`;
 
-  const isSettingsRootPage = location.pathname === settingsBasePath;
+  const pathname = location.pathname;
+  const teamBasePath = `/teams/${home.meetingId}`;
+  const settingsBasePath = `${teamBasePath}/settings`;
+  const isSettingsRootPage = pathname === settingsBasePath;
+  const isSettingsSubPage = pathname.startsWith(`${settingsBasePath}/`);
+  const isSettingsPage = isSettingsRootPage || isSettingsSubPage;
 
-  const isSettingsSubPage = location.pathname.startsWith(
-    `${settingsBasePath}/`,
-  );
+  const showTeamHeader = !isSettingsSubPage;
+  const showTabs = !isPostDetailPage && !isSettingsPage;
 
   return (
     <article
@@ -59,7 +60,7 @@ export function TeammateDetail({
           : "min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]"
       }
     >
-      {isSettingsSubPage ? null : (
+      {showTeamHeader ? (
         <TeammateHeader
           title={home.name}
           viewerRole={viewerRole}
@@ -67,17 +68,15 @@ export function TeammateDetail({
           showSettingsInsteadOfRole={isHomePage && viewerRole === "leader"}
           onBack={() => navigate(-1)}
           onSettingsClick={() => {
-            navigate(`/teams/${home.meetingId}/settings`);
+            navigate(`${teamBasePath}/settings`);
           }}
           isBookmarked={isBookmarked}
           isBookmarkPending={isBookmarkPending}
           onBookmarkToggle={onBookmarkToggle}
         />
-      )}
+      ) : null}
 
-      {isPostDetailPage || isSettingsRootPage || isSettingsSubPage ? null : (
-        <TeammateTabs meetingId={home.meetingId} />
-      )}
+      {showTabs ? <TeammateTabs meetingId={home.meetingId} /> : null}
 
       {children}
 

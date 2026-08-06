@@ -41,7 +41,7 @@ export function SharedMeetingBoard({
   const selectedPostType = hasTypeFilter ? selectedType : undefined;
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const postListParams = useMemo(
-    () => (selectedPostType ? { type: selectedPostType } : {}),
+    () => (selectedPostType ? { types: [selectedPostType] } : {}),
     [selectedPostType],
   );
   const postsQuery = useMeetingPostsQuery(meetingId, postListParams);

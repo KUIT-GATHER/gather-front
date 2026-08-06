@@ -32,6 +32,10 @@ import { TeamPostDetailPage } from "@/pages/teams/TeamPostDetailPage";
 import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
 import { TeamSettingsPage } from "@/pages/teams/TeamSettingsPage";
 import { TeamInfoEditPage } from "@/pages/teams/TeamInfoEditPage";
+import { TeamMemberManagementPage } from "@/pages/teams/TeamMemberManagementPage";
+import { TeamJoinRequestManagementPage } from "@/pages/teams/TeamJoinRequestManagementPage";
+import { TeamActivityManagementPage } from "@/pages/teams/TeamActivityManagementPage";
+import { TeamActivityApplicantsPage } from "@/pages/teams/TeamActivityApplicantsPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
@@ -116,6 +120,22 @@ export const router = createBrowserRouter([
               { path: "activity", element: <TeamDetailActivityPage /> },
               { path: "settings", element: <TeamSettingsPage /> },
               { path: "settings/info", element: <TeamInfoEditPage /> },
+              {
+                path: "settings/members",
+                element: <TeamMemberManagementPage />,
+              },
+              {
+                path: "settings/applications",
+                element: <TeamJoinRequestManagementPage />,
+              },
+              {
+                path: "settings/activities",
+                element: <TeamActivityManagementPage />,
+              },
+              {
+                path: "settings/activities/:postId/applicants",
+                element: <TeamActivityApplicantsPage />,
+              },
             ],
           },
 

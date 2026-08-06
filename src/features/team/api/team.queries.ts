@@ -5,11 +5,14 @@ import {
   getMeetingPostComments,
   getMeeting,
   getMeetingHome,
+  getMeetingJoinRequests,
   getMeetingPosts,
   getMeetingRecommendedKeywords,
   getMeetings,
   getMyMeetings,
   getRecommendedMeetings,
+  getMeetingRecruitActivities,
+  getMeetingRecruit,
 } from "@/features/team/api/team.api";
 import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 
@@ -49,12 +52,24 @@ export const teamKeys = {
       ...teamKeys.home(meetingId),
       isAuthenticated ? "authenticated" : "anonymous",
     ] as const,
+  joinRequests: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "joinRequests"] as const,
+
+  approveJoinRequest: (meetingId: number) =>
+    [...teamKeys.joinRequests(meetingId), "approve"] as const,
+
+  rejectJoinRequest: (meetingId: number) =>
+    [...teamKeys.joinRequests(meetingId), "reject"] as const,
   posts: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "posts"] as const,
+  recruitActivities: (meetingId: number) =>
+    [...teamKeys.posts(meetingId), "recruitActivities"] as const,
   postList: (meetingId: number, params: MeetingPostListParams = {}) =>
     [...teamKeys.posts(meetingId), params] as const,
   post: (meetingId: number, postId: number) =>
     [...teamKeys.posts(meetingId), "detail", postId] as const,
+  recruit: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "recruit"] as const,
   postComments: (meetingId: number, postId: number) =>
     [...teamKeys.post(meetingId, postId), "comments"] as const,
   postCommentList: (
@@ -128,6 +143,23 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.homeForViewer(meetingId, isAuthenticated),
       queryFn: () => getMeetingHome(meetingId),
+    }),
+
+  joinRequests: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.joinRequests(meetingId),
+      queryFn: () => getMeetingJoinRequests(meetingId),
+    }),
+
+  recruitActivities: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.recruitActivities(meetingId),
+      queryFn: () => getMeetingRecruitActivities(meetingId),
+    }),
+  recruit: (meetingId: number, postId: number) =>
+    queryOptions({
+      queryKey: teamKeys.recruit(meetingId, postId),
+      queryFn: () => getMeetingRecruit(meetingId, postId),
     }),
 
   posts: (meetingId: number, params: MeetingPostListParams = {}) =>

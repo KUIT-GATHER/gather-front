@@ -89,7 +89,7 @@ export function TeammateHeader({
           <button
             type="button"
             aria-label="모임 설정"
-            disabled
+            onClick={onSettingsClick}
             className="grid size-8 shrink-0 place-items-center rounded-full text-text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-default"
           >
             <img src={SettingsIcon} alt="" className="size-5.3" />
