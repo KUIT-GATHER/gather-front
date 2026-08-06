@@ -233,7 +233,6 @@ const pendingMeetingImageUploads = new Map<
     applied: boolean;
   }
 >();
-const meetingImageUrlsByMeetingId = new Map<number, string[]>();
 const uploadedMockObjects = new Map<
   string,
   { meetingId: number; publicUrl: string; uploadId: string }
@@ -244,6 +243,10 @@ const mockPostImageUrls = [
   mockPostImageTwo,
   mockPostImageThree,
 ] as const;
+const meetingImageUrlsByMeetingId = new Map<number, string[]>([
+  [1, [...mockPostImageUrls]],
+  [2, [mockPostImageOne]],
+]);
 
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   1: [

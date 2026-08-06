@@ -4,22 +4,22 @@ import type {
   MeetingHome,
 } from "@/features/team/types/team.types";
 
+import { MeetingImageCarousel } from "./MeetingImageCarousel";
+
 type SharedMeetingSummaryProps = {
   home: MeetingHome;
   detail: MeetingDetail;
+  imageUrls: readonly string[];
 };
 
 export function SharedMeetingSummary({
   home,
   detail,
+  imageUrls,
 }: SharedMeetingSummaryProps) {
   return (
     <section>
-      {/* 사진 추후 추가 예정 */}
-      <div
-        className="-mx-5.5 -mt-4 mb-2.5 h-[184px] bg-stroke"
-        aria-hidden="true"
-      />
+      <MeetingImageCarousel meetingName={home.name} imageUrls={imageUrls} />
       <div className="flex flex-wrap gap-1">
         {detail.categories.map((category) => (
           <CategoryBadge key={category} category={category} />
