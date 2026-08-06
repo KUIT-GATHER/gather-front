@@ -2,6 +2,7 @@ import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
   MeetingImageListResponse,
+  MeetingManageImage,
   MeetingImagePresignedUrlRequest,
   MeetingImagePresignedUrlResponse,
   MeetingImageUpdateRequest,
@@ -44,5 +45,11 @@ export function getMeetingImages(meetingId: number) {
   return fetchClient<MeetingImageListResponse>(
     `${MEETING_ENDPOINT}/${meetingId}/images`,
     publicOptions,
+  );
+}
+
+export function getMeetingManageImages(meetingId: number) {
+  return fetchClient<MeetingManageImage[]>(
+    `${MEETING_ENDPOINT}/${meetingId}/images/manage`,
   );
 }

@@ -186,7 +186,6 @@ export function SharedMeetingBoard({
         <button
           type="button"
           aria-label="게시글 작성"
-          disabled={!onWriteClick}
           className="fixed right-[max(1.375rem,calc(50%-11.25rem))] bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-20 inline-flex h-11 items-center gap-2 rounded-full bg-button px-5 text-[15px] leading-5 font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.12)] transition active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-default"
           onClick={onWriteClick}
         >
