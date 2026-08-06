@@ -29,6 +29,27 @@ const VOLUNTEER_POSTING_IMAGES_BY_CATEGORY = {
   OVERSEAS: [OverseasImage01, OverseasImage02, OverseasImage03],
 } as const satisfies Record<PostingCategory, readonly string[]>;
 
+const ALL_VOLUNTEER_POSTING_IMAGES = [
+  EnvironmentImage01,
+  EnvironmentImage02,
+  EnvironmentImage03,
+  EducationImage01,
+  EducationImage02,
+  EducationImage03,
+  CultureImage01,
+  CultureImage02,
+  CultureImage03,
+  CommunityImage01,
+  CommunityImage02,
+  CommunityImage03,
+  WelfareImage01,
+  WelfareImage02,
+  WelfareImage03,
+  OverseasImage01,
+  OverseasImage02,
+  OverseasImage03,
+] as const;
+
 export function getVolunteerPostingImage(
   category?: PostingCategory | null,
   postingId?: number | null,
@@ -46,4 +67,14 @@ export function getVolunteerPostingImage(
   const imageIndex = Math.abs(postingId) % images.length;
 
   return images[imageIndex] ?? fallbackImage;
+}
+
+export function getVolunteerNotificationImage(postingId: number): string {
+  if (!Number.isInteger(postingId)) {
+    return fallbackImage;
+  }
+
+  const imageIndex = Math.abs(postingId) % ALL_VOLUNTEER_POSTING_IMAGES.length;
+
+  return ALL_VOLUNTEER_POSTING_IMAGES[imageIndex] ?? fallbackImage;
 }

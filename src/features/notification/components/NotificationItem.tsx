@@ -1,4 +1,5 @@
 import { formatNotificationCreatedAt } from "@/features/notification/lib/formatNotificationCreatedAt";
+import { NotificationThumbnail } from "@/features/notification/components/NotificationThumbnail";
 
 import type { Notification } from "@/features/notification/types/notification.types";
 import { cn } from "@/shared/lib/cn";
@@ -20,7 +21,7 @@ export function NotificationItem({
     <button
       type="button"
       className={cn(
-        "flex w-full px-5.5 py-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed",
+        "flex w-full items-center gap-5 px-7 py-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed",
         notification.read ? "bg-white" : "bg-point-green/15",
       )}
       aria-label={`${readStatus}: ${notification.message}`}
@@ -28,13 +29,14 @@ export function NotificationItem({
       onClick={onClick}
     >
       <span className="sr-only">{readStatus}</span>
-      <span className="min-w-0">
+      <NotificationThumbnail notification={notification} />
+      <span className="min-w-0 flex-1">
         <span className="block break-words text-body-15-semibold text-text">
           {notification.message}
         </span>
         <time
           dateTime={notification.createdAt}
-          className="mt-2 block text-body-14 text-text-gray-100"
+          className="mt-2 block text-xs leading-5 font-medium text-text-gray-100"
         >
           {formatNotificationCreatedAt(notification.createdAt)}
         </time>

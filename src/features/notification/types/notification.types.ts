@@ -9,13 +9,29 @@ export type NotificationTargetType =
   | "MY_PAGE"
   | (string & {});
 
+export type NotificationType =
+  | "VOLUNTEER_SCHEDULE"
+  | "BOOKMARKED_POSTING_DEADLINE"
+  | "BADGE_EARNED"
+  | "ACTIVITY_POST_COMMENT"
+  | "MEETING_JOIN_APPROVED"
+  | "MEETING_JOIN_REJECTED"
+  | "MEETING_BOOKMARKED_DEADLINE"
+  | "MEETING_POST_COMMENT"
+  | "MEETING_NOTICE_CREATED"
+  | "MEETING_POSTING_CREATED"
+  | "MEETING_POST_CREATED"
+  | (string & {});
+
 export type Notification = {
   id: number;
   category: NotificationCategory;
-  type: string;
+  type: NotificationType;
   message: string;
   targetType: NotificationTargetType;
   targetId: number | null;
+  targetMeetingId: number | null;
+  thumbnailUrl: string | null;
   read: boolean;
   createdAt: string;
 };
