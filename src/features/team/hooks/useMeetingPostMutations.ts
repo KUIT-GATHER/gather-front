@@ -4,7 +4,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 
-import { myBadgeKeys } from "@/features/my/api/myBadge.api";
+import { myPageKeys } from "@/features/my/api/myPage.queries";
 import {
   createMeetingPostComment,
   createMeetingPost,
@@ -84,7 +84,9 @@ export function useCreateMeetingPostMutation(meetingId: number) {
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
       });
-      void queryClient.invalidateQueries({ queryKey: myBadgeKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
     },
   });
 }
@@ -170,7 +172,9 @@ export function useCreateMeetingPostCommentMutation(
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
       });
-      void queryClient.invalidateQueries({ queryKey: myBadgeKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
     },
   });
 }

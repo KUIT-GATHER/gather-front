@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { myBadgeKeys } from "@/features/my/api/myBadge.api";
 import {
   applyVolunteerPostingParticipation,
   cancelVolunteerPostingParticipation,
@@ -145,7 +144,9 @@ export function useCompleteVolunteerPostingParticipationMutation(
     mutationKey: volunteerPostingKeys.participationComplete(postingId),
     mutationFn: () => completeVolunteerPostingParticipation(postingId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: myBadgeKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
     },
   });
 }
