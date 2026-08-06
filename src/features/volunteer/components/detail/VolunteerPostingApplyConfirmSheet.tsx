@@ -1,8 +1,8 @@
 import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
 import {
-  formatVolunteerDate,
   formatVolunteerLocation,
+  formatVolunteerShortDate,
   getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
@@ -28,7 +28,7 @@ export function VolunteerPostingApplyConfirmSheet({
 }: VolunteerPostingApplyConfirmSheetProps) {
   const imageSrc = getVolunteerPostingImage(posting.category, posting.id);
   const location = formatVolunteerLocation(posting);
-  const activityDate = formatVolunteerDate(posting.actStartDate);
+  const activityDate = formatVolunteerShortDate(posting.actStartDate);
   const deadline = getRecruitmentDDay(posting.noticeEndDate);
   const metaItems = [location, activityDate].filter(Boolean);
 
@@ -37,6 +37,7 @@ export function VolunteerPostingApplyConfirmSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="신청 확인"
+      className="rounded-t-[40px] bg-bg"
       secondaryAction={{
         label: "취소",
         onClick: () => onOpenChange(false),
@@ -51,12 +52,12 @@ export function VolunteerPostingApplyConfirmSheet({
         isPending,
       }}
     >
-      <div className="rounded-xl border border-[#C5C5C5] bg-white p-3">
+      <div className="rounded-xl border border-[#C5C5C5] bg-white px-[11px] py-[15px]">
         <div className="flex items-stretch gap-3">
           <img
             src={imageSrc}
             alt=""
-            className="w-20 shrink-0 rounded-lg object-cover"
+            className="h-[106px] w-[91px] shrink-0 rounded-[10px] object-cover"
           />
 
           <div className="flex min-w-0 flex-1 flex-col">
@@ -89,7 +90,9 @@ export function VolunteerPostingApplyConfirmSheet({
       </div>
 
       <p className="mt-2 text-[13px] leading-[21.125px] font-normal text-text-gray-400">
-        활동 조건을 다시 한번 확인해 주세요.
+        카드 클릭 시 외부 링크로 이동하여 봉사 신청이 가능합니다.
+        <br />
+        공식 페이지 신청 후 신청 버튼을 눌러 상태를 변경해 주세요.
       </p>
 
       {errorMessage ? (

@@ -26,10 +26,6 @@ export function VolunteerPostingCard({
       ? formatVolunteerHomeDate(posting.actStartDate)
       : formatVolunteerDate(posting.actStartDate);
   const recruitmentDDay = getRecruitmentDDay(posting.noticeEndDate);
-  const urgentRecruitmentDDay =
-    recruitmentDDay === "D-day" || /^D-[1-7]$/.test(recruitmentDDay ?? "")
-      ? recruitmentDDay
-      : null;
 
   if (variant === "compact") {
     return (
@@ -61,7 +57,7 @@ export function VolunteerPostingCard({
       title={posting.title}
       description={posting.recruitOrg}
       metadata={[location, activityDate]}
-      dDay={urgentRecruitmentDDay}
+      dDay={recruitmentDDay}
       categories={[posting.category]}
       onClick={onClick}
     />
