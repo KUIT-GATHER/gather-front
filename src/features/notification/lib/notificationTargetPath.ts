@@ -17,8 +17,12 @@ export function getNotificationTargetPath(notification: Notification) {
         ? `/teams/${notification.targetId}`
         : null;
     case "MY_PAGE":
-      return "/my";
+      return notification.type === "BADGE_EARNED" ? "/my/badges" : "/my";
     case "POST":
+      return isValidTargetId(notification.targetMeetingId) &&
+        isValidTargetId(notification.targetId)
+        ? `/teams/${notification.targetMeetingId}/posts/${notification.targetId}`
+        : null;
     default:
       return null;
   }
