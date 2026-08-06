@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 
-import type { BadgeType, MyBadge } from "@/features/my/api/myBadge.api";
 import activityBadgeIcon from "@/features/my/assets/activity-badge.svg";
 import bookmark5Icon from "@/features/my/assets/badge-bookmark-5.svg";
 import comment10Icon from "@/features/my/assets/badge-comment-10.svg";
@@ -12,6 +11,7 @@ import firstTeamJoinIcon from "@/features/my/assets/badge-first-team-join.svg";
 import lockIcon from "@/features/my/assets/badge-lock.svg";
 import teamCreatedIcon from "@/features/my/assets/badge-team-created.svg";
 import { useMyBadgesQuery } from "@/features/my/hooks/useMyBadgesQuery";
+import type { BadgeType, MyBadge } from "@/features/my/types/myBadge.types";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
@@ -71,7 +71,10 @@ function BadgeCard({ badge }: { badge: MyBadge }) {
       <h2 className="mt-3 flex h-5 w-[134px] items-center justify-center text-[16px] leading-5 font-semibold text-text">
         {badgeDisplayTitles[badge.badgeType]}
       </h2>
-      <p className="mt-1 flex h-4 w-[134px] items-center justify-center whitespace-nowrap text-[15px] leading-[13.75px] text-text-gray-400">
+      <p
+        title={badge.title}
+        className="mt-1 flex h-4 w-[134px] items-center justify-center truncate text-[15px] leading-[13.75px] text-text-gray-400"
+      >
         {badge.title}
       </p>
 

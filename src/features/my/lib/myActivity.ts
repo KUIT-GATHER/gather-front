@@ -1,19 +1,26 @@
-import type { MyMeetingActivity } from "@/features/my/types/myActivity.types";
+import type {
+  MyDisplayablePageActivity,
+  MyLinkedMeetingActivity,
+  MyPageActivity,
+  MyVolunteerActivityStatus,
+} from "@/features/my/types/myActivity.types";
 
-export function getMeetingActivityLabel(activity: MyMeetingActivity) {
-  if (
-    activity.postingParticipationStatus === "APPLIED" ||
-    activity.postingParticipationStatus === "CONFIRMED"
-  ) {
-    return "신청중";
-  }
+const meetingActivityLabels: Record<MyVolunteerActivityStatus, string> = {
+  APPLIED: "신청중",
+  CONFIRMED: "신청중",
+  COMPLETED: "봉사 완료",
+  REVIEWED: "봉사 완료",
+};
 
-  if (
-    activity.postingParticipationStatus === "COMPLETED" ||
-    activity.postingParticipationStatus === "REVIEWED"
-  ) {
-    return "봉사 완료";
-  }
+export function isDisplayableMyPageActivity(
+  activity: MyPageActivity,
+): activity is MyDisplayablePageActivity {
+  return (
+    activity.activityType === "VOLUNTEER" ||
+    activity.postingParticipationStatus !== null
+  );
+}
 
-  return activity.meetingStatus === "COMPLETED" ? "모임 완료" : "활동 예정";
+export function getMeetingActivityLabel(activity: MyLinkedMeetingActivity) {
+  return meetingActivityLabels[activity.postingParticipationStatus];
 }

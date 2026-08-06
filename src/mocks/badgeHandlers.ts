@@ -1,6 +1,6 @@
 import { HttpResponse, http } from "msw";
 
-import type { BadgeType, MyBadge } from "@/features/my/api/myBadge.api";
+import type { BadgeType, MyBadge } from "@/features/my/types/myBadge.types";
 import { formatLocalDateTimeForApi } from "@/shared/lib/localDateTime";
 
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";

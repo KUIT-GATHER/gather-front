@@ -5,12 +5,14 @@ import {
   getMyActivityRecords,
   getMyActivitySummary,
 } from "@/features/my/api/myActivity.api";
+import { getMyBadges } from "@/features/my/api/myBadge.api";
 import { getMyPageHome } from "@/features/my/api/myPage.api";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
 export const myPageKeys = {
   all: ["mypage"] as const,
   home: () => [...myPageKeys.all, "home"] as const,
+  badges: () => [...myPageKeys.all, "badges"] as const,
   activitiesAll: () => [...myPageKeys.all, "activities"] as const,
   activities: (yearMonth: string) =>
     [...myPageKeys.activitiesAll(), yearMonth] as const,
@@ -24,6 +26,12 @@ export const myPageQueries = {
     queryOptions({
       queryKey: myPageKeys.home(),
       queryFn: getMyPageHome,
+    }),
+  badges: () =>
+    queryOptions({
+      queryKey: myPageKeys.badges(),
+      queryFn: getMyBadges,
+      refetchOnMount: "always",
     }),
   activities: (yearMonth: string) =>
     queryOptions({

@@ -39,6 +39,14 @@ export type MyMeetingActivity = MyPageActivityBase & {
 
 export type MyPageActivity = MyVolunteerActivity | MyMeetingActivity;
 
+export type MyLinkedMeetingActivity = MyMeetingActivity & {
+  postingParticipationStatus: MyVolunteerActivityStatus;
+};
+
+export type MyDisplayablePageActivity =
+  | MyVolunteerActivity
+  | MyLinkedMeetingActivity;
+
 export type MyActivitySummary = {
   totalCompletedCount: number;
   totalRecognizedMinutes: number;

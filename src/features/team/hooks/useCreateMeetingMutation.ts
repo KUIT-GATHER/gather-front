@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { myBadgeKeys } from "@/features/my/api/myBadge.api";
+import { myPageKeys } from "@/features/my/api/myPage.queries";
 import { createMeeting } from "@/features/team/api/team.api";
 import { teamKeys } from "@/features/team/api/team.queries";
 
@@ -13,7 +13,9 @@ export function useCreateMeetingMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: teamKeys.my() });
-      void queryClient.invalidateQueries({ queryKey: myBadgeKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
     },
   });
 }

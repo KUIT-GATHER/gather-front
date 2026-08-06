@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getMyBadges, myBadgeKeys } from "@/features/my/api/myBadge.api";
+import { myPageQueries } from "@/features/my/api/myPage.queries";
 
 export function useMyBadgesQuery() {
-  return useQuery({
-    queryKey: myBadgeKeys.all,
-    queryFn: getMyBadges,
-    refetchOnMount: "always",
-  });
+  return useQuery(myPageQueries.badges());
 }
