@@ -28,7 +28,7 @@ export function VolunteerPostingApplyBar({
   const canApply = participationAction === "APPLY";
   const canCancel = participationAction === "CANCEL";
   const canComplete = participationAction === "COMPLETE";
-  const canClick = canApply || canCancel || canComplete;
+  const canClick = canApply || canComplete;
   const isButtonDisabled = isPending || !canClick || (canApply && disabled);
   const isNeutralButton = canCancel || participationAction === "NONE";
   const buttonVariant =
@@ -61,7 +61,7 @@ export function VolunteerPostingApplyBar({
       case "APPLY":
         return disabled ? "신청 마감된 공고예요" : "신청하기";
       case "CANCEL":
-        return "신청 취소하기";
+        return "이미 신청한 봉사입니다";
       case "COMPLETE":
         return "봉사 완료";
       default:

@@ -65,8 +65,9 @@ export function useVolunteerPostingApplicationFlow({
     setApplyErrorMessage(undefined);
 
     applyMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (participation) => {
         setIsApplySheetOpen(false);
+        window.location.assign(participation.applicationUrl);
       },
       onError: (error) => {
         if (
