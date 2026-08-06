@@ -16,18 +16,45 @@ export function NotificationThumbnail({
 }: NotificationThumbnailProps) {
   const thumbnailSrc = getNotificationThumbnail(notification);
 
-  return <NotificationThumbnailImage key={thumbnailSrc} src={thumbnailSrc} />;
+  return (
+    <NotificationThumbnailImage
+      key={thumbnailSrc}
+      src={thumbnailSrc}
+      isBadge={notification.type === "BADGE_EARNED"}
+    />
+  );
 }
 
-function NotificationThumbnailImage({ src }: { src: string }) {
+function NotificationThumbnailImage({
+  src,
+  isBadge,
+}: {
+  src: string;
+  isBadge: boolean;
+}) {
   const [hasImageError, setHasImageError] = useState(false);
 
-  return (
+  const image = (
     <img
       src={hasImageError ? notificationThumbnailFallbackImage : src}
       alt=""
-      className="size-12 shrink-0 rounded-lg object-cover"
+      draggable={false}
+      className={
+        isBadge
+          ? "pointer-events-none size-6 shrink-0 select-none object-contain"
+          : "pointer-events-none size-12 shrink-0 select-none rounded-full object-cover"
+      }
       onError={() => setHasImageError(true)}
     />
+  );
+
+  return isBadge ? (
+    <span className="pointer-events-none flex size-12 shrink-0 items-center justify-center rounded-full bg-white p-2.5">
+      {image}
+    </span>
+  ) : (
+    <span className="pointer-events-none size-12 shrink-0 overflow-hidden rounded-full">
+      {image}
+    </span>
   );
 }

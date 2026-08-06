@@ -21,7 +21,7 @@ export function NotificationItem({
     <button
       type="button"
       className={cn(
-        "flex w-full gap-3 px-5.5 py-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed",
+        "flex w-full items-center gap-5 px-7 py-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed",
         notification.read ? "bg-white" : "bg-point-green/15",
       )}
       aria-label={`${readStatus}: ${notification.message}`}
@@ -36,7 +36,7 @@ export function NotificationItem({
         </span>
         <time
           dateTime={notification.createdAt}
-          className="mt-2 block text-body-14 text-text-gray-100"
+          className="mt-2 block text-xs leading-5 font-medium text-text-gray-100"
         >
           {formatNotificationCreatedAt(notification.createdAt)}
         </time>

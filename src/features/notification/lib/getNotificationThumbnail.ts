@@ -17,8 +17,10 @@ export function getNotificationThumbnail(notification: Notification): string {
     return activityBadgeIcon;
   }
 
-  if (notification.thumbnailUrl !== null) {
-    return notification.thumbnailUrl;
+  const thumbnailUrl = notification.thumbnailUrl?.trim();
+
+  if (thumbnailUrl) {
+    return thumbnailUrl;
   }
 
   if (
