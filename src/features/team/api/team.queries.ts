@@ -10,12 +10,17 @@ import {
   getMeetingRecommendedKeywords,
   getMeetings,
   getMyMeetings,
+  getMyMeetingActivityAppliedRecruits,
+  getMyMeetingActivityCommentedPosts,
+  getMyMeetingActivityPosts,
+  getMyMeetingActivitySummary,
   getRecommendedMeetings,
 } from "@/features/team/api/team.api";
 import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 
 import type {
   BookmarkedMeetingInfiniteParams,
+  MeetingActivityListParams,
   MeetingInfiniteParams,
   MeetingListParams,
   MeetingPostCommentListParams,
@@ -54,6 +59,22 @@ export const teamKeys = {
       ...teamKeys.home(meetingId),
       isAuthenticated ? "authenticated" : "anonymous",
     ] as const,
+  myActivity: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "myActivity"] as const,
+  myActivitySummary: (meetingId: number) =>
+    [...teamKeys.myActivity(meetingId), "summary"] as const,
+  myActivityPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) => [...teamKeys.myActivity(meetingId), "posts", params] as const,
+  myActivityCommentedPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) => [...teamKeys.myActivity(meetingId), "commentedPosts", params] as const,
+  myActivityAppliedRecruits: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) => [...teamKeys.myActivity(meetingId), "appliedRecruits", params] as const,
   posts: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "posts"] as const,
   postList: (meetingId: number, params: MeetingPostListParams = {}) =>
@@ -81,6 +102,8 @@ export const teamKeys = {
     [...teamKeys.postComments(meetingId, postId), "update", commentId] as const,
   deletePostComment: (meetingId: number, postId: number, commentId: number) =>
     [...teamKeys.postComments(meetingId, postId), "delete", commentId] as const,
+  leave: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "leave"] as const,
   bookmark: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "bookmark"] as const,
 };
@@ -145,6 +168,66 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.homeForViewer(meetingId, isAuthenticated),
       queryFn: () => getMeetingHome(meetingId),
+    }),
+
+  myActivitySummary: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.myActivitySummary(meetingId),
+      queryFn: () => getMyMeetingActivitySummary(meetingId),
+    }),
+
+  myActivityPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.myActivityPosts(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMyMeetingActivityPosts(meetingId, { ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  myActivityCommentedPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.myActivityCommentedPosts(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMyMeetingActivityCommentedPosts(meetingId, {
+          ...params,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  myActivityAppliedRecruits: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.myActivityAppliedRecruits(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMyMeetingActivityAppliedRecruits(meetingId, {
+          ...params,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
     }),
 
   posts: (meetingId: number, params: MeetingPostListParams = {}) =>

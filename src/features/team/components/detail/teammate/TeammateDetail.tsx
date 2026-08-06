@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
+import { TeamActivityMainHeader } from "@/features/team/components/activity/TeamActivityMainHeader";
 import type {
   MeetingHome,
   TeammateViewerRole,
@@ -34,12 +35,31 @@ export function TeammateDetail({
     `/teams/${home.meetingId}/posts/`,
   );
   const isHomePage = location.pathname === `/teams/${home.meetingId}`;
+  const isActivityMainPage =
+    location.pathname === `/teams/${home.meetingId}/activity`;
+  const activitySectionTitleByPath = new Map([
+    [`/teams/${home.meetingId}/activity/recruits`, "내가 신청한 봉사"],
+    [`/teams/${home.meetingId}/activity/posts`, "작성한 게시글"],
+    [`/teams/${home.meetingId}/activity/comments`, "댓글 단 게시글"],
+  ]);
+  const activitySectionTitle = activitySectionTitleByPath.get(
+    location.pathname,
+  );
   const headerAction =
     isBoardPage && viewerRole === "leader"
       ? "settings"
       : isHomePage
         ? "bookmark"
         : "none";
+  const headerTitle = activitySectionTitle ?? home.name;
+  const handleBack = () => {
+    if (activitySectionTitle) {
+      navigate(`/teams/${home.meetingId}/activity`);
+      return;
+    }
+
+    navigate(-1);
+  };
 
   return (
     <article
@@ -49,15 +69,19 @@ export function TeammateDetail({
           : "min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]"
       }
     >
-      <TeammateHeader
-        title={home.name}
-        viewerRole={viewerRole}
-        action={headerAction}
-        onBack={() => navigate(-1)}
-        isBookmarked={isBookmarked}
-        isBookmarkPending={isBookmarkPending}
-        onBookmarkToggle={onBookmarkToggle}
-      />
+      {isActivityMainPage ? (
+        <TeamActivityMainHeader title={home.name} />
+      ) : (
+        <TeammateHeader
+          title={headerTitle}
+          viewerRole={viewerRole}
+          action={headerAction}
+          onBack={handleBack}
+          isBookmarked={isBookmarked}
+          isBookmarkPending={isBookmarkPending}
+          onBookmarkToggle={onBookmarkToggle}
+        />
+      )}
       {isPostDetailPage ? null : <TeammateTabs meetingId={home.meetingId} />}
 
       {children}

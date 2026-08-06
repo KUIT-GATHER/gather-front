@@ -206,6 +206,39 @@ export type MeetingPostCommentPage = {
   size: number;
 };
 
+export type MeetingActivityListParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
+};
+
+export type MyMeetingActivitySummary = {
+  writtenPostCount: number;
+  commentedPostCount: number;
+  appliedRecruitCount: number;
+};
+
+export type MeetingRecruitParticipationStatus = "APPLIED";
+
+export type MyAppliedRecruit = {
+  postId: number;
+  meetingId: number;
+  title: string;
+  place: string | null;
+  actDate: string;
+  actStartTime: string | null;
+  actEndTime: string | null;
+  status: MeetingRecruitParticipationStatus;
+};
+
+export type MyAppliedRecruitPage = {
+  content: MyAppliedRecruit[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
 export type MeetingPostCommentCreateRequest = {
   content: string;
 };

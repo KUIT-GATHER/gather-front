@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import CommentIcon from "@/assets/icons/Comment.svg";
@@ -18,14 +19,49 @@ export function SharedMeetingBoardPostCard({
   post,
 }: SharedMeetingBoardPostCardProps) {
   const firstImageUrl = post.imageUrls[0];
+  const postDetailPath = `/teams/${meetingId}/posts/${post.postId}`;
+  const contentRef = useRef<HTMLParagraphElement>(null);
+  const [isContentTruncated, setIsContentTruncated] = useState(false);
+
+  useEffect(() => {
+    const contentElement = contentRef.current;
+
+    if (!contentElement) return;
+
+    const updateTruncatedState = () => {
+      setIsContentTruncated(
+        contentElement.scrollWidth > contentElement.clientWidth ||
+          contentElement.scrollHeight > contentElement.clientHeight,
+      );
+    };
+
+    updateTruncatedState();
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updateTruncatedState);
+
+    resizeObserver?.observe(contentElement);
+    window.addEventListener("resize", updateTruncatedState);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", updateTruncatedState);
+    };
+  }, [post.content]);
 
   return (
-    <article className="rounded-xl border border-stroke bg-white px-3 pt-5 pb-3">
+    <Link
+      to={postDetailPath}
+      className="block rounded-xl border border-stroke bg-white px-3 pt-5 pb-3 text-left transition hover:border-point-green hover:bg-[#f0f6f0] active:border-point-green active:bg-[#f0f6f0] focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
+    >
       <h3 className="line-clamp-1 text-[15px] leading-5 font-semibold text-text">
         {post.title}
       </h3>
       <div className="mt-2 flex items-start gap-3 text-[14px] leading-5 font-normal text-text-gray-400">
         <p
+          ref={contentRef}
           className="line-clamp-1 min-w-0 flex-1"
           style={{
             background:
@@ -37,20 +73,21 @@ export function SharedMeetingBoardPostCard({
         >
           {post.content}
         </p>
-        <Link
-          to={`/teams/${meetingId}/posts/${post.postId}`}
-          className="shrink-0 text-text"
-          style={{
-            textDecorationLine: "underline",
-            textDecorationSkipInk: "auto",
-            textDecorationStyle: "solid",
-            textDecorationThickness: "auto",
-            textUnderlineOffset: "auto",
-            textUnderlinePosition: "from-font",
-          }}
-        >
-          더보기
-        </Link>
+        {isContentTruncated ? (
+          <span
+            className="shrink-0 text-text"
+            style={{
+              textDecorationLine: "underline",
+              textDecorationSkipInk: "auto",
+              textDecorationStyle: "solid",
+              textDecorationThickness: "auto",
+              textUnderlineOffset: "auto",
+              textUnderlinePosition: "from-font",
+            }}
+          >
+            더보기
+          </span>
+        ) : null}
       </div>
 
       {firstImageUrl ? (
@@ -100,6 +137,6 @@ export function SharedMeetingBoardPostCard({
           </span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

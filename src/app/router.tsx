@@ -27,6 +27,9 @@ import { TeamCreatePage } from "@/pages/teams/TeamCreatePage";
 import { TeamCreateCompletePage } from "@/pages/teams/TeamCreateCompletePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
+import { TeamDetailActivityCommentsPage } from "@/pages/teams/TeamDetailActivityCommentsPage";
+import { TeamDetailActivityPostsPage } from "@/pages/teams/TeamDetailActivityPostsPage";
+import { TeamDetailActivityRecruitsPage } from "@/pages/teams/TeamDetailActivityRecruitsPage";
 import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
 import { TeamPostDetailPage } from "@/pages/teams/TeamPostDetailPage";
 import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
@@ -116,6 +119,18 @@ export const router = createBrowserRouter([
               { path: "posts", element: <TeamDetailPostListPage /> },
               { path: "posts/:postId", element: <TeamPostDetailPage /> },
               { path: "activity", element: <TeamDetailActivityPage /> },
+              {
+                path: "activity/recruits",
+                element: <TeamDetailActivityRecruitsPage />,
+              },
+              {
+                path: "activity/posts",
+                element: <TeamDetailActivityPostsPage />,
+              },
+              {
+                path: "activity/comments",
+                element: <TeamDetailActivityCommentsPage />,
+              },
             ],
           },
 
