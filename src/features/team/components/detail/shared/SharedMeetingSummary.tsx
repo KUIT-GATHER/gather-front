@@ -1,4 +1,5 @@
 import { CategoryBadge } from "@/features/category/components/CategoryBadge";
+import { MeetingCover } from "@/features/team/components/MeetingCover";
 import type {
   MeetingDetail,
   MeetingHome,
@@ -15,10 +16,10 @@ export function SharedMeetingSummary({
 }: SharedMeetingSummaryProps) {
   return (
     <section>
-      {/* 사진 추후 추가 예정 */}
-      <div
-        className="-mx-5.5 -mt-4 mb-2.5 h-[184px] bg-stroke"
-        aria-hidden="true"
+      <MeetingCover
+        meetingId={detail.meetingId}
+        alt={home.name + " 대표 이미지"}
+        className="-mx-5.5 -mt-4 mb-2.5 h-[184px]"
       />
       <div className="flex flex-wrap gap-1">
         {detail.categories.map((category) => (
