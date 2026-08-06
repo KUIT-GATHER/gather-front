@@ -18,6 +18,8 @@ import type {
   MeetingMember,
   MeetingMemberRole,
   MeetingPostType,
+  MeetingRecruitDetail,
+  MeetingRecruitParticipationResponse,
   MyAppliedRecruit,
 } from "@/features/team/types/team.types";
 import {
@@ -129,6 +131,22 @@ type MockMeetingPostComment = {
 type MockAppliedRecruit = MyAppliedRecruit & {
   userId: number;
 };
+
+type MockMeetingRecruit = Pick<
+  MeetingRecruitDetail,
+  | "postId"
+  | "meetingId"
+  | "place"
+  | "actDate"
+  | "actStartTime"
+  | "actEndTime"
+  | "maxParticipants"
+  | "categories"
+  | "timeRecognized"
+  | "recognizedMinutes"
+  | "applyDeadline"
+  | "external"
+>;
 
 function formatMockDate(offsetDays: number) {
   const date = new Date();
@@ -350,6 +368,37 @@ const appliedRecruits: MockAppliedRecruit[] = [
     actStartTime: "10:00",
     actEndTime: "12:00",
     status: "APPLIED",
+  },
+];
+
+const meetingRecruits: MockMeetingRecruit[] = [
+  {
+    postId: 2,
+    meetingId: 1,
+    place: "서울 영등포구 여의도동",
+    actDate: formatMockDate(14),
+    actStartTime: "09:00",
+    actEndTime: "12:00",
+    maxParticipants: 4,
+    categories: ["WELFARE"],
+    timeRecognized: true,
+    recognizedMinutes: 180,
+    applyDeadline: formatMockDate(7),
+    external: false,
+  },
+  {
+    postId: 5,
+    meetingId: 1,
+    place: "마포사회복지관",
+    actDate: "2026-05-22",
+    actStartTime: "10:00",
+    actEndTime: "12:00",
+    maxParticipants: 4,
+    categories: ["WELFARE"],
+    timeRecognized: true,
+    recognizedMinutes: 120,
+    applyDeadline: "2026-05-20",
+    external: false,
   },
 ];
 
@@ -809,6 +858,74 @@ function toMeetingPostDetail(
     recruitCapacity: post.type === "RECRUIT" ? 3 : null,
     canEdit: post.authorId === viewerUserId,
     canDelete: post.authorId === viewerUserId || team.hostId === viewerUserId,
+    updatedAt: post.createdAt,
+  };
+}
+
+function findMeetingRecruit(meetingId: number, postId: number) {
+  return meetingRecruits.find(
+    (recruit) => recruit.meetingId === meetingId && recruit.postId === postId,
+  );
+}
+
+function getMeetingRecruitAppliedCount(recruit: MockMeetingRecruit) {
+  return appliedRecruits.filter(
+    (appliedRecruit) =>
+      appliedRecruit.meetingId === recruit.meetingId &&
+      appliedRecruit.postId === recruit.postId,
+  ).length;
+}
+
+function isMeetingRecruitApplied(recruit: MockMeetingRecruit, userId: number) {
+  return appliedRecruits.some(
+    (appliedRecruit) =>
+      appliedRecruit.meetingId === recruit.meetingId &&
+      appliedRecruit.postId === recruit.postId &&
+      appliedRecruit.userId === userId,
+  );
+}
+
+function isMeetingRecruitApplicationOpen(recruit: MockMeetingRecruit) {
+  const deadline = new Date(`${recruit.applyDeadline}T23:59:59`);
+
+  return !Number.isNaN(deadline.getTime()) && Date.now() <= deadline.getTime();
+}
+
+function toMeetingRecruitDetail(
+  recruit: MockMeetingRecruit,
+  post: MockMeetingPost,
+  viewerUserId: number,
+  team: MockMeeting,
+): MeetingRecruitDetail {
+  const author = getPublicUser(post.authorId, post.authorNickname);
+  const appliedCount = getMeetingRecruitAppliedCount(recruit);
+
+  return {
+    postId: post.postId,
+    meetingId: post.meetingId,
+    title: post.title,
+    content: post.content,
+    authorId: post.authorId,
+    authorNickname: author.nickname,
+    place: recruit.place,
+    actDate: recruit.actDate,
+    actStartTime: recruit.actStartTime,
+    actEndTime: recruit.actEndTime,
+    maxParticipants: recruit.maxParticipants,
+    categories: recruit.categories,
+    timeRecognized: recruit.timeRecognized,
+    recognizedMinutes: recruit.recognizedMinutes,
+    applyDeadline: recruit.applyDeadline,
+    external: recruit.external,
+    likeCount: post.likeCount,
+    commentCount: post.commentCount,
+    appliedCount,
+    applied: isMeetingRecruitApplied(recruit, viewerUserId),
+    applicationOpen: isMeetingRecruitApplicationOpen(recruit),
+    full: appliedCount >= recruit.maxParticipants,
+    canEdit: post.authorId === viewerUserId,
+    canDelete: post.authorId === viewerUserId || team.hostId === viewerUserId,
+    createdAt: post.createdAt,
     updatedAt: post.createdAt,
   };
 }
@@ -2262,6 +2379,161 @@ export const teamHandlers = [
       return HttpResponse.json({
         success: true,
         data: null,
+        error: null,
+      });
+    },
+  ),
+
+  http.get(
+    "*/api/v1/meetings/:meetingId/posts/:postId/recruit",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      if (getMembershipRole(userId, meetingId) === null) {
+        return createMeetingErrorResponse(
+          "MEETING_MEMBER_REQUIRED",
+          "Meeting members only.",
+          403,
+        );
+      }
+
+      const recruit = findMeetingRecruit(meetingId, postId);
+
+      if (post.type !== "RECRUIT" || !recruit) {
+        return createMeetingErrorResponse(
+          "RECRUIT_NOT_FOUND",
+          "Recruit post not found.",
+          404,
+        );
+      }
+
+      return HttpResponse.json({
+        success: true,
+        data: toMeetingRecruitDetail(recruit, post, userId, team),
+        error: null,
+      });
+    },
+  ),
+
+  http.post(
+    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participation",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const postId = Number(params.postId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const post = findMeetingPost(meetingId, postId);
+
+      if (!post) {
+        return createPostNotFoundResponse();
+      }
+
+      if (getMembershipRole(userId, meetingId) === null) {
+        return createMeetingErrorResponse(
+          "MEETING_MEMBER_REQUIRED",
+          "Meeting members only.",
+          403,
+        );
+      }
+
+      const recruit = findMeetingRecruit(meetingId, postId);
+
+      if (post.type !== "RECRUIT" || !recruit) {
+        return createMeetingErrorResponse(
+          "RECRUIT_NOT_FOUND",
+          "Recruit post not found.",
+          404,
+        );
+      }
+
+      if (!isMeetingRecruitApplicationOpen(recruit)) {
+        return createMeetingErrorResponse(
+          "RECRUIT_APPLICATION_CLOSED",
+          "Recruit application is closed.",
+          409,
+        );
+      }
+
+      const appliedRecruitIndex = appliedRecruits.findIndex(
+        (appliedRecruit) =>
+          appliedRecruit.meetingId === meetingId &&
+          appliedRecruit.postId === postId &&
+          appliedRecruit.userId === userId,
+      );
+
+      if (appliedRecruitIndex >= 0) {
+        appliedRecruits.splice(appliedRecruitIndex, 1);
+
+        const data: MeetingRecruitParticipationResponse = {
+          applied: false,
+          appliedCount: getMeetingRecruitAppliedCount(recruit),
+          maxParticipants: recruit.maxParticipants,
+        };
+
+        return HttpResponse.json({
+          success: true,
+          data,
+          error: null,
+        });
+      }
+
+      if (getMeetingRecruitAppliedCount(recruit) >= recruit.maxParticipants) {
+        return createMeetingErrorResponse(
+          "RECRUIT_FULL",
+          "Recruit is full.",
+          409,
+        );
+      }
+
+      appliedRecruits.push({
+        userId,
+        postId,
+        meetingId,
+        title: post.title,
+        place: recruit.place,
+        actDate: recruit.actDate,
+        actStartTime: recruit.actStartTime,
+        actEndTime: recruit.actEndTime,
+        status: "APPLIED",
+      });
+
+      const data: MeetingRecruitParticipationResponse = {
+        applied: true,
+        appliedCount: getMeetingRecruitAppliedCount(recruit),
+        maxParticipants: recruit.maxParticipants,
+      };
+
+      return HttpResponse.json({
+        success: true,
+        data,
         error: null,
       });
     },
