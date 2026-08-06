@@ -154,9 +154,7 @@ export function SwipeActionRow({
             direction: null,
             swiped: false,
           };
-          event.currentTarget.setPointerCapture(event.pointerId);
           setOffset(open ? -ACTION_WIDTH : 0);
-          setIsDragging(true);
         }}
         onPointerMove={(event) => {
           const gesture = gestureRef.current;
@@ -176,6 +174,12 @@ export function SwipeActionRow({
 
             if (Math.abs(deltaX) > SWIPE_START_THRESHOLD) {
               gesture.direction = "horizontal";
+
+              if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }
+
+              setIsDragging(true);
             }
           }
 
