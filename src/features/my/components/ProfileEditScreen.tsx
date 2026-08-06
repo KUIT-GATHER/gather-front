@@ -5,7 +5,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
 import CameraIcon from "@/assets/icons/Camera.svg";
-import defaultProfileImage from "@/features/my/assets/profile.png";
+import defaultProfileImage from "@/assets/icons/Profile.svg";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
 import {

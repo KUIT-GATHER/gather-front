@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { ActivityCalendarSection } from "@/features/my/components/ActivityCalendarSection";
 
 import bookmarkIcon from "@/features/my/assets/bookmark.svg";
-import profileImage from "@/features/my/assets/profile.png";
+import profileImage from "@/assets/icons/Profile.svg";
 import profileEditIcon from "@/features/my/assets/profileedit.svg";
 import settingIcon from "@/features/my/assets/setting.svg";
 import { useMyActivitySummaryQuery } from "@/features/my/hooks/useMyActivitiesQuery";
