@@ -56,6 +56,16 @@ export type MeetingMember = {
   host: boolean;
 };
 
+export type MeetingJoinRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export type MeetingJoinRequest = {
+  joinRequestId: number;
+  userId: number;
+  nickname: string;
+  status: MeetingJoinRequestStatus;
+  requestedAt: string;
+};
+
 export type UpcomingActivity = {
   postingId: number;
   title: string;
@@ -268,4 +278,33 @@ export type MeetingPostCreateRequest =
 export type MeetingPostUpdateRequest = {
   title: string;
   content: string;
+};
+
+export type MeetingRecruitDetail = {
+  postId: number;
+  meetingId: number;
+  title: string;
+  content: string;
+  authorId: number;
+  authorNickname: string;
+  place: string;
+  actDate: string;
+  actStartTime: string | null;
+  actEndTime: string | null;
+  maxParticipants: number;
+  categories: PostingCategory[];
+  timeRecognized: boolean;
+  recognizedMinutes: number | null;
+  applyDeadline: string;
+  external: boolean;
+  likeCount: number;
+  commentCount: number;
+  appliedCount: number;
+  applied: boolean;
+  applicationOpen: boolean;
+  full: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
