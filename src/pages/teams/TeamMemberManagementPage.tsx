@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 
-import CrownIcon from "@/assets/team/crown.svg";
+import CrownIcon from "@/shared/assets/puzzle/crown.svg";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import type { MeetingMember } from "@/features/team/types/team.types";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";

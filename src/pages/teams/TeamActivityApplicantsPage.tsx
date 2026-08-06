@@ -6,6 +6,7 @@ import { teamQueries } from "@/features/team/api/team.queries";
 
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import { cn } from "@/shared/lib/cn";
+import { env } from "@/shared/config/env";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import PageHeader from "@/shared/ui/PageHeader";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -73,7 +74,7 @@ export function TeamActivityApplicantsPage() {
   });
 
   const [applicants, setApplicants] = useState<ActivityApplicant[]>(() =>
-    import.meta.env.DEV ? DEV_APPLICANTS : [],
+    env.IS_DEV ? DEV_APPLICANTS : [],
   );
   const [participantsConfirmed, setParticipantsConfirmed] = useState(false);
   const [expandedApplicantId, setExpandedApplicantId] = useState<number | null>(

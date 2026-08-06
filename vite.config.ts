@@ -18,22 +18,6 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  server: {
-    port: 5173,
-    strictPort: true,
-    proxy: {
-      "/api": {
-        target: "https://api.gathernow.kr",
-        changeOrigin: true,
-        cookieDomainRewrite: "",
-        configure: (proxy) => {
-          proxy.on("proxyReq", (proxyReq) => {
-            proxyReq.removeHeader("origin");
-          });
-        },
-      },
-    },
-  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],

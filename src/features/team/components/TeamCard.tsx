@@ -1,6 +1,6 @@
 import { Settings } from "lucide-react";
 
-import { CategoryBadge } from "@/features/category/components/CategoryBadge";
+import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
 import {
   formatMeetingActivityDate,
   getMeetingDDay,
@@ -13,7 +13,7 @@ import type {
 import { cn } from "@/shared/lib/cn";
 
 type TeamCardProps = {
-  team: MeetingListItem;
+  team: Omit<MeetingListItem, "regionName">;
   onClick: () => void;
   variant?: "list" | "compact" | "my";
   regionName?: string | null;
@@ -126,62 +126,18 @@ export function TeamCard({
   }
 
   return (
-    <button
-      type="button"
+    <ActivityListCard
+      imageSrc={imageSrc}
+      title={team.name}
+      description={team.description}
+      metadata={[
+        regionName,
+        `${team.currentMemberCount}/${team.maxMember}명`,
+        deadlineDate,
+      ]}
+      dDay={urgentDeadline}
+      categories={team.categories}
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-xl border border-stroke bg-white px-3 py-4 text-left transition-colors duration-200 hover:border-point-green hover:bg-[#f0f6f0] active:border-point-green active:bg-[#f0f6f0] focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
-    >
-      <img
-        src={imageSrc}
-        alt=""
-        className="h-[106px] w-[91px] shrink-0 rounded-[10px] object-cover"
-      />
-
-      <div className="min-w-0 flex-1">
-        <h2 className="truncate text-lg font-semibold leading-5 text-text">
-          {team.name}
-        </h2>
-        {team.description ? (
-          <p className="mt-3 truncate text-[15px] leading-4 text-text-gray-400">
-            {team.description}
-          </p>
-        ) : null}
-        <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
-          {regionName ? `${regionName} · ` : ""}
-          {team.currentMemberCount}/{team.maxMember}명
-          {deadlineDate ? ` · ${deadlineDate}` : ""}
-          {urgentDeadline ? (
-            <span
-              className={cn(
-                urgentDeadline === "D-day" ||
-                  urgentDeadline === "D-1" ||
-                  urgentDeadline === "D-2" ||
-                  urgentDeadline === "D-3"
-                  ? "font-semibold text-point-red"
-                  : "text-point-red",
-              )}
-            >
-              {" "}
-              · {urgentDeadline}
-            </span>
-          ) : null}
-        </p>
-
-        <div className="mt-2 flex flex-wrap gap-1">
-          {team.categories.map((category) => (
-            <CategoryBadge
-              key={category}
-              category={category}
-              className="text-sm"
-            />
-          ))}
-          {viewerRole ? (
-            <span className="rounded-full border border-button bg-button/10 px-2 py-0.5 text-xs font-semibold text-button">
-              {viewerRole === "HOST" ? "팀장" : "팀원"}
-            </span>
-          ) : null}
-        </div>
-      </div>
-    </button>
+    />
   );
 }

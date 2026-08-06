@@ -27,6 +27,9 @@ import { TeamCreatePage } from "@/pages/teams/TeamCreatePage";
 import { TeamCreateCompletePage } from "@/pages/teams/TeamCreateCompletePage";
 import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
 import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
+import { TeamDetailActivityCommentsPage } from "@/pages/teams/TeamDetailActivityCommentsPage";
+import { TeamDetailActivityPostsPage } from "@/pages/teams/TeamDetailActivityPostsPage";
+import { TeamDetailActivityRecruitsPage } from "@/pages/teams/TeamDetailActivityRecruitsPage";
 import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
 import { TeamPostDetailPage } from "@/pages/teams/TeamPostDetailPage";
 import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
@@ -39,6 +42,10 @@ import { TeamActivityApplicantsPage } from "@/pages/teams/TeamActivityApplicants
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
+import { MyActivitiesPage } from "@/pages/my/MyActivitiesPage";
+import { MyBadgesPage } from "@/pages/my/MyBadgesPage";
+import { MyBookmarksPage } from "@/pages/my/MyBookmarksPage";
+import { ProfileEditPage } from "@/pages/my/ProfileEditPage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
@@ -82,7 +89,7 @@ export const router = createBrowserRouter([
             element: <KakaoLoginCallbackPage />,
           },
           { path: "/signup/kakao", element: <KakaoSignupPage /> },
-          { path: "/terms", element: <TermsPage /> },
+          { path: "/terms/:type", element: <TermsPage /> },
         ],
       },
 
@@ -118,6 +125,18 @@ export const router = createBrowserRouter([
               { path: "posts", element: <TeamDetailPostListPage /> },
               { path: "posts/:postId", element: <TeamPostDetailPage /> },
               { path: "activity", element: <TeamDetailActivityPage /> },
+              {
+                path: "activity/recruits",
+                element: <TeamDetailActivityRecruitsPage />,
+              },
+              {
+                path: "activity/posts",
+                element: <TeamDetailActivityPostsPage />,
+              },
+              {
+                path: "activity/comments",
+                element: <TeamDetailActivityCommentsPage />,
+              },
               { path: "settings", element: <TeamSettingsPage /> },
               { path: "settings/info", element: <TeamInfoEditPage /> },
               {
@@ -155,6 +174,22 @@ export const router = createBrowserRouter([
               {
                 path: "/notifications",
                 element: <NotificationPage />,
+              },
+              {
+                path: "/my/profile/edit",
+                element: <ProfileEditPage />,
+              },
+              {
+                path: "/my/activities",
+                element: <MyActivitiesPage />,
+              },
+              {
+                path: "/my/badges",
+                element: <MyBadgesPage />,
+              },
+              {
+                path: "/my/bookmarks",
+                element: <MyBookmarksPage />,
               },
             ],
           },

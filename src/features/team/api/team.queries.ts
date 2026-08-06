@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import {
+  getBookmarkedMeetings,
   getMeetingPost,
   getMeetingPostComments,
   getMeeting,
@@ -10,6 +11,10 @@ import {
   getMeetingRecommendedKeywords,
   getMeetings,
   getMyMeetings,
+  getMyMeetingActivityAppliedRecruits,
+  getMyMeetingActivityCommentedPosts,
+  getMyMeetingActivityPosts,
+  getMyMeetingActivitySummary,
   getRecommendedMeetings,
   getMeetingRecruitActivities,
   getMeetingRecruit,
@@ -17,6 +22,8 @@ import {
 import { getMeetingImages } from "@/features/team/api/meetingImage.api";
 
 import type {
+  BookmarkedMeetingInfiniteParams,
+  MeetingActivityListParams,
   MeetingInfiniteParams,
   MeetingListParams,
   MeetingPostCommentListParams,
@@ -28,12 +35,15 @@ type RecommendationScope = "guest" | "member";
 export const teamKeys = {
   all: ["meetings"] as const,
   lists: () => [...teamKeys.all, "list"] as const,
+  bookmarkedLists: () => [...teamKeys.all, "bookmarked"] as const,
   list: (params: MeetingListParams = {}) =>
     [...teamKeys.lists(), params] as const,
   recommended: (scope: RecommendationScope) =>
     [...teamKeys.all, "recommended", scope] as const,
   infiniteList: (params: MeetingInfiniteParams = {}) =>
     [...teamKeys.lists(), "infinite", params] as const,
+  infiniteBookmarks: (params: BookmarkedMeetingInfiniteParams = {}) =>
+    [...teamKeys.bookmarkedLists(), "infinite", params] as const,
   my: () => [...teamKeys.all, "my"] as const,
   recommendedKeywords: () => [...teamKeys.all, "recommendedKeywords"] as const,
   create: () => [...teamKeys.all, "create"] as const,
@@ -52,6 +62,22 @@ export const teamKeys = {
       ...teamKeys.home(meetingId),
       isAuthenticated ? "authenticated" : "anonymous",
     ] as const,
+  myActivity: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "myActivity"] as const,
+  myActivitySummary: (meetingId: number) =>
+    [...teamKeys.myActivity(meetingId), "summary"] as const,
+  myActivityPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) => [...teamKeys.myActivity(meetingId), "posts", params] as const,
+  myActivityCommentedPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) => [...teamKeys.myActivity(meetingId), "commentedPosts", params] as const,
+  myActivityAppliedRecruits: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) => [...teamKeys.myActivity(meetingId), "appliedRecruits", params] as const,
   joinRequests: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "joinRequests"] as const,
 
@@ -91,6 +117,8 @@ export const teamKeys = {
     [...teamKeys.postComments(meetingId, postId), "update", commentId] as const,
   deletePostComment: (meetingId: number, postId: number, commentId: number) =>
     [...teamKeys.postComments(meetingId, postId), "delete", commentId] as const,
+  leave: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "leave"] as const,
   bookmark: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "bookmark"] as const,
 };
@@ -127,6 +155,18 @@ export const teamQueries = {
       },
     }),
 
+  infiniteBookmarks: (params: BookmarkedMeetingInfiniteParams = {}) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.infiniteBookmarks(params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getBookmarkedMeetings({ ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
   my: () =>
     queryOptions({
       queryKey: teamKeys.my(),
@@ -143,6 +183,66 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.homeForViewer(meetingId, isAuthenticated),
       queryFn: () => getMeetingHome(meetingId),
+    }),
+
+  myActivitySummary: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.myActivitySummary(meetingId),
+      queryFn: () => getMyMeetingActivitySummary(meetingId),
+    }),
+
+  myActivityPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.myActivityPosts(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMyMeetingActivityPosts(meetingId, { ...params, page: pageParam }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  myActivityCommentedPosts: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.myActivityCommentedPosts(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMyMeetingActivityCommentedPosts(meetingId, {
+          ...params,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
+    }),
+
+  myActivityAppliedRecruits: (
+    meetingId: number,
+    params: MeetingActivityListParams = {},
+  ) =>
+    infiniteQueryOptions({
+      queryKey: teamKeys.myActivityAppliedRecruits(meetingId, params),
+      initialPageParam: 0,
+      queryFn: ({ pageParam }) =>
+        getMyMeetingActivityAppliedRecruits(meetingId, {
+          ...params,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage) => {
+        const nextPage = lastPage.page + 1;
+
+        return nextPage < lastPage.totalPages ? nextPage : undefined;
+      },
     }),
 
   joinRequests: (meetingId: number) =>

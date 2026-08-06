@@ -9,6 +9,7 @@ import {
 } from "@/features/team/hooks/useMeetingBookmarkMutation";
 import { useMeetingDetailQuery } from "@/features/team/hooks/useMeetingDetailQuery";
 import { useMeetingHomeQuery } from "@/features/team/hooks/useMeetingHomeQuery";
+import { useMeetingImagesQuery } from "@/features/team/hooks/useMeetingImagesQuery";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 
@@ -33,6 +34,9 @@ export function TeamDetailPage() {
   const detailQuery = useMeetingDetailQuery(safeMeetingId, {
     enabled: hasValidMeetingId && authInitialized,
     isAuthenticated,
+  });
+  const imagesQuery = useMeetingImagesQuery(safeMeetingId, {
+    enabled: hasValidMeetingId,
   });
 
   if (!hasValidMeetingId) {
@@ -115,6 +119,7 @@ export function TeamDetailPage() {
       meetingId={safeMeetingId}
       home={homeQuery.data}
       detail={detailQuery.data}
+      imageUrls={imagesQuery.data?.imageUrls ?? []}
       authInitialized={authInitialized}
       isAuthenticated={isAuthenticated}
       isJoined={isJoined}

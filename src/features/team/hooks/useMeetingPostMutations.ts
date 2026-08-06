@@ -1,5 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 
+import { myPageKeys } from "@/features/my/api/myPage.queries";
 import {
   createMeetingPostComment,
   createMeetingPost,
@@ -13,7 +18,9 @@ import { teamKeys } from "@/features/team/api/team.queries";
 
 import type {
   MeetingPost,
+  MeetingPostComment,
   MeetingPostCommentCreateRequest,
+  MeetingPostCommentPage,
   MeetingPostCommentUpdateRequest,
   MeetingPostCreateRequest,
   MeetingPostLikeResponse,
@@ -45,6 +52,27 @@ function updatePostCommentCount(post: MeetingPost | undefined, delta: number) {
   }));
 }
 
+function updatePostCommentPage(
+  data: InfiniteData<MeetingPostCommentPage> | undefined,
+  updatedComment: MeetingPostComment,
+) {
+  if (!data) {
+    return data;
+  }
+
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      content: page.content.map((comment) =>
+        comment.commentId === updatedComment.commentId
+          ? updatedComment
+          : comment,
+      ),
+    })),
+  };
+}
+
 export function useCreateMeetingPostMutation(meetingId: number) {
   const queryClient = useQueryClient();
 
@@ -55,6 +83,12 @@ export function useCreateMeetingPostMutation(meetingId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivityCommentedPosts(meetingId),
       });
     },
   });
@@ -74,6 +108,9 @@ export function useUpdateMeetingPostMutation(
       queryClient.setQueryData(teamKeys.post(meetingId, postId), post);
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivityCommentedPosts(meetingId),
       });
     },
   });
@@ -141,6 +178,9 @@ export function useCreateMeetingPostCommentMutation(
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
     },
   });
 }
@@ -156,7 +196,11 @@ export function useUpdateMeetingPostCommentMutation(
     mutationKey: teamKeys.updatePostComment(meetingId, postId, commentId),
     mutationFn: (payload: MeetingPostCommentUpdateRequest) =>
       updateMeetingPostComment(meetingId, postId, commentId, payload),
-    onSuccess: () => {
+    onSuccess: (comment) => {
+      queryClient.setQueriesData<InfiniteData<MeetingPostCommentPage>>(
+        { queryKey: teamKeys.postComments(meetingId, postId) },
+        (data) => updatePostCommentPage(data, comment),
+      );
       void queryClient.invalidateQueries({
         queryKey: teamKeys.postComments(meetingId, postId),
       });

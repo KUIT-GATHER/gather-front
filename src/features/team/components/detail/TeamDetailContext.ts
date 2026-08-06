@@ -9,6 +9,7 @@ export type TeamDetailContextValue = {
   meetingId: number;
   home: MeetingHome;
   detail: MeetingDetail;
+  imageUrls: readonly string[];
   authInitialized: boolean;
   isAuthenticated: boolean;
   isJoined: boolean;

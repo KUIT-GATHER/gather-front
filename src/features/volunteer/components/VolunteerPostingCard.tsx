@@ -1,5 +1,5 @@
-import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
+import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
 import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
@@ -7,7 +7,6 @@ import {
   getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
-import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingCardProps = {
   posting: VolunteerPostingListItem;
@@ -57,51 +56,14 @@ export function VolunteerPostingCard({
   }
 
   return (
-    <button
-      type="button"
+    <ActivityListCard
+      imageSrc={imageSrc}
+      title={posting.title}
+      description={posting.recruitOrg}
+      metadata={[location, activityDate]}
+      dDay={urgentRecruitmentDDay}
+      categories={[posting.category]}
       onClick={onClick}
-      className="flex w-full gap-3 rounded-xl border border-stroke bg-white pl-3 py-4 text-left transition-colors duration-200 hover:border-[#90D79D] hover:bg-[#F0F6F0] active:border-[#90D79D] active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-    >
-      <img
-        src={imageSrc}
-        alt=""
-        className="h-[106px] w-[91px] shrink-0 rounded-[10px] border border-stroke object-cover"
-      />
-
-      <div className="min-w-0 flex-1 py-0.5">
-        <h2 className="truncate text-body-15-semibold text-text">
-          {posting.title}
-        </h2>
-        {posting.recruitOrg ? (
-          <p className="mt-1 truncate text-sm text-text-gray-300">
-            {posting.recruitOrg}
-          </p>
-        ) : null}
-        {location || activityDate || urgentRecruitmentDDay ? (
-          <p className="mt-1 line-clamp-2 text-sm text-text-gray-300">
-            {[location, activityDate].filter(Boolean).join(" · ")}
-            {urgentRecruitmentDDay ? (
-              <span
-                className={cn(
-                  "text-point-red",
-                  (urgentRecruitmentDDay === "D-day" ||
-                    urgentRecruitmentDDay === "D-1" ||
-                    urgentRecruitmentDDay === "D-2" ||
-                    urgentRecruitmentDDay === "D-3") &&
-                    "font-semibold",
-                )}
-              >
-                {location || activityDate ? " · " : ""}
-                {urgentRecruitmentDDay}
-              </span>
-            ) : null}
-          </p>
-        ) : null}
-
-        <div className="mt-3 flex flex-wrap gap-1">
-          <CategoryBadge category={posting.category} />
-        </div>
-      </div>
-    </button>
+    />
   );
 }

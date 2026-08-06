@@ -6,6 +6,7 @@ import {
   completeVolunteerPostingParticipation,
   submitVolunteerPostingRecognizedMinutes,
 } from "@/features/volunteer/api/volunteer.api";
+import { myPageKeys } from "@/features/my/api/myPage.queries";
 import { volunteerPostingKeys } from "@/features/volunteer/api/volunteer.queries";
 import type {
   VolunteerPosting,
@@ -103,6 +104,9 @@ export function useApplyVolunteerPostingParticipationMutation(
       void queryClient.invalidateQueries({
         queryKey: volunteerPostingKeys.detail(postingId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.activitiesAll(),
+      });
     },
   });
 }
@@ -124,6 +128,9 @@ export function useCancelVolunteerPostingParticipationMutation(
       void queryClient.invalidateQueries({
         queryKey: volunteerPostingKeys.detail(postingId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.activitiesAll(),
+      });
     },
   });
 }
@@ -131,9 +138,16 @@ export function useCancelVolunteerPostingParticipationMutation(
 export function useCompleteVolunteerPostingParticipationMutation(
   postingId: number,
 ) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: volunteerPostingKeys.participationComplete(postingId),
     mutationFn: () => completeVolunteerPostingParticipation(postingId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
+    },
   });
 }
 

@@ -7,10 +7,10 @@ import { useQuery } from "@tanstack/react-query";
 import { teamQueries } from "@/features/team/api/team.queries";
 
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
-import InformationIcon from "@/assets/team/information-square.svg";
-import MemberIcon from "@/assets/team/member.svg";
-import ActivityIcon from "@/assets/team/activity.svg";
-import ApplicationIcon from "@/assets/team/application.svg";
+import ActivityIcon from "@/shared/assets/puzzle/activity.svg";
+import ApplicationIcon from "@/shared/assets/puzzle/application.svg";
+import InformationIcon from "@/shared/assets/puzzle/information-square.svg";
+import MemberIcon from "@/shared/assets/puzzle/member.svg";
 
 export function TeamSettingsPage() {
   const { home, isHost } = useTeamDetailContext();

@@ -2,11 +2,19 @@ import { HttpResponse, http } from "msw";
 
 import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
 
+import { addMockBadgeProgress } from "./badgeHandlers";
 import postings from "./data/postings.json";
+import {
+  addMockParticipation,
+  findMockParticipation,
+  getMockParticipations,
+  removeMockParticipation,
+  updateMockParticipation,
+} from "./data/mockParticipations";
 import { getMockUserById } from "./data/mockUsers";
 import regions from "./data/regions.json";
 import teams from "./data/teams.json";
-import { getMockUserId } from "./lib/mockAuth";
+import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const RECOMMENDATION_COUNT = 5;
@@ -92,9 +100,10 @@ const baseMockPostings = postings.data.map((posting) => {
 
 const recruitmentDeadlineOffsets = [1, 3, 7, 8, 10, 14, 21, 30, 45, 60, 90];
 
-const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
+const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
   const id = index + 3;
-  const recruitmentDeadlineOffset = recruitmentDeadlineOffsets[index];
+  const recruitmentDeadlineOffset =
+    recruitmentDeadlineOffsets[index] ?? 100 + index * 7;
 
   return {
     ...postings.data[0],
@@ -114,11 +123,20 @@ const additionalMockPostings = Array.from({ length: 11 }, (_, index) => {
   };
 });
 
-const mockPostings = [...baseMockPostings, ...additionalMockPostings];
-const bookmarkedPostingIds = new Set<number>();
-const participatedPostingIds = new Map<number, MockPostingParticipation>([
-  [1, { participationId: 1, status: "CONFIRMED" }],
-]);
+export const mockPostings = [...baseMockPostings, ...additionalMockPostings];
+const bookmarkedPostingIds = new Set(
+  Array.from({ length: 21 }, (_, index) => index + 3),
+);
+const participatedPostingIds = new Map<number, MockPostingParticipation>(
+  getMockParticipations(1).map((participation) => [
+    participation.postingId,
+    {
+      participationId: participation.participationId,
+      status: participation.status,
+      recognizedMinutes: participation.recognizedMinutes,
+    },
+  ]),
+);
 
 function parseMockLocalDate(value: string | null | undefined) {
   if (!value) {
@@ -557,6 +575,98 @@ export const postingHandlers = [
     });
   }),
 
+  http.get("*/api/v1/postings/bookmarks", ({ request }) => {
+    const userId = getMockUserId(request);
+
+    if (!userId) {
+      return createUnauthorizedResponse();
+    }
+
+    const url = new URL(request.url);
+
+    const page = Math.max(0, Number(url.searchParams.get("page")) || 0);
+    const size = Math.max(1, Number(url.searchParams.get("size")) || 20);
+    const keyword = url.searchParams.get("keyword")?.trim();
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
+    const noticeStartDate = url.searchParams.get("noticeStartDate");
+    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const category = url.searchParams.get("category");
+
+    if (regionId !== undefined && regionGroupId !== undefined) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    let items = mockPostings.filter((posting) =>
+      bookmarkedPostingIds.has(posting.id),
+    );
+
+    if (keyword) {
+      items = items.filter((posting) =>
+        [posting.title, posting.recruitOrg].some((value) =>
+          value.includes(keyword),
+        ),
+      );
+    }
+
+    if (category) {
+      items = items.filter((posting) => posting.category === category);
+    }
+
+    if (regionId !== undefined) {
+      const includedRegionIds = getRegionIdsIncludingChildren([regionId]);
+
+      items = items.filter((posting) =>
+        includedRegionIds.has(posting.regionId),
+      );
+    }
+
+    if (regionGroupId !== undefined) {
+      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
+
+      items = items.filter((posting) =>
+        includedRegionIds.has(posting.regionId),
+      );
+    }
+
+    if (noticeStartDate) {
+      items = items.filter(
+        (posting) => posting.noticeStartDate >= noticeStartDate,
+      );
+    }
+
+    if (noticeEndDate) {
+      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
+    }
+
+    const sortedItems = sortPostings(items, [], false);
+    const startIndex = page * size;
+    const content = sortedItems
+      .slice(startIndex, startIndex + size)
+      .map(toVolunteerPostingListItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        totalElements: sortedItems.length,
+        totalPages: Math.ceil(sortedItems.length / size),
+        page,
+        size,
+      },
+      error: null,
+    });
+  }),
   http.get("*/api/v1/postings/recommended", ({ request }) => {
     return HttpResponse.json({
       success: true,
@@ -680,9 +790,11 @@ export const postingHandlers = [
     });
   }),
 
-  http.post("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
+  http.post("*/api/v1/postings/:postingId/bookmark", ({ params, request }) => {
     const postingId = Number(params.postingId);
     bookmarkedPostingIds.add(postingId);
+    const userId = getMockUserId(request);
+    if (userId) addMockBadgeProgress(userId, "BOOKMARK_5");
 
     return HttpResponse.json({
       success: true,
@@ -694,72 +806,79 @@ export const postingHandlers = [
     });
   }),
 
-  http.post("*/api/v1/postings/:postingId/participations", ({ params }) => {
-    const postingId = Number(params.postingId);
-    const posting = mockPostings.find((item) => item.id === postingId);
+  http.post(
+    "*/api/v1/postings/:postingId/participations",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    if (!posting) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "POSTING_NOT_FOUND",
-            message: "Posting not found.",
+      const postingId = Number(params.postingId);
+      const posting = mockPostings.find((item) => item.id === postingId);
+
+      if (!posting) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_NOT_FOUND",
+              message: "Posting not found.",
+            },
           },
-        },
-        { status: 404 },
-      );
-    }
+          { status: 404 },
+        );
+      }
 
-    if (participatedPostingIds.has(postingId)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "PARTICIPATION_DUPLICATE",
-            message: "Already applied to this posting.",
+      if (participatedPostingIds.has(postingId)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_DUPLICATE",
+              message: "Already applied to this posting.",
+            },
           },
-        },
-        { status: 409 },
-      );
-    }
+          { status: 409 },
+        );
+      }
 
-    if (posting.status !== "RECRUITING") {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "POSTING_CLOSED",
-            message: "마감된 봉사공고입니다.",
+      if (posting.status !== "RECRUITING") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_CLOSED",
+              message: "마감된 봉사공고입니다.",
+            },
           },
-        },
-        { status: 409 },
-      );
-    }
+          { status: 409 },
+        );
+      }
 
-    const participationId = participatedPostingIds.size + 1;
-    participatedPostingIds.set(postingId, {
-      participationId,
-      status: "APPLIED",
-    });
-
-    return HttpResponse.json({
-      success: true,
-      data: {
+      const savedParticipation = addMockParticipation(userId, postingId);
+      const participationId = savedParticipation.participationId;
+      participatedPostingIds.set(postingId, {
         participationId,
         status: "APPLIED",
-        applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
-      },
-      error: null,
-    });
-  }),
+      });
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          participationId,
+          status: "APPLIED",
+          applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
+        },
+        error: null,
+      });
+    },
+  ),
 
   http.patch(
     "*/api/v1/postings/:postingId/participations/complete",
-    ({ params }) => {
+    ({ params, request }) => {
       const postingId = Number(params.postingId);
       const posting = mockPostings.find((item) => item.id === postingId);
       const participation = participatedPostingIds.get(postingId);
@@ -827,6 +946,12 @@ export const postingHandlers = [
         ...participation,
         status: "COMPLETED",
       });
+      updateMockParticipation(1, postingId, { status: "COMPLETED" });
+      const userId = getMockUserId(request);
+      if (userId) {
+        addMockBadgeProgress(userId, "FIRST_COMPLETION");
+        addMockBadgeProgress(userId, "COMPLETION_5");
+      }
 
       return HttpResponse.json({
         success: true,
@@ -912,6 +1037,7 @@ export const postingHandlers = [
         ...participation,
         recognizedMinutes,
       });
+      updateMockParticipation(1, postingId, { recognizedMinutes });
 
       return HttpResponse.json({
         success: true,
@@ -921,62 +1047,74 @@ export const postingHandlers = [
     },
   ),
 
-  http.delete("*/api/v1/postings/:postingId/participations", ({ params }) => {
-    const postingId = Number(params.postingId);
-    const participation = participatedPostingIds.get(postingId);
+  http.delete(
+    "*/api/v1/postings/:postingId/participations",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    if (!participation) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "PARTICIPATION_NOT_FOUND",
-            message: "신청 내역을 찾을 수 없습니다.",
+      const postingId = Number(params.postingId);
+      const participation = findMockParticipation(userId, postingId);
+
+      if (!participation) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_NOT_FOUND",
+              message: "신청 내역을 찾을 수 없습니다.",
+            },
           },
-        },
-        { status: 404 },
-      );
-    }
+          { status: 404 },
+        );
+      }
 
-    if (
-      participation.status === "COMPLETED" ||
-      participation.status === "REVIEWED"
-    ) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "PARTICIPATION_CANCEL_NOT_ALLOWED",
-            message:
-              "이력 보존을 위해 완료되었거나 후기가 작성된 신청은 취소할 수 없습니다.",
+      if (
+        participation.status === "COMPLETED" ||
+        participation.status === "REVIEWED"
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PARTICIPATION_CANCEL_NOT_ALLOWED",
+              message:
+                "이력 보존을 위해 완료되었거나 후기가 작성된 신청은 취소할 수 없습니다.",
+            },
           },
+          { status: 409 },
+        );
+      }
+
+      participatedPostingIds.delete(postingId);
+      removeMockParticipation(userId, postingId);
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
+
+  http.delete(
+    "*/api/v1/postings/:postingId/bookmark",
+    ({ params, request }) => {
+      const postingId = Number(params.postingId);
+      bookmarkedPostingIds.delete(postingId);
+      const userId = getMockUserId(request);
+      if (userId) addMockBadgeProgress(userId, "BOOKMARK_5", -1);
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          postingId,
+          bookmarked: false,
         },
-        { status: 409 },
-      );
-    }
-
-    participatedPostingIds.delete(postingId);
-
-    return HttpResponse.json({
-      success: true,
-      data: null,
-      error: null,
-    });
-  }),
-
-  http.delete("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
-    const postingId = Number(params.postingId);
-    bookmarkedPostingIds.delete(postingId);
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        postingId,
-        bookmarked: false,
-      },
-      error: null,
-    });
-  }),
+        error: null,
+      });
+    },
+  ),
 ];

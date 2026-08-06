@@ -116,6 +116,16 @@ export function getVolunteerPostings(params?: VolunteerPostingListParams) {
   );
 }
 
+export function getBookmarkedVolunteerPostings(
+  params: VolunteerPostingListParams = {},
+) {
+  const query = buildPostingListQuery(params);
+
+  return fetchClient<VolunteerPostingPage>(
+    `${POSTING_ENDPOINT}/bookmarks?${query}`,
+  );
+}
+
 export function getRecommendedVolunteerPostings() {
   return fetchClient<VolunteerPostingListItem[]>(
     `${POSTING_ENDPOINT}/recommended`,

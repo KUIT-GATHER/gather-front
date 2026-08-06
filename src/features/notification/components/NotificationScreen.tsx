@@ -126,55 +126,60 @@ export function NotificationScreen() {
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-8">
-      <PageHeader
-        sticky
-        title="알림"
-        onBack={() => navigate(-1)}
-        rightAction={
-          <IconButton
-            label="알림 설정 열기"
-            icon={<Settings />}
-            onClick={() => setIsSettingsOpen(true)}
-          />
-        }
-      />
-
-      <NotificationTabs category={category} onChange={changeCategory} />
-
-      {notifications.length > 0 ? (
-        <div className="-mx-5.5 flex h-12 items-center justify-end px-5.5">
-          <button
-            type="button"
-            className="min-h-11 px-3 text-body-14 text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:text-text-gray-100"
-            disabled={
-              unreadInCurrentCategory === 0 ||
-              readAllMutation.isPending ||
-              readMutation.isPending ||
-              deleteMutation.isPending
+    <>
+      <div className="sticky top-0 z-40 bg-bg">
+        <PageContainer size="narrow">
+          <PageHeader
+            title="알림"
+            onBack={() => navigate(-1)}
+            rightAction={
+              <IconButton
+                label="알림 설정 열기"
+                icon={<Settings />}
+                onClick={() => setIsSettingsOpen(true)}
+              />
             }
-            onClick={() => readAllMutation.mutate(category)}
-          >
-            전체 읽음
-          </button>
-        </div>
-      ) : null}
+          />
+        </PageContainer>
+      </div>
 
-      <NotificationList
-        query={notificationsQuery}
-        openNotificationId={openNotificationId}
-        onOpenNotificationChange={setOpenNotificationId}
-        onNotificationClick={handleNotificationClick}
-        onDelete={handleDelete}
-        isReadAllPending={readAllMutation.isPending}
-        readPendingNotificationId={readPendingNotificationId}
-        deletePendingNotificationId={deletePendingNotificationId}
-      />
+      <PageContainer size="narrow" className="min-h-dvh pb-8">
+        <NotificationTabs category={category} onChange={changeCategory} />
 
-      <NotificationSettingsSheet
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-      />
-    </PageContainer>
+        {notifications.length > 0 ? (
+          <div className="-mx-5.5 flex h-12 items-center justify-end px-5.5">
+            <button
+              type="button"
+              className="min-h-11 px-3 text-body-14 text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:text-text-gray-100"
+              disabled={
+                unreadInCurrentCategory === 0 ||
+                readAllMutation.isPending ||
+                readMutation.isPending ||
+                deleteMutation.isPending
+              }
+              onClick={() => readAllMutation.mutate(category)}
+            >
+              전체 읽음
+            </button>
+          </div>
+        ) : null}
+
+        <NotificationList
+          query={notificationsQuery}
+          openNotificationId={openNotificationId}
+          onOpenNotificationChange={setOpenNotificationId}
+          onNotificationClick={handleNotificationClick}
+          onDelete={handleDelete}
+          isReadAllPending={readAllMutation.isPending}
+          readPendingNotificationId={readPendingNotificationId}
+          deletePendingNotificationId={deletePendingNotificationId}
+        />
+
+        <NotificationSettingsSheet
+          open={isSettingsOpen}
+          onOpenChange={setIsSettingsOpen}
+        />
+      </PageContainer>
+    </>
   );
 }

@@ -5,7 +5,7 @@ import { cn } from "@/shared/lib/cn";
 
 export type ConfirmDialogProps = {
   open: boolean;
-  title: string;
+  title: ReactNode;
   cancelText?: string;
   confirmText?: string;
   onCancel: () => void;
@@ -81,25 +81,23 @@ export default function ConfirmDialog({
             }
           }}
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 box-border w-[calc(100%-4.375rem)] max-w-83",
-            "-translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white px-3 py-5",
+            "fixed top-1/2 left-1/2 z-50 box-border w-[calc(100%-2.5rem)] max-w-[22.75rem]",
+            "-translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-5",
             "focus:outline-none",
           )}
         >
-          <div className="flex flex-col items-center gap-5">
-            <div className="text-center">
-              <AlertDialog.Title className="text-lg font-medium leading-7 text-text">
-                {title}
-              </AlertDialog.Title>
+          <div className="flex flex-col items-center gap-[18px] text-center">
+            <AlertDialog.Title className="text-[18px] leading-7 font-semibold text-text">
+              {title}
+            </AlertDialog.Title>
 
-              {dialogDescription ? (
-                <AlertDialog.Description className="text-lg font-normal leading-7 text-text">
-                  {dialogDescription}
-                </AlertDialog.Description>
-              ) : null}
-            </div>
+            {dialogDescription ? (
+              <AlertDialog.Description className="text-[16px] leading-[1.3] font-normal text-text-gray-400">
+                {dialogDescription}
+              </AlertDialog.Description>
+            ) : null}
 
-            <div className="flex w-full gap-2">
+            <div className="flex w-full max-w-[19.25rem] justify-center gap-2">
               {showCancel ? (
                 <AlertDialog.Cancel asChild>
                   <button
@@ -107,7 +105,7 @@ export default function ConfirmDialog({
                     disabled={isPending}
                     onClick={handleCancelClick}
                     className={cn(
-                      "h-12 flex-1 rounded-full bg-[#DCECDF] text-lg font-medium leading-7 text-text transition",
+                      "h-12 min-w-0 max-w-[9.375rem] flex-1 rounded-full bg-[#DCECDF] text-[18px] leading-7 font-semibold text-text transition",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                       "disabled:cursor-not-allowed disabled:bg-stroke disabled:text-text-gray-100",
                     )}
@@ -123,7 +121,7 @@ export default function ConfirmDialog({
                   disabled={isPending}
                   onClick={handleConfirmClick}
                   className={cn(
-                    "h-12 flex-1 rounded-full text-lg font-normal leading-7 transition",
+                    "h-12 min-w-0 max-w-[9.375rem] flex-1 rounded-full text-[18px] leading-7 font-semibold transition",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                     "disabled:cursor-not-allowed disabled:bg-stroke disabled:text-text-gray-100",
                     confirmVariantClasses[confirmVariant],

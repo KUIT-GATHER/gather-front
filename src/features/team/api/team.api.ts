@@ -2,7 +2,11 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 import { fetchClient } from "@/shared/api/fetchClient";
 
 import type {
+  BookmarkedMeetingListItem,
+  BookmarkedMeetingListParams,
+  BookmarkedMeetingPage,
   MeetingBookmarkResponse,
+  MeetingActivityListParams,
   MeetingCreateRequest,
   MeetingDetail,
   MeetingHome,
@@ -21,7 +25,9 @@ import type {
   MeetingPostListParams,
   MeetingPostPage,
   MeetingPostUpdateRequest,
+  MyAppliedRecruitPage,
   MyMeetingListItem,
+  MyMeetingActivitySummary,
   MeetingRecruitDetail,
 } from "@/features/team/types/team.types";
 
@@ -39,6 +45,11 @@ type MeetingCategoryResponse = {
 };
 
 type MeetingListItemResponse = Omit<MeetingListItem, "categories"> &
+  MeetingCategoryResponse;
+type BookmarkedMeetingListItemResponse = Omit<
+  BookmarkedMeetingListItem,
+  "categories"
+> &
   MeetingCategoryResponse;
 type MeetingDetailResponse = Omit<MeetingDetail, "categories"> &
   MeetingCategoryResponse;
@@ -187,10 +198,55 @@ function buildMeetingPostLikesEndpoint(meetingId: number, postId: number) {
   return `${buildMeetingPostEndpoint(meetingId, postId)}/likes`;
 }
 
+function buildMyMeetingActivityEndpoint(
+  meetingId: number,
+  path: string,
+  params: MeetingActivityListParams = {},
+) {
+  const searchParams = new URLSearchParams();
+  const page = params.page ?? 0;
+  const size = params.size ?? 20;
+
+  setQueryParam(searchParams, "page", page);
+  setQueryParam(searchParams, "size", size);
+
+  params.sort?.forEach((sort) => {
+    appendQueryParam(searchParams, "sort", sort);
+  });
+
+  const query = searchParams.toString();
+  const endpoint = `${MEETING_ENDPOINT}/${meetingId}/my/${path}`;
+
+  return query ? `${endpoint}?${query}` : endpoint;
+}
+
 export async function getMeetings(params?: MeetingListParams) {
   const page = await fetchClient<
     Omit<MeetingPage, "content"> & { content: MeetingListItemResponse[] }
   >(buildMeetingsEndpoint(params), publicOptions);
+
+  return {
+    ...page,
+    content: page.content.map(normalizeMeetingCategories),
+  };
+}
+
+export async function getBookmarkedMeetings(
+  params: BookmarkedMeetingListParams = {},
+) {
+  const searchParams = new URLSearchParams();
+  setQueryParam(searchParams, "page", params.page ?? 0);
+  setQueryParam(searchParams, "size", params.size ?? 20);
+  setQueryParam(searchParams, "keyword", params.keyword);
+  setQueryParam(searchParams, "regionId", params.regionId);
+  setQueryParam(searchParams, "category", params.category);
+  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
+  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
+  const page = await fetchClient<
+    Omit<BookmarkedMeetingPage, "content"> & {
+      content: BookmarkedMeetingListItemResponse[];
+    }
+  >(`${MEETING_ENDPOINT}/bookmarks?${searchParams.toString()}`);
 
   return {
     ...page,
@@ -236,6 +292,39 @@ export async function getMeeting(meetingId: number) {
 
 export function getMeetingHome(meetingId: number) {
   return fetchClient<MeetingHome>(`${MEETING_ENDPOINT}/${meetingId}/home`);
+}
+
+export function getMyMeetingActivitySummary(meetingId: number) {
+  return fetchClient<MyMeetingActivitySummary>(
+    `${MEETING_ENDPOINT}/${meetingId}/my/activity-summary`,
+  );
+}
+
+export function getMyMeetingActivityPosts(
+  meetingId: number,
+  params?: MeetingActivityListParams,
+) {
+  return fetchClient<MeetingPostPage>(
+    buildMyMeetingActivityEndpoint(meetingId, "posts", params),
+  );
+}
+
+export function getMyMeetingActivityCommentedPosts(
+  meetingId: number,
+  params?: MeetingActivityListParams,
+) {
+  return fetchClient<MeetingPostPage>(
+    buildMyMeetingActivityEndpoint(meetingId, "commented-posts", params),
+  );
+}
+
+export function getMyMeetingActivityAppliedRecruits(
+  meetingId: number,
+  params?: MeetingActivityListParams,
+) {
+  return fetchClient<MyAppliedRecruitPage>(
+    buildMyMeetingActivityEndpoint(meetingId, "applied-recruits", params),
+  );
 }
 
 export function getMeetingJoinRequests(meetingId: number) {
@@ -392,6 +481,12 @@ export async function joinMeeting(meetingId: number) {
   );
 
   return normalizeMeetingCategories(meeting);
+}
+
+export function leaveMeeting(meetingId: number) {
+  return fetchClient<null>(`${MEETING_ENDPOINT}/${meetingId}/members/me`, {
+    method: "DELETE",
+  });
 }
 
 export function addMeetingBookmark(meetingId: number) {

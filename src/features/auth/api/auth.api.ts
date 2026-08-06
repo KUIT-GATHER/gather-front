@@ -13,6 +13,7 @@ import type {
   SignupRequest,
   SignupResponse,
   TokenResponse,
+  WithdrawAccountResponse,
 } from "@/features/auth/types/auth.types";
 
 import type { LoginRequest } from "@/features/auth/schemas/login.schema";
@@ -108,5 +109,13 @@ export function logout() {
   return fetchClient<null>("/api/v1/auth/logout", {
     ...cookieAuthOptions,
     method: "POST",
+  });
+}
+
+export function withdrawAccount() {
+  return fetchClient<WithdrawAccountResponse>("/api/v1/users/me", {
+    method: "DELETE",
+    withCredentials: true,
+    signal: AbortSignal.timeout(10_000),
   });
 }
