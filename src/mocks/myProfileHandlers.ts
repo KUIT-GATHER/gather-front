@@ -166,7 +166,10 @@ const mockCalendarActivities: MyPageActivity[] = [
     actEndTime: "12:00",
     actPlace: null,
     regionName: "서울시 영등포구",
-    status: "RECRUITING",
+    volunteerPostingId: 1,
+    status: null,
+    meetingStatus: "RECRUITING",
+    postingParticipationStatus: "APPLIED",
   },
   {
     activityType: "MEETING",
@@ -180,7 +183,10 @@ const mockCalendarActivities: MyPageActivity[] = [
     actEndTime: null,
     actPlace: null,
     regionName: "서울시 마포구",
-    status: "CLOSED",
+    volunteerPostingId: null,
+    status: null,
+    meetingStatus: "CLOSED",
+    postingParticipationStatus: null,
   },
   {
     activityType: "MEETING",
@@ -194,7 +200,10 @@ const mockCalendarActivities: MyPageActivity[] = [
     actEndTime: "13:00",
     actPlace: null,
     regionName: "서울시 마포구",
-    status: "COMPLETED",
+    volunteerPostingId: 3,
+    status: null,
+    meetingStatus: "COMPLETED",
+    postingParticipationStatus: "COMPLETED",
   },
 ];
 

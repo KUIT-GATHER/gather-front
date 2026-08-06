@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 
 import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
 
+import { addMockBadgeProgress } from "./badgeHandlers";
 import postings from "./data/postings.json";
 import {
   addMockParticipation,
@@ -788,9 +789,11 @@ export const postingHandlers = [
     });
   }),
 
-  http.post("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
+  http.post("*/api/v1/postings/:postingId/bookmark", ({ params, request }) => {
     const postingId = Number(params.postingId);
     bookmarkedPostingIds.add(postingId);
+    const userId = getMockUserId(request);
+    if (userId) addMockBadgeProgress(userId, "BOOKMARK_5");
 
     return HttpResponse.json({
       success: true,
@@ -874,7 +877,7 @@ export const postingHandlers = [
 
   http.patch(
     "*/api/v1/postings/:postingId/participations/complete",
-    ({ params }) => {
+    ({ params, request }) => {
       const postingId = Number(params.postingId);
       const posting = mockPostings.find((item) => item.id === postingId);
       const participation = participatedPostingIds.get(postingId);
@@ -943,6 +946,11 @@ export const postingHandlers = [
         status: "COMPLETED",
       });
       updateMockParticipation(1, postingId, { status: "COMPLETED" });
+      const userId = getMockUserId(request);
+      if (userId) {
+        addMockBadgeProgress(userId, "FIRST_COMPLETION");
+        addMockBadgeProgress(userId, "COMPLETION_5");
+      }
 
       return HttpResponse.json({
         success: true,
@@ -1090,17 +1098,22 @@ export const postingHandlers = [
     },
   ),
 
-  http.delete("*/api/v1/postings/:postingId/bookmark", ({ params }) => {
-    const postingId = Number(params.postingId);
-    bookmarkedPostingIds.delete(postingId);
+  http.delete(
+    "*/api/v1/postings/:postingId/bookmark",
+    ({ params, request }) => {
+      const postingId = Number(params.postingId);
+      bookmarkedPostingIds.delete(postingId);
+      const userId = getMockUserId(request);
+      if (userId) addMockBadgeProgress(userId, "BOOKMARK_5", -1);
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        postingId,
-        bookmarked: false,
-      },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: {
+          postingId,
+          bookmarked: false,
+        },
+        error: null,
+      });
+    },
+  ),
 ];

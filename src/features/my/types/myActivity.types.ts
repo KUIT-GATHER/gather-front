@@ -31,7 +31,10 @@ export type MyMeetingActivity = MyPageActivityBase & {
   participationId: null;
   postingId: null;
   meetingId: number;
-  status: MyMeetingActivityStatus;
+  volunteerPostingId: number | null;
+  status: null;
+  meetingStatus: MyMeetingActivityStatus;
+  postingParticipationStatus: MyVolunteerActivityStatus | null;
 };
 
 export type MyPageActivity = MyVolunteerActivity | MyMeetingActivity;
