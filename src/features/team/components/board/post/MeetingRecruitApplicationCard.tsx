@@ -1,9 +1,12 @@
+import { useState } from "react";
+
 import CalendarIcon from "@/assets/volunteer/calender.svg";
 import ClockIcon from "@/assets/volunteer/clock.svg";
 import LocationIcon from "@/assets/volunteer/location.svg";
 import { useMeetingRecruitApplicationCard } from "@/features/team/hooks/useMeetingRecruitApplicationCard";
 import { cn } from "@/shared/lib/cn";
 import Button from "@/shared/ui/Button";
+import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 type MeetingRecruitApplicationCardProps = {
   meetingId: number;
@@ -34,6 +37,7 @@ export function MeetingRecruitApplicationCard({
   meetingId,
   postId,
 }: MeetingRecruitApplicationCardProps) {
+  const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const {
     recruit,
     isLoading,
@@ -57,6 +61,21 @@ export function MeetingRecruitApplicationCard({
   if (isError || !recruit) {
     return <MeetingRecruitApplicationError onRetry={retryRecruit} />;
   }
+
+  const handleParticipationClick = () => {
+    if (recruit.applied) {
+      toggleParticipation();
+      return;
+    }
+
+    setIsApplyDialogOpen(true);
+  };
+
+  const handleApplyConfirm = () => {
+    toggleParticipation({
+      onSettled: () => setIsApplyDialogOpen(false),
+    });
+  };
 
   return (
     <section
@@ -153,7 +172,7 @@ export function MeetingRecruitApplicationCard({
           "mt-5 h-11 rounded-lg text-[14px] leading-5 font-semibold",
           recruit.applied && "bg-icon",
         )}
-        onClick={toggleParticipation}
+        onClick={handleParticipationClick}
       >
         {participationButtonLabel}
       </Button>
@@ -166,6 +185,25 @@ export function MeetingRecruitApplicationCard({
           신청 상태를 변경하지 못했어요. 다시 시도해 주세요.
         </p>
       ) : null}
+
+      <ConfirmDialog
+        open={isApplyDialogOpen}
+        title={
+          <>
+            신청 시 모임장에게 회원님의
+            <br />
+            전화번호와 생년월일이 전달됩니다
+            <br />
+            봉사를 신청하시겠습니까?
+          </>
+        }
+        cancelText="취소"
+        confirmText="확인"
+        confirmVariant="primary"
+        isPending={isParticipationPending}
+        onCancel={() => setIsApplyDialogOpen(false)}
+        onConfirm={handleApplyConfirm}
+      />
     </section>
   );
 }

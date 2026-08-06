@@ -97,9 +97,12 @@ export function useMeetingRecruitApplicationCard(
     void refetch();
   }, [refetch]);
 
-  const toggleParticipation = useCallback(() => {
-    mutate();
-  }, [mutate]);
+  const toggleParticipation = useCallback(
+    (options?: Parameters<typeof mutate>[1]) => {
+      mutate(undefined, options);
+    },
+    [mutate],
+  );
 
   const navigateToLinkedPosting =
     linkedPostingId === null
