@@ -81,7 +81,7 @@ type MeetingPostCommentSort = {
   direction: "asc" | "desc";
 };
 
-type MockMeeting = {
+export type MockMeeting = {
   meetingId: number;
   name: string;
   description: string | null;
@@ -856,6 +856,12 @@ function getMockMeetings() {
   ];
 }
 
+export function getCreatedMockMeetings(userId: number) {
+  return createdMeetings.filter(
+    (meeting) => getMembershipRole(userId, meeting.meetingId) !== null,
+  );
+}
+
 export function getJoinedMockMeetings(userId: number) {
   const joinedMeetingIds = membershipsByUserId.get(userId)?.keys() ?? [];
   const joinedMeetingIdSet = new Set(joinedMeetingIds);
@@ -1312,6 +1318,7 @@ export const teamHandlers = [
 
     createdMeetings.push(meeting);
     addMembership(userId, meetingId, "HOST");
+
     earnMockBadge(userId, "TEAM_CREATED");
 
     return HttpResponse.json({
