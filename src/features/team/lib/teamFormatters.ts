@@ -47,6 +47,47 @@ function parseLocalDateTime(value: string) {
   return date;
 }
 
+function formatMeetingFullDateParts(date: Date) {
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+}
+
+function normalizeMeetingTime(value: string | null) {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const match = /^(\d{1,2})(?::(\d{1,2}))?(?::\d{1,2})?$/.exec(normalizedValue);
+
+  if (!match) {
+    return normalizedValue;
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] ?? 0);
+
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return normalizedValue;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    2,
+    "0",
+  )}`;
+}
+
 export function formatMeetingActivityDate(value: string | null) {
   if (!value) {
     return null;
@@ -72,30 +113,61 @@ export function formatMeetingFullDate(value: string) {
     return null;
   }
 
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  return formatMeetingFullDateParts(date);
+}
 
-  return `${year}.${month}.${day}`;
+export function formatMeetingFullDateWithWeekday(value: string) {
+  const date = parseLocalDateTime(value);
+
+  if (!date) {
+    return null;
+  }
+
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekday = weekdays[date.getDay()];
+
+  return `${formatMeetingFullDateParts(date)}(${weekday})`;
 }
 
 export function formatMeetingTimeRange(
   startTime: string | null,
   endTime: string | null,
 ) {
-  if (!startTime && !endTime) {
+  const start = normalizeMeetingTime(startTime);
+  const end = normalizeMeetingTime(endTime);
+
+  if (!start && !end) {
     return null;
   }
 
-  if (!startTime) {
-    return endTime;
+  if (!start) {
+    return end;
   }
 
-  if (!endTime) {
-    return startTime;
+  if (!end) {
+    return start;
   }
 
-  return `${startTime} - ${endTime}`;
+  return `${start} - ${end}`;
+}
+
+export function formatMeetingDurationMinutes(minutes: number | null) {
+  if (!minutes || minutes <= 0) {
+    return null;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const restMinutes = minutes % 60;
+
+  if (hours > 0 && restMinutes > 0) {
+    return `${hours}h ${restMinutes}m`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+
+  return `${restMinutes}m`;
 }
 
 export function getMeetingDDay(value: string) {

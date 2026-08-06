@@ -8,6 +8,7 @@ import type { MeetingPost } from "@/features/team/types/team.types";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import { BoardActionMenuPanel } from "../shared/BoardActionMenuPanel";
+import { MeetingRecruitApplicationCard } from "./MeetingRecruitApplicationCard";
 import { MeetingPostImageCarousel } from "./MeetingPostImageCarousel";
 import { MeetingPostTypeBadge } from "../shared/MeetingPostTypeBadge";
 
@@ -120,6 +121,13 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
       </p>
 
       <MeetingPostImageCarousel imageUrls={post.imageUrls} title={post.title} />
+
+      {post.type === "RECRUIT" ? (
+        <MeetingRecruitApplicationCard
+          meetingId={post.meetingId}
+          postId={post.postId}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
