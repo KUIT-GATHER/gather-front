@@ -154,18 +154,7 @@ export function TeamCreatePage() {
     (isPostingBased && postingQuery.data?.regionId
       ? String(postingQuery.data.regionId)
       : "");
-  const resolvedCategories =
-    categories.length > 0
-      ? categories
-      : isPostingBased && postingQuery.data?.category
-        ? [postingQuery.data.category]
-        : [];
-  const orderedCategories = [
-    ...resolvedCategories,
-    ...MEETING_CATEGORY_ORDER.filter(
-      (category) => !resolvedCategories.includes(category),
-    ),
-  ];
+  const resolvedCategories = categories;
   const resolvedDeadline = deadline || (postingDefaultDeadline ?? "");
   const regions = useMemo(() => regionsQuery.data ?? [], [regionsQuery.data]);
   const regionById = useMemo(
@@ -684,8 +673,8 @@ export function TeamCreatePage() {
           required
           error={errors.categories}
         >
-          <div className="-mx-5.5 flex gap-2 overflow-x-auto px-5.5 pb-1">
-            {orderedCategories.map((value) => (
+          <div className="-mx-5.5 flex touch-pan-x gap-2 overflow-x-auto overscroll-x-contain px-5.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {MEETING_CATEGORY_ORDER.map((value) => (
               <button
                 key={value}
                 type="button"
