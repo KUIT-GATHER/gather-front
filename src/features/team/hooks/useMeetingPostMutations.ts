@@ -4,6 +4,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 
+import { myPageKeys } from "@/features/my/api/myPage.queries";
 import {
   createMeetingPostComment,
   createMeetingPost,
@@ -82,6 +83,9 @@ export function useCreateMeetingPostMutation(meetingId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
       });
       void queryClient.invalidateQueries({
         queryKey: teamKeys.myActivityCommentedPosts(meetingId),
@@ -173,6 +177,9 @@ export function useCreateMeetingPostCommentMutation(
       });
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
       });
     },
   });

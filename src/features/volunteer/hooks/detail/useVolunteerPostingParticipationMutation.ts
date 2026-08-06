@@ -138,9 +138,16 @@ export function useCancelVolunteerPostingParticipationMutation(
 export function useCompleteVolunteerPostingParticipationMutation(
   postingId: number,
 ) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: volunteerPostingKeys.participationComplete(postingId),
     mutationFn: () => completeVolunteerPostingParticipation(postingId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.badges(),
+      });
+    },
   });
 }
 

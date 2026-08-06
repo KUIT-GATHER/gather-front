@@ -5,6 +5,7 @@ import { authHandlers } from "./authHandlers";
 import { notificationHandlers } from "./notificationHandlers";
 import { regionHandlers } from "./regionHandlers";
 import { teamHandlers } from "./teamHandlers";
+import { badgeHandlers } from "./badgeHandlers";
 import { myProfileHandlers } from "./myProfileHandlers";
 
 export const handlers = [
@@ -14,6 +15,7 @@ export const handlers = [
   ...regionHandlers,
   ...teamHandlers,
   ...myProfileHandlers,
+  ...badgeHandlers,
   http.all("*/api/*", ({ request }) => {
     console.error(
       `[MSW] Unhandled API request: ${request.method} ${request.url}`,

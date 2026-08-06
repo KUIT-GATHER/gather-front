@@ -9,8 +9,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useMyActivitiesQuery } from "@/features/my/hooks/useMyActivitiesQuery";
+import {
+  getMeetingActivityLabel,
+  isDisplayableMyPageActivity,
+} from "@/features/my/lib/myActivity";
 import type {
-  MyMeetingActivity,
+  MyLinkedMeetingActivity,
   MyPageActivity,
   MyVolunteerActivity,
 } from "@/features/my/types/myActivity.types";
@@ -104,13 +108,18 @@ function VolunteerActivityCard({
   );
 }
 
-function MeetingActivityCard({ activity }: { activity: MyMeetingActivity }) {
+function MeetingActivityCard({
+  activity,
+}: {
+  activity: MyLinkedMeetingActivity;
+}) {
   const navigate = useNavigate();
-  const statusLabel =
-    activity.status === "COMPLETED" ? "모임 완료" : "활동 예정";
 
   return (
-    <ActivityCardFrame activity={activity} statusLabel={statusLabel}>
+    <ActivityCardFrame
+      activity={activity}
+      statusLabel={getMeetingActivityLabel(activity)}
+    >
       <ActivityDetailButton
         fullWidth
         onClick={() => navigate(`/teams/${activity.meetingId}`)}
@@ -178,7 +187,10 @@ export function ActivityCalendarSection() {
   const monthIndex = month.getMonth();
   const yearMonth = `${year}-${pad(monthIndex + 1)}`;
   const activitiesQuery = useMyActivitiesQuery(yearMonth);
-  const activities = activitiesQuery.data ?? [];
+  const activities = useMemo(
+    () => (activitiesQuery.data ?? []).filter(isDisplayableMyPageActivity),
+    [activitiesQuery.data],
+  );
   const lastDay = new Date(year, monthIndex + 1, 0).getDate();
   const selectedDate = toDateKey(year, monthIndex, selectedDay);
   const todayKey = toDateKey(
