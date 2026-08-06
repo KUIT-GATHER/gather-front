@@ -7,16 +7,23 @@ export type MockParticipation = {
 };
 
 const STORAGE_KEY = "gather_mock_posting_participations";
+const defaultParticipations: MockParticipation[] = [
+  { participationId: 201, userId: 1, postingId: 1, status: "APPLIED" },
+  { participationId: 202, userId: 1, postingId: 2, status: "CONFIRMED" },
+  { participationId: 203, userId: 1, postingId: 3, status: "COMPLETED" },
+  { participationId: 204, userId: 1, postingId: 4, status: "REVIEWED" },
+];
 
 function readParticipations() {
-  if (typeof localStorage === "undefined") return [];
+  if (typeof localStorage === "undefined") return [...defaultParticipations];
 
   try {
-    return JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ?? "[]",
-    ) as MockParticipation[];
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored
+      ? (JSON.parse(stored) as MockParticipation[])
+      : [...defaultParticipations];
   } catch {
-    return [];
+    return [...defaultParticipations];
   }
 }
 
