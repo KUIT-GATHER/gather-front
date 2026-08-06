@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 
 import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
+import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
 
 import { addMockBadgeProgress } from "./badgeHandlers";
 import postings from "./data/postings.json";
@@ -243,6 +244,85 @@ function toVolunteerPostingListItem(posting: (typeof postings.data)[number]) {
     category,
     noticeEndDate,
   };
+}
+
+function toUnifiedPostingListItem(
+  posting: (typeof postings.data)[number],
+): PostingListItem {
+  return {
+    sourceType: "POSTING" as const,
+    id: posting.id,
+    meetingId: null,
+    title: posting.title,
+    organizationName: posting.recruitOrg,
+    thumbnailUrl: null,
+    regionId: posting.regionId,
+    regionName: posting.regionName,
+    place: posting.actPlace,
+    activityStartAt: posting.actStartDate
+      ? `${posting.actStartDate}T${posting.actStartTime ?? "00:00"}:00`
+      : null,
+    activityEndAt: posting.actEndDate
+      ? `${posting.actEndDate}T${posting.actEndTime ?? "23:59"}:00`
+      : null,
+    applyDeadlineAt: posting.noticeEndDate
+      ? `${posting.noticeEndDate}T23:59:59`
+      : null,
+    maxParticipants: posting.recruitCount,
+    appliedCount: posting.applicantCount,
+    category: posting.category as PostingListItem["category"],
+    status: posting.status,
+  };
+}
+
+function getUnifiedPostingSortValue(
+  item: PostingListItem,
+  field: PostingSortField,
+) {
+  switch (field) {
+    case "actStartDate":
+      return item.activityStartAt ?? "";
+    case "actEndDate":
+      return item.activityEndAt ?? "";
+    case "noticeStartDate":
+    case "noticeEndDate":
+      return item.applyDeadlineAt ?? "";
+    case "recruitCount":
+      return item.maxParticipants ?? 0;
+    case "applicantCount":
+      return item.appliedCount ?? 0;
+    case "createdAt":
+    case "updatedAt":
+      return item.id;
+    default:
+      return item[field];
+  }
+}
+
+function sortUnifiedPostings(
+  items: PostingListItem[],
+  sorts: PostingSort[],
+  applyStatusPriority: boolean,
+) {
+  return [...items].sort((left, right) => {
+    if (applyStatusPriority) {
+      const statusComparison =
+        getPostingStatusPriority(left.status) -
+        getPostingStatusPriority(right.status);
+      if (statusComparison !== 0) return statusComparison;
+    }
+    for (const { field, direction } of sorts) {
+      const leftValue = getUnifiedPostingSortValue(left, field);
+      const rightValue = getUnifiedPostingSortValue(right, field);
+      const comparison =
+        typeof leftValue === "number" && typeof rightValue === "number"
+          ? leftValue - rightValue
+          : String(leftValue).localeCompare(String(rightValue));
+      if (comparison !== 0)
+        return direction === "asc" ? comparison : -comparison;
+    }
+    return right.id - left.id;
+  });
 }
 
 function getRecommendedMockPostings(userId: number | null) {
@@ -556,18 +636,63 @@ export const postingHandlers = [
       items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
     }
 
-    const sortedItems = sortPostings(items, sorts, status === null);
+    const meetingRecruitItem: PostingListItem = {
+      sourceType: "MEETING_RECRUIT" as const,
+      id: 2,
+      meetingId: 1,
+      title: "한강공원 플로깅",
+      organizationName: "따뜻한 마음",
+      thumbnailUrl: "/src/assets/icons/Temp-volunteer-posting.svg",
+      regionId: 41,
+      regionName: "영등포구",
+      place: "여의도 한강공원",
+      activityStartAt: `${formatMockDate(7)}T09:00:00`,
+      activityEndAt: `${formatMockDate(7)}T12:00:00`,
+      applyDeadlineAt: `${formatMockDate(3)}T23:59:59`,
+      maxParticipants: 30,
+      appliedCount: 4,
+      category: "ENVIRONMENT" as const,
+      status: "RECRUITING",
+    };
+    const meetingRecruitMatches =
+      (!keyword ||
+        [meetingRecruitItem.title, meetingRecruitItem.organizationName].some(
+          (value) => value?.includes(keyword),
+        )) &&
+      (!category || meetingRecruitItem.category === category) &&
+      (regionId === undefined ||
+        getRegionIdsIncludingChildren([regionId]).has(
+          meetingRecruitItem.regionId!,
+        )) &&
+      (regionGroupId === undefined ||
+        getRegionIdsByGroup(regionGroupId).has(meetingRecruitItem.regionId!)) &&
+      (status
+        ? meetingRecruitItem.status === status
+        : meetingRecruitItem.status === "RECRUITING" ||
+          meetingRecruitItem.status === "CLOSED") &&
+      (!noticeStartDate ||
+        (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") >=
+          noticeStartDate) &&
+      (!noticeEndDate ||
+        (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") <=
+          noticeEndDate);
+    const unifiedItems = sortUnifiedPostings(
+      [
+        ...items.map(toUnifiedPostingListItem),
+        ...(meetingRecruitMatches ? [meetingRecruitItem] : []),
+      ],
+      sorts,
+      status === null,
+    );
     const startIndex = page * size;
-    const content = sortedItems
-      .slice(startIndex, startIndex + size)
-      .map(toVolunteerPostingListItem);
+    const content = unifiedItems.slice(startIndex, startIndex + size);
 
     return HttpResponse.json({
       success: true,
       data: {
         content,
-        totalElements: sortedItems.length,
-        totalPages: Math.ceil(sortedItems.length / size),
+        totalElements: unifiedItems.length,
+        totalPages: Math.ceil(unifiedItems.length / size),
         page,
         size,
       },
