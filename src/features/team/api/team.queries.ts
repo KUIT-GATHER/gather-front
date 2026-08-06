@@ -7,6 +7,7 @@ import {
   getMeeting,
   getMeetingHome,
   getMeetingPosts,
+  getMeetingRecruit,
   getMeetingRecommendedKeywords,
   getMeetings,
   getMyMeetings,
@@ -81,6 +82,8 @@ export const teamKeys = {
     [...teamKeys.posts(meetingId), params] as const,
   post: (meetingId: number, postId: number) =>
     [...teamKeys.posts(meetingId), "detail", postId] as const,
+  recruit: (meetingId: number, postId: number) =>
+    [...teamKeys.post(meetingId, postId), "recruit"] as const,
   postComments: (meetingId: number, postId: number) =>
     [...teamKeys.post(meetingId, postId), "comments"] as const,
   postCommentList: (
@@ -96,6 +99,8 @@ export const teamKeys = {
     [...teamKeys.post(meetingId, postId), "delete"] as const,
   togglePostLike: (meetingId: number, postId: number) =>
     [...teamKeys.post(meetingId, postId), "like"] as const,
+  toggleRecruitParticipation: (meetingId: number, postId: number) =>
+    [...teamKeys.recruit(meetingId, postId), "participation"] as const,
   createPostComment: (meetingId: number, postId: number) =>
     [...teamKeys.postComments(meetingId, postId), "create"] as const,
   updatePostComment: (meetingId: number, postId: number, commentId: number) =>
@@ -247,6 +252,12 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.post(meetingId, postId),
       queryFn: () => getMeetingPost(meetingId, postId),
+    }),
+
+  recruit: (meetingId: number, postId: number) =>
+    queryOptions({
+      queryKey: teamKeys.recruit(meetingId, postId),
+      queryFn: () => getMeetingRecruit(meetingId, postId),
     }),
 
   postComments: (

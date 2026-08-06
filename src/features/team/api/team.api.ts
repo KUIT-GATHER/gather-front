@@ -23,6 +23,8 @@ import type {
   MeetingPostLikeResponse,
   MeetingPostListParams,
   MeetingPostPage,
+  MeetingRecruitDetail,
+  MeetingRecruitParticipationResponse,
   MeetingPostUpdateRequest,
   MyAppliedRecruitPage,
   MyMeetingListItem,
@@ -154,6 +156,10 @@ function buildMeetingPostEndpoint(meetingId: number, postId: number) {
   return `${MEETING_ENDPOINT}/${meetingId}/posts/${postId}`;
 }
 
+function buildMeetingRecruitEndpoint(meetingId: number, postId: number) {
+  return `${buildMeetingPostEndpoint(meetingId, postId)}/recruit`;
+}
+
 function buildMeetingPostCommentsEndpoint(
   meetingId: number,
   postId: number,
@@ -190,6 +196,13 @@ function buildMeetingPostCommentEndpoint(
 
 function buildMeetingPostLikesEndpoint(meetingId: number, postId: number) {
   return `${buildMeetingPostEndpoint(meetingId, postId)}/likes`;
+}
+
+function buildMeetingRecruitParticipationEndpoint(
+  meetingId: number,
+  postId: number,
+) {
+  return `${buildMeetingRecruitEndpoint(meetingId, postId)}/participation`;
 }
 
 function buildMyMeetingActivityEndpoint(
@@ -334,9 +347,25 @@ export function getMeetingPost(meetingId: number, postId: number) {
   return fetchClient<MeetingPost>(buildMeetingPostEndpoint(meetingId, postId));
 }
 
+export function getMeetingRecruit(meetingId: number, postId: number) {
+  return fetchClient<MeetingRecruitDetail>(
+    buildMeetingRecruitEndpoint(meetingId, postId),
+  );
+}
+
 export function toggleMeetingPostLike(meetingId: number, postId: number) {
   return fetchClient<MeetingPostLikeResponse>(
     buildMeetingPostLikesEndpoint(meetingId, postId),
+    { method: "POST" },
+  );
+}
+
+export function toggleMeetingRecruitParticipation(
+  meetingId: number,
+  postId: number,
+) {
+  return fetchClient<MeetingRecruitParticipationResponse>(
+    buildMeetingRecruitParticipationEndpoint(meetingId, postId),
     { method: "POST" },
   );
 }

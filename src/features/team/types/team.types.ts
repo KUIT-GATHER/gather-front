@@ -239,6 +239,41 @@ export type MyAppliedRecruitPage = {
   size: number;
 };
 
+export type MeetingRecruitDetail = {
+  postId: number;
+  meetingId: number;
+  title: string;
+  content: string;
+  authorId: number;
+  authorNickname: string;
+  place: string;
+  actDate: string;
+  actStartTime: string | null;
+  actEndTime: string | null;
+  maxParticipants: number;
+  categories: PostingCategory[];
+  timeRecognized: boolean;
+  recognizedMinutes: number | null;
+  applyDeadline: string;
+  external: boolean;
+  likeCount: number;
+  commentCount: number;
+  appliedCount: number;
+  applied: boolean;
+  applicationOpen: boolean;
+  full: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MeetingRecruitParticipationResponse = {
+  applied: boolean;
+  appliedCount: number;
+  maxParticipants: number;
+};
+
 export type MeetingPostCommentCreateRequest = {
   content: string;
 };
