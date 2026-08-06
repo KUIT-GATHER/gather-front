@@ -244,7 +244,7 @@ const mockPostImageUrls = [
   mockPostImageThree,
 ] as const;
 const meetingImageUrlsByMeetingId = new Map<number, string[]>([
-  [1, [...mockPostImageUrls]],
+  [1, [mockPostImageOne]],
   [2, [mockPostImageOne]],
 ]);
 

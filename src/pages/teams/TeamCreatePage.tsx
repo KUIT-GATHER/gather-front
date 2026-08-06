@@ -17,7 +17,6 @@ import { buildMeetingCreateDateTimePayload } from "@/features/team/lib/meetingCr
 import { getMeetingImageUploadErrorMessage } from "@/features/team/lib/meetingImageUpload";
 import {
   getMeetingImageSelectionErrorMessage,
-  MAX_MEETING_IMAGE_COUNT,
   validateMeetingImageSelection,
 } from "@/features/team/lib/meetingImageValidation";
 import type { LocalMeetingImage } from "@/features/team/types/meetingImage.types";
@@ -38,6 +37,8 @@ import Textarea from "@/shared/ui/Textarea";
 const NAME_MAX_LENGTH = 15;
 const DESCRIPTION_MAX_LENGTH = 200;
 const MAX_MEMBER = 100;
+const TEAM_CREATE_MAX_IMAGE_COUNT = 1;
+const TEAM_CREATE_IMAGE_COUNT_ERROR_MESSAGE = `사진은 최대 ${TEAM_CREATE_MAX_IMAGE_COUNT}장까지 첨부할 수 있어요.`;
 const PARTICIPATION_CONDITION_MAX_LENGTH = 150;
 const MEETING_CATEGORY_ORDER: PostingCategory[] = [
   "ENVIRONMENT",
@@ -201,9 +202,15 @@ export function TeamCreatePage() {
     try {
       if (!files) return;
 
+      const selectedFiles = Array.from(files);
+      const remainingCount = Math.max(
+        0,
+        TEAM_CREATE_MAX_IMAGE_COUNT - images.length,
+      );
+      const filesWithinLimit = selectedFiles.slice(0, remainingCount);
       const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
         existingImages: images,
-        files: Array.from(files),
+        files: filesWithinLimit,
       });
       const nextImages = acceptedFiles.map((file) => {
         const previewUrl = URL.createObjectURL(file);
@@ -223,7 +230,9 @@ export function TeamCreatePage() {
       setImageSelectionError(
         rejectedReasons.length > 0
           ? getMeetingImageSelectionErrorMessage(rejectedReasons)
-          : null,
+          : selectedFiles.length > filesWithinLimit.length
+            ? TEAM_CREATE_IMAGE_COUNT_ERROR_MESSAGE
+            : null,
       );
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -536,13 +545,13 @@ export function TeamCreatePage() {
             className="flex w-full items-center gap-3 rounded-xl border border-dashed border-[#90d79d] bg-[#f8fbf8] px-4 py-3 text-left text-base font-semibold text-[#18bd77] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={
               areImageControlsDisabled ||
-              images.length >= MAX_MEETING_IMAGE_COUNT
+              images.length >= TEAM_CREATE_MAX_IMAGE_COUNT
             }
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus aria-hidden="true" className="size-6" />
             <span id="meeting-image-label">
-              사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
+              사진 첨부 (선택, 최대 {TEAM_CREATE_MAX_IMAGE_COUNT}장)
             </span>
           </button>
           <input
@@ -550,7 +559,6 @@ export function TeamCreatePage() {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             disabled={areImageControlsDisabled}
-            multiple
             className="sr-only"
             onChange={(event) => handleImageChange(event.target.files)}
           />
