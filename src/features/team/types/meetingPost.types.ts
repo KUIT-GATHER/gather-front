@@ -2,6 +2,7 @@ import type { UserStatus } from "@/shared/types/user.types";
 
 export type EditableMeetingPostType = "NOTICE" | "REVIEW" | "FREE";
 export type ReviewSourceType = "POSTING" | "MEETING_RECRUIT";
+export type ReviewSourceValue = `${ReviewSourceType}:${number}`;
 
 export type ReviewableActivity = {
   reviewSourceType: ReviewSourceType;

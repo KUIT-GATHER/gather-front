@@ -16,7 +16,12 @@ import {
   meetingPostSchema,
   type MeetingPostFormValues,
 } from "@/features/team/schemas/meetingPost.schema";
-import type { EditableMeetingPostType } from "@/features/team/types/meetingPost.types";
+import type {
+  EditableMeetingPostType,
+  MeetingPostCreateRequest,
+  ReviewSourceType,
+  ReviewSourceValue,
+} from "@/features/team/types/meetingPost.types";
 import type { MeetingPost } from "@/features/team/types/team.types";
 import Button from "@/shared/ui/Button";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -33,6 +38,30 @@ type MeetingPostEditorScreenProps = {
   postType: EditableMeetingPostType;
   post?: MeetingPost;
 };
+
+function isReviewSourceValue(value: string): value is ReviewSourceValue {
+  return /^(POSTING|MEETING_RECRUIT):[1-9]\d*$/.test(value);
+}
+
+function parseReviewSourceValue(value: ReviewSourceValue): {
+  reviewSourceType: ReviewSourceType;
+  reviewSourceId: number;
+} | null {
+  const [reviewSourceType, sourceIdValue, extraValue] = value.split(":");
+  const reviewSourceId = Number(sourceIdValue);
+
+  if (
+    extraValue !== undefined ||
+    (reviewSourceType !== "POSTING" &&
+      reviewSourceType !== "MEETING_RECRUIT") ||
+    !Number.isInteger(reviewSourceId) ||
+    reviewSourceId <= 0
+  ) {
+    return null;
+  }
+
+  return { reviewSourceType, reviewSourceId };
+}
 
 export function MeetingPostEditorScreen({
   meetingId,
@@ -65,12 +94,12 @@ export function MeetingPostEditorScreen({
     defaultValues: {
       title: post?.title ?? "",
       content: post?.content ?? "",
-      reviewSourceId: null,
+      reviewSourceValue: null,
     },
   });
   const title = useWatch({ control, name: "title" });
   const content = useWatch({ control, name: "content" });
-  const reviewSourceId = useWatch({ control, name: "reviewSourceId" });
+  const reviewSourceValue = useWatch({ control, name: "reviewSourceValue" });
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   useEffect(() => () => previewsRef.current.forEach(URL.revokeObjectURL), []);
@@ -115,26 +144,35 @@ export function MeetingPostEditorScreen({
         return;
       }
 
-      const reviewActivity = reviewableQuery.data?.find(
-        (activity) => activity.reviewSourceId === values.reviewSourceId,
-      );
-      const created = await createMutation.mutateAsync(
-        postType === "REVIEW"
-          ? {
-              type: "REVIEW",
-              title: values.title.trim(),
-              content: values.content.trim(),
-              imageObjectKeys,
-              reviewSourceType: reviewActivity!.reviewSourceType,
-              reviewSourceId: reviewActivity!.reviewSourceId,
-            }
-          : {
-              type: postType,
-              title: values.title.trim(),
-              content: values.content.trim(),
-              imageObjectKeys,
-            },
-      );
+      let createRequest: MeetingPostCreateRequest;
+
+      if (postType === "REVIEW") {
+        const reviewSource = values.reviewSourceValue
+          ? parseReviewSourceValue(values.reviewSourceValue)
+          : null;
+
+        if (!reviewSource) {
+          setSubmitError("후기를 작성할 완료 활동을 선택해 주세요.");
+          return;
+        }
+
+        createRequest = {
+          type: "REVIEW",
+          title: values.title.trim(),
+          content: values.content.trim(),
+          imageObjectKeys,
+          ...reviewSource,
+        };
+      } else {
+        createRequest = {
+          type: postType,
+          title: values.title.trim(),
+          content: values.content.trim(),
+          imageObjectKeys,
+        };
+      }
+
+      const created = await createMutation.mutateAsync(createRequest);
       navigate(`/teams/${meetingId}/posts/${created.postId}`, {
         replace: true,
       });
@@ -202,10 +240,10 @@ export function MeetingPostEditorScreen({
           <FormField
             label="완료 활동"
             required
-            error={errors.reviewSourceId?.message}
+            error={errors.reviewSourceValue?.message}
           >
             <Controller
-              name="reviewSourceId"
+              name="reviewSourceValue"
               control={control}
               rules={{ required: true }}
               render={({ field }) => (
@@ -213,24 +251,29 @@ export function MeetingPostEditorScreen({
                   aria-label="후기를 작성할 완료 활동"
                   className="h-12 w-full rounded-xl border border-stroke bg-white px-4 outline-none focus:border-button"
                   value={field.value ?? ""}
-                  onChange={(event) =>
-                    field.onChange(Number(event.target.value) || null)
-                  }
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    field.onChange(isReviewSourceValue(value) ? value : null);
+                  }}
                 >
                   <option value="">완료 활동을 선택해 주세요</option>
-                  {reviewableQuery.data?.map((activity) => (
-                    <option
-                      key={`${activity.reviewSourceType}-${activity.reviewSourceId}`}
-                      value={activity.reviewSourceId}
-                    >
-                      {activity.reviewSourceType === "POSTING"
-                        ? "[봉사 공고]"
-                        : "[모임 활동]"}{" "}
-                      {activity.title} ·{" "}
-                      {activity.activityStartAt.slice(0, 16).replace("T", " ")}{" "}
-                      ~ {activity.activityEndAt.slice(0, 16).replace("T", " ")}
-                    </option>
-                  ))}
+                  {reviewableQuery.data?.map((activity) => {
+                    const value: ReviewSourceValue = `${activity.reviewSourceType}:${activity.reviewSourceId}`;
+
+                    return (
+                      <option key={value} value={value}>
+                        {activity.reviewSourceType === "POSTING"
+                          ? "[봉사 공고]"
+                          : "[모임 활동]"}{" "}
+                        {activity.title} ·{" "}
+                        {activity.activityStartAt
+                          .slice(0, 16)
+                          .replace("T", " ")}{" "}
+                        ~{" "}
+                        {activity.activityEndAt.slice(0, 16).replace("T", " ")}
+                      </option>
+                    );
+                  })}
                 </select>
               )}
             />
@@ -340,7 +383,7 @@ export function MeetingPostEditorScreen({
           type="submit"
           fullWidth
           disabled={
-            isPending || (postType === "REVIEW" && !post && !reviewSourceId)
+            isPending || (postType === "REVIEW" && !post && !reviewSourceValue)
           }
         >
           {isPending ? "저장 중" : post ? "저장하기" : "등록하기"}
