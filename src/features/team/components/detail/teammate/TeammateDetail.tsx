@@ -39,6 +39,10 @@ export function TeammateDetail({
   const isHomePage = pathname === teamBasePath;
   const isBoardPage = pathname === `${teamBasePath}/posts`;
   const isPostDetailPage = pathname.startsWith(`${teamBasePath}/posts/`);
+  const isPostWritePage =
+    pathname === `${teamBasePath}/posts/new` ||
+    pathname.startsWith(`${teamBasePath}/posts/new/`) ||
+    pathname === `${teamBasePath}/posts/recruits/new`;
 
   const isActivityMainPage = pathname === activityBasePath;
 
@@ -64,7 +68,7 @@ export function TeammateDetail({
 
   const headerTitle = activitySectionTitle ?? home.name;
 
-  const showTeamHeader = !isSettingsSubPage;
+  const showTeamHeader = !isSettingsSubPage && !isPostWritePage;
   const showTabs =
     !isPostDetailPage &&
     !isSettingsPage &&

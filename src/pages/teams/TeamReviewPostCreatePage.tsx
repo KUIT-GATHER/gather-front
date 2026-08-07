@@ -1,6 +1,8 @@
 import { useState, type SubmitEvent } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 
+import { teamQueries } from "@/features/team/api/team.queries";
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 import { ActivitySelectDropdown } from "@/features/team/components/board/create/ActivitySelectDropdown";
 import type { ReviewableActivity } from "@/features/team/types/meetingPost.types";
@@ -16,27 +18,6 @@ import { uploadMeetingPostImages } from "@/features/team/lib/postImageUpload";
 
 type FormErrors = Partial<Record<"activity" | "title" | "content", string>>;
 
-/*
- * TODO: 후기 작성 가능한 활동 목록 조회 API로 교체
- * GET /api/v1/meetings/{meetingId}/my/reviewable-activities
- */
-const DEV_COMPLETED_ACTIVITIES: ReviewableActivity[] = [
-  {
-    reviewSourceType: "MEETING_RECRUIT",
-    reviewSourceId: 1,
-    title: "어린이 독서 지도 활동",
-    activityStartAt: "2026-05-22T10:00:00",
-    activityEndAt: "2026-05-22T12:00:00",
-  },
-  {
-    reviewSourceType: "MEETING_RECRUIT",
-    reviewSourceId: 2,
-    title: "지역 어르신 도시락 전달",
-    activityStartAt: "2026-05-01T10:00:00",
-    activityEndAt: "2026-05-01T12:00:00",
-  },
-];
-
 export function TeamReviewPostCreatePage() {
   const navigate = useNavigate();
   const { teamId } = useParams();
@@ -51,9 +32,12 @@ export function TeamReviewPostCreatePage() {
     isAuthenticated: true,
   });
 
-  const [completedActivities] = useState<ReviewableActivity[]>(() =>
-    import.meta.env.DEV ? DEV_COMPLETED_ACTIVITIES : [],
-  );
+  const reviewableActivitiesQuery = useQuery({
+    ...teamQueries.reviewableActivities(safeMeetingId),
+    enabled:
+      hasValidMeetingId &&
+      Boolean(homeQuery.data?.member || homeQuery.data?.host),
+  });
 
   const [selectedActivity, setSelectedActivity] =
     useState<ReviewableActivity | null>(null);
@@ -101,6 +85,31 @@ export function TeamReviewPostCreatePage() {
   if (!isJoined) {
     return <Navigate to={`/teams/${meetingId}/posts`} replace />;
   }
+
+  if (reviewableActivitiesQuery.isLoading) {
+    return (
+      <LoadingState
+        className="mx-auto min-h-dvh max-w-app justify-center px-5.5"
+        label="후기 작성 가능한 활동을 불러오는 중"
+      />
+    );
+  }
+
+  if (reviewableActivitiesQuery.isError) {
+    return (
+      <ErrorState
+        className="mx-auto min-h-dvh max-w-app justify-center px-5.5"
+        title="활동 목록을 불러오지 못했어요"
+        description="잠시 후 다시 확인해 주세요."
+        primaryAction={{
+          label: "다시 시도",
+          onClick: () => void reviewableActivitiesQuery.refetch(),
+        }}
+      />
+    );
+  }
+
+  const completedActivities = reviewableActivitiesQuery.data ?? [];
 
   const clearError = (field: keyof FormErrors) => {
     setErrors((current) => ({
