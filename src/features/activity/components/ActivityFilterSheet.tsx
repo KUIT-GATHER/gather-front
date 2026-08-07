@@ -469,7 +469,7 @@ export function ActivityFilterSheet({
                       "mt-1 w-full rounded-lg px-4 py-3 text-left text-sm text-text-gray-300",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                       regionSelectionId === region.id &&
-                        "bg-icon/10 font-medium text-text",
+                        "bg-[rgba(217,217,217,0.44)] font-medium text-text",
                     )}
                     onClick={() => setRegionSelectionId(region.id)}
                   >
