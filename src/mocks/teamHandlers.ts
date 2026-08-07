@@ -7,7 +7,15 @@ import { addMockBadgeProgress, earnMockBadge } from "./badgeHandlers";
 import teams from "./data/teams.json";
 import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
-import { hasUpcomingConfirmedMockRecruit } from "./data/mockMeetingRecruits";
+import {
+  hasUpcomingConfirmedMockRecruit,
+  mockMeetingRecruitsByPostId,
+  mockRecruitParticipantsByPostId,
+} from "./data/mockMeetingRecruits";
+import {
+  findMockParticipation,
+  updateMockParticipation,
+} from "./data/mockParticipations";
 
 import {
   createUnauthorizedResponse,
@@ -26,6 +34,7 @@ import type {
 import type {
   MeetingPostCreateRequest,
   MeetingPostUpdateRequest,
+  ReviewSourceType,
 } from "@/features/team/types/meetingPost.types";
 import {
   MAX_MEETING_IMAGE_COUNT,
@@ -121,6 +130,8 @@ type MockMeetingPost = {
   commentCount: number;
   likedUserIds: number[];
   createdAt: string;
+  reviewSourceType?: ReviewSourceType;
+  reviewSourceId?: number;
 };
 
 type MockMeetingPostComment = {
@@ -462,6 +473,10 @@ const meetingPosts: MockMeetingPost[] = [
     createdAt: "2026-07-24T18:10:00",
   },
 ];
+
+export function getNextMockMeetingPostId() {
+  return Math.max(...meetingPosts.map((item) => item.postId), 0) + 1;
+}
 
 export function upsertMockMeetingRecruitPost({
   postId,
@@ -2163,10 +2178,52 @@ export const teamHandlers = [
           400,
         );
       }
+
+      let completeReviewCreation: (() => void) | undefined;
+      if (body.type === "REVIEW") {
+        if (body.reviewSourceType === "POSTING") {
+          const participation = findMockParticipation(
+            userId,
+            body.reviewSourceId,
+          );
+          if (
+            team.volunteerPostingId !== body.reviewSourceId ||
+            participation?.status !== "COMPLETED"
+          ) {
+            return createMeetingErrorResponse(
+              "REVIEW_SOURCE_NOT_REVIEWABLE",
+              "후기를 작성할 수 없는 활동입니다.",
+              409,
+            );
+          }
+          completeReviewCreation = () =>
+            updateMockParticipation(userId, body.reviewSourceId, {
+              status: "REVIEWED",
+            });
+        } else {
+          const recruit = mockMeetingRecruitsByPostId.get(body.reviewSourceId);
+          const participant = (
+            mockRecruitParticipantsByPostId.get(body.reviewSourceId) ?? []
+          ).find((item) => item.userId === userId);
+          if (
+            recruit?.meetingId !== meetingId ||
+            participant?.participationStatus !== "COMPLETED"
+          ) {
+            return createMeetingErrorResponse(
+              "REVIEW_SOURCE_NOT_REVIEWABLE",
+              "후기를 작성할 수 없는 활동입니다.",
+              409,
+            );
+          }
+          completeReviewCreation = () => {
+            participant.participationStatus = "REVIEWED";
+          };
+        }
+      }
       const user = getMockUserById(userId);
       const now = new Date().toISOString().slice(0, 19);
       const post: MockMeetingPost = {
-        postId: Math.max(...meetingPosts.map((item) => item.postId), 0) + 1,
+        postId: getNextMockMeetingPostId(),
         meetingId,
         type: body.type,
         title: body.title.trim(),
@@ -2180,8 +2237,15 @@ export const teamHandlers = [
         commentCount: 0,
         likedUserIds: [],
         createdAt: now,
+        ...(body.type === "REVIEW"
+          ? {
+              reviewSourceType: body.reviewSourceType,
+              reviewSourceId: body.reviewSourceId,
+            }
+          : {}),
       };
       meetingPosts.push(post);
+      completeReviewCreation?.();
       return HttpResponse.json(
         {
           success: true,
@@ -2649,6 +2713,25 @@ export const teamHandlers = [
           "게시글을 삭제할 권한이 없습니다.",
           403,
         );
+      }
+
+      if (
+        post.type === "REVIEW" &&
+        post.reviewSourceType &&
+        post.reviewSourceId
+      ) {
+        if (post.reviewSourceType === "POSTING") {
+          updateMockParticipation(post.authorId, post.reviewSourceId, {
+            status: "COMPLETED",
+          });
+        } else {
+          const participant = (
+            mockRecruitParticipantsByPostId.get(post.reviewSourceId) ?? []
+          ).find((item) => item.userId === post.authorId);
+          if (participant?.participationStatus === "REVIEWED") {
+            participant.participationStatus = "COMPLETED";
+          }
+        }
       }
 
       meetingPosts.splice(postIndex, 1);
