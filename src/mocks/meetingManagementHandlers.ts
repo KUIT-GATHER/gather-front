@@ -1,5 +1,10 @@
 import { HttpResponse, http } from "msw";
 
+import {
+  MAX_MEETING_IMAGE_SIZE_BYTES,
+  isMeetingImageMimeType,
+} from "@/features/team/lib/meetingImageValidation";
+import type { PostImagePresignedUrlRequest } from "@/features/team/types/meetingPost.types";
 import type {
   MeetingRecruitRequest,
   RecruitParticipantSummary,
@@ -17,15 +22,18 @@ import {
   syncMockRecruitCounts,
 } from "@/mocks/data/mockMeetingRecruits";
 import { getMockUserById } from "@/mocks/data/mockUsers";
+import { findMockParticipation } from "@/mocks/data/mockParticipations";
 import {
   createUnauthorizedResponse,
   getMockUserId,
 } from "@/mocks/lib/mockAuth";
+import { mockPostings } from "@/mocks/postingHandlers";
 import {
   approveMockMeetingMember,
   getMockMeeting,
   getMockMeetingManageImages,
   getMockMeetingMembers,
+  getNextMockMeetingPostId,
   getMockMeetingRole,
   getMockPendingJoinRequests,
   isMockMeetingMember,
@@ -41,6 +49,11 @@ const fail = (code: string, message: string, status: number) =>
     { success: false, data: null, error: { code, message } },
     { status },
   );
+
+function toPostingActivityDateTime(date: string, time: string) {
+  const normalizedHour = String(Number(time)).padStart(2, "0");
+  return `${date}T${normalizedHour}:00:00`;
+}
 
 const joinRequestsByMeetingId = new Map<number, MeetingJoinRequest[]>([
   [
@@ -79,8 +92,6 @@ const recognizedMinutesByUserId = new Map<number, number>([
   [301, 0],
   [302, 180],
 ]);
-
-let nextPostId = 106;
 
 for (const recruit of mockMeetingRecruitsByPostId.values()) {
   syncMockRecruitCounts(recruit);
@@ -367,38 +378,108 @@ export const meetingManagementHandlers = [
       if (!userId) return createUnauthorizedResponse();
 
       const meetingId = Number(params.meetingId);
-      const reviewable = [...mockMeetingRecruitsByPostId.values()].flatMap(
-        (recruit) => {
-          const participant = (
-            mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
-          ).find((item) => item.userId === userId);
+      if (!isMockMeetingMember(userId, meetingId)) {
+        return fail(
+          "MEETING_MEMBER_REQUIRED",
+          "승인된 모임원만 조회할 수 있습니다.",
+          403,
+        );
+      }
 
-          return recruit.meetingId === meetingId &&
-            participant?.participationStatus === "COMPLETED"
-            ? [
-                {
-                  reviewSourceType: "MEETING_RECRUIT" as const,
-                  reviewSourceId: recruit.postId,
-                  title: recruit.title,
-                  activityStartAt: recruit.activityStartAt,
-                  activityEndAt: recruit.activityEndAt,
-                },
-              ]
-            : [];
-        },
-      );
+      const meeting = getMockMeeting(meetingId);
+      if (!meeting) {
+        return fail("MEETING_NOT_FOUND", "모임을 찾을 수 없습니다.", 404);
+      }
 
-      return ok(reviewable);
+      const postingReviewable = meeting.volunteerPostingId
+        ? (() => {
+            const posting = mockPostings.find(
+              (item) => item.id === meeting.volunteerPostingId,
+            );
+            const participation = findMockParticipation(
+              userId,
+              meeting.volunteerPostingId,
+            );
+
+            return posting && participation?.status === "COMPLETED"
+              ? [
+                  {
+                    reviewSourceType: "POSTING" as const,
+                    reviewSourceId: posting.id,
+                    title: posting.title,
+                    activityStartAt: toPostingActivityDateTime(
+                      posting.actStartDate,
+                      posting.actStartTime,
+                    ),
+                    activityEndAt: toPostingActivityDateTime(
+                      posting.actEndDate,
+                      posting.actEndTime,
+                    ),
+                  },
+                ]
+              : [];
+          })()
+        : [];
+      const recruitReviewable = [
+        ...mockMeetingRecruitsByPostId.values(),
+      ].flatMap((recruit) => {
+        const participant = (
+          mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
+        ).find((item) => item.userId === userId);
+
+        return recruit.meetingId === meetingId &&
+          participant?.participationStatus === "COMPLETED"
+          ? [
+              {
+                reviewSourceType: "MEETING_RECRUIT" as const,
+                reviewSourceId: recruit.postId,
+                title: recruit.title,
+                activityStartAt: recruit.activityStartAt,
+                activityEndAt: recruit.activityEndAt,
+              },
+            ]
+          : [];
+      });
+
+      return ok([...postingReviewable, ...recruitReviewable]);
     },
   ),
 
   http.post(
     "*/api/v1/meetings/:meetingId/posts/images/presigned-url",
-    ({ request }) => {
+    async ({ request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
 
-      const objectKey = `posts/${userId}/${crypto.randomUUID()}.jpg`;
+      const body = (await request.json()) as PostImagePresignedUrlRequest;
+
+      if (!isMeetingImageMimeType(body.contentType)) {
+        return fail(
+          "UNSUPPORTED_POST_IMAGE_TYPE",
+          "지원하지 않는 게시글 이미지 형식입니다.",
+          400,
+        );
+      }
+
+      if (
+        !Number.isInteger(body.fileSize) ||
+        body.fileSize <= 0 ||
+        body.fileSize > MAX_MEETING_IMAGE_SIZE_BYTES
+      ) {
+        return fail(
+          "POST_IMAGE_SIZE_EXCEEDED",
+          "게시글 이미지 크기는 5MB 이하여야 합니다.",
+          400,
+        );
+      }
+
+      const extensionByContentType = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      } as const;
+      const extension = extensionByContentType[body.contentType];
+      const objectKey = `posts/${userId}/${crypto.randomUUID()}.${extension}`;
       return ok({
         uploadUrl: `http://localhost:5173/__mock-s3/post-images/${encodeURIComponent(objectKey)}`,
         objectKey,
@@ -451,7 +532,7 @@ export const meetingManagementHandlers = [
       }
 
       const body = (await request.json()) as MeetingRecruitRequest;
-      const postId = nextPostId++;
+      const postId = getNextMockMeetingPostId();
       const now = new Date().toISOString().slice(0, 19);
       const recruit = {
         ...body,

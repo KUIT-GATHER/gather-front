@@ -1,17 +1,12 @@
-import { CalendarDays, MapPin } from "lucide-react";
 import { Navigate, useNavigate } from "react-router";
 
+import { ManagedRecruitCard } from "@/features/team/components/management/activity/ManagedRecruitCard";
 import { useMeetingRecruitActivitiesQuery } from "@/features/team/hooks/useMeetingRecruitActivitiesQuery";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
-import Button from "@/shared/ui/Button";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
-
-function formatDateTime(value: string) {
-  return value.slice(0, 16).replace("T", " ");
-}
 
 export function MeetingActivityManagementScreen() {
   const navigate = useNavigate();
@@ -53,95 +48,13 @@ export function MeetingActivityManagementScreen() {
           />
         ) : (
           <ul className="flex flex-col gap-3">
-            {query.data?.map((activity) => {
-              const progress = activity.maxParticipants
-                ? Math.min(
-                    100,
-                    (activity.appliedCount / activity.maxParticipants) * 100,
-                  )
-                : 0;
-              return (
-                <li
-                  key={activity.postId}
-                  className="rounded-xl border border-stroke bg-white p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <h2 className="min-w-0 flex-1 text-base font-semibold">
-                      {activity.title}
-                    </h2>
-                    <span className="rounded-md bg-point-green/15 px-2 py-1 text-xs text-icon">
-                      {activity.confirmationStatus === "CONFIRMED"
-                        ? "인원 확정"
-                        : activity.applicationOpen
-                          ? "모집중"
-                          : "마감"}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 text-sm">
-                    <CalendarDays className="size-4 text-icon" />
-                    <span>
-                      {formatDateTime(activity.activityStartAt)} ~{" "}
-                      {formatDateTime(activity.activityEndAt)}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 text-sm">
-                    <MapPin className="size-4 text-icon" />
-                    <span>{activity.place}</span>
-                  </div>
-                  <p className="mt-4 text-sm">
-                    신청 마감 {formatDateTime(activity.applyDeadlineAt)}
-                  </p>
-                  <div className="mt-4 flex justify-between text-sm">
-                    <span>참여 신청 현황</span>
-                    <span>
-                      {activity.appliedCount} / {activity.maxParticipants}명
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-stroke">
-                    <div
-                      className="h-full rounded-full bg-button"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <Button
-                      variant="primaryOutline"
-                      size="medium"
-                      disabled={!activity.canEdit}
-                      onClick={() =>
-                        navigate(
-                          `/teams/${home.meetingId}/posts/${activity.postId}/recruit/edit`,
-                        )
-                      }
-                    >
-                      공고 수정
-                    </Button>
-                    <Button
-                      variant="primaryOutline"
-                      size="medium"
-                      onClick={() =>
-                        navigate(
-                          `/teams/${home.meetingId}/settings/activities/${activity.postId}/applicants`,
-                        )
-                      }
-                    >
-                      신청자 보기
-                    </Button>
-                  </div>
-                  <button
-                    type="button"
-                    className="mt-3 w-full text-center text-xs text-text-gray-300 underline"
-                    onClick={() =>
-                      navigate(
-                        `/volunteers/meeting-recruits/${home.meetingId}/${activity.postId}`,
-                      )
-                    }
-                  >
-                    실제 공고 상세 보기
-                  </button>
-                </li>
-              );
-            })}
+            {query.data?.map((activity) => (
+              <ManagedRecruitCard
+                key={activity.postId}
+                meetingId={home.meetingId}
+                activity={activity}
+              />
+            ))}
           </ul>
         )}
       </section>

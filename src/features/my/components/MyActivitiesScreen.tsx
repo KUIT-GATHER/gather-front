@@ -6,7 +6,7 @@ import activityBadgeIcon from "@/features/my/assets/activity-badge.svg";
 import activityClockIcon from "@/features/my/assets/activity-clock.svg";
 import activityHeartIcon from "@/features/my/assets/activity-heart.svg";
 import activityNoteIcon from "@/features/my/assets/activity-note.svg";
-import { MeetingCategoryTag } from "@/features/team/components/MeetingCategoryTag";
+import { CategoryChip } from "@/features/category/components/CategoryChip";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import communityPuzzle from "@/features/my/assets/activity-puzzle/community.svg";
@@ -323,7 +323,7 @@ export function MyActivitiesScreen() {
                   type="button"
                   onClick={() => setSelectedCategory(category)}
                 >
-                  <MeetingCategoryTag
+                  <CategoryChip
                     category={category}
                     selected={selectedCategory === category}
                   />

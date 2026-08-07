@@ -20,24 +20,23 @@ const options: Array<{
   type: MeetingPostType;
   title: string;
   description: string;
-  hostOnly?: boolean;
+  badge?: string;
 }> = [
   {
     type: "NOTICE",
     title: "공지",
     description: "중요한 내용을 팀 전체에 알려요",
-    hostOnly: true,
   },
   {
     type: "RECRUIT",
     title: "모집 공고",
     description: "새로운 봉사활동을 모집해요",
-    hostOnly: true,
   },
   {
     type: "REVIEW",
-    title: "활동 후기",
+    title: "활동 후기 글",
     description: "완료한 활동의 후기를 남겨요",
+    badge: "참여 완료자만",
   },
   {
     type: "FREE",
@@ -95,8 +94,15 @@ export function MeetingPostTypeSelectScreen({
                   )}
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">
-                    {option.title}
+                  <span className="flex items-center gap-2">
+                    <span className="text-base font-semibold">
+                      {option.title}
+                    </span>
+                    {option.badge ? (
+                      <span className="rounded-md bg-point-green/20 px-2 py-0.5 text-xs font-medium text-text-green-500">
+                        {option.badge}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="mt-1 block text-sm text-text-gray-300">
                     {option.description}
@@ -104,13 +110,15 @@ export function MeetingPostTypeSelectScreen({
                 </span>
                 <span
                   className={cn(
-                    "grid size-5 place-items-center rounded-full border",
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border",
                     active
-                      ? "border-point-green bg-point-green text-white"
-                      : "border-stroke text-transparent",
+                      ? "border-point-green bg-point-green"
+                      : "border-stroke bg-white",
                   )}
                 >
-                  •
+                  {active ? (
+                    <span className="size-1.5 rounded-full bg-white" />
+                  ) : null}
                 </span>
               </button>
             );

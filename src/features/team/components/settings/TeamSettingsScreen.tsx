@@ -10,10 +10,10 @@ import { ApiError } from "@/shared/api/apiError";
 import Button from "@/shared/ui/Button";
 
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
-import ActivityIcon from "@/shared/assets/puzzle/activity.svg";
-import ApplicationIcon from "@/shared/assets/puzzle/application.svg";
+import MemberManagementIcon from "@/shared/assets/puzzle/activity.svg";
+import ActivityManagementIcon from "@/shared/assets/puzzle/application.svg";
 import InformationIcon from "@/shared/assets/puzzle/information-square.svg";
-import MemberIcon from "@/shared/assets/puzzle/member.svg";
+import JoinRequestManagementIcon from "@/shared/assets/puzzle/member.svg";
 
 export function TeamSettingsScreen() {
   const { home, isHost } = useTeamDetailContext();
@@ -57,7 +57,7 @@ export function TeamSettingsScreen() {
         />
 
         <TeamSettingsMenuItem
-          iconSrc={MemberIcon}
+          iconSrc={MemberManagementIcon}
           title="멤버 관리"
           description={`${home.currentMemberCount}명 참여중`}
           onClick={() => {
@@ -66,7 +66,7 @@ export function TeamSettingsScreen() {
         />
 
         <TeamSettingsMenuItem
-          iconSrc={ApplicationIcon}
+          iconSrc={JoinRequestManagementIcon}
           title="가입 신청 관리"
           description={
             joinRequestsQuery.isLoading
@@ -81,7 +81,7 @@ export function TeamSettingsScreen() {
         />
 
         <TeamSettingsMenuItem
-          iconSrc={ActivityIcon}
+          iconSrc={ActivityManagementIcon}
           title="활동 관리"
           description="모임 내 봉사활동 관리"
           onClick={() => {

@@ -1,16 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 import { teamQueries } from "@/features/team/api/team.queries";
+import { ReviewableActivityField } from "@/features/team/components/board/create/ReviewableActivityField";
+import { MeetingPostImageCarousel } from "@/features/team/components/board/post/MeetingPostImageCarousel";
+import { MeetingImageEditorCarousel } from "@/features/team/components/form/MeetingImageEditorCarousel";
 import {
   useCreateMeetingPostMutation,
   useUpdateMeetingPostMutation,
 } from "@/features/team/hooks/useMeetingPostMutations";
+import {
+  getMeetingImageSelectionErrorMessage,
+  MAX_MEETING_IMAGE_COUNT,
+  MEETING_IMAGE_MIME_TYPES,
+  validateMeetingImageSelection,
+} from "@/features/team/lib/meetingImageValidation";
 import { uploadMeetingPostImages } from "@/features/team/lib/postImageUpload";
 import {
   meetingPostSchema,
@@ -74,6 +83,9 @@ export function MeetingPostEditorScreen({
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [removeExistingImages, setRemoveExistingImages] = useState(false);
+  const [imageSelectionError, setImageSelectionError] = useState<string | null>(
+    null,
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const createMutation = useCreateMeetingPostMutation(meetingId);
   const updateMutation = useUpdateMeetingPostMutation(
@@ -106,20 +118,40 @@ export function MeetingPostEditorScreen({
 
   const selectFiles = (selected: FileList | null) => {
     if (!selected) return;
-    previewsRef.current.forEach(URL.revokeObjectURL);
-    const nextFiles = Array.from(selected).slice(0, 3);
-    const nextPreviews = nextFiles.map(URL.createObjectURL);
-    previewsRef.current = nextPreviews;
-    setFiles(nextFiles);
-    setPreviews(nextPreviews);
+
+    const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
+      existingImages: files.map((file) => ({ file })),
+      files: selected,
+    });
+
+    if (acceptedFiles.length > 0) {
+      const acceptedPreviews = acceptedFiles.map(URL.createObjectURL);
+      previewsRef.current = [...previewsRef.current, ...acceptedPreviews];
+      setFiles((current) => [...current, ...acceptedFiles]);
+      setPreviews((current) => [...current, ...acceptedPreviews]);
+    }
+
+    setImageSelectionError(
+      rejectedReasons.length > 0
+        ? getMeetingImageSelectionErrorMessage(rejectedReasons)
+        : null,
+    );
     setSubmitError(null);
   };
 
-  const clearFiles = () => {
-    previewsRef.current.forEach(URL.revokeObjectURL);
-    previewsRef.current = [];
-    setFiles([]);
-    setPreviews([]);
+  const removeFile = (index: number) => {
+    const previewUrl = previewsRef.current[index];
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewsRef.current = previewsRef.current.filter(
+      (_, currentIndex) => currentIndex !== index,
+    );
+    setFiles((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
+    setPreviews((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
+    setImageSelectionError(null);
   };
 
   const submit = handleSubmit(async (values) => {
@@ -237,47 +269,29 @@ export function MeetingPostEditorScreen({
       />
       <form className="flex flex-col gap-6 pt-5" noValidate onSubmit={submit}>
         {postType === "REVIEW" && !post ? (
-          <FormField
-            label="완료 활동"
-            required
-            error={errors.reviewSourceValue?.message}
-          >
+          <div>
             <Controller
               name="reviewSourceValue"
               control={control}
               rules={{ required: true }}
               render={({ field }) => (
-                <select
-                  aria-label="후기를 작성할 완료 활동"
-                  className="h-12 w-full rounded-xl border border-stroke bg-white px-4 outline-none focus:border-button"
-                  value={field.value ?? ""}
-                  onChange={(event) => {
-                    const value = event.target.value;
+                <ReviewableActivityField
+                  id="review-source"
+                  value={field.value}
+                  activities={reviewableQuery.data ?? []}
+                  invalid={Boolean(errors.reviewSourceValue)}
+                  onChange={(value) => {
                     field.onChange(isReviewSourceValue(value) ? value : null);
                   }}
-                >
-                  <option value="">완료 활동을 선택해 주세요</option>
-                  {reviewableQuery.data?.map((activity) => {
-                    const value: ReviewSourceValue = `${activity.reviewSourceType}:${activity.reviewSourceId}`;
-
-                    return (
-                      <option key={value} value={value}>
-                        {activity.reviewSourceType === "POSTING"
-                          ? "[봉사 공고]"
-                          : "[모임 활동]"}{" "}
-                        {activity.title} ·{" "}
-                        {activity.activityStartAt
-                          .slice(0, 16)
-                          .replace("T", " ")}{" "}
-                        ~{" "}
-                        {activity.activityEndAt.slice(0, 16).replace("T", " ")}
-                      </option>
-                    );
-                  })}
-                </select>
+                />
               )}
             />
-          </FormField>
+            {errors.reviewSourceValue?.message ? (
+              <p role="alert" className="mt-1.5 text-xs text-point-red">
+                {errors.reviewSourceValue.message}
+              </p>
+            ) : null}
+          </div>
         ) : null}
         <FormField
           label="제목"
@@ -313,65 +327,63 @@ export function MeetingPostEditorScreen({
           />
         </FormField>
         <section>
-          <button
-            type="button"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-point-green text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+          <Button
+            variant="primaryOutline"
+            size="medium"
+            fullWidth
+            disabled={files.length >= MAX_MEETING_IMAGE_COUNT || isPending}
+            className="h-12 border-point-green text-base text-button"
+            leftIcon={<ImagePlus className="size-5" aria-hidden="true" />}
             onClick={() => fileInputRef.current?.click()}
           >
-            <ImagePlus className="size-5" aria-hidden="true" /> 사진 첨부 (선택,
-            최대 3장)
-          </button>
+            사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={MEETING_IMAGE_MIME_TYPES.join(",")}
             multiple
             className="sr-only"
-            onChange={(event) => selectFiles(event.target.files)}
+            onChange={(event) => {
+              selectFiles(event.target.files);
+              event.currentTarget.value = "";
+            }}
           />
+          {imageSelectionError ? (
+            <p role="alert" className="mt-1.5 text-xs text-point-red">
+              {imageSelectionError}
+            </p>
+          ) : null}
           {post?.imageUrls.length &&
           !removeExistingImages &&
           previews.length === 0 ? (
             <div className="mt-3">
-              <div className="flex gap-2 overflow-x-auto">
-                {post.imageUrls.map((url, index) => (
-                  <img
-                    key={url}
-                    src={url}
-                    alt={`기존 게시글 사진 ${index + 1}`}
-                    className="h-28 w-36 rounded-xl object-cover"
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                className="mt-2 text-sm text-point-red"
+              <MeetingPostImageCarousel
+                className="mt-0"
+                imageUrls={post.imageUrls}
+                title={post.title}
+              />
+              <Button
+                variant="dangerOutline"
+                size="medium"
+                fullWidth
+                className="mt-3"
+                disabled={isPending}
                 onClick={() => setRemoveExistingImages(true)}
               >
                 기존 사진 전체 삭제
-              </button>
+              </Button>
             </div>
           ) : null}
           {previews.length > 0 ? (
-            <div className="mt-3 flex gap-2 overflow-x-auto">
-              {previews.map((url, index) => (
-                <div key={url} className="relative">
-                  <img
-                    src={url}
-                    alt={`새 게시글 사진 ${index + 1}`}
-                    className="h-28 w-36 rounded-xl object-cover"
-                  />
-                  <button
-                    type="button"
-                    aria-label="선택한 사진 전체 삭제"
-                    className="absolute right-1 top-1 grid size-7 place-items-center rounded-full bg-white/90"
-                    onClick={clearFiles}
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <MeetingImageEditorCarousel
+              className="mt-3"
+              images={previews.map((url, index) => ({
+                id: `local-${index}-${url}`,
+                previewUrl: url,
+              }))}
+              onRemove={removeFile}
+            />
           ) : null}
         </section>
         {submitError ? (

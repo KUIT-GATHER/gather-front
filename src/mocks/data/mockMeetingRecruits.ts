@@ -129,6 +129,21 @@ export const mockMeetingRecruitsByPostId = new Map<number, MockMeetingRecruit>([
       participationAction: "NONE",
     }),
   ],
+  [
+    106,
+    createRecruit({
+      postId: 106,
+      title: "[QA] 후기 작성 가능 활동",
+      activityStartAt: formatLocalDateTime(-5, "10:00:00"),
+      activityEndAt: formatLocalDateTime(-5, "12:00:00"),
+      applyDeadlineAt: formatLocalDateTime(-7, "23:59:59"),
+      applicationOpen: false,
+      canEdit: false,
+      confirmationStatus: "CONFIRMED",
+      confirmedAt: formatLocalDateTime(-7, "23:59:59"),
+      participationAction: "NONE",
+    }),
+  ],
 ]);
 
 export const mockRecruitParticipantsByPostId = new Map<
@@ -238,6 +253,20 @@ export const mockRecruitParticipantsByPostId = new Map<
         participationStatus: "APPLIED",
         attendanceStatus: "UNSET",
         appliedAt: formatLocalDateTime(-2, "12:00:00"),
+      },
+    ],
+  ],
+  [
+    106,
+    [
+      {
+        participationId: 1061,
+        userId: 1,
+        nickname: "가더",
+        applicantType: "MEMBER",
+        participationStatus: "COMPLETED",
+        attendanceStatus: "PRESENT",
+        appliedAt: formatLocalDateTime(-10, "12:00:00"),
       },
     ],
   ],
