@@ -1,25 +1,106 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  CalendarDays,
-  ChevronRight,
-  Clock3,
-  MapPin,
-  Users,
-} from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import { teamQueries } from "@/features/team/api/team.queries";
 import { useAuthStore } from "@/features/auth/store/auth.store";
-import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import { useToggleMeetingRecruitParticipationMutation } from "@/features/team/hooks/useMeetingRecruitMutations";
+import { VolunteerOpportunityConditionCard } from "@/features/volunteer/components/detail/VolunteerOpportunityConditionCard";
+import { VolunteerOpportunityHero } from "@/features/volunteer/components/detail/VolunteerOpportunityHero";
+import {
+  VolunteerOpportunityInfoCard,
+  type VolunteerOpportunityInfoRow,
+} from "@/features/volunteer/components/detail/VolunteerOpportunityInfoCard";
+import { VolunteerOpportunityTeamCard } from "@/features/volunteer/components/detail/VolunteerOpportunityTeamCard";
+import { VolunteerPostingHeader } from "@/features/volunteer/components/detail/VolunteerPostingHeader";
+import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
+import {
+  formatVolunteerDate,
+  formatVolunteerPeriod,
+  formatVolunteerTimeRange,
+} from "@/features/volunteer/lib/volunteerPostingFormatters";
 import { ApiError } from "@/shared/api/apiError";
 import Button from "@/shared/ui/Button";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
-import PageHeader from "@/shared/ui/PageHeader";
+
+function formatMeetingRecruitDeadline(value: string) {
+  const date = formatVolunteerDate(value.slice(0, 10));
+  const time = value.slice(11, 16);
+
+  return date ? `${date} ${time}` : value.replace("T", " ").slice(0, 16);
+}
+
+function getMeetingRecruitInfoRows({
+  regionName,
+  place,
+  activityStartAt,
+  activityEndAt,
+  appliedCount,
+  maxParticipants,
+  applyDeadlineAt,
+  timeRecognized,
+  recognizedMinutes,
+}: {
+  regionName: string;
+  place: string;
+  activityStartAt: string;
+  activityEndAt: string;
+  appliedCount: number;
+  maxParticipants: number;
+  applyDeadlineAt: string;
+  timeRecognized: boolean;
+  recognizedMinutes: number | null;
+}): VolunteerOpportunityInfoRow[] {
+  return [
+    {
+      id: "location",
+      icon: "location",
+      label: "장소",
+      value: `${regionName} ${place}`.trim(),
+    },
+    {
+      id: "date",
+      icon: "date",
+      label: "날짜",
+      value:
+        formatVolunteerPeriod(
+          activityStartAt.slice(0, 10),
+          activityEndAt.slice(0, 10),
+        ) ?? "-",
+    },
+    {
+      id: "time",
+      icon: "time",
+      label: "시간",
+      value:
+        formatVolunteerTimeRange(
+          activityStartAt.slice(11, 16),
+          activityEndAt.slice(11, 16),
+        ) ?? "-",
+    },
+    {
+      id: "participants",
+      icon: "participants",
+      label: "참여 인원",
+      value: `${appliedCount}/${maxParticipants}명`,
+    },
+    {
+      id: "deadline",
+      icon: "deadline",
+      label: "신청 마감",
+      value: formatMeetingRecruitDeadline(applyDeadlineAt),
+    },
+    {
+      id: "recognizedTime",
+      icon: "time",
+      label: "인정 시간",
+      value: timeRecognized ? `${recognizedMinutes ?? 0}분` : "미인정",
+    },
+  ];
+}
 
 export function MeetingRecruitDetailScreen({
   meetingId,
@@ -49,15 +130,21 @@ export function MeetingRecruitDetailScreen({
 
   if (recruitQuery.isLoading)
     return (
-      <LoadingState className="min-h-dvh" label="봉사 공고를 불러오는 중" />
+      <PageContainer className="min-h-dvh bg-bg">
+        <VolunteerPostingHeader onBack={() => navigate(-1)} />
+        <LoadingState
+          className="min-h-[calc(100dvh-7rem)]"
+          label="봉사 공고를 불러오는 중"
+        />
+      </PageContainer>
     );
   if (recruitQuery.isError) {
     const forbidden =
       recruitQuery.error instanceof ApiError &&
       recruitQuery.error.status === 403;
     return (
-      <PageContainer className="min-h-dvh">
-        <PageHeader title="봉사 공고" onBack={() => navigate(-1)} />
+      <PageContainer className="min-h-dvh bg-bg">
+        <VolunteerPostingHeader onBack={() => navigate(-1)} />
         <ErrorState
           className="mt-24"
           title={
@@ -81,6 +168,11 @@ export function MeetingRecruitDetailScreen({
   const recruit = recruitQuery.data;
   if (!recruit) return null;
   const participationCondition = recruit.participationCondition?.trim();
+  const primaryCategory = recruit.categories[0] ?? "COMMUNITY";
+  const heroImage =
+    imagesQuery.data?.imageUrls[0] ??
+    getVolunteerPostingImage(primaryCategory, recruit.postId);
+  const infoRows = getMeetingRecruitInfoRows(recruit);
   const actionLabel =
     recruit.participationAction === "APPLY"
       ? "신청하기"
@@ -106,130 +198,57 @@ export function MeetingRecruitDetailScreen({
   };
 
   return (
-    <PageContainer className="min-h-dvh pb-32">
-      <PageHeader title={recruit.title} onBack={() => navigate(-1)} sticky />
-      <article className="pt-2">
-        {imagesQuery.data?.imageUrls[0] ? (
-          <img
-            src={imagesQuery.data.imageUrls[0]}
-            alt={`${recruit.meetingName} 대표 이미지`}
-            className="aspect-[1.9] w-full rounded-xl border border-stroke object-cover"
+    <PageContainer className="min-h-dvh bg-bg">
+      <article className="pb-[calc(env(safe-area-inset-bottom)+7.25rem)]">
+        <VolunteerPostingHeader
+          title={recruit.title}
+          onBack={() => navigate(-1)}
+          sticky
+        />
+        <div className="pt-1">
+          <VolunteerOpportunityHero
+            title={recruit.title}
+            content={recruit.content}
+            imageSrc={heroImage}
+            imageAlt={`${recruit.meetingName} 대표 이미지`}
+            categories={recruit.categories}
+            regionName={recruit.regionName}
           />
-        ) : (
-          <div className="grid aspect-[1.9] w-full place-items-center rounded-xl border border-stroke bg-gradient-to-br from-white to-point-green/25 text-3xl font-semibold text-button">
-            Gather
-          </div>
-        )}
-        <div className="mt-4 flex flex-wrap gap-2">
-          {recruit.categories.map((category) => (
-            <CategoryBadge key={category} category={category} />
-          ))}
-        </div>
-        <h1 className="mt-4 text-2xl font-semibold leading-8">
-          {recruit.title}
-        </h1>
-        <p className="mt-4 whitespace-pre-line text-base leading-7">
-          {recruit.content}
-        </p>
-        <section className="mt-6 rounded-xl border border-stroke bg-white p-4">
-          <dl className="space-y-3 text-sm">
-            <div className="flex gap-3">
-              <MapPin className="size-5 text-icon" />
-              <dt className="w-20 text-text-gray-300">장소</dt>
-              <dd className="ml-auto text-right">
-                {recruit.regionName} {recruit.place}
-              </dd>
-            </div>
-            <div className="flex gap-3">
-              <CalendarDays className="size-5 text-icon" />
-              <dt className="w-20 text-text-gray-300">날짜</dt>
-              <dd className="ml-auto text-right">
-                {recruit.activityStartAt.slice(0, 10)} ~{" "}
-                {recruit.activityEndAt.slice(0, 10)}
-              </dd>
-            </div>
-            <div className="flex gap-3">
-              <Clock3 className="size-5 text-icon" />
-              <dt className="w-20 text-text-gray-300">시간</dt>
-              <dd className="ml-auto text-right">
-                {recruit.activityStartAt.slice(11, 16)} ~{" "}
-                {recruit.activityEndAt.slice(11, 16)}
-              </dd>
-            </div>
-            <div className="flex gap-3">
-              <Users className="size-5 text-icon" />
-              <dt className="w-20 text-text-gray-300">참여 인원</dt>
-              <dd className="ml-auto text-right">
-                {recruit.appliedCount}/{recruit.maxParticipants}명
-              </dd>
-            </div>
-            <div className="flex gap-3">
-              <CalendarDays className="size-5 text-icon" />
-              <dt className="w-20 text-text-gray-300">신청 마감</dt>
-              <dd className="ml-auto text-right">
-                {recruit.applyDeadlineAt.slice(0, 16).replace("T", " ")}
-              </dd>
-            </div>
-            <div className="flex gap-3">
-              <Clock3 className="size-5 text-icon" />
-              <dt className="w-20 text-text-gray-300">시간 인정</dt>
-              <dd className="ml-auto text-right">
-                {recruit.timeRecognized
-                  ? `${recruit.recognizedMinutes ?? 0}분`
-                  : "미인정"}
-              </dd>
-            </div>
-          </dl>
-        </section>
-        {participationCondition ? (
-          <section className="mt-6 rounded-xl border border-stroke bg-white p-4">
-            <h2 className="text-lg font-semibold">참여 조건</h2>
-            <p className="mt-2 whitespace-pre-line text-sm leading-6">
-              · {participationCondition}
-            </p>
-          </section>
-        ) : null}
-        <section className="mt-6">
-          <h2 className="text-lg font-semibold">함께하는 팀</h2>
-          <button
-            type="button"
-            className="mt-3 flex w-full items-center gap-3 rounded-xl border border-stroke bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-            onClick={() => navigate(`/teams/${meetingId}`)}
-          >
-            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-point-green/10 text-sm font-semibold text-button">
-              모임
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">
-                {recruit.meetingName}
-              </span>
-              <span className="mt-1 block text-sm text-text-gray-300">
-                모집 활동을 만든 모임
-              </span>
-            </span>
-            <ChevronRight
-              className="size-6 text-text-gray-300"
-              aria-hidden="true"
+          <VolunteerOpportunityInfoCard rows={infoRows} className="mt-5" />
+          {participationCondition ? (
+            <VolunteerOpportunityConditionCard
+              condition={participationCondition}
+              className="mt-4"
             />
-          </button>
-        </section>
-        {actionError ? (
-          <p role="alert" className="mt-4 text-sm text-point-red">
-            {actionError}
-          </p>
-        ) : null}
+          ) : null}
+          <section className="mt-5 pt-1">
+            <h2 className="text-title-18 text-text">함께하는 팀</h2>
+            <div className="mt-4">
+              <VolunteerOpportunityTeamCard
+                name={recruit.meetingName}
+                category={primaryCategory}
+                activityLabel="모집 활동을 만든 모임"
+                onClick={() => navigate(`/teams/${meetingId}`)}
+              />
+            </div>
+          </section>
+          {actionError ? (
+            <p role="alert" className="mt-4 text-body-14 text-point-red">
+              {actionError}
+            </p>
+          ) : null}
+        </div>
       </article>
-      <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-app -translate-x-1/2 border-t border-stroke bg-white px-6 py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+      <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-app -translate-x-1/2 bg-bg px-5.5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <Button
           fullWidth
+          className="h-12"
           disabled={
             recruit.participationAction === "NONE" ||
             participationMutation.isPending
           }
           variant={
-            recruit.participationAction === "CANCEL"
-              ? "primaryOutline"
-              : "primary"
+            recruit.participationAction === "CANCEL" ? "neutral" : "primary"
           }
           onClick={requestParticipation}
         >
