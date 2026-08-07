@@ -295,7 +295,11 @@ export function ActivityFilterSheet({
             ? "max-h-[min(88dvh,48rem)]"
             : undefined,
       )}
-      contentClassName={view === "region" ? "px-0 py-0" : undefined}
+      contentClassName={cn(
+        view === "region" && "px-0 py-0",
+        view === "date" &&
+          "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+      )}
     >
       {view === "main" ? (
         <div className="flex flex-col gap-7">
