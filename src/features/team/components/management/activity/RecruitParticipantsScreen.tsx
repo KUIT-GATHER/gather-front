@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 
 import { teamQueries } from "@/features/team/api/team.queries";
 import { MeetingPersonDetail } from "@/features/team/components/management/MeetingPersonDetail";
+import { RecruitParticipantCard } from "@/features/team/components/management/activity/RecruitParticipantCard";
 import {
   useConfirmRecruitParticipantsMutation,
   useRejectRecruitParticipantMutation,
@@ -14,7 +14,6 @@ import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext
 import { getRecruitParticipantUiState } from "@/features/team/lib/recruitParticipantUi";
 import type { RecruitParticipantSummary } from "@/features/team/types/meetingRecruit.types";
 import { ApiError } from "@/shared/api/apiError";
-import { cn } from "@/shared/lib/cn";
 import Button from "@/shared/ui/Button";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -115,7 +114,7 @@ export function RecruitParticipantsScreen() {
   };
 
   return (
-    <main className="min-h-dvh bg-bg px-5.5">
+    <main className="min-h-dvh bg-white px-5.5 font-sans">
       <PageHeader
         title={activityTitle ?? "봉사 신청자 관리"}
         onBack={() => navigate(-1)}
@@ -125,6 +124,7 @@ export function RecruitParticipantsScreen() {
           </span>
         }
         sticky
+        className="bg-white"
       />
       <section className="pb-28 pt-6">
         {participantsQuery.isLoading ? (
@@ -175,118 +175,50 @@ export function RecruitParticipantsScreen() {
                     attendanceMutation.variables?.participationId ===
                       participant.participationId;
                   return (
-                    <li
+                    <RecruitParticipantCard
                       key={participant.participationId}
-                      className="overflow-hidden rounded-xl border border-stroke bg-white"
-                    >
-                      <div className="flex min-h-16 items-center gap-2 px-3">
-                        <button
-                          type="button"
-                          aria-expanded={expanded}
-                          className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                          onClick={() =>
-                            setExpandedId(
-                              expanded ? null : participant.participationId,
-                            )
-                          }
-                        >
-                          <span className="grid size-7 place-items-center rounded-full border border-stroke text-xs">
-                            {participant.nickname.slice(0, 1)}
-                          </span>
-                          <span className="truncate text-sm font-medium">
-                            {participant.nickname}
-                          </span>
-                          <ChevronDown
-                            className={cn(
-                              "size-4 transition",
-                              expanded && "rotate-180",
-                            )}
-                          />
-                        </button>
-                        <span className="rounded-md border border-stroke px-2 py-1 text-xs">
-                          {participant.applicantType === "MEMBER"
-                            ? "팀원"
-                            : "외부"}
-                        </span>
-                        {uiState?.showReject &&
-                        participant.participationStatus === "APPLIED" ? (
-                          <Button
-                            variant="dangerOutline"
-                            size="medium"
-                            className="h-8 px-2 text-xs"
-                            disabled={rejectMutation.isPending}
-                            onClick={() =>
-                              setPendingDialog({ type: "reject", participant })
-                            }
-                          >
-                            반려
-                          </Button>
-                        ) : null}
-                        {uiState?.showAttendance &&
+                      participant={participant}
+                      expanded={expanded}
+                      showReject={Boolean(
+                        uiState?.showReject &&
+                        participant.participationStatus === "APPLIED",
+                      )}
+                      showAttendance={Boolean(
+                        uiState?.showAttendance &&
                         participant.participationStatus !== "REJECTED" &&
-                        participant.participationStatus !== "CANCELLED" ? (
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              aria-pressed={
-                                participant.attendanceStatus === "PRESENT"
-                              }
-                              disabled={
-                                uiState.attendanceDisabled || updatingThis
-                              }
-                              className={cn(
-                                "rounded-md border border-button px-2 py-1 text-xs disabled:opacity-40",
-                                participant.attendanceStatus === "PRESENT"
-                                  ? "bg-button text-white"
-                                  : "text-button",
-                              )}
-                              onClick={() =>
-                                updateAttendance(participant, "PRESENT")
-                              }
-                            >
-                              출석
-                            </button>
-                            <button
-                              type="button"
-                              aria-pressed={
-                                participant.attendanceStatus === "ABSENT"
-                              }
-                              disabled={
-                                uiState.attendanceDisabled || updatingThis
-                              }
-                              className={cn(
-                                "rounded-md border border-point-red px-2 py-1 text-xs disabled:opacity-40",
-                                participant.attendanceStatus === "ABSENT"
-                                  ? "bg-point-red text-white"
-                                  : "text-point-red",
-                              )}
-                              onClick={() =>
-                                updateAttendance(participant, "ABSENT")
-                              }
-                            >
-                              불참
-                            </button>
-                          </div>
-                        ) : null}
-                      </div>
+                        participant.participationStatus !== "CANCELLED",
+                      )}
+                      attendanceDisabled={uiState?.attendanceDisabled ?? true}
+                      attendancePending={updatingThis}
+                      rejectPending={rejectMutation.isPending}
+                      onToggle={() =>
+                        setExpandedId(
+                          expanded ? null : participant.participationId,
+                        )
+                      }
+                      onReject={() =>
+                        setPendingDialog({ type: "reject", participant })
+                      }
+                      onAttendanceChange={(attendanceStatus) =>
+                        updateAttendance(participant, attendanceStatus)
+                      }
+                    >
                       {expanded ? (
-                        <div className="mx-3 mb-3 rounded-xl bg-point-green/10 p-3">
-                          {detailQuery.isLoading ? (
-                            <LoadingState
-                              className="min-h-20"
-                              label="상세 정보를 불러오는 중"
-                            />
-                          ) : detailQuery.isError ? (
-                            <ErrorState
-                              className="min-h-20"
-                              title="상세 정보를 불러오지 못했어요"
-                            />
-                          ) : detailQuery.data ? (
-                            <MeetingPersonDetail {...detailQuery.data} />
-                          ) : null}
-                        </div>
+                        detailQuery.isLoading ? (
+                          <LoadingState
+                            className="min-h-20"
+                            label="상세 정보를 불러오는 중"
+                          />
+                        ) : detailQuery.isError ? (
+                          <ErrorState
+                            className="min-h-20"
+                            title="상세 정보를 불러오지 못했어요"
+                          />
+                        ) : detailQuery.data ? (
+                          <MeetingPersonDetail {...detailQuery.data} />
+                        ) : null
                       ) : null}
-                    </li>
+                    </RecruitParticipantCard>
                   );
                 })}
               </ul>

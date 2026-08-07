@@ -4,11 +4,13 @@ import { useImageCarousel } from "@/features/team/hooks/useImageCarousel";
 type MeetingPostImageCarouselProps = {
   imageUrls?: readonly string[];
   title: string;
+  className?: string;
 };
 
 export function MeetingPostImageCarousel({
   imageUrls,
   title,
+  className,
 }: MeetingPostImageCarouselProps) {
   const {
     images,
@@ -28,7 +30,7 @@ export function MeetingPostImageCarousel({
   }
 
   return (
-    <div className="mt-5" aria-label="게시글 이미지">
+    <div className={cn("mt-5", className)} aria-label="게시글 이미지">
       <div
         className="overflow-hidden rounded-xl border border-stroke bg-stroke touch-pan-y"
         onPointerDown={onPointerDown}

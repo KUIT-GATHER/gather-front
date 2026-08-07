@@ -1,16 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
-import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
-import { MeetingCategoryTag } from "@/features/team/components/MeetingCategoryTag";
+import { MeetingDateTimeField } from "@/features/team/components/form/MeetingDateTimeField";
 import {
   useCreateMeetingRecruitMutation,
   useUpdateMeetingRecruitMutation,
@@ -214,15 +213,19 @@ export function MeetingRecruitFormScreen({
               htmlFor={name}
               error={errors[name]?.message}
             >
-              <div className="relative">
-                <Input
-                  id={name}
-                  type="datetime-local"
-                  invalid={Boolean(errors[name])}
-                  {...register(name)}
-                />
-                <CalendarDays className="pointer-events-none absolute right-4 top-3 size-5 text-icon" />
-              </div>
+              <Controller
+                name={name}
+                control={control}
+                render={({ field }) => (
+                  <MeetingDateTimeField
+                    id={name}
+                    title={name === "activityStartAt" ? "시작일시" : "종료일시"}
+                    value={field.value}
+                    invalid={Boolean(errors[name])}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
             </FormField>
           ))}
         </div>
@@ -251,34 +254,11 @@ export function MeetingRecruitFormScreen({
             name="categories"
             control={control}
             render={({ field }) => (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {POSTING_CATEGORIES.map((category) => {
-                  const selected = field.value.includes(category);
-                  return (
-                    <button
-                      key={category}
-                      type="button"
-                      aria-label={POSTING_CATEGORY_LABEL[category]}
-                      aria-pressed={selected}
-                      className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-                      onClick={() =>
-                        field.onChange(
-                          selected
-                            ? field.value.filter((value) => value !== category)
-                            : field.value.length < 3
-                              ? [...field.value, category]
-                              : field.value,
-                        )
-                      }
-                    >
-                      <MeetingCategoryTag
-                        category={category}
-                        selected={selected}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+              <CategoryChipGroup
+                value={field.value}
+                onChange={field.onChange}
+                maxSelected={3}
+              />
             )}
           />
         </FormField>
@@ -325,15 +305,19 @@ export function MeetingRecruitFormScreen({
           htmlFor="applyDeadlineAt"
           error={errors.applyDeadlineAt?.message}
         >
-          <div className="relative">
-            <Input
-              id="applyDeadlineAt"
-              type="datetime-local"
-              invalid={Boolean(errors.applyDeadlineAt)}
-              {...register("applyDeadlineAt")}
-            />
-            <CalendarDays className="pointer-events-none absolute right-4 top-3 size-5 text-icon" />
-          </div>
+          <Controller
+            name="applyDeadlineAt"
+            control={control}
+            render={({ field }) => (
+              <MeetingDateTimeField
+                id="applyDeadlineAt"
+                title="신청 마감일"
+                value={field.value}
+                invalid={Boolean(errors.applyDeadlineAt)}
+                onChange={field.onChange}
+              />
+            )}
+          />
         </FormField>
         <FormField
           label="참여 조건"

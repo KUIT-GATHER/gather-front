@@ -153,6 +153,9 @@ export function useDeleteMeetingPostMutation(
         queryKey: teamKeys.myActivity(meetingId),
       });
       void queryClient.invalidateQueries({
+        queryKey: teamKeys.reviewableActivities(meetingId),
+      });
+      void queryClient.invalidateQueries({
         queryKey: volunteerPostingKeys.lists(),
       });
     },

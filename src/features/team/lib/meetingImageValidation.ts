@@ -33,9 +33,11 @@ export function isMeetingImageMimeType(
 
 export function validateMeetingImageSelection({
   existingImages,
+  existingCount = existingImages.length,
   files,
 }: {
   existingImages: Pick<LocalMeetingImage, "file">[];
+  existingCount?: number;
   files: Iterable<File>;
 }): MeetingImageSelectionResult {
   const knownFileKeys = new Set(
@@ -67,10 +69,7 @@ export function validateMeetingImageSelection({
       continue;
     }
 
-    if (
-      existingImages.length + acceptedFiles.length >=
-      MAX_MEETING_IMAGE_COUNT
-    ) {
+    if (existingCount + acceptedFiles.length >= MAX_MEETING_IMAGE_COUNT) {
       rejectedReasons.push("countExceeded");
       continue;
     }

@@ -174,7 +174,7 @@ export function MeetingRecruitDetailScreen({
     recruit.participationAction === "APPLY"
       ? "신청하기"
       : recruit.participationAction === "CANCEL"
-        ? "신청 취소"
+        ? "신청 완료"
         : recruit.participationStatus === "CONFIRMED"
           ? "참가 확정"
           : recruit.participationStatus === "COMPLETED" ||
@@ -245,7 +245,12 @@ export function MeetingRecruitDetailScreen({
             participationMutation.isPending
           }
           variant={
-            recruit.participationAction === "CANCEL" ? "neutral" : "primary"
+            recruit.participationAction === "CANCEL" ? "dark" : "primary"
+          }
+          aria-label={
+            recruit.participationAction === "CANCEL"
+              ? "신청 완료, 누르면 신청 취소"
+              : undefined
           }
           onClick={requestParticipation}
         >
@@ -255,12 +260,20 @@ export function MeetingRecruitDetailScreen({
       <ConfirmDialog
         open={confirmOpen}
         title={
-          recruit.participationAction === "CANCEL"
-            ? "봉사 신청을 취소하시겠어요?"
-            : "이 봉사에 신청하시겠어요?"
+          recruit.participationAction === "CANCEL" ? (
+            "봉사 신청을 취소하시겠어요?"
+          ) : (
+            <>
+              신청 시 모임장에게 회원님의
+              <br />
+              전화번호와 생년월일이 전달됩니다.
+              <br />
+              봉사를 신청하시겠습니까?
+            </>
+          )
         }
         confirmText={
-          recruit.participationAction === "CANCEL" ? "취소하기" : "신청"
+          recruit.participationAction === "CANCEL" ? "취소하기" : "확인"
         }
         isPending={participationMutation.isPending}
         onCancel={() => setConfirmOpen(false)}
