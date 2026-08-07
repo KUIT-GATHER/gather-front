@@ -17,31 +17,34 @@ export function MeetingPersonDetail({
   totalRecognizedMinutes,
 }: MeetingPersonDetailProps) {
   return (
-    <dl className="grid grid-cols-2 gap-3 text-xs">
-      <div>
-        <dt className="text-text-gray-300">전화번호</dt>
-        <dd className="mt-1">{phoneNumber}</dd>
-      </div>
-      <div>
-        <dt className="text-text-gray-300">생년월일</dt>
-        <dd className="mt-1">{birthDate}</dd>
-      </div>
-      <div>
-        <dt className="text-text-gray-300">지역</dt>
-        <dd className="mt-1">{regionName}</dd>
-      </div>
-      <div>
-        <dt className="text-text-gray-300">관심 분야</dt>
-        <dd className="mt-1">
-          {interestCategories
-            .map((category) => POSTING_CATEGORY_LABEL[category])
-            .join(", ")}
-        </dd>
-      </div>
-      <div className="col-span-2">
-        <dt className="text-text-gray-300">총 인정 시간</dt>
-        <dd className="mt-1">{totalRecognizedMinutes}분</dd>
-      </div>
-    </dl>
+    <div>
+      <h3 className="text-body-14-semibold text-text">기본 정보</h3>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-xs text-text-gray-300">
+        <div className="flex min-w-0 gap-1">
+          <dt className="shrink-0">전화번호</dt>
+          <dd className="truncate text-text">{phoneNumber}</dd>
+        </div>
+        <div className="flex min-w-0 gap-1">
+          <dt className="shrink-0">생년월일</dt>
+          <dd className="truncate text-text">{birthDate}</dd>
+        </div>
+        <div className="flex min-w-0 gap-1">
+          <dt className="shrink-0">지역</dt>
+          <dd className="truncate text-text">{regionName}</dd>
+        </div>
+        <div className="flex min-w-0 gap-1">
+          <dt className="shrink-0">관심 분야</dt>
+          <dd className="truncate text-text">
+            {interestCategories
+              .map((category) => POSTING_CATEGORY_LABEL[category])
+              .join(", ")}
+          </dd>
+        </div>
+        <div className="col-span-2 flex min-w-0 gap-1">
+          <dt className="shrink-0">총 인정 시간</dt>
+          <dd className="truncate text-text">{totalRecognizedMinutes}분</dd>
+        </div>
+      </dl>
+    </div>
   );
 }

@@ -7,53 +7,15 @@ import ClockIcon from "@/assets/volunteer/clock.svg";
 import LocationIcon from "@/assets/volunteer/location.svg";
 import { teamQueries } from "@/features/team/api/team.queries";
 import { useToggleMeetingRecruitParticipationMutation } from "@/features/team/hooks/useMeetingRecruitMutations";
-import { formatMeetingFullDate } from "@/features/team/lib/teamFormatters";
 import {
-  formatVolunteerDate,
-  formatVolunteerTimeRange,
-} from "@/features/volunteer/lib/volunteerPostingFormatters";
+  formatMeetingRecruitActivitySchedule,
+  formatMeetingRecruitApplicationPeriod,
+  formatMeetingRecruitLocation,
+} from "@/features/team/lib/meetingRecruitFormatters";
 import Button from "@/shared/ui/Button";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
-
-function formatDateWithWeekday(value: string) {
-  return formatVolunteerDate(value.slice(0, 10))?.replace("(", " (") ?? value;
-}
-
-function formatActivitySchedule(startAt: string, endAt: string) {
-  const startDate = formatDateWithWeekday(startAt);
-  const endDate = formatDateWithWeekday(endAt);
-  const startTime = startAt.slice(11, 16);
-  const endTime = endAt.slice(11, 16);
-
-  if (startAt.slice(0, 10) !== endAt.slice(0, 10)) {
-    return `${startDate} ${startTime} ~ ${endDate} ${endTime}`;
-  }
-
-  const timeRange = formatVolunteerTimeRange(startTime, endTime);
-
-  return timeRange ? `${startDate} ${timeRange}` : startDate;
-}
-
-function formatApplicationPeriod(createdAt: string, applyDeadlineAt: string) {
-  const startDate = formatMeetingFullDate(createdAt) ?? createdAt.slice(0, 10);
-  const endDate =
-    formatMeetingFullDate(applyDeadlineAt) ?? applyDeadlineAt.slice(0, 10);
-
-  return `${startDate} ~ ${endDate}`;
-}
-
-function formatLocation(regionName: string, place: string) {
-  const region = regionName.trim();
-  const location = place.trim();
-
-  if (!region || location.includes(region)) {
-    return location || region;
-  }
-
-  return `${region} ${location}`;
-}
 
 function SummaryIcon({ src }: { src: string }) {
   return (
@@ -137,7 +99,7 @@ export function MeetingRecruitSummaryCard({
             <SummaryIcon src={CalendarIcon} />
             <dt className="sr-only">봉사 일정</dt>
             <dd className="min-w-0 text-body-14 text-text">
-              {formatActivitySchedule(
+              {formatMeetingRecruitActivitySchedule(
                 recruit.activityStartAt,
                 recruit.activityEndAt,
               )}
@@ -147,7 +109,7 @@ export function MeetingRecruitSummaryCard({
             <SummaryIcon src={LocationIcon} />
             <dt className="sr-only">봉사 장소</dt>
             <dd className="min-w-0 text-body-14 text-text">
-              {formatLocation(recruit.regionName, recruit.place)}
+              {formatMeetingRecruitLocation(recruit.regionName, recruit.place)}
             </dd>
           </div>
         </dl>
@@ -158,7 +120,7 @@ export function MeetingRecruitSummaryCard({
         <div className="mt-3 flex items-start gap-3">
           <SummaryIcon src={ClockIcon} />
           <p className="min-w-0 text-body-14 text-text">
-            {formatApplicationPeriod(
+            {formatMeetingRecruitApplicationPeriod(
               recruit.createdAt,
               recruit.applyDeadlineAt,
             )}
