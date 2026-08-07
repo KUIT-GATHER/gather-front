@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router";
+import { Navigate, useLocation, useNavigate } from "react-router";
 
 import { GuestBoard } from "@/features/team/components/board/list/GuestBoard";
 import { SharedMeetingBoard } from "@/features/team/components/board/list/SharedMeetingBoard";
@@ -7,6 +7,7 @@ import LoadingState from "@/shared/ui/LoadingState";
 
 export function TeamDetailPostListPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { authInitialized, home, isAuthenticated, isJoined } =
     useTeamDetailContext();
 
@@ -40,6 +41,9 @@ export function TeamDetailPostListPage() {
       meetingId={home.meetingId}
       meetingName={home.name}
       canWrite
+      onWriteClick={() => {
+        navigate(`/teams/${home.meetingId}/posts/new`);
+      }}
     />
   );
 }

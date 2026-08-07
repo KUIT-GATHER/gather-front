@@ -250,6 +250,7 @@ export type MeetingPostCommentUpdateRequest = {
 type MeetingPostCreateBaseRequest = {
   title: string;
   content: string;
+  imageObjectKeys?: string[];
 };
 
 export type MeetingPostCreateGeneralRequest = MeetingPostCreateBaseRequest & {

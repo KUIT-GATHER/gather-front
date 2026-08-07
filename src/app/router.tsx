@@ -33,6 +33,11 @@ import { TeamDetailActivityRecruitsPage } from "@/pages/teams/TeamDetailActivity
 import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
 import { TeamPostDetailPage } from "@/pages/teams/TeamPostDetailPage";
 import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
+import { TeamPostTypeSelectPage } from "@/pages/teams/TeamPostTypeSelectPage";
+import { TeamReviewPostCreatePage } from "@/pages/teams/TeamReviewPostCreatePage";
+import { TeamFreePostCreatePage } from "@/pages/teams/TeamFreePostCreatePage";
+import { TeamNoticePostCreatePage } from "@/pages/teams/TeamNoticePostCreatePage";
+import { TeamRecruitPostCreatePage } from "@/pages/teams/TeamRecruitPostCreatePage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
@@ -166,6 +171,26 @@ export const router = createBrowserRouter([
               {
                 path: "/my/bookmarks",
                 element: <MyBookmarksPage />,
+              },
+              {
+                path: "/teams/:teamId/posts/new",
+                element: <TeamPostTypeSelectPage />,
+              },
+              {
+                path: "/teams/:teamId/posts/new/review",
+                element: <TeamReviewPostCreatePage />,
+              },
+              {
+                path: "/teams/:teamId/posts/new/free",
+                element: <TeamFreePostCreatePage />,
+              },
+              {
+                path: "/teams/:teamId/posts/new/notice",
+                element: <TeamNoticePostCreatePage />,
+              },
+              {
+                path: "/teams/:teamId/posts/new/recruit",
+                element: <TeamRecruitPostCreatePage />,
               },
             ],
           },
