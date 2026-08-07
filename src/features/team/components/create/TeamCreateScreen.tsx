@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ImagePlus, MapPin } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 
+import locationIcon from "@/assets/volunteer/location.svg";
 import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
@@ -504,7 +505,12 @@ export function TeamCreateScreen() {
             className="relative flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 text-sm font-medium text-text focus:border-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:opacity-100"
             onClick={() => setIsRegionSheetOpen(true)}
           >
-            <MapPin aria-hidden="true" className="size-4 text-icon" />
+            <img
+              src={locationIcon}
+              alt=""
+              aria-hidden="true"
+              className="size-4"
+            />
             {isPostingBased
               ? postingQuery.data?.actPlace ||
                 postingQuery.data?.regionName ||

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { MapPin } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
 
+import locationIcon from "@/assets/volunteer/location.svg";
 import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,
@@ -68,7 +68,7 @@ export function RegionSelector() {
         className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 text-[15px] font-medium text-text focus:border-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
         onClick={() => setIsRegionSheetOpen(true)}
       >
-        <MapPin aria-hidden="true" className="size-5 text-icon" />
+        <img src={locationIcon} alt="" aria-hidden="true" className="size-5" />
         {selectedRegion
           ? getFullRegionSelectionLabel(selectedRegion, selectedRegionParent)
           : "활동 지역을 선택해 주세요"}
