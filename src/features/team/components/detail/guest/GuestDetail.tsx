@@ -58,6 +58,7 @@ export function GuestDetail({
           disabled={isJoinDisabled(home)}
           meetingId={home.meetingId}
           meetingName={home.name}
+          pendingJoinRequested={home.pendingJoinRequested}
         />
       )}
     </article>

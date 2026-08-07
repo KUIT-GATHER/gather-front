@@ -102,7 +102,18 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
                   disabled: !post.canDelete || deletePostMutation.isPending,
                   onClick: handleDeleteClick,
                 },
-                { label: "게시글 수정" },
+                {
+                  label: "게시글 수정",
+                  disabled: !post.canEdit,
+                  onClick: () => {
+                    setIsActionMenuOpen(false);
+                    navigate(
+                      post.type === "RECRUIT"
+                        ? `/teams/${post.meetingId}/posts/${post.postId}/recruit/edit`
+                        : `/teams/${post.meetingId}/posts/${post.postId}/edit`,
+                    );
+                  },
+                },
               ]}
             />
           ) : null}

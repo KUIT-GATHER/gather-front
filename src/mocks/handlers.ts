@@ -7,12 +7,14 @@ import { regionHandlers } from "./regionHandlers";
 import { teamHandlers } from "./teamHandlers";
 import { badgeHandlers } from "./badgeHandlers";
 import { myProfileHandlers } from "./myProfileHandlers";
+import { meetingManagementHandlers } from "./meetingManagementHandlers";
 
 export const handlers = [
   ...postingHandlers,
   ...authHandlers,
   ...notificationHandlers,
   ...regionHandlers,
+  ...meetingManagementHandlers,
   ...teamHandlers,
   ...myProfileHandlers,
   ...badgeHandlers,

@@ -1,26 +1,25 @@
 import { CategoryBadge } from "@/features/category/components/CategoryBadge";
-import { MeetingCover } from "@/features/team/components/MeetingCover";
 import type {
   MeetingDetail,
   MeetingHome,
 } from "@/features/team/types/team.types";
 
+import { MeetingImageCarousel } from "./MeetingImageCarousel";
+
 type SharedMeetingSummaryProps = {
   home: MeetingHome;
   detail: MeetingDetail;
+  imageUrls: readonly string[];
 };
 
 export function SharedMeetingSummary({
   home,
   detail,
+  imageUrls,
 }: SharedMeetingSummaryProps) {
   return (
     <section>
-      <MeetingCover
-        meetingId={detail.meetingId}
-        alt={home.name + " 대표 이미지"}
-        className="-mx-5.5 -mt-4 mb-2.5 h-[184px]"
-      />
+      <MeetingImageCarousel meetingName={home.name} imageUrls={imageUrls} />
       <div className="flex flex-wrap gap-1">
         {detail.categories.map((category) => (
           <CategoryBadge key={category} category={category} />

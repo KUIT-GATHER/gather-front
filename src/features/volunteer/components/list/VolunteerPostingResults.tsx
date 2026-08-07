@@ -2,6 +2,8 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 import { useInfiniteVolunteerPostingsQuery } from "@/features/volunteer/hooks/useInfiniteVolunteerPostingsQuery";
 import type { VolunteerPostingInfiniteParams } from "@/features/volunteer/types/volunteer.types";
+import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
+import { getPostingListItemKey } from "@/features/volunteer/lib/postingListRouting";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -11,7 +13,7 @@ type VolunteerPostingResultsProps = {
   params: VolunteerPostingInfiniteParams;
   emptyTitle: string;
   emptyDescription: string;
-  onSelect: (postingId: number) => void;
+  onSelect: (posting: PostingListItem) => void;
   renderMeta?: (totalElements: number) => ReactNode;
 };
 
@@ -75,10 +77,10 @@ export function VolunteerPostingResults({
         <>
           <ul className="flex flex-col gap-3">
             {postings.map((posting) => (
-              <li key={posting.id}>
+              <li key={getPostingListItemKey(posting)}>
                 <VolunteerPostingCard
                   posting={posting}
-                  onClick={() => onSelect(posting.id)}
+                  onClick={() => onSelect(posting)}
                 />
               </li>
             ))}

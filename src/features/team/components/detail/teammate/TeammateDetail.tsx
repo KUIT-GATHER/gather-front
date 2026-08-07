@@ -30,31 +30,50 @@ export function TeammateDetail({
 }: TeammateDetailProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isBoardPage = location.pathname.endsWith("/posts");
-  const isPostDetailPage = location.pathname.startsWith(
-    `/teams/${home.meetingId}/posts/`,
-  );
-  const isHomePage = location.pathname === `/teams/${home.meetingId}`;
-  const isActivityMainPage =
-    location.pathname === `/teams/${home.meetingId}/activity`;
-  const activitySectionTitleByPath = new Map([
-    [`/teams/${home.meetingId}/activity/recruits`, "내가 신청한 봉사"],
-    [`/teams/${home.meetingId}/activity/posts`, "작성한 게시글"],
-    [`/teams/${home.meetingId}/activity/comments`, "댓글 단 게시글"],
+
+  const pathname = location.pathname;
+  const teamBasePath = `/teams/${home.meetingId}`;
+  const settingsBasePath = `${teamBasePath}/settings`;
+  const activityBasePath = `${teamBasePath}/activity`;
+
+  const isHomePage = pathname === teamBasePath;
+  const isBoardPage = pathname === `${teamBasePath}/posts`;
+  const isPostDetailPage = pathname.startsWith(`${teamBasePath}/posts/`);
+
+  const isActivityMainPage = pathname === activityBasePath;
+
+  const activitySectionTitleByPath = new Map<string, string>([
+    [`${activityBasePath}/recruits`, "내가 신청한 봉사"],
+    [`${activityBasePath}/posts`, "작성한 게시글"],
+    [`${activityBasePath}/comments`, "댓글 단 게시글"],
   ]);
-  const activitySectionTitle = activitySectionTitleByPath.get(
-    location.pathname,
-  );
+
+  const activitySectionTitle = activitySectionTitleByPath.get(pathname);
+  const isActivitySubPage = activitySectionTitle !== undefined;
+
+  const isSettingsRootPage = pathname === settingsBasePath;
+  const isSettingsSubPage = pathname.startsWith(`${settingsBasePath}/`);
+  const isSettingsPage = isSettingsRootPage || isSettingsSubPage;
+
   const headerAction =
     isBoardPage && viewerRole === "leader"
       ? "settings"
       : isHomePage
         ? "bookmark"
         : "none";
+
   const headerTitle = activitySectionTitle ?? home.name;
+
+  const showTeamHeader = !isSettingsSubPage;
+  const showTabs =
+    !isPostDetailPage &&
+    !isSettingsPage &&
+    !isActivityMainPage &&
+    !isActivitySubPage;
+
   const handleBack = () => {
-    if (activitySectionTitle) {
-      navigate(`/teams/${home.meetingId}/activity`);
+    if (isActivitySubPage) {
+      navigate(activityBasePath);
       return;
     }
 
@@ -71,18 +90,23 @@ export function TeammateDetail({
     >
       {isActivityMainPage ? (
         <TeamActivityMainHeader title={home.name} />
-      ) : (
+      ) : showTeamHeader ? (
         <TeammateHeader
           title={headerTitle}
           viewerRole={viewerRole}
           action={headerAction}
+          showSettingsInsteadOfRole={isHomePage && viewerRole === "leader"}
           onBack={handleBack}
+          onSettingsClick={() => {
+            navigate(settingsBasePath);
+          }}
           isBookmarked={isBookmarked}
           isBookmarkPending={isBookmarkPending}
           onBookmarkToggle={onBookmarkToggle}
         />
-      )}
-      {isPostDetailPage ? null : <TeammateTabs meetingId={home.meetingId} />}
+      ) : null}
+
+      {showTabs ? <TeammateTabs meetingId={home.meetingId} /> : null}
 
       {children}
 

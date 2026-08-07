@@ -9,6 +9,7 @@ import type {
   VolunteerPostingMeetingPage,
   VolunteerPostingPage,
   VolunteerPostingParticipationResponse,
+  PostingListPage,
 } from "@/features/volunteer/types/volunteer.types";
 
 const publicOptions = {
@@ -110,7 +111,7 @@ function buildPostingMeetingsEndpoint(
 }
 
 export function getVolunteerPostings(params?: VolunteerPostingListParams) {
-  return fetchClient<VolunteerPostingPage>(
+  return fetchClient<PostingListPage>(
     buildPostingListEndpoint(params),
     publicOptions,
   );

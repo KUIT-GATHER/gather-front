@@ -10,6 +10,7 @@ import type {
   MeetingCreateRequest,
   MeetingDetail,
   MeetingHome,
+  MeetingJoinRequest,
   MeetingListItem,
   MeetingListParams,
   MeetingPage,
@@ -19,11 +20,9 @@ import type {
   MeetingPostCommentListParams,
   MeetingPostCommentPage,
   MeetingPostCommentUpdateRequest,
-  MeetingPostCreateRequest,
   MeetingPostLikeResponse,
   MeetingPostListParams,
   MeetingPostPage,
-  MeetingPostUpdateRequest,
   MyAppliedRecruitPage,
   MyMeetingListItem,
   MyMeetingActivitySummary,
@@ -321,6 +320,36 @@ export function getMyMeetingActivityAppliedRecruits(
   );
 }
 
+export function getMeetingJoinRequests(meetingId: number) {
+  return fetchClient<MeetingJoinRequest[]>(
+    `${MEETING_ENDPOINT}/${meetingId}/join-requests`,
+  );
+}
+
+export function approveMeetingJoinRequest(
+  meetingId: number,
+  joinRequestId: number,
+) {
+  return fetchClient<MeetingJoinRequest>(
+    `${MEETING_ENDPOINT}/${meetingId}/join-requests/${joinRequestId}/approve`,
+    {
+      method: "PATCH",
+    },
+  );
+}
+
+export function rejectMeetingJoinRequest(
+  meetingId: number,
+  joinRequestId: number,
+) {
+  return fetchClient<MeetingJoinRequest>(
+    `${MEETING_ENDPOINT}/${meetingId}/join-requests/${joinRequestId}/reject`,
+    {
+      method: "PATCH",
+    },
+  );
+}
+
 export function getMeetingPosts(
   meetingId: number,
   params?: MeetingPostListParams,
@@ -391,40 +420,10 @@ export function deleteMeetingPostComment(
   );
 }
 
-export function createMeetingPost(
-  meetingId: number,
-  payload: MeetingPostCreateRequest,
-) {
-  return fetchClient<MeetingPost>(buildMeetingPostsEndpoint(meetingId), {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
-export function updateMeetingPost(
-  meetingId: number,
-  postId: number,
-  payload: MeetingPostUpdateRequest,
-) {
-  return fetchClient<MeetingPost>(buildMeetingPostEndpoint(meetingId, postId), {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
-}
-
 export function deleteMeetingPost(meetingId: number, postId: number) {
   return fetchClient<null>(buildMeetingPostEndpoint(meetingId, postId), {
     method: "DELETE",
   });
-}
-
-export async function joinMeeting(meetingId: number) {
-  const meeting = await fetchClient<MeetingListItemResponse>(
-    `${MEETING_ENDPOINT}/${meetingId}/join`,
-    { method: "POST" },
-  );
-
-  return normalizeMeetingCategories(meeting);
 }
 
 export function leaveMeeting(meetingId: number) {
