@@ -78,7 +78,7 @@ export function ManagedRecruitCard({
       </div>
 
       <div className="mt-5">
-        <h3 className="text-base font-semibold text-text">신청 기간</h3>
+        <h3 className="text-base font-semibold text-text">신청 마감일</h3>
         <div className="mt-3 flex items-start gap-3">
           <SummaryIcon src={ClockIcon} />
           <p className="min-w-0 text-body-14 text-text">

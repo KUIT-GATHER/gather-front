@@ -26,21 +26,8 @@ export function formatMeetingRecruitActivitySchedule(
   return timeRange ? `${startDate} ${timeRange}` : startDate;
 }
 
-export function formatMeetingRecruitApplicationPeriod(
-  createdAt: string,
-  applyDeadlineAt: string,
-) {
-  const startDate = formatMeetingFullDate(createdAt) ?? createdAt.slice(0, 10);
-  const endDate =
-    formatMeetingFullDate(applyDeadlineAt) ?? applyDeadlineAt.slice(0, 10);
-
-  return `${startDate} ~ ${endDate}`;
-}
-
 export function formatMeetingRecruitApplicationDeadline(value: string) {
-  const date = formatMeetingFullDate(value) ?? value.slice(0, 10);
-
-  return `${date}까지`;
+  return formatMeetingFullDate(value) ?? value.slice(0, 10);
 }
 
 export function formatMeetingRecruitLocation(
