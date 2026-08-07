@@ -1,23 +1,36 @@
 import { HttpResponse, http } from "msw";
 
 import type {
-  MeetingRecruitDetail,
   MeetingRecruitRequest,
   RecruitParticipantSummary,
+  RecruitParticipationAction,
   UpdateAttendanceRequest,
 } from "@/features/team/types/meetingRecruit.types";
-import type {
-  MeetingJoinRequest,
-  MeetingMemberRole,
-} from "@/features/team/types/team.types";
+import type { MeetingJoinRequest } from "@/features/team/types/team.types";
+import {
+  applyMockAutomaticConfirmation,
+  getMockRecruitAppliedCount,
+  getNextMockRecruitParticipationId,
+  hasUpcomingConfirmedMockRecruit,
+  mockMeetingRecruitsByPostId,
+  mockRecruitParticipantsByPostId,
+  syncMockRecruitCounts,
+} from "@/mocks/data/mockMeetingRecruits";
+import { getMockUserById } from "@/mocks/data/mockUsers";
 import {
   createUnauthorizedResponse,
   getMockUserId,
 } from "@/mocks/lib/mockAuth";
 import {
   approveMockMeetingMember,
+  getMockMeeting,
+  getMockMeetingManageImages,
+  getMockMeetingMembers,
+  getMockMeetingRole,
+  getMockPendingJoinRequests,
   isMockMeetingMember,
   removeMockMeetingMember,
+  updateMockPendingJoinRequest,
   upsertMockMeetingRecruitPost,
 } from "@/mocks/teamHandlers";
 
@@ -29,322 +42,363 @@ const fail = (code: string, message: string, status: number) =>
     { status },
   );
 
-let manageImages = [
-  {
-    objectKey: "meetings/1/existing-1.jpg",
-    imageUrl: "/src/assets/icons/Temp-volunteer-posting.svg",
-    sortOrder: 0,
-  },
-];
-const joinRequests: MeetingJoinRequest[] = [
-  {
-    joinRequestId: 1,
-    userId: 201,
-    nickname: "이민혁",
-    status: "PENDING",
-    requestedAt: "2026-08-07T12:00:00",
-  },
-  {
-    joinRequestId: 2,
-    userId: 202,
-    nickname: "김하늘",
-    status: "APPROVED",
-    requestedAt: "2026-08-05T12:00:00",
-  },
-  {
-    joinRequestId: 3,
-    userId: 203,
-    nickname: "박여름",
-    status: "REJECTED",
-    requestedAt: "2026-08-04T12:00:00",
-  },
-];
-const memberDetails = new Map<
-  number,
-  { userId: number; nickname: string; role: MeetingMemberRole }
->([
-  [1, { userId: 1, nickname: "가더", role: "HOST" }],
-  ...Array.from(
-    { length: 11 },
-    (_, index) =>
-      [
-        101 + index,
-        {
-          userId: 101 + index,
-          nickname: `팀원 ${index + 1}`,
-          role: "MEMBER" as const,
-        },
-      ] as const,
-  ),
-]);
-type MockRecruit = MeetingRecruitDetail & {
-  confirmationStatus: "UNCONFIRMED" | "CONFIRMED";
-  confirmedAt: string | null;
-};
-
-const recruitByPostId = new Map<number, MockRecruit>([
+const joinRequestsByMeetingId = new Map<number, MeetingJoinRequest[]>([
   [
-    2,
-    {
-      postId: 2,
-      meetingId: 1,
-      meetingName: "따뜻한 마음",
-      title: "한강공원 플로깅",
-      content: "한강의 아름다운 환경을 지키기 위해 함께 뛰어요!",
-      participationCondition: "만 14세 이상, 편한 복장 필수",
-      authorId: 1,
-      authorNickname: "가더",
-      regionId: 41,
-      regionName: "영등포구",
-      place: "여의도 한강공원",
-      activityStartAt: "2026-08-10T09:00:00",
-      activityEndAt: "2026-08-10T12:00:00",
-      maxParticipants: 30,
-      categories: ["ENVIRONMENT"],
-      timeRecognized: true,
-      recognizedMinutes: 180,
-      applyDeadlineAt: "2026-08-08T23:59:59",
-      external: true,
-      likeCount: 7,
-      commentCount: 2,
-      appliedCount: 2,
-      participationStatus: null,
-      participationAction: "APPLY",
-      applicationOpen: true,
-      full: false,
-      canEdit: true,
-      canDelete: true,
-      createdAt: "2026-08-01T12:00:00",
-      updatedAt: "2026-08-01T12:00:00",
-      confirmationStatus: "UNCONFIRMED",
-      confirmedAt: null,
-    },
-  ],
-  [
-    5,
-    {
-      postId: 5,
-      meetingId: 1,
-      meetingName: "따뜻한 마음",
-      title: "6월 도시락 배달",
-      content: "도시락 배달 봉사입니다.",
-      participationCondition: null,
-      authorId: 1,
-      authorNickname: "가더",
-      regionId: 32,
-      regionName: "마포구",
-      place: "마포사회복지관",
-      activityStartAt: "2026-08-06T09:00:00",
-      activityEndAt: "2026-08-06T12:00:00",
-      maxParticipants: 4,
-      categories: ["WELFARE"],
-      timeRecognized: true,
-      recognizedMinutes: 180,
-      applyDeadlineAt: "2026-08-05T23:59:59",
-      external: false,
-      likeCount: 3,
-      commentCount: 0,
-      appliedCount: 2,
-      participationStatus: "CONFIRMED",
-      participationAction: "NONE",
-      applicationOpen: false,
-      full: false,
-      canEdit: false,
-      canDelete: true,
-      createdAt: "2026-08-01T12:00:00",
-      updatedAt: "2026-08-01T12:00:00",
-      confirmationStatus: "CONFIRMED",
-      confirmedAt: "2026-08-05T23:59:59",
-    },
-  ],
-]);
-const participantsByPostId = new Map<number, RecruitParticipantSummary[]>([
-  [
-    2,
+    10,
     [
       {
-        participationId: 1,
-        userId: 101,
-        nickname: "박서준",
-        applicantType: "MEMBER",
-        participationStatus: "APPLIED",
-        attendanceStatus: "UNSET",
-        appliedAt: "2026-08-07T12:00:00",
+        joinRequestId: 1001,
+        userId: 201,
+        nickname: "가입 대기자",
+        status: "PENDING",
+        requestedAt: "2026-08-07T12:00:00",
       },
       {
-        participationId: 2,
-        userId: 301,
-        nickname: "최민호",
-        applicantType: "EXTERNAL",
-        participationStatus: "APPLIED",
-        attendanceStatus: "UNSET",
-        appliedAt: "2026-08-07T13:00:00",
-      },
-    ],
-  ],
-  [
-    5,
-    [
-      {
-        participationId: 3,
-        userId: 101,
-        nickname: "박서준",
-        applicantType: "MEMBER",
-        participationStatus: "CONFIRMED",
-        attendanceStatus: "UNSET",
-        appliedAt: "2026-08-01T12:00:00",
+        joinRequestId: 1002,
+        userId: 202,
+        nickname: "승인된 신청자",
+        status: "APPROVED",
+        requestedAt: "2026-08-05T12:00:00",
       },
       {
-        participationId: 4,
-        userId: 301,
-        nickname: "최민호",
-        applicantType: "EXTERNAL",
-        participationStatus: "COMPLETED",
-        attendanceStatus: "PRESENT",
-        appliedAt: "2026-08-01T13:00:00",
+        joinRequestId: 1003,
+        userId: 203,
+        nickname: "반려된 신청자",
+        status: "REJECTED",
+        requestedAt: "2026-08-04T12:00:00",
       },
     ],
   ],
 ]);
-let nextPostId = 100;
 
-function personalDetail(userId: number, nickname: string) {
+const recognizedMinutesByUserId = new Map<number, number>([
+  [1, 720],
+  [101, 720],
+  [102, 900],
+  [103, 540],
+  [301, 0],
+  [302, 180],
+]);
+
+let nextPostId = 106;
+
+for (const recruit of mockMeetingRecruitsByPostId.values()) {
+  syncMockRecruitCounts(recruit);
+  upsertMockMeetingRecruitPost({
+    postId: recruit.postId,
+    meetingId: recruit.meetingId,
+    title: recruit.title,
+    content: recruit.content,
+  });
+}
+
+function getMeetingJoinRequests(meetingId: number) {
+  return [
+    ...(joinRequestsByMeetingId.get(meetingId) ?? []),
+    ...getMockPendingJoinRequests(meetingId),
+  ];
+}
+
+function getPersonalDetail(userId: number, fallbackNickname: string) {
+  const user = getMockUserById(userId);
+
   return {
     userId,
-    nickname,
-    phoneNumber: "010-1234-5678",
-    birthDate: "2000-01-01",
-    regionId: 32,
+    nickname: user?.nickname ?? fallbackNickname,
+    phoneNumber: user?.phoneNumber ?? "010-1234-5678",
+    birthDate: user?.birthDate ?? "2000-01-01",
+    regionId: user?.activityRegionId ?? 32,
     regionName: "서울 마포구",
-    interestCategories: ["WELFARE", "ENVIRONMENT"],
-    totalRecognizedMinutes: 720,
+    interestCategories: user?.interestCategories ?? ["WELFARE", "ENVIRONMENT"],
+    totalRecognizedMinutes: recognizedMinutesByUserId.get(userId) ?? 720,
+  };
+}
+
+function isMeetingHost(request: Request, meetingId: number) {
+  const userId = getMockUserId(request);
+
+  return userId !== null && getMockMeetingRole(userId, meetingId) === "HOST";
+}
+
+function getRecruit(postId: number, meetingId: number) {
+  const recruit = mockMeetingRecruitsByPostId.get(postId);
+
+  return recruit?.meetingId === meetingId ? recruit : null;
+}
+
+function getParticipationAction(
+  recruit: NonNullable<ReturnType<typeof getRecruit>>,
+  participant?: RecruitParticipantSummary,
+): RecruitParticipationAction {
+  if (recruit.confirmationStatus === "CONFIRMED" || !recruit.applicationOpen) {
+    return "NONE";
+  }
+
+  if (participant?.participationStatus === "APPLIED") {
+    return "CANCEL";
+  }
+
+  if (participant && participant.participationStatus !== "CANCELLED") {
+    return "NONE";
+  }
+
+  return "APPLY";
+}
+
+function getViewerRecruit(
+  recruit: NonNullable<ReturnType<typeof getRecruit>>,
+  userId: number | null,
+) {
+  applyMockAutomaticConfirmation(recruit);
+  syncMockRecruitCounts(recruit);
+
+  const participant = userId
+    ? (mockRecruitParticipantsByPostId.get(recruit.postId) ?? []).find(
+        (item) => item.userId === userId,
+      )
+    : undefined;
+
+  return {
+    ...recruit,
+    participationStatus: participant?.participationStatus ?? null,
+    participationAction: getParticipationAction(recruit, participant),
+  };
+}
+
+function getManagedRecruit(
+  recruit: NonNullable<ReturnType<typeof getRecruit>>,
+) {
+  applyMockAutomaticConfirmation(recruit);
+  syncMockRecruitCounts(recruit);
+
+  return {
+    postId: recruit.postId,
+    title: recruit.title,
+    place: recruit.place,
+    activityStartAt: recruit.activityStartAt,
+    activityEndAt: recruit.activityEndAt,
+    applyDeadlineAt: recruit.applyDeadlineAt,
+    appliedCount: recruit.appliedCount,
+    maxParticipants: recruit.maxParticipants,
+    external: recruit.external,
+    applicationOpen: recruit.applicationOpen,
+    confirmationStatus: recruit.confirmationStatus,
+    confirmedAt: recruit.confirmedAt,
+    canEdit: recruit.canEdit,
   };
 }
 
 export const meetingManagementHandlers = [
-  http.get("*/api/v1/meetings/:meetingId/images/manage", ({ request }) =>
-    getMockUserId(request) ? ok(manageImages) : createUnauthorizedResponse(),
+  http.get(
+    "*/api/v1/meetings/:meetingId/images/manage",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const meetingId = Number(params.meetingId);
+      if (!getMockMeeting(meetingId)) {
+        return fail("MEETING_NOT_FOUND", "모임을 찾을 수 없습니다.", 404);
+      }
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
+      return ok(getMockMeetingManageImages(meetingId));
+    },
   ),
-  http.patch("*/api/v1/meetings/:meetingId/images", async ({ request }) => {
-    if (!getMockUserId(request)) return createUnauthorizedResponse();
-    const body = (await request.json()) as { objectKeys?: string[] };
-    if (!Array.isArray(body.objectKeys) || body.objectKeys.length > 3)
-      return fail("VALIDATION_ERROR", "사진은 최대 3장입니다.", 400);
-    manageImages = body.objectKeys.map((objectKey, sortOrder) => ({
-      objectKey,
-      imageUrl: objectKey.startsWith("http")
-        ? objectKey
-        : `https://mock-s3.gather.local/${objectKey}`,
-      sortOrder,
-    }));
-    return ok({ imageUrls: manageImages.map((image) => image.imageUrl) });
-  }),
-  http.get("*/api/v1/meetings/:meetingId/images", () =>
-    ok({ imageUrls: manageImages.map((image) => image.imageUrl) }),
+
+  http.get(
+    "*/api/v1/meetings/:meetingId/join-requests",
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const meetingId = Number(params.meetingId);
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
+      const status = new URL(request.url).searchParams.get("status");
+      const requests = getMeetingJoinRequests(meetingId);
+
+      return ok(
+        status ? requests.filter((item) => item.status === status) : requests,
+      );
+    },
   ),
-  http.get("*/api/v1/meetings/:meetingId/join-requests", ({ request }) => {
-    if (!getMockUserId(request)) return createUnauthorizedResponse();
-    const status = new URL(request.url).searchParams.get("status");
-    return ok(
-      status
-        ? joinRequests.filter((item) => item.status === status)
-        : joinRequests,
-    );
-  }),
+
   http.get(
     "*/api/v1/meetings/:meetingId/join-requests/:joinRequestId",
     ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
-      const item = joinRequests.find(
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
+      const item = getMeetingJoinRequests(meetingId).find(
         (requestItem) =>
           requestItem.joinRequestId === Number(params.joinRequestId),
       );
+
       return item
-        ? ok({ ...item, ...personalDetail(item.userId, item.nickname) })
+        ? ok({ ...item, ...getPersonalDetail(item.userId, item.nickname) })
         : fail("JOIN_REQUEST_NOT_FOUND", "가입 신청을 찾을 수 없습니다.", 404);
     },
   ),
+
   ...(["approve", "reject", "pending"] as const).map((action) =>
     http.patch(
       `*/api/v1/meetings/:meetingId/join-requests/:joinRequestId/${action}`,
       ({ params, request }) => {
+        const meetingId = Number(params.meetingId);
         if (!getMockUserId(request)) return createUnauthorizedResponse();
-        const item = joinRequests.find(
-          (requestItem) =>
-            requestItem.joinRequestId === Number(params.joinRequestId),
+        if (!isMeetingHost(request, meetingId)) {
+          return fail(
+            "MEETING_HOST_REQUIRED",
+            "팀장만 처리할 수 있습니다.",
+            403,
+          );
+        }
+
+        const joinRequestId = Number(params.joinRequestId);
+        const item = getMeetingJoinRequests(meetingId).find(
+          (requestItem) => requestItem.joinRequestId === joinRequestId,
         );
-        if (!item)
+        if (!item) {
           return fail(
             "JOIN_REQUEST_NOT_FOUND",
             "가입 신청을 찾을 수 없습니다.",
             404,
           );
-        item.status =
+        }
+
+        const nextStatus =
           action === "approve"
             ? "APPROVED"
             : action === "reject"
               ? "REJECTED"
               : "PENDING";
-        if (action === "approve") {
-          approveMockMeetingMember(
-            Number(params.meetingId),
-            item.userId,
-            item.nickname,
-          );
+        const staticRequests = joinRequestsByMeetingId.get(meetingId) ?? [];
+        const isStaticRequest = staticRequests.some(
+          (requestItem) => requestItem.joinRequestId === joinRequestId,
+        );
+
+        if (isStaticRequest) {
+          item.status = nextStatus;
+        } else {
+          staticRequests.push({ ...item, status: nextStatus });
+          joinRequestsByMeetingId.set(meetingId, staticRequests);
+          updateMockPendingJoinRequest(joinRequestId, nextStatus);
         }
-        return ok(item);
+
+        if (action === "approve") {
+          approveMockMeetingMember(meetingId, item.userId, item.nickname);
+        }
+
+        return ok({ ...item, status: nextStatus });
       },
     ),
   ),
+
   http.get(
     "*/api/v1/meetings/:meetingId/members/:userId",
     ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
-      const member = memberDetails.get(Number(params.userId));
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
+      const member = getMockMeetingMembers(meetingId).find(
+        (item) => item.userId === Number(params.userId),
+      );
+
       return member
         ? ok({
-            ...personalDetail(member.userId, member.nickname),
+            ...getPersonalDetail(member.userId, member.nickname),
             role: member.role,
           })
         : fail("MEETING_MEMBER_NOT_FOUND", "멤버를 찾을 수 없습니다.", 404);
     },
   ),
+
   http.delete(
     "*/api/v1/meetings/:meetingId/members/:userId",
     ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      const targetUserId = Number(params.userId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
-      const userId = Number(params.userId);
-      if (userId === 1)
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 내보낼 수 있습니다.", 403);
+      }
+      if (getMockMeetingRole(targetUserId, meetingId) === "HOST") {
         return fail(
           "MEETING_HOST_REMOVE_NOT_ALLOWED",
           "팀장은 내보낼 수 없습니다.",
           409,
         );
-      memberDetails.delete(userId);
-      removeMockMeetingMember(Number(params.meetingId), userId);
+      }
+      if (hasUpcomingConfirmedMockRecruit(meetingId, targetUserId)) {
+        return fail(
+          "MEETING_MEMBER_CONFIRMED_ACTIVITY_EXISTS",
+          "확정된 진행 예정 활동이 있어 멤버를 내보낼 수 없습니다.",
+          409,
+        );
+      }
+
+      for (const participants of mockRecruitParticipantsByPostId.values()) {
+        const participant = participants.find(
+          (item) => item.userId === targetUserId,
+        );
+        if (participant?.participationStatus === "APPLIED") {
+          participant.participationStatus = "CANCELLED";
+        }
+      }
+      removeMockMeetingMember(meetingId, targetUserId);
       return ok(null);
     },
   ),
+
   http.get(
     "*/api/v1/meetings/:meetingId/my/reviewable-activities",
-    ({ request }) =>
-      getMockUserId(request)
-        ? ok([
-            {
-              reviewSourceType: "MEETING_RECRUIT",
-              reviewSourceId: 5,
-              title: "6월 도시락 배달",
-              activityStartAt: "2026-08-06T09:00:00",
-              activityEndAt: "2026-08-06T12:00:00",
-            },
-          ])
-        : createUnauthorizedResponse(),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const meetingId = Number(params.meetingId);
+      const reviewable = [...mockMeetingRecruitsByPostId.values()].flatMap(
+        (recruit) => {
+          const participant = (
+            mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
+          ).find((item) => item.userId === userId);
+
+          return recruit.meetingId === meetingId &&
+            participant?.participationStatus === "COMPLETED"
+            ? [
+                {
+                  reviewSourceType: "MEETING_RECRUIT" as const,
+                  reviewSourceId: recruit.postId,
+                  title: recruit.title,
+                  activityStartAt: recruit.activityStartAt,
+                  activityEndAt: recruit.activityEndAt,
+                },
+              ]
+            : [];
+        },
+      );
+
+      return ok(reviewable);
+    },
   ),
+
   http.post(
     "*/api/v1/meetings/:meetingId/posts/images/presigned-url",
-    async ({ request }) => {
-      if (!getMockUserId(request)) return createUnauthorizedResponse();
-      const objectKey = `posts/1/${crypto.randomUUID()}.jpg`;
+    ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const objectKey = `posts/${userId}/${crypto.randomUUID()}.jpg`;
       return ok({
         uploadUrl: `http://localhost:5173/__mock-s3/post-images/${encodeURIComponent(objectKey)}`,
         objectKey,
@@ -357,147 +411,239 @@ export const meetingManagementHandlers = [
     "*/__mock-s3/post-images/:objectKey",
     () => new HttpResponse(null, { status: 200 }),
   ),
-  http.get("*/api/v1/meetings/:meetingId/posts/recruits", () =>
-    ok(
-      [...recruitByPostId.values()].map((item) => ({
-        postId: item.postId,
-        title: item.title,
-        place: item.place,
-        activityStartAt: item.activityStartAt,
-        activityEndAt: item.activityEndAt,
-        applyDeadlineAt: item.applyDeadlineAt,
-        appliedCount: item.appliedCount,
-        maxParticipants: item.maxParticipants,
-        external: item.external,
-        applicationOpen: item.applicationOpen,
-        confirmationStatus: item.confirmationStatus,
-        confirmedAt: item.confirmedAt,
-        canEdit: item.canEdit,
-      })),
-    ),
+
+  http.get(
+    "*/api/v1/meetings/:meetingId/posts/recruits",
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      if (!getMockUserId(request)) return createUnauthorizedResponse();
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
+      return ok(
+        [...mockMeetingRecruitsByPostId.values()]
+          .filter((recruit) => recruit.meetingId === meetingId)
+          .map(getManagedRecruit),
+      );
+    },
   ),
+
   http.post(
     "*/api/v1/meetings/:meetingId/posts/recruits",
     async ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const meetingId = Number(params.meetingId);
+      const meeting = getMockMeeting(meetingId);
+      if (!meeting)
+        return fail("MEETING_NOT_FOUND", "모임을 찾을 수 없습니다.", 404);
+      if (getMockMeetingRole(userId, meetingId) !== "HOST") {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 작성할 수 있습니다.", 403);
+      }
+      if (meeting.volunteerPostingId !== null) {
+        return fail(
+          "RECRUIT_NOT_ALLOWED_FOR_POSTING_BASED_MEETING",
+          "봉사공고 기반 모임에서는 모집공고를 작성할 수 없습니다.",
+          409,
+        );
+      }
+
       const body = (await request.json()) as MeetingRecruitRequest;
       const postId = nextPostId++;
+      const now = new Date().toISOString().slice(0, 19);
       const recruit = {
-        ...recruitByPostId.get(2)!,
         ...body,
         postId,
-        meetingId: Number(params.meetingId),
+        meetingId,
+        meetingName: meeting.name,
+        authorId: userId,
+        authorNickname: getMockUserById(userId)?.nickname ?? "가더",
+        regionName: meeting.regionName,
+        likeCount: 0,
+        commentCount: 0,
         appliedCount: 0,
         participationStatus: null,
         participationAction: "APPLY" as const,
+        applicationOpen: true,
+        full: false,
+        canEdit: true,
+        canDelete: true,
+        createdAt: now,
+        updatedAt: now,
         confirmationStatus: "UNCONFIRMED" as const,
         confirmedAt: null,
-        createdAt: "2026-08-07T12:00:00",
-        updatedAt: "2026-08-07T12:00:00",
       };
-      recruitByPostId.set(postId, recruit);
+      mockMeetingRecruitsByPostId.set(postId, recruit);
+      mockRecruitParticipantsByPostId.set(postId, []);
       upsertMockMeetingRecruitPost({
         postId,
-        meetingId: Number(params.meetingId),
+        meetingId,
         title: recruit.title,
         content: recruit.content,
       });
-      participantsByPostId.set(postId, []);
-      return ok(recruit, { status: 201 });
+
+      return ok(getViewerRecruit(recruit, userId), { status: 201 });
     },
   ),
+
   http.patch(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit",
     async ({ params, request }) => {
-      const recruit = recruitByPostId.get(Number(params.postId));
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const meetingId = Number(params.meetingId);
+      const recruit = getRecruit(Number(params.postId), meetingId);
       if (!recruit)
         return fail("POST_NOT_FOUND", "공고를 찾을 수 없습니다.", 404);
-      Object.assign(recruit, (await request.json()) as MeetingRecruitRequest);
+      if (getMockMeetingRole(userId, meetingId) !== "HOST") {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 수정할 수 있습니다.", 403);
+      }
+      if (!recruit.canEdit) {
+        return fail(
+          "RECRUIT_EDIT_NOT_ALLOWED",
+          "수정할 수 없는 공고입니다.",
+          409,
+        );
+      }
+
+      Object.assign(recruit, (await request.json()) as MeetingRecruitRequest, {
+        updatedAt: new Date().toISOString().slice(0, 19),
+      });
       upsertMockMeetingRecruitPost({
         postId: recruit.postId,
-        meetingId: recruit.meetingId,
+        meetingId,
         title: recruit.title,
         content: recruit.content,
       });
-      return ok(recruit);
+      return ok(getViewerRecruit(recruit, userId));
     },
   ),
+
   http.get(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit",
     ({ params, request }) => {
-      const recruit = recruitByPostId.get(Number(params.postId));
+      const meetingId = Number(params.meetingId);
+      const recruit = getRecruit(Number(params.postId), meetingId);
       if (!recruit)
         return fail("POST_NOT_FOUND", "공고를 찾을 수 없습니다.", 404);
+
       const userId = getMockUserId(request);
       if (
         !recruit.external &&
-        (!userId || !isMockMeetingMember(userId, Number(params.meetingId)))
-      )
+        (!userId || !isMockMeetingMember(userId, meetingId))
+      ) {
         return fail("MEETING_MEMBER_REQUIRED", "모임원 전용 공고입니다.", 403);
-      return ok(recruit);
+      }
+
+      return ok(getViewerRecruit(recruit, userId));
     },
   ),
+
   http.post(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participation",
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
-      const recruit = recruitByPostId.get(Number(params.postId));
+
+      const meetingId = Number(params.meetingId);
+      const recruit = getRecruit(Number(params.postId), meetingId);
       if (!recruit)
         return fail("POST_NOT_FOUND", "공고를 찾을 수 없습니다.", 404);
-      if (
-        !recruit.external &&
-        !isMockMeetingMember(userId, Number(params.meetingId))
-      ) {
+      if (!recruit.external && !isMockMeetingMember(userId, meetingId)) {
         return fail("MEETING_MEMBER_REQUIRED", "모임원 전용 공고입니다.", 403);
       }
-      if (recruit.participationAction === "NONE") {
+
+      applyMockAutomaticConfirmation(recruit);
+      const participants =
+        mockRecruitParticipantsByPostId.get(recruit.postId) ?? [];
+      let participant = participants.find((item) => item.userId === userId);
+      const action = getParticipationAction(recruit, participant);
+      if (action === "NONE") {
         return fail(
           "RECRUIT_PARTICIPATION_NOT_ALLOWED",
           "현재는 신청 상태를 변경할 수 없습니다.",
           409,
         );
       }
-      const applying = recruit.participationAction === "APPLY";
-      recruit.participationStatus = applying ? "APPLIED" : "CANCELLED";
-      recruit.participationAction = applying ? "CANCEL" : "APPLY";
-      recruit.appliedCount = Math.max(
-        0,
-        recruit.appliedCount + (applying ? 1 : -1),
-      );
+
+      if (action === "APPLY") {
+        if (participant) {
+          participant.participationStatus = "APPLIED";
+          participant.attendanceStatus = "UNSET";
+        } else {
+          participant = {
+            participationId: getNextMockRecruitParticipationId(),
+            userId,
+            nickname: getMockUserById(userId)?.nickname ?? `사용자 ${userId}`,
+            applicantType: isMockMeetingMember(userId, meetingId)
+              ? "MEMBER"
+              : "EXTERNAL",
+            participationStatus: "APPLIED",
+            attendanceStatus: "UNSET",
+            appliedAt: new Date().toISOString().slice(0, 19),
+          };
+          participants.push(participant);
+          mockRecruitParticipantsByPostId.set(recruit.postId, participants);
+        }
+      } else {
+        participant!.participationStatus = "CANCELLED";
+      }
+
+      syncMockRecruitCounts(recruit);
       return ok({
-        participationId: 99,
-        participationStatus: recruit.participationStatus,
-        participationAction: recruit.participationAction,
-        appliedCount: recruit.appliedCount,
+        participationId: participant!.participationId,
+        participationStatus: participant!.participationStatus,
+        participationAction: getParticipationAction(recruit, participant),
+        appliedCount: getMockRecruitAppliedCount(recruit.postId),
       });
     },
   ),
+
   http.get(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants",
-    ({ params }) => {
-      const recruit = recruitByPostId.get(Number(params.postId));
-      return recruit
-        ? ok({
-            postId: recruit.postId,
-            confirmationStatus: recruit.confirmationStatus,
-            confirmedAt: recruit.confirmedAt,
-            activityStartAt: recruit.activityStartAt,
-            activityEndAt: recruit.activityEndAt,
-            participants: participantsByPostId.get(recruit.postId) ?? [],
-          })
-        : fail("POST_NOT_FOUND", "공고를 찾을 수 없습니다.", 404);
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      if (!getMockUserId(request)) return createUnauthorizedResponse();
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
+      const recruit = getRecruit(Number(params.postId), meetingId);
+      if (!recruit)
+        return fail("POST_NOT_FOUND", "공고를 찾을 수 없습니다.", 404);
+      applyMockAutomaticConfirmation(recruit);
+
+      return ok({
+        postId: recruit.postId,
+        confirmationStatus: recruit.confirmationStatus,
+        confirmedAt: recruit.confirmedAt,
+        activityStartAt: recruit.activityStartAt,
+        activityEndAt: recruit.activityEndAt,
+        participants: mockRecruitParticipantsByPostId.get(recruit.postId) ?? [],
+      });
     },
   ),
+
   http.get(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId",
-    ({ params }) => {
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      if (!getMockUserId(request)) return createUnauthorizedResponse();
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 조회할 수 있습니다.", 403);
+      }
+
       const participant = (
-        participantsByPostId.get(Number(params.postId)) ?? []
+        mockRecruitParticipantsByPostId.get(Number(params.postId)) ?? []
       ).find((item) => item.participationId === Number(params.participationId));
+
       return participant
         ? ok({
             ...participant,
-            ...personalDetail(participant.userId, participant.nickname),
+            ...getPersonalDetail(participant.userId, participant.nickname),
           })
         : fail(
             "RECRUIT_PARTICIPATION_NOT_FOUND",
@@ -506,21 +652,29 @@ export const meetingManagementHandlers = [
           );
     },
   ),
+
   http.patch(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId/reject",
-    ({ params }) => {
-      const recruit = recruitByPostId.get(Number(params.postId));
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      if (!getMockUserId(request)) return createUnauthorizedResponse();
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 반려할 수 있습니다.", 403);
+      }
+
+      const recruit = getRecruit(Number(params.postId), meetingId);
       const participant = (
-        participantsByPostId.get(Number(params.postId)) ?? []
+        mockRecruitParticipantsByPostId.get(Number(params.postId)) ?? []
       ).find((item) => item.participationId === Number(params.participationId));
-      if (!participant)
+      if (!recruit || !participant) {
         return fail(
           "RECRUIT_PARTICIPATION_NOT_FOUND",
           "신청자를 찾을 수 없습니다.",
           404,
         );
+      }
       if (
-        recruit?.confirmationStatus === "CONFIRMED" ||
+        recruit.confirmationStatus === "CONFIRMED" ||
         participant.participationStatus !== "APPLIED"
       ) {
         return fail(
@@ -529,21 +683,30 @@ export const meetingManagementHandlers = [
           409,
         );
       }
+
       participant.participationStatus = "REJECTED";
+      syncMockRecruitCounts(recruit);
       return ok({
         participationId: participant.participationId,
         participationStatus: "REJECTED",
         attendanceStatus: "UNSET",
-        updatedAt: "2026-08-07T13:00:00",
+        updatedAt: new Date().toISOString().slice(0, 19),
       });
     },
   ),
+
   http.patch(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/confirm",
-    ({ params }) => {
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      if (!getMockUserId(request)) return createUnauthorizedResponse();
+      if (!isMeetingHost(request, meetingId)) {
+        return fail("MEETING_HOST_REQUIRED", "팀장만 확정할 수 있습니다.", 403);
+      }
+
       const postId = Number(params.postId);
-      const recruit = recruitByPostId.get(postId);
-      const participants = participantsByPostId.get(postId) ?? [];
+      const recruit = getRecruit(postId, meetingId);
+      const participants = mockRecruitParticipantsByPostId.get(postId) ?? [];
       const applied = participants.filter(
         (item) => item.participationStatus === "APPLIED",
       );
@@ -551,15 +714,23 @@ export const meetingManagementHandlers = [
         !recruit ||
         recruit.confirmationStatus === "CONFIRMED" ||
         applied.length === 0
-      )
+      ) {
         return fail(
           "RECRUIT_CONFIRM_NOT_ALLOWED",
           "확정할 신청자가 없습니다.",
           409,
         );
-      applied.forEach((item) => (item.participationStatus = "CONFIRMED"));
+      }
+
+      applied.forEach((item) => {
+        item.participationStatus = "CONFIRMED";
+      });
       recruit.confirmationStatus = "CONFIRMED";
-      recruit.confirmedAt = "2026-08-07T13:00:00";
+      recruit.confirmedAt = new Date().toISOString().slice(0, 19);
+      recruit.applicationOpen = false;
+      recruit.canEdit = false;
+      syncMockRecruitCounts(recruit);
+
       return ok({
         postId,
         confirmationStatus: "CONFIRMED",
@@ -568,21 +739,32 @@ export const meetingManagementHandlers = [
       });
     },
   ),
+
   http.patch(
     "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId/attendance",
     async ({ params, request }) => {
-      const recruit = recruitByPostId.get(Number(params.postId));
+      const meetingId = Number(params.meetingId);
+      if (!getMockUserId(request)) return createUnauthorizedResponse();
+      if (!isMeetingHost(request, meetingId)) {
+        return fail(
+          "MEETING_HOST_REQUIRED",
+          "팀장만 출석을 처리할 수 있습니다.",
+          403,
+        );
+      }
+
+      const recruit = getRecruit(Number(params.postId), meetingId);
       const participant = (
-        participantsByPostId.get(Number(params.postId)) ?? []
+        mockRecruitParticipantsByPostId.get(Number(params.postId)) ?? []
       ).find((item) => item.participationId === Number(params.participationId));
-      if (!participant)
+      if (!recruit || !participant) {
         return fail(
           "RECRUIT_PARTICIPATION_NOT_FOUND",
           "신청자를 찾을 수 없습니다.",
           404,
         );
+      }
       if (
-        !recruit ||
         recruit.confirmationStatus !== "CONFIRMED" ||
         new Date(recruit.activityEndAt).getTime() > Date.now()
       ) {
@@ -592,25 +774,50 @@ export const meetingManagementHandlers = [
           409,
         );
       }
+
       const body = (await request.json()) as UpdateAttendanceRequest;
       if (
         body.attendanceStatus === "ABSENT" &&
         participant.participationStatus === "REVIEWED"
       ) {
-        return fail("RECRUIT_REVIEW_EXISTS", "후기를 먼저 삭제해 주세요.", 409);
+        return fail(
+          "RECRUIT_REVIEW_EXISTS",
+          "출석을 변경하려면 작성한 활동 후기를 먼저 삭제해 주세요.",
+          409,
+        );
       }
+
+      const previousAttendance = participant.attendanceStatus;
+      const recognizedMinutes = recruit.timeRecognized
+        ? (recruit.recognizedMinutes ?? 0)
+        : 0;
+      const recognizedDelta =
+        previousAttendance === body.attendanceStatus
+          ? 0
+          : body.attendanceStatus === "PRESENT"
+            ? recognizedMinutes
+            : previousAttendance === "PRESENT"
+              ? -recognizedMinutes
+              : 0;
+
       participant.attendanceStatus = body.attendanceStatus;
       participant.participationStatus =
         body.attendanceStatus === "PRESENT" ? "COMPLETED" : "CONFIRMED";
+      recognizedMinutesByUserId.set(
+        participant.userId,
+        Math.max(
+          0,
+          (recognizedMinutesByUserId.get(participant.userId) ?? 720) +
+            recognizedDelta,
+        ),
+      );
+
       return ok({
         participationId: participant.participationId,
         participationStatus: participant.participationStatus,
         attendanceStatus: participant.attendanceStatus,
-        recognizedMinutesApplied:
-          body.attendanceStatus === "PRESENT" && recruit.timeRecognized
-            ? (recruit.recognizedMinutes ?? 0)
-            : 0,
-        updatedAt: "2026-08-07T13:00:00",
+        recognizedMinutesApplied: recognizedDelta,
+        updatedAt: new Date().toISOString().slice(0, 19),
       });
     },
   ),

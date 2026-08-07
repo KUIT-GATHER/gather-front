@@ -7,6 +7,7 @@ import { addMockBadgeProgress, earnMockBadge } from "./badgeHandlers";
 import teams from "./data/teams.json";
 import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
+import { hasUpcomingConfirmedMockRecruit } from "./data/mockMeetingRecruits";
 
 import {
   createUnauthorizedResponse,
@@ -18,6 +19,7 @@ import type {
   MeetingUpdateRequest,
   MeetingMember,
   MeetingMemberRole,
+  MeetingJoinRequest,
   MeetingPostType,
   MyAppliedRecruit,
 } from "@/features/team/types/team.types";
@@ -136,6 +138,10 @@ type MockAppliedRecruit = MyAppliedRecruit & {
   userId: number;
 };
 
+type MockPendingJoinRequest = MeetingJoinRequest & {
+  meetingId: number;
+};
+
 function formatMockDate(offsetDays: number) {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -181,6 +187,47 @@ const baseMockMeetings = teams.data.map((team) => {
   };
 });
 
+const qaMockMeetings: MockMeeting[] = [
+  {
+    meetingId: 10,
+    name: "[QA] 자유모임 운영 테스트",
+    description: "모임 관리 전체 흐름을 확인하기 위한 자유 모임입니다.",
+    currentMemberCount: 4,
+    maxMember: 10,
+    regionId: 32,
+    regionName: "마포구",
+    categories: ["ENVIRONMENT", "COMMUNITY"],
+    status: "RECRUITING",
+    deadline: formatMockDateTime("2026-08-31T18:00:00", 30),
+    activityStartAt: null,
+    activityEndAt: null,
+    hostId: 1,
+    volunteerPostingId: null,
+    participationCondition: "봉사활동에 관심 있는 누구나",
+    memo: null,
+    timeRecognized: false,
+  },
+  {
+    meetingId: 11,
+    name: "[QA] 자유모임 해산 테스트",
+    description: "진행 예정 활동이 없어 해산 성공을 확인하는 모임입니다.",
+    currentMemberCount: 1,
+    maxMember: 10,
+    regionId: 32,
+    regionName: "마포구",
+    categories: ["COMMUNITY"],
+    status: "RECRUITING",
+    deadline: formatMockDateTime("2026-08-31T18:00:00", 30),
+    activityStartAt: null,
+    activityEndAt: null,
+    hostId: 1,
+    volunteerPostingId: null,
+    participationCondition: null,
+    memo: null,
+    timeRecognized: false,
+  },
+];
+
 const bookmarkPaginationMeetings: MockMeeting[] = Array.from(
   { length: 21 },
   (_, index) => ({
@@ -221,10 +268,18 @@ const membershipsByUserId = new Map<number, Map<number, MeetingMemberRole>>([
     new Map([
       [1, "HOST"],
       [3, "MEMBER"],
+      [10, "HOST"],
+      [11, "HOST"],
     ]),
   ],
+  [101, new Map([[10, "MEMBER"]])],
+  [102, new Map([[10, "MEMBER"]])],
+  [103, new Map([[10, "MEMBER"]])],
 ]);
-const pendingJoinRequestIdByUserAndMeeting = new Map<string, number>();
+const pendingJoinRequestByUserAndMeeting = new Map<
+  string,
+  MockPendingJoinRequest
+>();
 let nextJoinRequestId = 100;
 
 function getPendingJoinRequestKey(userId: number, meetingId: number) {
@@ -259,7 +314,18 @@ const mockPostImageUrls = [
 const meetingImageUrlsByMeetingId = new Map<number, string[]>([
   [1, [...mockPostImageUrls]],
   [2, [mockPostImageOne]],
+  [10, [mockPostImageOne, mockPostImageTwo]],
 ]);
+const meetingManageImagesByMeetingId = new Map(
+  [...meetingImageUrlsByMeetingId].map(([meetingId, imageUrls]) => [
+    meetingId,
+    imageUrls.map((imageUrl, sortOrder) => ({
+      objectKey: `meetings/${meetingId}/existing-${sortOrder + 1}.jpg`,
+      imageUrl,
+      sortOrder,
+    })),
+  ]),
+);
 
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   1: [
@@ -276,6 +342,13 @@ const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
       host: false,
     })),
   ],
+  10: [
+    { userId: 1, nickname: "가더", role: "HOST", host: true },
+    { userId: 101, nickname: "팀원 1", role: "MEMBER", host: false },
+    { userId: 102, nickname: "팀원 2", role: "MEMBER", host: false },
+    { userId: 103, nickname: "팀원 3", role: "MEMBER", host: false },
+  ],
+  11: [{ userId: 1, nickname: "가더", role: "HOST", host: true }],
 };
 
 export function approveMockMeetingMember(
@@ -288,6 +361,52 @@ export function approveMockMeetingMember(
     members.push({ userId, nickname, role: "MEMBER", host: false });
     meetingMembersByMeetingId[meetingId] = members;
   }
+  addMembership(userId, meetingId, "MEMBER");
+}
+
+export function getMockMeeting(meetingId: number) {
+  return findMeeting(meetingId);
+}
+
+export function getMockMeetingRole(userId: number, meetingId: number) {
+  return getMembershipRole(userId, meetingId);
+}
+
+export function getMockMeetingMembers(meetingId: number) {
+  const meeting = findMeeting(meetingId);
+
+  return meeting ? getMeetingMembers(meeting) : [];
+}
+
+export function getMockPendingJoinRequests(meetingId: number) {
+  return [...pendingJoinRequestByUserAndMeeting.values()].filter(
+    (request) => request.meetingId === meetingId,
+  );
+}
+
+export function updateMockPendingJoinRequest(
+  joinRequestId: number,
+  status: MockPendingJoinRequest["status"],
+) {
+  const entry = [...pendingJoinRequestByUserAndMeeting.entries()].find(
+    ([, request]) => request.joinRequestId === joinRequestId,
+  );
+
+  if (!entry) {
+    return null;
+  }
+
+  const [key, request] = entry;
+  request.status = status;
+  if (status !== "PENDING") {
+    pendingJoinRequestByUserAndMeeting.delete(key);
+  }
+
+  return request;
+}
+
+export function getMockMeetingManageImages(meetingId: number) {
+  return meetingManageImagesByMeetingId.get(meetingId) ?? [];
 }
 
 export function removeMockMeetingMember(meetingId: number, userId: number) {
@@ -315,20 +434,6 @@ const meetingPosts: MockMeetingPost[] = [
     createdAt: "2026-05-11T19:30:00",
   },
   {
-    postId: 2,
-    meetingId: 1,
-    type: "RECRUIT",
-    title: "다음 활동에 함께할 팀원을 모집합니다",
-    content: "다음 주 활동에 함께해 주세요.",
-    authorId: 1,
-    authorNickname: "가더",
-    imageUrls: [mockPostImageOne],
-    likeCount: 7,
-    commentCount: 0,
-    likedUserIds: [],
-    createdAt: "2026-07-24T18:10:00",
-  },
-  {
     postId: 3,
     meetingId: 1,
     type: "FREE",
@@ -341,21 +446,6 @@ const meetingPosts: MockMeetingPost[] = [
     commentCount: 1,
     likedUserIds: [1],
     createdAt: "2026-07-25T18:10:00",
-  },
-  {
-    postId: 5,
-    meetingId: 1,
-    type: "RECRUIT",
-    title: "6월 도시락 배달 참여자 모집",
-    content:
-      "마포사회복지관에서 도시락 배달 봉사에 함께할 참여자를 모집합니다.",
-    authorId: 1,
-    authorNickname: "가더",
-    imageUrls: [],
-    likeCount: 3,
-    commentCount: 0,
-    likedUserIds: [],
-    createdAt: "2026-05-15T18:10:00",
   },
   {
     postId: 4,
@@ -411,13 +501,13 @@ export function upsertMockMeetingRecruitPost({
 const appliedRecruits: MockAppliedRecruit[] = [
   {
     userId: 1,
-    postId: 5,
-    meetingId: 1,
-    title: "6월 도시락 배달 참여자 모집",
-    place: "마포사회복지관",
-    activityStartAt: "2026-05-22T10:00:00",
-    activityEndAt: "2026-05-22T12:00:00",
-    status: "APPLIED",
+    postId: 104,
+    meetingId: 10,
+    title: "[QA] 활동 종료·출석 처리",
+    place: "서울 마포구 월드컵공원",
+    activityStartAt: formatMockDateTime("2026-08-06T09:00:00", -1),
+    activityEndAt: formatMockDateTime("2026-08-06T12:00:00", -1),
+    status: "CONFIRMED",
   },
 ];
 
@@ -922,6 +1012,7 @@ function toMeetingPostCommentResponse(
 function getMockMeetings() {
   return [
     ...(baseMockMeetings as MockMeeting[]),
+    ...qaMockMeetings,
     ...bookmarkPaginationMeetings,
     ...createdMeetings,
   ].filter((meeting) => !deletedMeetingIds.has(meeting.meetingId));
@@ -1567,16 +1658,27 @@ export const teamHandlers = [
         );
       }
 
-      const uploadedObjects = objectKeys.map((objectKey) =>
-        uploadedMockObjects.get(objectKey),
+      const existingImages = new Map(
+        getMockMeetingManageImages(meetingId).map((image) => [
+          image.objectKey,
+          image,
+        ]),
       );
+      const resolvedImages = objectKeys.map((objectKey) => {
+        const uploadedObject = uploadedMockObjects.get(objectKey);
 
-      if (
-        uploadedObjects.some(
-          (uploadedObject) =>
-            !uploadedObject || uploadedObject.meetingId !== meetingId,
-        )
-      ) {
+        if (uploadedObject?.meetingId === meetingId) {
+          return { objectKey, imageUrl: uploadedObject.publicUrl };
+        }
+
+        const existingImage = existingImages.get(objectKey);
+
+        return existingImage
+          ? { objectKey, imageUrl: existingImage.imageUrl }
+          : null;
+      });
+
+      if (resolvedImages.some((resolvedImage) => resolvedImage === null)) {
         return createMeetingErrorResponse(
           "MEETING_IMAGE_OBJECT_NOT_FOUND",
           "업로드된 이미지를 찾을 수 없습니다.",
@@ -1594,9 +1696,14 @@ export const teamHandlers = [
         }
       });
 
-      const imageUrls = uploadedObjects.map(
-        (uploadedObject) => uploadedObject!.publicUrl,
+      const nextManageImages = resolvedImages.map(
+        (resolvedImage, sortOrder) => ({
+          ...resolvedImage!,
+          sortOrder,
+        }),
       );
+      const imageUrls = nextManageImages.map((image) => image.imageUrl);
+      meetingManageImagesByMeetingId.set(meetingId, nextManageImages);
       meetingImageUrlsByMeetingId.set(meetingId, imageUrls);
 
       return HttpResponse.json({
@@ -1666,14 +1773,14 @@ export const teamHandlers = [
         member: viewerRole !== null,
         host: viewerRole === "HOST",
         pendingJoinRequested: userId
-          ? pendingJoinRequestIdByUserAndMeeting.has(
+          ? pendingJoinRequestByUserAndMeeting.has(
               getPendingJoinRequestKey(userId, meetingId),
             )
           : false,
         myPendingJoinRequestId: userId
-          ? (pendingJoinRequestIdByUserAndMeeting.get(
+          ? (pendingJoinRequestByUserAndMeeting.get(
               getPendingJoinRequestKey(userId, meetingId),
-            ) ?? null)
+            )?.joinRequestId ?? null)
           : null,
       },
       error: null,
@@ -2593,19 +2700,27 @@ export const teamHandlers = [
     }
 
     const requestKey = getPendingJoinRequestKey(userId, meetingId);
-    if (pendingJoinRequestIdByUserAndMeeting.has(requestKey)) {
+    if (pendingJoinRequestByUserAndMeeting.has(requestKey)) {
       return createMeetingErrorResponse(
         "MEETING_JOIN_REQUEST_ALREADY_PENDING",
         "이미 가입 신청을 보냈습니다.",
         409,
       );
     }
-    pendingJoinRequestIdByUserAndMeeting.set(requestKey, nextJoinRequestId++);
+    const joinRequest: MockPendingJoinRequest = {
+      joinRequestId: nextJoinRequestId++,
+      meetingId,
+      userId,
+      nickname: getMockUserById(userId)?.nickname ?? `사용자 ${userId}`,
+      status: "PENDING",
+      requestedAt: new Date().toISOString().slice(0, 19),
+    };
+    pendingJoinRequestByUserAndMeeting.set(requestKey, joinRequest);
 
     return HttpResponse.json({
       success: true,
       data: {
-        joinRequestId: pendingJoinRequestIdByUserAndMeeting.get(requestKey),
+        joinRequestId: joinRequest.joinRequestId,
         meetingId,
         status: "PENDING",
       },
@@ -2622,7 +2737,7 @@ export const teamHandlers = [
       userId,
       Number(params.meetingId),
     );
-    if (!pendingJoinRequestIdByUserAndMeeting.delete(requestKey)) {
+    if (!pendingJoinRequestByUserAndMeeting.delete(requestKey)) {
       return createMeetingErrorResponse(
         "MEETING_JOIN_REQUEST_NOT_FOUND",
         "취소할 가입 신청이 없습니다.",
@@ -2704,6 +2819,13 @@ export const teamHandlers = [
         "MEETING_HOST_REQUIRED",
         "팀장만 모임을 해산할 수 있습니다.",
         403,
+      );
+    }
+    if (hasUpcomingConfirmedMockRecruit(meetingId)) {
+      return createMeetingErrorResponse(
+        "MEETING_DISBAND_CONFIRMED_ACTIVITY_EXISTS",
+        "확정된 진행 예정 활동이 있어 모임을 해산할 수 없습니다.",
+        409,
       );
     }
     deletedMeetingIds.add(meetingId);
