@@ -2,7 +2,9 @@ import { SharedHomeContent } from "@/features/team/components/detail/shared/Shar
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 
 export function TeamDetailHomePage() {
-  const { home, detail } = useTeamDetailContext();
+  const { home, detail, imageUrls } = useTeamDetailContext();
 
-  return <SharedHomeContent home={home} detail={detail} />;
+  return (
+    <SharedHomeContent home={home} detail={detail} imageUrls={imageUrls} />
+  );
 }

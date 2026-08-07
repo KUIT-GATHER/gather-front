@@ -70,6 +70,34 @@ export type VolunteerPostingListItem = {
   noticeEndDate: string | null;
 };
 
+export type PostingListItemBase = {
+  id: number;
+  title: string;
+  organizationName: string | null;
+  thumbnailUrl: string | null;
+  regionId: number | null;
+  regionName: string | null;
+  place: string | null;
+  activityStartAt: string | null;
+  activityEndAt: string | null;
+  applyDeadlineAt: string | null;
+  maxParticipants: number | null;
+  appliedCount: number | null;
+  category: PostingCategory;
+  status: string;
+};
+
+export type PostingListItem =
+  | (PostingListItemBase & { sourceType: "POSTING"; meetingId: null })
+  | (PostingListItemBase & {
+      sourceType: "MEETING_RECRUIT";
+      meetingId: number;
+    });
+
+export type PostingListPage = Omit<VolunteerPostingPage, "content"> & {
+  content: PostingListItem[];
+};
+
 export type VolunteerPostingPage = {
   content: VolunteerPostingListItem[];
   totalElements: number;

@@ -2,12 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
-
-export type ReviewableActivity = {
-  recruitPostId: number;
-  title: string;
-  activityDate: string;
-};
+import type { ReviewableActivity } from "@/features/team/types/meetingPost.types";
 
 interface ActivitySelectDropdownProps {
   activities: ReviewableActivity[];
@@ -15,7 +10,9 @@ interface ActivitySelectDropdownProps {
   error?: string;
   onSelect: (activity: ReviewableActivity) => void;
 }
-
+function formatActivityDate(activityStartAt: string) {
+  return activityStartAt.slice(0, 10);
+}
 export function ActivitySelectDropdown({
   activities,
   selectedActivity,
@@ -46,7 +43,9 @@ export function ActivitySelectDropdown({
           )}
         >
           {selectedActivity
-            ? `${selectedActivity.title} (${selectedActivity.activityDate})`
+            ? `${selectedActivity.title} (${formatActivityDate(
+                selectedActivity.activityStartAt,
+              )})`
             : "참여한 봉사 목록 확인"}
         </span>
 
@@ -77,10 +76,14 @@ export function ActivitySelectDropdown({
             <ul className="max-h-60 overflow-y-auto py-1">
               {activities.map((activity) => {
                 const isSelected =
-                  selectedActivity?.recruitPostId === activity.recruitPostId;
+                  selectedActivity?.reviewSourceType ===
+                    activity.reviewSourceType &&
+                  selectedActivity?.reviewSourceId === activity.reviewSourceId;
 
                 return (
-                  <li key={activity.recruitPostId}>
+                  <li
+                    key={`${activity.reviewSourceType}:${activity.reviewSourceId}`}
+                  >
                     <button
                       type="button"
                       role="option"
@@ -96,7 +99,8 @@ export function ActivitySelectDropdown({
                         setIsOpen(false);
                       }}
                     >
-                      {activity.title} ({activity.activityDate})
+                      {activity.title} (
+                      {formatActivityDate(activity.activityStartAt)})
                     </button>
                   </li>
                 );

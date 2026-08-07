@@ -2,10 +2,8 @@ import { useState, type SubmitEvent } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
-import {
-  ActivitySelectDropdown,
-  type ReviewableActivity,
-} from "@/features/team/components/board/create/ActivitySelectDropdown";
+import { ActivitySelectDropdown } from "@/features/team/components/board/create/ActivitySelectDropdown";
+import type { ReviewableActivity } from "@/features/team/types/meetingPost.types";
 import { PostCreateForm } from "@/features/team/components/board/create/PostCreateForm";
 import type { PostImage } from "@/features/team/components/board/create/PostImageUploader";
 import { useMeetingHomeQuery } from "@/features/team/hooks/useMeetingHomeQuery";
@@ -14,7 +12,7 @@ import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
 import { useCreateMeetingPostMutation } from "@/features/team/hooks/useMeetingPostMutations";
-import { uploadPostImages } from "@/features/team/lib/postImageUpload";
+import { uploadMeetingPostImages } from "@/features/team/lib/postImageUpload";
 
 type FormErrors = Partial<Record<"activity" | "title" | "content", string>>;
 
@@ -24,14 +22,18 @@ type FormErrors = Partial<Record<"activity" | "title" | "content", string>>;
  */
 const DEV_COMPLETED_ACTIVITIES: ReviewableActivity[] = [
   {
-    recruitPostId: 1,
+    reviewSourceType: "MEETING_RECRUIT",
+    reviewSourceId: 1,
     title: "어린이 독서 지도 활동",
-    activityDate: "2026-05-22",
+    activityStartAt: "2026-05-22T10:00:00",
+    activityEndAt: "2026-05-22T12:00:00",
   },
   {
-    recruitPostId: 2,
+    reviewSourceType: "MEETING_RECRUIT",
+    reviewSourceId: 2,
     title: "지역 어르신 도시락 전달",
-    activityDate: "2026-05-01",
+    activityStartAt: "2026-05-01T10:00:00",
+    activityEndAt: "2026-05-01T12:00:00",
   },
 ];
 
@@ -142,7 +144,7 @@ export function TeamReviewPostCreatePage() {
     setIsUploadingImages(true);
 
     try {
-      const imageObjectKeys = await uploadPostImages(
+      const imageObjectKeys = await uploadMeetingPostImages(
         meetingId,
         images.map((image) => image.file),
       );
@@ -152,6 +154,8 @@ export function TeamReviewPostCreatePage() {
         title: title.trim(),
         content: content.trim(),
         imageObjectKeys,
+        reviewSourceType: selectedActivity.reviewSourceType,
+        reviewSourceId: selectedActivity.reviewSourceId,
       });
 
       console.log("선택한 활동:", selectedActivity);

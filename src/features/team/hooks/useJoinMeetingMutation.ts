@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { joinMeeting } from "@/features/team/api/team.api";
+import { requestMeetingJoin } from "@/features/team/api/meetingManagement.api";
 import { teamKeys } from "@/features/team/api/team.queries";
 
 type UseJoinMeetingMutationOptions = {
@@ -24,7 +24,7 @@ export function useJoinMeetingMutation(
     void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
   }, [meetingId, queryClient]);
   const mutation = useMutation({
-    mutationFn: () => joinMeeting(meetingId),
+    mutationFn: () => requestMeetingJoin(meetingId),
     onSuccess: () => {
       if (options.invalidateOnSuccess !== false) {
         invalidateMeetingQueries();

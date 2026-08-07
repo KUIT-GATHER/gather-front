@@ -4,11 +4,13 @@ import regions from "./data/regions.json";
 import { getMockParticipations } from "./data/mockParticipations";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 import { mockPostings } from "./postingHandlers";
+import { getCreatedMockMeetings } from "./teamHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
 import type {
   MyActivityRecord,
+  MyMeetingActivityStatus,
   MyPageActivity,
 } from "@/features/my/types/myActivity.types";
 
@@ -296,34 +298,88 @@ export const myProfileHandlers = [
     const [year, month] = yearMonth.split("-").map(Number);
     const monthStart = `${yearMonth}-01`;
     const monthEnd = `${yearMonth}-${new Date(year, month, 0).getDate()}`;
-    const participationActivities: MyPageActivity[] = getMockParticipations(
+    const participations = getMockParticipations(userId);
+    const calendarActivities = mockCalendarActivities
+      .filter((activity) => activity.activityType === "MEETING")
+      .map((activity) => {
+        if (
+          activity.activityType !== "MEETING" ||
+          activity.volunteerPostingId === null
+        ) {
+          return activity;
+        }
+
+        const participation = participations.find(
+          (item) => item.postingId === activity.volunteerPostingId,
+        );
+
+        return {
+          ...activity,
+          postingParticipationStatus: participation?.status ?? null,
+        };
+      });
+    const createdMeetingActivities: MyPageActivity[] = getCreatedMockMeetings(
       userId,
-    ).flatMap((participation) => {
-      const posting = mockPostings.find(
-        (item) => item.id === participation.postingId,
+    ).flatMap((meeting) => {
+      if (
+        meeting.volunteerPostingId === null ||
+        meeting.activityStartAt === null
+      ) {
+        return [];
+      }
+
+      const participation = participations.find(
+        (item) => item.postingId === meeting.volunteerPostingId,
       );
-
-      if (!posting) return [];
-
       return [
         {
-          activityType: "VOLUNTEER",
-          participationId: participation.participationId,
-          postingId: posting.id,
-          meetingId: null,
-          title: posting.title,
-          actStartDate: posting.actStartDate,
-          actEndDate: posting.actEndDate ?? null,
-          actStartTime: formatMockTime(posting.actStartTime),
-          actEndTime: formatMockTime(posting.actEndTime),
-          actPlace: posting.actPlace ?? null,
-          regionName: null,
-          status: participation.status,
+          activityType: "MEETING",
+          participationId: null,
+          postingId: null,
+          meetingId: meeting.meetingId,
+          title: meeting.name,
+          actStartDate: meeting.activityStartAt.slice(0, 10),
+          actEndDate: meeting.activityEndAt?.slice(0, 10) ?? null,
+          actStartTime: meeting.activityStartAt.slice(11, 16),
+          actEndTime: meeting.activityEndAt?.slice(11, 16) ?? null,
+          actPlace: null,
+          regionName: meeting.regionName || null,
+          volunteerPostingId: meeting.volunteerPostingId,
+          status: null,
+          meetingStatus: meeting.status as MyMeetingActivityStatus,
+          postingParticipationStatus: participation?.status ?? null,
         },
       ];
     });
+    const participationActivities: MyPageActivity[] = participations.flatMap(
+      (participation) => {
+        const posting = mockPostings.find(
+          (item) => item.id === participation.postingId,
+        );
+
+        if (!posting) return [];
+
+        return [
+          {
+            activityType: "VOLUNTEER",
+            participationId: participation.participationId,
+            postingId: posting.id,
+            meetingId: null,
+            title: posting.title,
+            actStartDate: posting.actStartDate,
+            actEndDate: posting.actEndDate ?? null,
+            actStartTime: formatMockTime(posting.actStartTime),
+            actEndTime: formatMockTime(posting.actEndTime),
+            actPlace: posting.actPlace ?? null,
+            regionName: null,
+            status: participation.status,
+          },
+        ];
+      },
+    );
     const activities = [
-      ...mockCalendarActivities,
+      ...calendarActivities,
+      ...createdMeetingActivities,
       ...participationActivities,
     ].filter((activity) => {
       const effectiveEndDate = activity.actEndDate ?? activity.actStartDate;

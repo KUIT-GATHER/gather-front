@@ -48,24 +48,36 @@ function getAppliedRecruitStatusLabel(status: MyAppliedRecruit["status"]) {
   switch (status) {
     case "APPLIED":
       return "신청 완료";
+    case "CONFIRMED":
+      return "참가 확정";
+    case "REJECTED":
+      return "신청 반려";
+    case "CANCELLED":
+      return "신청 취소";
+    case "COMPLETED":
+      return "활동 완료";
+    case "REVIEWED":
+      return "후기 작성 완료";
   }
 }
 
 function AppliedRecruitCard({ recruit }: { recruit: MyAppliedRecruit }) {
   const navigate = useNavigate();
+  const activityDate = recruit.activityStartAt.slice(0, 10);
   const timeRange = formatActivityTimeRange(
-    recruit.actStartTime,
-    recruit.actEndTime,
+    recruit.activityStartAt.slice(11, 16),
+    recruit.activityEndAt.slice(11, 16),
   );
-  const dateLabel = timeRange
-    ? `${formatActivityDate(recruit.actDate)} ${timeRange}`
-    : formatActivityDate(recruit.actDate);
+  const dateLabel =
+    `${formatActivityDate(activityDate)} ${timeRange ?? ""}`.trim();
 
   return (
     <button
       type="button"
       onClick={() =>
-        navigate(`/teams/${recruit.meetingId}/posts/${recruit.postId}`)
+        navigate(
+          `/volunteers/meeting-recruits/${recruit.meetingId}/${recruit.postId}`,
+        )
       }
       className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-left transition hover:border-point-green hover:bg-[#f0f6f0] active:border-point-green active:bg-[#f0f6f0] focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
     >

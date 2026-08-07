@@ -1,25 +1,16 @@
-import { requestPostImagePresignedUrl } from "@/features/team/api/postImage.api";
+import { requestPostImagePresignedUrl } from "@/features/team/api/meetingPost.api";
 
-async function uploadPostImage(meetingId: number, file: File) {
+async function uploadMeetingPostImage(meetingId: number, file: File) {
   let retriesRemaining = 1;
 
   while (true) {
-    console.log("업로드할 이미지 정보:", {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    });
-
-    const { uploadUrl, objectKey, expiresInSeconds } =
-      await requestPostImagePresignedUrl(meetingId, {
+    const { uploadUrl, objectKey } = await requestPostImagePresignedUrl(
+      meetingId,
+      {
         contentType: file.type,
         fileSize: file.size,
-      });
-
-    console.log("Presigned URL 발급 결과:", {
-      objectKey,
-      expiresInSeconds,
-    });
+      },
+    );
 
     let response: Response;
 
@@ -33,60 +24,33 @@ async function uploadPostImage(meetingId: number, file: File) {
         body: file,
         credentials: "omit",
       });
-    } catch (error) {
-      console.error("S3 연결 실패:", error);
+    } catch {
       throw new Error("이미지 저장 서버와 연결하지 못했습니다.");
     }
 
     if (response.ok) {
-      console.log("이미지 업로드 성공:", {
-        objectKey,
-        status: response.status,
-      });
-
       return objectKey;
     }
 
-    const errorResponse = await response.text().catch(() => "");
-
-    console.error("S3 이미지 업로드 실패:", {
-      status: response.status,
-      statusText: response.statusText,
-      objectKey,
-      response: errorResponse,
-    });
-
     if (response.status === 412 && retriesRemaining > 0) {
       retriesRemaining -= 1;
-
-      console.warn("이미지 키 충돌로 Presigned URL을 다시 발급합니다.", {
-        retriesRemaining,
-      });
-
       continue;
     }
 
-    throw new Error(
-      errorResponse
-        ? `이미지 업로드 실패: ${response.status}\n${errorResponse}`
-        : `이미지 업로드 실패: ${response.status}`,
-    );
+    throw new Error("게시글 사진 업로드에 실패했습니다.");
   }
 }
 
-export async function uploadPostImages(
+export async function uploadMeetingPostImages(
   meetingId: number,
-  files: File[],
+  files: readonly File[],
 ): Promise<string[]> {
   const objectKeys: string[] = [];
 
-  // 선택한 이미지 순서를 유지하기 위해 순차 업로드
   for (const file of files) {
-    const objectKey = await uploadPostImage(meetingId, file);
+    const objectKey = await uploadMeetingPostImage(meetingId, file);
     objectKeys.push(objectKey);
   }
-
-  console.log("전체 이미지 업로드 완료:", objectKeys);
 
   return objectKeys;
 }

@@ -7,13 +7,15 @@ import {
 import { myPageKeys } from "@/features/my/api/myPage.queries";
 import {
   createMeetingPostComment,
-  createMeetingPost,
   deleteMeetingPostComment,
   deleteMeetingPost,
   toggleMeetingPostLike,
   updateMeetingPostComment,
-  updateMeetingPost,
 } from "@/features/team/api/team.api";
+import {
+  createMeetingPost,
+  updateMeetingPost,
+} from "@/features/team/api/meetingPost.api";
 import { teamKeys } from "@/features/team/api/team.queries";
 
 import type {
@@ -80,13 +82,21 @@ export function useCreateMeetingPostMutation(meetingId: number) {
     mutationKey: teamKeys.createPost(meetingId),
     mutationFn: (payload: MeetingPostCreateRequest) =>
       createMeetingPost(meetingId, payload),
-    onSuccess: () => {
+    onSuccess: (_post, payload) => {
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
       });
       void queryClient.invalidateQueries({
         queryKey: myPageKeys.badges(),
       });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivity(meetingId),
+      });
+      if (payload.type === "REVIEW") {
+        void queryClient.invalidateQueries({
+          queryKey: teamKeys.reviewableActivities(meetingId),
+        });
+      }
       void queryClient.invalidateQueries({
         queryKey: teamKeys.myActivityCommentedPosts(meetingId),
       });
@@ -111,6 +121,9 @@ export function useUpdateMeetingPostMutation(
       });
       void queryClient.invalidateQueries({
         queryKey: teamKeys.myActivityCommentedPosts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivity(meetingId),
       });
     },
   });

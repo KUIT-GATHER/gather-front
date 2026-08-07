@@ -6,8 +6,8 @@ import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext
 import LoadingState from "@/shared/ui/LoadingState";
 
 export function TeamDetailPostListPage() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { authInitialized, home, isAuthenticated, isJoined } =
     useTeamDetailContext();
 
@@ -41,9 +41,7 @@ export function TeamDetailPostListPage() {
       meetingId={home.meetingId}
       meetingName={home.name}
       canWrite
-      onWriteClick={() => {
-        navigate(`/teams/${home.meetingId}/posts/new`);
-      }}
+      onWriteClick={() => navigate(`/teams/${home.meetingId}/posts/new`)}
     />
   );
 }

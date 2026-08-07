@@ -9,7 +9,7 @@ import { useCreateMeetingPostMutation } from "@/features/team/hooks/useMeetingPo
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
-import { uploadPostImages } from "@/features/team/lib/postImageUpload";
+import { uploadMeetingPostImages } from "@/features/team/lib/postImageUpload";
 
 type FormErrors = Partial<Record<"title" | "content", string>>;
 
@@ -102,7 +102,7 @@ export function TeamNoticePostCreatePage() {
     setIsUploadingImages(true);
 
     try {
-      const imageObjectKeys = await uploadPostImages(
+      const imageObjectKeys = await uploadMeetingPostImages(
         meetingId,
         images.map((image) => image.file),
       );

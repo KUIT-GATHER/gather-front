@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 
 import type {
+  Notification,
   NotificationCategory,
   NotificationSettings,
 } from "@/features/notification/types/notification.types";
@@ -9,16 +10,8 @@ import {
   getMockUserId,
 } from "@/mocks/lib/mockAuth";
 
-type MockNotification = {
-  id: number;
+type MockNotification = Notification & {
   userId: number;
-  category: NotificationCategory;
-  type: string;
-  message: string;
-  targetType: "POSTING" | "MEETING" | "POST" | "MY_PAGE";
-  targetId: number | null;
-  read: boolean;
-  createdAt: string;
   deleted: boolean;
 };
 
@@ -42,6 +35,8 @@ const initialNotifications: MockNotification[] = [
       "[동화책 같이 읽어요 📖] 봉사가 내일 진행돼요. 시간과 장소를 확인해 주세요.",
     targetType: "POSTING",
     targetId: 1,
+    targetMeetingId: null,
+    thumbnailUrl: null,
     read: false,
     createdAt: "2026-07-30T11:00:00",
     deleted: false,
@@ -52,9 +47,11 @@ const initialNotifications: MockNotification[] = [
     category: "ACTIVITY",
     type: "VOLUNTEER_SCHEDULE",
     message:
-      "[한강공원 플로깅 🌿] 봉사가 일주일 뒤에 진행돼요. 미리 일정을 확인해 주세요.",
+      "[한강공원 플로깅 🌿] 봉사 일정이 일주일 남았어요. 시간과 장소를 확인해 주세요.",
     targetType: "POSTING",
     targetId: 2,
+    targetMeetingId: null,
+    thumbnailUrl: null,
     read: false,
     createdAt: "2026-07-29T11:30:00",
     deleted: false,
@@ -68,6 +65,8 @@ const initialNotifications: MockNotification[] = [
       "[한강공원 플로깅 🌿] 모집 마감이 얼마 남지 않았어요. 신청을 고민 중이라면 지금 확인해 보세요.",
     targetType: "POSTING",
     targetId: 2,
+    targetMeetingId: null,
+    thumbnailUrl: null,
     read: true,
     createdAt: "2026-07-28T09:30:00",
     deleted: false,
@@ -80,20 +79,10 @@ const initialNotifications: MockNotification[] = [
     message: "새로운 뱃지를 획득했어요. 마이페이지에서 확인해 보세요.",
     targetType: "MY_PAGE",
     targetId: null,
+    targetMeetingId: null,
+    thumbnailUrl: null,
     read: false,
     createdAt: "2026-07-27T10:00:00",
-    deleted: false,
-  },
-  {
-    id: 5,
-    userId: 1,
-    category: "ACTIVITY",
-    type: "ACTIVITY_POST_COMMENT",
-    message: "작성한 봉사 후기 글에 새 댓글이 등록되었어요.",
-    targetType: "POST",
-    targetId: 11,
-    read: true,
-    createdAt: "2026-07-26T08:30:00",
     deleted: false,
   },
   {
@@ -105,6 +94,9 @@ const initialNotifications: MockNotification[] = [
       "[그린서움 🌿] 모임 가입이 승인되었어요. 지금부터 활동에 참여할 수 있어요.",
     targetType: "MEETING",
     targetId: 1,
+    targetMeetingId: null,
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80",
     read: false,
     createdAt: "2026-07-30T10:30:00",
     deleted: false,
@@ -117,6 +109,8 @@ const initialNotifications: MockNotification[] = [
     message: "[주말 책나눔] 모임 가입이 거절되었어요. 다른 모임을 찾아보세요.",
     targetType: "MEETING",
     targetId: 2,
+    targetMeetingId: null,
+    thumbnailUrl: null,
     read: true,
     createdAt: "2026-07-29T09:20:00",
     deleted: false,
@@ -126,9 +120,12 @@ const initialNotifications: MockNotification[] = [
     userId: 1,
     category: "MEETING",
     type: "MEETING_POST_COMMENT",
-    message: "동네한바퀴 봉사단 게시글에 김민지님이 새 댓글을 남겼어요.",
+    message: "[동네한바퀴 봉사단] 작성한 글에 새 댓글이 달렸어요.",
     targetType: "POST",
-    targetId: 12,
+    targetId: 3,
+    targetMeetingId: 1,
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=200&q=80",
     read: false,
     createdAt: "2026-07-28T08:30:00",
     deleted: false,
@@ -140,7 +137,9 @@ const initialNotifications: MockNotification[] = [
     type: "MEETING_NOTICE_CREATED",
     message: "[벽화 그리기팀]에 새 공지가 등록되었어요.",
     targetType: "POST",
-    targetId: 13,
+    targetId: 1,
+    targetMeetingId: 1,
+    thumbnailUrl: null,
     read: true,
     createdAt: "2026-07-27T09:30:00",
     deleted: false,
@@ -151,8 +150,11 @@ const initialNotifications: MockNotification[] = [
     category: "MEETING",
     type: "MEETING_POSTING_CREATED",
     message: "[그린서움 🌿]에 새 봉사공고가 등록되었어요.",
-    targetType: "POSTING",
-    targetId: 1,
+    targetType: "POST",
+    targetId: 5,
+    targetMeetingId: 1,
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1531481540919-6a67ca4ec1a3?auto=format&fit=crop&w=200&q=80",
     read: false,
     createdAt: "2026-07-26T13:00:00",
     deleted: false,
@@ -162,11 +164,30 @@ const initialNotifications: MockNotification[] = [
     userId: 1,
     category: "MEETING",
     type: "MEETING_POST_CREATED",
-    message: "[그린서움 🌿]에 이가더님이 새 게시글을 등록했어요.",
+    message: "[그린서움 🌿]에 [이가더]님이 새 게시글을 등록했어요.",
     targetType: "POST",
-    targetId: 14,
+    targetId: 3,
+    targetMeetingId: 1,
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=200&q=80",
     read: true,
     createdAt: "2026-07-25T18:10:00",
+    deleted: false,
+  },
+  {
+    id: 12,
+    userId: 1,
+    category: "MEETING",
+    type: "MEETING_BOOKMARKED_DEADLINE",
+    message:
+      "[주말 책나눔] 팀 모집 마감이 얼마 남지 않았어요. 참여를 고민 중이라면 지금 확인해 보세요.",
+    targetType: "MEETING",
+    targetId: 2,
+    targetMeetingId: null,
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=200&q=80",
+    read: false,
+    createdAt: "2026-07-24T15:00:00",
     deleted: false,
   },
 ];
@@ -174,13 +195,15 @@ const initialNotifications: MockNotification[] = [
 const generatedActivityNotifications = Array.from(
   { length: 16 },
   (_, index) => ({
-    id: index + 12,
+    id: index + 13,
     userId: 1,
     category: "ACTIVITY" as const,
     type: "VOLUNTEER_SCHEDULE",
-    message: `[환경 정화 봉사 ${index + 1}] 다가오는 봉사 일정을 확인해 주세요.`,
+    message: `[환경 정화 봉사 ${index + 1}] 봉사 일정이 일주일 남았어요. 시간과 장소를 확인해 주세요.`,
     targetType: "POSTING" as const,
     targetId: (index % 2) + 1,
+    targetMeetingId: null,
+    thumbnailUrl: null,
     read: index % 3 === 0,
     createdAt: `2026-07-${String(24 - index).padStart(2, "0")}T09:00:00`,
     deleted: false,
@@ -235,7 +258,7 @@ function getPositiveInteger(value: string | null, fallback: number) {
     : undefined;
 }
 
-function toNotificationResponse(notification: MockNotification) {
+function toNotificationResponse(notification: MockNotification): Notification {
   return {
     id: notification.id,
     category: notification.category,
@@ -243,6 +266,8 @@ function toNotificationResponse(notification: MockNotification) {
     message: notification.message,
     targetType: notification.targetType,
     targetId: notification.targetId,
+    targetMeetingId: notification.targetMeetingId,
+    thumbnailUrl: notification.thumbnailUrl,
     read: notification.read,
     createdAt: notification.createdAt,
   };

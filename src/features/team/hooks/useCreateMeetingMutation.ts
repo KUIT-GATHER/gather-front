@@ -16,6 +16,9 @@ export function useCreateMeetingMutation() {
       void queryClient.invalidateQueries({
         queryKey: myPageKeys.badges(),
       });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.activitiesAll(),
+      });
     },
   });
 }
