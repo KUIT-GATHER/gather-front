@@ -17,6 +17,7 @@ import {
   updateMeetingPost,
 } from "@/features/team/api/meetingPost.api";
 import { teamKeys } from "@/features/team/api/team.queries";
+import { volunteerPostingKeys } from "@/features/volunteer/api/volunteer.queries";
 
 import type {
   MeetingPost,
@@ -144,6 +145,15 @@ export function useDeleteMeetingPostMutation(
       });
       void queryClient.invalidateQueries({
         queryKey: teamKeys.posts(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.managedRecruits(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.myActivity(meetingId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: volunteerPostingKeys.lists(),
       });
     },
   });

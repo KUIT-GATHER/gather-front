@@ -156,18 +156,19 @@ export function TeamCreateScreen() {
     (isPostingBased && postingQuery.data?.regionId
       ? String(postingQuery.data.regionId)
       : "");
-  const resolvedCategories =
-    categories.length > 0
-      ? categories
-      : isPostingBased && postingQuery.data?.category
-        ? [postingQuery.data.category]
-        : [];
-  const orderedCategories = [
-    ...resolvedCategories,
-    ...MEETING_CATEGORY_ORDER.filter(
-      (category) => !resolvedCategories.includes(category),
-    ),
-  ];
+  const resolvedCategories = isPostingBased
+    ? postingQuery.data?.category
+      ? [postingQuery.data.category]
+      : []
+    : categories;
+  const orderedCategories = isPostingBased
+    ? resolvedCategories
+    : [
+        ...resolvedCategories,
+        ...MEETING_CATEGORY_ORDER.filter(
+          (category) => !resolvedCategories.includes(category),
+        ),
+      ];
   const resolvedDeadline = deadline || (postingDefaultDeadline ?? "");
   const regions = useMemo(() => regionsQuery.data ?? [], [regionsQuery.data]);
   const regionById = useMemo(
@@ -694,7 +695,7 @@ export function TeamCreateScreen() {
                 type="button"
                 aria-pressed={resolvedCategories.includes(value)}
                 aria-label={`${POSTING_CATEGORY_LABEL[value]} 카테고리`}
-                disabled={isFormLocked}
+                disabled={isPostingBased || isFormLocked}
                 className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                 onClick={() => {
                   setCategories((current) =>
