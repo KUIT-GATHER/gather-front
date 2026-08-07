@@ -40,6 +40,19 @@ const defaultMockUsers: MockUser[] = [
     activityRegionId: 201,
     interestCategories: ["ENVIRONMENT", "COMMUNITY"],
   },
+  {
+    id: 50,
+    name: "외부지원자",
+    birthDate: "2002-05-20",
+    gender: "FEMALE",
+    phoneNumber: "01050505050",
+    email: "outsider@example.com",
+    password: "test1234",
+    nickname: "외부지원자",
+    introduction: "외부 공개 봉사공고 신청 흐름을 확인하는 QA 계정입니다.",
+    activityRegionId: 202,
+    interestCategories: ["WELFARE", "ENVIRONMENT"],
+  },
 ];
 
 function isMockUser(value: unknown): value is MockUser {

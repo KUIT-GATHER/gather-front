@@ -13,6 +13,7 @@ import {
   updateMockParticipation,
 } from "./data/mockParticipations";
 import { getMockUserById } from "./data/mockUsers";
+import { getExternalMockMeetingRecruitListItems } from "./data/mockMeetingRecruits";
 import regions from "./data/regions.json";
 import teams from "./data/teams.json";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
@@ -636,51 +637,34 @@ export const postingHandlers = [
       items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
     }
 
-    const meetingRecruitItem: PostingListItem = {
-      sourceType: "MEETING_RECRUIT" as const,
-      id: 2,
-      meetingId: 1,
-      title: "한강공원 플로깅",
-      organizationName: "따뜻한 마음",
-      thumbnailUrl: "/src/assets/icons/Temp-volunteer-posting.svg",
-      regionId: 41,
-      regionName: "영등포구",
-      place: "여의도 한강공원",
-      activityStartAt: `${formatMockDate(7)}T09:00:00`,
-      activityEndAt: `${formatMockDate(7)}T12:00:00`,
-      applyDeadlineAt: `${formatMockDate(3)}T23:59:59`,
-      maxParticipants: 30,
-      appliedCount: 4,
-      category: "ENVIRONMENT" as const,
-      status: "RECRUITING",
-    };
-    const meetingRecruitMatches =
-      (!keyword ||
-        [meetingRecruitItem.title, meetingRecruitItem.organizationName].some(
-          (value) => value?.includes(keyword),
-        )) &&
-      (!category || meetingRecruitItem.category === category) &&
-      (regionId === undefined ||
-        getRegionIdsIncludingChildren([regionId]).has(
-          meetingRecruitItem.regionId!,
-        )) &&
-      (regionGroupId === undefined ||
-        getRegionIdsByGroup(regionGroupId).has(meetingRecruitItem.regionId!)) &&
-      (status
-        ? meetingRecruitItem.status === status
-        : meetingRecruitItem.status === "RECRUITING" ||
-          meetingRecruitItem.status === "CLOSED") &&
-      (!noticeStartDate ||
-        (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") >=
-          noticeStartDate) &&
-      (!noticeEndDate ||
-        (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") <=
-          noticeEndDate);
+    const meetingRecruitItems = getExternalMockMeetingRecruitListItems().filter(
+      (meetingRecruitItem) =>
+        (!keyword ||
+          [meetingRecruitItem.title, meetingRecruitItem.organizationName].some(
+            (value) => value?.includes(keyword),
+          )) &&
+        (!category || meetingRecruitItem.category === category) &&
+        (regionId === undefined ||
+          getRegionIdsIncludingChildren([regionId]).has(
+            meetingRecruitItem.regionId!,
+          )) &&
+        (regionGroupId === undefined ||
+          getRegionIdsByGroup(regionGroupId).has(
+            meetingRecruitItem.regionId!,
+          )) &&
+        (status
+          ? meetingRecruitItem.status === status
+          : meetingRecruitItem.status === "RECRUITING" ||
+            meetingRecruitItem.status === "CLOSED") &&
+        (!noticeStartDate ||
+          (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") >=
+            noticeStartDate) &&
+        (!noticeEndDate ||
+          (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") <=
+            noticeEndDate),
+    );
     const unifiedItems = sortUnifiedPostings(
-      [
-        ...items.map(toUnifiedPostingListItem),
-        ...(meetingRecruitMatches ? [meetingRecruitItem] : []),
-      ],
+      [...items.map(toUnifiedPostingListItem), ...meetingRecruitItems],
       sorts,
       status === null,
     );
