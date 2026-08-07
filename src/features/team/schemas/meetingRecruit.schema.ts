@@ -14,6 +14,7 @@ export const meetingRecruitSchema = z
   .object({
     title: z.string().trim().min(1, "활동 제목을 입력해 주세요.").max(15),
     content: z.string().trim().min(1, "활동 소개를 입력해 주세요.").max(1000),
+    participationCondition: z.string().max(255),
     regionId: z.number().int().positive("지역을 선택해 주세요."),
     place: z.string().trim().min(1, "상세 장소를 입력해 주세요."),
     activityStartAt: localDateTimeField,

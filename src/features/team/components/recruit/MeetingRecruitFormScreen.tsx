@@ -70,6 +70,7 @@ export function MeetingRecruitFormScreen({
     defaultValues: {
       title: recruit?.title ?? "",
       content: recruit?.content ?? "",
+      participationCondition: recruit?.participationCondition ?? "",
       regionId: recruit?.regionId ?? 0,
       place: recruit?.place ?? "",
       activityStartAt: recruit?.activityStartAt.slice(0, 16) ?? "",
@@ -95,6 +96,7 @@ export function MeetingRecruitFormScreen({
       ...formValues,
       title: formValues.title.trim(),
       content: formValues.content.trim(),
+      participationCondition: formValues.participationCondition.trim() || null,
       place: formValues.place.trim(),
       activityStartAt: toApiDateTime(formValues.activityStartAt),
       activityEndAt: toApiDateTime(formValues.activityEndAt),
@@ -204,18 +206,10 @@ export function MeetingRecruitFormScreen({
           />
         </FormField>
         <div className="grid gap-4">
-          {(
-            ["activityStartAt", "activityEndAt", "applyDeadlineAt"] as const
-          ).map((name) => (
+          {(["activityStartAt", "activityEndAt"] as const).map((name) => (
             <FormField
               key={name}
-              label={
-                name === "activityStartAt"
-                  ? "시작일시"
-                  : name === "activityEndAt"
-                    ? "종료일시"
-                    : "신청 마감일"
-              }
+              label={name === "activityStartAt" ? "시작일시" : "종료일시"}
               required
               htmlFor={name}
               error={errors[name]?.message}
@@ -325,6 +319,35 @@ export function MeetingRecruitFormScreen({
             />
           </FormField>
         ) : null}
+        <FormField
+          label="신청 마감일"
+          required
+          htmlFor="applyDeadlineAt"
+          error={errors.applyDeadlineAt?.message}
+        >
+          <div className="relative">
+            <Input
+              id="applyDeadlineAt"
+              type="datetime-local"
+              invalid={Boolean(errors.applyDeadlineAt)}
+              {...register("applyDeadlineAt")}
+            />
+            <CalendarDays className="pointer-events-none absolute right-4 top-3 size-5 text-icon" />
+          </div>
+        </FormField>
+        <FormField
+          label="참여 조건"
+          htmlFor="participation-condition"
+          error={errors.participationCondition?.message}
+        >
+          <Input
+            id="participation-condition"
+            maxLength={255}
+            placeholder="예: 만 14세 이상, 편한 복장 필수"
+            invalid={Boolean(errors.participationCondition)}
+            {...register("participationCondition")}
+          />
+        </FormField>
         {submitError ? (
           <p role="alert" className="text-sm text-point-red">
             {submitError}

@@ -80,6 +80,7 @@ export function MeetingRecruitDetailScreen({
   }
   const recruit = recruitQuery.data;
   if (!recruit) return null;
+  const participationCondition = recruit.participationCondition?.trim();
   const actionLabel =
     recruit.participationAction === "APPLY"
       ? "신청하기"
@@ -180,6 +181,14 @@ export function MeetingRecruitDetailScreen({
             </div>
           </dl>
         </section>
+        {participationCondition ? (
+          <section className="mt-6 rounded-xl border border-stroke bg-white p-4">
+            <h2 className="text-lg font-semibold">참여 조건</h2>
+            <p className="mt-2 whitespace-pre-line text-sm leading-6">
+              · {participationCondition}
+            </p>
+          </section>
+        ) : null}
         <section className="mt-6">
           <h2 className="text-lg font-semibold">함께하는 팀</h2>
           <button

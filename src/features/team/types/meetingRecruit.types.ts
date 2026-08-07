@@ -15,6 +15,7 @@ export type RecruitAttendanceStatus = "UNSET" | "PRESENT" | "ABSENT";
 export type MeetingRecruitRequest = {
   title: string;
   content: string;
+  participationCondition: string | null;
   regionId: number;
   place: string;
   activityStartAt: string;
