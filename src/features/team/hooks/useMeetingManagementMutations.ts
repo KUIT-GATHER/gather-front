@@ -10,6 +10,7 @@ import {
 } from "@/features/team/api/meetingManagement.api";
 import { teamKeys } from "@/features/team/api/team.queries";
 import type { MeetingUpdateRequest } from "@/features/team/types/team.types";
+import { volunteerPostingKeys } from "@/features/volunteer/api/volunteer.queries";
 import {
   saveMeetingImages,
   type EditableMeetingImage,
@@ -30,6 +31,9 @@ export function useUpdateMeetingMutation(meetingId: number) {
       });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: teamKeys.my() });
+      void queryClient.invalidateQueries({
+        queryKey: volunteerPostingKeys.lists(),
+      });
     },
   });
 }
@@ -51,6 +55,9 @@ export function useSaveMeetingImagesMutation(meetingId: number) {
         queryKey: teamKeys.detail(meetingId),
       });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
+      void queryClient.invalidateQueries({
+        queryKey: volunteerPostingKeys.lists(),
+      });
     },
   });
 }
@@ -82,6 +89,9 @@ export function useDisbandMeetingMutation(meetingId: number) {
       queryClient.removeQueries({ queryKey: teamKeys.detail(meetingId) });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: teamKeys.my() });
+      void queryClient.invalidateQueries({
+        queryKey: volunteerPostingKeys.lists(),
+      });
     },
   });
 }

@@ -113,13 +113,10 @@ export function MeetingRecruitDetailScreen({
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authInitialized = useAuthStore((state) => state.authInitialized);
-  const recruitQuery = useQuery(
-    teamQueries.recruitForViewer(
-      meetingId,
-      postId,
-      authInitialized && isAuthenticated,
-    ),
-  );
+  const recruitQuery = useQuery({
+    ...teamQueries.recruitForViewer(meetingId, postId, isAuthenticated),
+    enabled: authInitialized,
+  });
   const imagesQuery = useQuery(teamQueries.images(meetingId));
   const participationMutation = useToggleMeetingRecruitParticipationMutation(
     meetingId,
@@ -128,7 +125,7 @@ export function MeetingRecruitDetailScreen({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  if (recruitQuery.isLoading)
+  if (!authInitialized || recruitQuery.isLoading)
     return (
       <PageContainer className="min-h-dvh bg-bg">
         <VolunteerPostingHeader onBack={() => navigate(-1)} />
