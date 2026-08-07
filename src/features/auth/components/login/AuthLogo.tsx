@@ -1,7 +1,6 @@
 import { cn } from "@/shared/lib/cn";
 
-import SplashLeftIcon from "@/assets/icons/SplashLeftIcon.svg";
-import SplashRightIcon from "@/assets/icons/SplashRightIcon.svg";
+import gatherLogo from "@/assets/images/Gather-logo.png";
 
 type AuthLogoProps = {
   size?: "large" | "medium";
@@ -13,23 +12,18 @@ export function AuthLogo({ size = "large", className }: AuthLogoProps) {
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
-      <div className={cn("relative", isLarge ? "h-32 w-57.5" : "h-28 w-50")}>
+      <div
+        className={cn(
+          "flex items-center justify-center",
+          isLarge ? "h-32 w-57.5" : "h-28 w-50",
+        )}
+      >
         <img
-          src={SplashLeftIcon}
-          alt=""
-          aria-hidden="true"
+          src={gatherLogo}
+          alt="Gather 로고"
           className={cn(
-            "absolute z-20 h-auto",
-            isLarge ? "top-0 left-0 w-32.5" : "top-0 left-0 w-29",
-          )}
-        />
-        <img
-          src={SplashRightIcon}
-          alt=""
-          aria-hidden="true"
-          className={cn(
-            "absolute z-10 h-auto",
-            isLarge ? "top-5.5 right-3 w-26.75" : "top-5 right-2.5 w-24",
+            "h-auto",
+            isLarge ? "w-57.5 max-w-full" : "w-50 max-w-full",
           )}
         />
       </div>
