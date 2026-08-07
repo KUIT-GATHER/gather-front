@@ -1,4 +1,8 @@
 import { requestPostImagePresignedUrl } from "@/features/team/api/meetingPost.api";
+import {
+  MeetingImageStorageError,
+  putMeetingImageToS3,
+} from "@/features/team/lib/meetingImageUpload";
 
 export async function uploadMeetingPostImages(
   meetingId: number,
@@ -7,25 +11,31 @@ export async function uploadMeetingPostImages(
   const objectKeys: string[] = [];
 
   for (const file of files) {
-    const presigned = await requestPostImagePresignedUrl(meetingId, {
-      contentType: file.type,
-      fileSize: file.size,
-    });
-    const response = await fetch(presigned.uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-        "If-None-Match": "*",
-      },
-      body: file,
-      credentials: "omit",
-    });
+    let retriesRemaining = 1;
 
-    if (!response.ok) {
-      throw new Error("게시글 사진 업로드에 실패했습니다.");
+    while (true) {
+      const presigned = await requestPostImagePresignedUrl(meetingId, {
+        contentType: file.type,
+        fileSize: file.size,
+      });
+
+      try {
+        await putMeetingImageToS3({ uploadUrl: presigned.uploadUrl, file });
+        objectKeys.push(presigned.objectKey);
+        break;
+      } catch (error) {
+        if (
+          error instanceof MeetingImageStorageError &&
+          error.status === 412 &&
+          retriesRemaining > 0
+        ) {
+          retriesRemaining -= 1;
+          continue;
+        }
+
+        throw error;
+      }
     }
-
-    objectKeys.push(presigned.objectKey);
   }
 
   return objectKeys;

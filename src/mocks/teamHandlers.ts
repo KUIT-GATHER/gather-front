@@ -2170,7 +2170,9 @@ export const teamHandlers = [
         body.title.trim().length > 15 ||
         !body.content.trim() ||
         body.content.trim().length > 1000 ||
-        (body.imageObjectKeys?.length ?? 0) > 3
+        (body.imageObjectKeys?.length ?? 0) > 3 ||
+        (body.imageObjectKeys &&
+          new Set(body.imageObjectKeys).size !== body.imageObjectKeys.length)
       ) {
         return createMeetingErrorResponse(
           "VALIDATION_ERROR",
@@ -2664,6 +2666,21 @@ export const teamHandlers = [
         );
       }
       const body = (await request.json()) as MeetingPostUpdateRequest;
+      if (
+        !body.title.trim() ||
+        body.title.trim().length > 15 ||
+        !body.content.trim() ||
+        body.content.trim().length > 1000 ||
+        (body.imageObjectKeys?.length ?? 0) > 3 ||
+        (body.imageObjectKeys &&
+          new Set(body.imageObjectKeys).size !== body.imageObjectKeys.length)
+      ) {
+        return createMeetingErrorResponse(
+          "VALIDATION_ERROR",
+          "게시글 수정 요청이 올바르지 않습니다.",
+          400,
+        );
+      }
       post.title = body.title.trim();
       post.content = body.content.trim();
       if (body.imageObjectKeys !== null && body.imageObjectKeys !== undefined) {

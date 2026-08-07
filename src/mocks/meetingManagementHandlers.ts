@@ -1,5 +1,10 @@
 import { HttpResponse, http } from "msw";
 
+import {
+  MAX_MEETING_IMAGE_SIZE_BYTES,
+  isMeetingImageMimeType,
+} from "@/features/team/lib/meetingImageValidation";
+import type { PostImagePresignedUrlRequest } from "@/features/team/types/meetingPost.types";
 import type {
   MeetingRecruitRequest,
   RecruitParticipantSummary,
@@ -442,11 +447,39 @@ export const meetingManagementHandlers = [
 
   http.post(
     "*/api/v1/meetings/:meetingId/posts/images/presigned-url",
-    ({ request }) => {
+    async ({ request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
 
-      const objectKey = `posts/${userId}/${crypto.randomUUID()}.jpg`;
+      const body = (await request.json()) as PostImagePresignedUrlRequest;
+
+      if (!isMeetingImageMimeType(body.contentType)) {
+        return fail(
+          "UNSUPPORTED_POST_IMAGE_TYPE",
+          "지원하지 않는 게시글 이미지 형식입니다.",
+          400,
+        );
+      }
+
+      if (
+        !Number.isInteger(body.fileSize) ||
+        body.fileSize <= 0 ||
+        body.fileSize > MAX_MEETING_IMAGE_SIZE_BYTES
+      ) {
+        return fail(
+          "POST_IMAGE_SIZE_EXCEEDED",
+          "게시글 이미지 크기는 5MB 이하여야 합니다.",
+          400,
+        );
+      }
+
+      const extensionByContentType = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      } as const;
+      const extension = extensionByContentType[body.contentType];
+      const objectKey = `posts/${userId}/${crypto.randomUUID()}.${extension}`;
       return ok({
         uploadUrl: `http://localhost:5173/__mock-s3/post-images/${encodeURIComponent(objectKey)}`,
         objectKey,
