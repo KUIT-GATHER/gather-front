@@ -1,21 +1,27 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, ImagePlus, MapPin, X } from "lucide-react";
+import { ImagePlus, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
-import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
 import { teamQueries } from "@/features/team/api/team.queries";
-import { MeetingCategoryTag } from "@/features/team/components/MeetingCategoryTag";
+import { MeetingDateTimeField } from "@/features/team/components/form/MeetingDateTimeField";
+import { MeetingImageEditorCarousel } from "@/features/team/components/form/MeetingImageEditorCarousel";
 import {
   useSaveMeetingImagesMutation,
   useUpdateMeetingMutation,
 } from "@/features/team/hooks/useMeetingManagementMutations";
 import type { EditableMeetingImage } from "@/features/team/lib/meetingImageEditor";
+import {
+  getMeetingImageSelectionErrorMessage,
+  MAX_MEETING_IMAGE_COUNT,
+  validateMeetingImageSelection,
+} from "@/features/team/lib/meetingImageValidation";
 import { buildMeetingUpdatePayload } from "@/features/team/lib/meetingUpdatePayload";
 import {
   meetingUpdateSchema,
@@ -52,6 +58,9 @@ export function TeamInfoEditScreen({
   const initializedRef = useRef(false);
   const [images, setImages] = useState<EditableMeetingImage[]>([]);
   const [regionOpen, setRegionOpen] = useState(false);
+  const [imageSelectionError, setImageSelectionError] = useState<string | null>(
+    null,
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
@@ -101,10 +110,19 @@ export function TeamInfoEditScreen({
   );
 
   const addImages = (files: FileList | null) => {
-    if (!files) return;
-    const additions = Array.from(files)
-      .slice(0, Math.max(0, 3 - images.length))
-      .map((file) => {
+    try {
+      if (!files) return;
+
+      const localImages = images.filter(
+        (image): image is Extract<EditableMeetingImage, { source: "local" }> =>
+          image.source === "local",
+      );
+      const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
+        existingImages: localImages,
+        existingCount: images.length,
+        files: Array.from(files),
+      });
+      const additions = acceptedFiles.map((file) => {
         const previewUrl = URL.createObjectURL(file);
         previewUrlsRef.current.push(previewUrl);
         return {
@@ -114,23 +132,27 @@ export function TeamInfoEditScreen({
           previewUrl,
         };
       });
-    setImages((current) => [...current, ...additions]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+
+      if (additions.length > 0) {
+        setImages((current) => [...current, ...additions]);
+      }
+      setImageSelectionError(
+        rejectedReasons.length > 0
+          ? getMeetingImageSelectionErrorMessage(rejectedReasons)
+          : null,
+      );
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
-  const removeImage = (index: number) =>
+  const removeImage = (index: number) => {
     setImages((current) => {
       const target = current[index];
       if (target?.source === "local") URL.revokeObjectURL(target.previewUrl);
       return current.filter((_, currentIndex) => currentIndex !== index);
     });
-  const moveImage = (index: number, direction: -1 | 1) =>
-    setImages((current) => {
-      const target = index + direction;
-      if (target < 0 || target >= current.length) return current;
-      const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+    setImageSelectionError(null);
+  };
 
   const submit = handleSubmit(async (formValues) => {
     if (formValues.maxMember < home.currentMemberCount) {
@@ -234,12 +256,12 @@ export function TeamInfoEditScreen({
         <section>
           <button
             type="button"
-            disabled={images.length >= 3}
+            disabled={images.length >= MAX_MEETING_IMAGE_COUNT}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-point-green text-button disabled:opacity-40"
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus className="size-5" />
-            사진 첨부 (선택, 최대 3장)
+            사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
           </button>
           <input
             ref={fileInputRef}
@@ -249,47 +271,12 @@ export function TeamInfoEditScreen({
             className="sr-only"
             onChange={(event) => addImages(event.target.files)}
           />
-          {images.length ? (
-            <div className="mt-3 flex gap-3 overflow-x-auto">
-              {images.map((image, index) => (
-                <div key={image.id} className="relative shrink-0">
-                  <img
-                    src={image.previewUrl}
-                    alt={`모임 사진 ${index + 1}`}
-                    className="h-32 w-48 rounded-xl object-cover"
-                  />
-                  <button
-                    type="button"
-                    aria-label="사진 삭제"
-                    className="absolute right-1 top-1 grid size-7 place-items-center rounded-full bg-white/90"
-                    onClick={() => removeImage(index)}
-                  >
-                    <X className="size-4" />
-                  </button>
-                  <div className="absolute bottom-1 right-1 flex gap-1">
-                    <button
-                      type="button"
-                      aria-label="앞으로 이동"
-                      disabled={index === 0}
-                      className="grid size-7 place-items-center rounded-full bg-white/90 disabled:opacity-30"
-                      onClick={() => moveImage(index, -1)}
-                    >
-                      <ArrowLeft className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="뒤로 이동"
-                      disabled={index === images.length - 1}
-                      className="grid size-7 place-items-center rounded-full bg-white/90 disabled:opacity-30"
-                      onClick={() => moveImage(index, 1)}
-                    >
-                      <ArrowRight className="size-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {imageSelectionError ? (
+            <p role="alert" className="mt-2 text-sm text-point-red">
+              {imageSelectionError}
+            </p>
           ) : null}
+          <MeetingImageEditorCarousel images={images} onRemove={removeImage} />
         </section>
         <FormField label="활동 지역" required error={errors.regionId?.message}>
           <button
@@ -339,34 +326,13 @@ export function TeamInfoEditScreen({
             name="categories"
             control={control}
             render={({ field }) => (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {POSTING_CATEGORIES.map((category) => {
-                  const selected = field.value.includes(category);
-                  return (
-                    <button
-                      key={category}
-                      type="button"
-                      disabled={basedOnPosting}
-                      aria-pressed={selected}
-                      className="rounded-full disabled:opacity-100"
-                      onClick={() =>
-                        field.onChange(
-                          selected
-                            ? field.value.filter((value) => value !== category)
-                            : field.value.length < 3
-                              ? [...field.value, category]
-                              : field.value,
-                        )
-                      }
-                    >
-                      <MeetingCategoryTag
-                        category={category}
-                        selected={selected}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+              <CategoryChipGroup
+                value={field.value}
+                options={basedOnPosting ? field.value : undefined}
+                maxSelected={3}
+                disabled={basedOnPosting}
+                onChange={field.onChange}
+              />
             )}
           />
         </FormField>
@@ -376,10 +342,18 @@ export function TeamInfoEditScreen({
           htmlFor="meeting-deadline"
           error={errors.deadline?.message}
         >
-          <Input
-            id="meeting-deadline"
-            type="datetime-local"
-            {...register("deadline")}
+          <Controller
+            name="deadline"
+            control={control}
+            render={({ field }) => (
+              <MeetingDateTimeField
+                id="meeting-deadline"
+                title="신청 마감일"
+                value={field.value}
+                invalid={Boolean(errors.deadline)}
+                onChange={field.onChange}
+              />
+            )}
           />
         </FormField>
         <FormField
@@ -401,11 +375,7 @@ export function TeamInfoEditScreen({
           </p>
         ) : null}
         <Button type="submit" fullWidth disabled={pending}>
-          {pending
-            ? "저장 중"
-            : basedOnPosting
-              ? "모임 만들기 완료"
-              : "저장하기"}
+          {pending ? "저장 중" : "저장하기"}
         </Button>
       </form>
       <RegionSelectionSheet
