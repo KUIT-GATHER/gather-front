@@ -1,5 +1,6 @@
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
-import { cn } from "@/shared/lib/cn";
+
+import { VolunteerOpportunityConditionCard } from "./VolunteerOpportunityConditionCard";
 
 type VolunteerPostingConditionCardProps = {
   posting: VolunteerPosting;
@@ -23,13 +24,9 @@ export function VolunteerPostingConditionCard({
   className,
 }: VolunteerPostingConditionCardProps) {
   return (
-    <section
-      className={cn("rounded-lg border border-stroke bg-white p-4", className)}
-    >
-      <h2 className="text-title-18 text-text">참여 조건</h2>
-      <p className="mt-2 text-[15px] leading-[21.125px] font-normal text-text">
-        · {getParticipationConditions(posting)}
-      </p>
-    </section>
+    <VolunteerOpportunityConditionCard
+      condition={getParticipationConditions(posting)}
+      className={className}
+    />
   );
 }

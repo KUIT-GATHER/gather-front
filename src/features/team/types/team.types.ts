@@ -37,6 +37,7 @@ export type MeetingCreateRequest = {
   volunteerPostingId?: number | null;
   activityStartAt: string | null;
   activityEndAt: string | null;
+  timeRecognized: boolean;
 };
 
 export type MeetingDetail = MeetingListItem & {
@@ -46,6 +47,18 @@ export type MeetingDetail = MeetingListItem & {
   memo: string | null;
   activityEndAt: string;
   bookmarked: boolean;
+  timeRecognized: boolean;
+};
+
+export type MeetingUpdateRequest = {
+  name: string;
+  description: string | null;
+  maxMember: number;
+  deadline: string;
+  categories: PostingCategory[] | null;
+  participationCondition: string | null;
+  regionId: number | null;
+  timeRecognized: boolean;
 };
 
 export type MeetingMember = {
@@ -85,7 +98,7 @@ export type MeetingHome = {
   regionName: string | null;
   currentMemberCount: number;
   maxMember: number;
-  timeVerified: boolean;
+  timeRecognized: boolean;
   status: MeetingStatus;
   basedOnPosting: boolean;
   linkedPostingId: number | null;
@@ -95,6 +108,8 @@ export type MeetingHome = {
   upcomingActivity: UpcomingActivity | null;
   member: boolean;
   host: boolean;
+  pendingJoinRequested: boolean;
+  myPendingJoinRequestId: number | null;
 };
 
 export type MeetingListParams = {
@@ -228,16 +243,21 @@ export type MyMeetingActivitySummary = {
   appliedRecruitCount: number;
 };
 
-export type MeetingRecruitParticipationStatus = "APPLIED";
+export type MeetingRecruitParticipationStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "REJECTED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "REVIEWED";
 
 export type MyAppliedRecruit = {
   postId: number;
   meetingId: number;
   title: string;
   place: string | null;
-  actDate: string;
-  actStartTime: string | null;
-  actEndTime: string | null;
+  activityStartAt: string;
+  activityEndAt: string;
   status: MeetingRecruitParticipationStatus;
 };
 
@@ -257,54 +277,8 @@ export type MeetingPostCommentUpdateRequest = {
   content: string;
 };
 
-type MeetingPostCreateBaseRequest = {
-  title: string;
-  content: string;
-};
-
-export type MeetingPostCreateGeneralRequest = MeetingPostCreateBaseRequest & {
-  type: Exclude<MeetingPostType, "RECRUIT">;
-};
-
-export type MeetingPostCreateRecruitRequest = MeetingPostCreateBaseRequest & {
-  type: "RECRUIT";
-  recruitCapacity: number;
-};
-
-export type MeetingPostCreateRequest =
-  | MeetingPostCreateGeneralRequest
-  | MeetingPostCreateRecruitRequest;
-
-export type MeetingPostUpdateRequest = {
-  title: string;
-  content: string;
-};
-
-export type MeetingRecruitDetail = {
-  postId: number;
-  meetingId: number;
-  title: string;
-  content: string;
-  authorId: number;
-  authorNickname: string;
-  place: string;
-  actDate: string;
-  actStartTime: string | null;
-  actEndTime: string | null;
-  maxParticipants: number;
-  categories: PostingCategory[];
-  timeRecognized: boolean;
-  recognizedMinutes: number | null;
-  applyDeadline: string;
-  external: boolean;
-  likeCount: number;
-  commentCount: number;
-  appliedCount: number;
-  applied: boolean;
-  applicationOpen: boolean;
-  full: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+export type {
+  MeetingPostCreateRequest,
+  MeetingPostUpdateRequest,
+} from "@/features/team/types/meetingPost.types";
+export type { MeetingRecruitDetail } from "@/features/team/types/meetingRecruit.types";

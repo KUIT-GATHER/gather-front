@@ -6,7 +6,6 @@ import {
   getMeetingPostComments,
   getMeeting,
   getMeetingHome,
-  getMeetingJoinRequests,
   getMeetingPosts,
   getMeetingRecommendedKeywords,
   getMeetings,
@@ -16,10 +15,23 @@ import {
   getMyMeetingActivityPosts,
   getMyMeetingActivitySummary,
   getRecommendedMeetings,
-  getMeetingRecruitActivities,
-  getMeetingRecruit,
 } from "@/features/team/api/team.api";
-import { getMeetingImages } from "@/features/team/api/meetingImage.api";
+import {
+  getMeetingImages,
+  getMeetingManageImages,
+} from "@/features/team/api/meetingImage.api";
+import { getReviewableActivities } from "@/features/team/api/meetingPost.api";
+import {
+  getManagedMeetingRecruits,
+  getMeetingRecruit,
+  getRecruitParticipant,
+  getRecruitParticipants,
+} from "@/features/team/api/meetingRecruit.api";
+import {
+  getMeetingJoinRequest,
+  getMeetingJoinRequests,
+  getMeetingMember,
+} from "@/features/team/api/meetingManagement.api";
 
 import type {
   BookmarkedMeetingInfiniteParams,
@@ -28,6 +40,7 @@ import type {
   MeetingListParams,
   MeetingPostCommentListParams,
   MeetingPostListParams,
+  MeetingJoinRequestStatus,
 } from "../types/team.types";
 
 type RecommendationScope = "guest" | "member";
@@ -51,6 +64,10 @@ export const teamKeys = {
   detail: (meetingId: number) => [...teamKeys.details(), meetingId] as const,
   images: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "images"] as const,
+  manage: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "manage"] as const,
+  manageImages: (meetingId: number) =>
+    [...teamKeys.manage(meetingId), "images"] as const,
   detailForViewer: (meetingId: number, isAuthenticated: boolean) =>
     [
       ...teamKeys.detail(meetingId),
@@ -78,24 +95,58 @@ export const teamKeys = {
     meetingId: number,
     params: MeetingActivityListParams = {},
   ) => [...teamKeys.myActivity(meetingId), "appliedRecruits", params] as const,
-  joinRequests: (meetingId: number) =>
-    [...teamKeys.detail(meetingId), "joinRequests"] as const,
+  joinRequests: (meetingId: number, status?: MeetingJoinRequestStatus) =>
+    [...teamKeys.detail(meetingId), "joinRequests", status ?? "ALL"] as const,
+  joinRequest: (meetingId: number, joinRequestId: number) =>
+    [...teamKeys.detail(meetingId), "joinRequest", joinRequestId] as const,
 
   approveJoinRequest: (meetingId: number) =>
-    [...teamKeys.joinRequests(meetingId), "approve"] as const,
+    [...teamKeys.detail(meetingId), "joinRequests", "approve"] as const,
 
   rejectJoinRequest: (meetingId: number) =>
-    [...teamKeys.joinRequests(meetingId), "reject"] as const,
+    [...teamKeys.detail(meetingId), "joinRequests", "reject"] as const,
+  restoreJoinRequest: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "joinRequests", "restore"] as const,
+  member: (meetingId: number, userId: number) =>
+    [...teamKeys.detail(meetingId), "member", userId] as const,
+  updateMeeting: (meetingId: number) =>
+    [...teamKeys.manage(meetingId), "update"] as const,
+  disband: (meetingId: number) =>
+    [...teamKeys.manage(meetingId), "disband"] as const,
+  cancelJoin: (meetingId: number) =>
+    [...teamKeys.detail(meetingId), "cancelJoin"] as const,
   posts: (meetingId: number) =>
     [...teamKeys.detail(meetingId), "posts"] as const,
-  recruitActivities: (meetingId: number) =>
-    [...teamKeys.posts(meetingId), "recruitActivities"] as const,
+  managedRecruits: (meetingId: number) =>
+    [...teamKeys.manage(meetingId), "recruits"] as const,
   postList: (meetingId: number, params: MeetingPostListParams = {}) =>
     [...teamKeys.posts(meetingId), params] as const,
   post: (meetingId: number, postId: number) =>
     [...teamKeys.posts(meetingId), "detail", postId] as const,
   recruit: (meetingId: number, postId: number) =>
     [...teamKeys.post(meetingId, postId), "recruit"] as const,
+  recruitForViewer: (
+    meetingId: number,
+    postId: number,
+    isAuthenticated: boolean,
+  ) =>
+    [
+      ...teamKeys.recruit(meetingId, postId),
+      isAuthenticated ? "authenticated" : "anonymous",
+    ] as const,
+  reviewableActivities: (meetingId: number) =>
+    [...teamKeys.posts(meetingId), "reviewableActivities"] as const,
+  recruitParticipants: (meetingId: number, postId: number) =>
+    [...teamKeys.recruit(meetingId, postId), "participants"] as const,
+  recruitParticipant: (
+    meetingId: number,
+    postId: number,
+    participationId: number,
+  ) =>
+    [
+      ...teamKeys.recruitParticipants(meetingId, postId),
+      participationId,
+    ] as const,
   postComments: (meetingId: number, postId: number) =>
     [...teamKeys.post(meetingId, postId), "comments"] as const,
   postCommentList: (
@@ -245,21 +296,65 @@ export const teamQueries = {
       },
     }),
 
-  joinRequests: (meetingId: number) =>
+  joinRequests: (meetingId: number, status?: MeetingJoinRequestStatus) =>
     queryOptions({
-      queryKey: teamKeys.joinRequests(meetingId),
-      queryFn: () => getMeetingJoinRequests(meetingId),
+      queryKey: teamKeys.joinRequests(meetingId, status),
+      queryFn: () => getMeetingJoinRequests(meetingId, status),
     }),
 
-  recruitActivities: (meetingId: number) =>
+  joinRequest: (meetingId: number, joinRequestId: number) =>
     queryOptions({
-      queryKey: teamKeys.recruitActivities(meetingId),
-      queryFn: () => getMeetingRecruitActivities(meetingId),
+      queryKey: teamKeys.joinRequest(meetingId, joinRequestId),
+      queryFn: () => getMeetingJoinRequest(meetingId, joinRequestId),
+    }),
+
+  member: (meetingId: number, userId: number) =>
+    queryOptions({
+      queryKey: teamKeys.member(meetingId, userId),
+      queryFn: () => getMeetingMember(meetingId, userId),
+    }),
+
+  managedRecruits: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.managedRecruits(meetingId),
+      queryFn: () => getManagedMeetingRecruits(meetingId),
     }),
   recruit: (meetingId: number, postId: number) =>
     queryOptions({
       queryKey: teamKeys.recruit(meetingId, postId),
       queryFn: () => getMeetingRecruit(meetingId, postId),
+    }),
+
+  recruitForViewer: (
+    meetingId: number,
+    postId: number,
+    isAuthenticated: boolean,
+  ) =>
+    queryOptions({
+      queryKey: teamKeys.recruitForViewer(meetingId, postId, isAuthenticated),
+      queryFn: () => getMeetingRecruit(meetingId, postId),
+    }),
+
+  reviewableActivities: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.reviewableActivities(meetingId),
+      queryFn: () => getReviewableActivities(meetingId),
+    }),
+
+  recruitParticipants: (meetingId: number, postId: number) =>
+    queryOptions({
+      queryKey: teamKeys.recruitParticipants(meetingId, postId),
+      queryFn: () => getRecruitParticipants(meetingId, postId),
+    }),
+
+  recruitParticipant: (
+    meetingId: number,
+    postId: number,
+    participationId: number,
+  ) =>
+    queryOptions({
+      queryKey: teamKeys.recruitParticipant(meetingId, postId, participationId),
+      queryFn: () => getRecruitParticipant(meetingId, postId, participationId),
     }),
 
   posts: (meetingId: number, params: MeetingPostListParams = {}) =>
@@ -305,5 +400,11 @@ export const teamQueries = {
     queryOptions({
       queryKey: teamKeys.images(meetingId),
       queryFn: () => getMeetingImages(meetingId),
+    }),
+
+  manageImages: (meetingId: number) =>
+    queryOptions({
+      queryKey: teamKeys.manageImages(meetingId),
+      queryFn: () => getMeetingManageImages(meetingId),
     }),
 };

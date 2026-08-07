@@ -11,7 +11,7 @@ export function useMeetingRecruitActivitiesQuery(
   options: UseMeetingRecruitActivitiesQueryOptions = {},
 ) {
   return useQuery({
-    ...teamQueries.recruitActivities(meetingId),
+    ...teamQueries.managedRecruits(meetingId),
     enabled: options.enabled,
   });
 }

@@ -20,6 +20,7 @@ import { HomePage } from "@/pages/home/HomePage";
 import { VolunteerListPage } from "@/pages/volunteers/VolunteerListPage";
 import { VolunteerSearchPage } from "@/pages/volunteers/VolunteerSearchPage";
 import { VolunteerDetailPage } from "@/pages/volunteers/VolunteerDetailPage";
+import { MeetingRecruitDetailPage } from "@/pages/volunteers/MeetingRecruitDetailPage";
 
 import { TeamPage } from "@/pages/teams/TeamPage";
 import { TeamSearchPage } from "@/pages/teams/TeamSearchPage";
@@ -39,6 +40,9 @@ import { TeamMemberManagementPage } from "@/pages/teams/TeamMemberManagementPage
 import { TeamJoinRequestManagementPage } from "@/pages/teams/TeamJoinRequestManagementPage";
 import { TeamActivityManagementPage } from "@/pages/teams/TeamActivityManagementPage";
 import { TeamActivityApplicantsPage } from "@/pages/teams/TeamActivityApplicantsPage";
+import { TeamPostTypeSelectPage } from "@/pages/teams/TeamPostTypeSelectPage";
+import { TeamPostEditorPage } from "@/pages/teams/TeamPostEditorPage";
+import { TeamRecruitEditorPage } from "@/pages/teams/TeamRecruitEditorPage";
 
 import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
@@ -113,6 +117,10 @@ export const router = createBrowserRouter([
           { path: "/volunteers", element: <VolunteerListPage /> },
           { path: "/volunteers/search", element: <VolunteerSearchPage /> },
           {
+            path: "/volunteers/meeting-recruits/:meetingId/:postId",
+            element: <MeetingRecruitDetailPage />,
+          },
+          {
             path: "/volunteers/:volunteerId",
             element: <VolunteerDetailPage />,
           },
@@ -123,6 +131,28 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <TeamDetailHomePage /> },
               { path: "posts", element: <TeamDetailPostListPage /> },
+              {
+                element: <RequireAuth />,
+                children: [
+                  { path: "posts/new", element: <TeamPostTypeSelectPage /> },
+                  {
+                    path: "posts/new/:postType",
+                    element: <TeamPostEditorPage />,
+                  },
+                  {
+                    path: "posts/:postId/edit",
+                    element: <TeamPostEditorPage />,
+                  },
+                  {
+                    path: "posts/recruits/new",
+                    element: <TeamRecruitEditorPage />,
+                  },
+                  {
+                    path: "posts/:postId/recruit/edit",
+                    element: <TeamRecruitEditorPage />,
+                  },
+                ],
+              },
               { path: "posts/:postId", element: <TeamPostDetailPage /> },
               { path: "activity", element: <TeamDetailActivityPage /> },
               {

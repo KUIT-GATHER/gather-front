@@ -13,6 +13,7 @@ import {
   toVolunteerPostingQueryParams,
   updateVolunteerPostingSearchParams,
 } from "@/features/volunteer/lib/volunteerPostingSearchParams";
+import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
@@ -155,7 +156,7 @@ export function VolunteerPostingSearchScreen() {
               params={queryParams}
               emptyTitle="검색 결과가 없어요"
               emptyDescription="다른 검색어로 다시 찾아보세요."
-              onSelect={(postingId) => navigate(`/volunteers/${postingId}`)}
+              onSelect={(posting) => navigate(getPostingListItemPath(posting))}
               renderMeta={(totalElements) => (
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-body-14 text-text-gray-300">

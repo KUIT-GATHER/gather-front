@@ -1,26 +1,17 @@
-import CalendarIcon from "@/assets/volunteer/calender.svg";
-import ClockIcon from "@/assets/volunteer/clock.svg";
-import ExpireDateIcon from "@/assets/volunteer/expiredate.svg";
-import LocationIcon from "@/assets/volunteer/location.svg";
-import MemberIcon from "@/assets/volunteer/member.svg";
-import PortalOrgIcon from "@/assets/volunteer/portalorg.svg";
-import VolunteerOrgIcon from "@/assets/volunteer/volunteerorg.svg";
 import {
   formatVolunteerPeriod,
   formatVolunteerTimeRange,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
-import { cn } from "@/shared/lib/cn";
+
+import {
+  VolunteerOpportunityInfoCard,
+  type VolunteerOpportunityInfoRow,
+} from "./VolunteerOpportunityInfoCard";
 
 type VolunteerPostingInfoCardProps = {
   posting: VolunteerPosting;
   className?: string;
-};
-
-type InfoRow = {
-  icon: string;
-  label: string;
-  value: string;
 };
 
 function getLocation(posting: VolunteerPosting) {
@@ -35,24 +26,10 @@ function getParticipantCount(posting: VolunteerPosting) {
   return `${posting.applicantCount ?? "-"}/${posting.recruitCount ?? "-"}명`;
 }
 
-function isInfoRow(row: InfoRow | null): row is InfoRow {
+function isInfoRow(
+  row: VolunteerOpportunityInfoRow | null,
+): row is VolunteerOpportunityInfoRow {
   return row !== null;
-}
-
-function DetailRow({ icon, label, value }: InfoRow) {
-  return (
-    <div className="grid grid-cols-[1.5rem_auto_1fr] items-start gap-2">
-      <span className="flex size-6 items-center justify-center">
-        <img src={icon} alt="" className="max-h-5 max-w-5" />
-      </span>
-      <dt className="whitespace-nowrap pt-0.5 text-[15px] leading-normal font-normal text-text-gray-400">
-        {label}
-      </dt>
-      <dd className="pt-0.5 text-right text-[15px] leading-normal font-normal text-text">
-        {value}
-      </dd>
-    </div>
-  );
 }
 
 export function VolunteerPostingInfoCard({
@@ -76,67 +53,61 @@ export function VolunteerPostingInfoCard({
   const rows = [
     location
       ? {
-          icon: LocationIcon,
+          id: "location",
+          icon: "location" as const,
           label: "장소",
           value: location,
         }
       : null,
     activityPeriod
       ? {
-          icon: CalendarIcon,
+          id: "date",
+          icon: "date" as const,
           label: "날짜",
           value: activityPeriod,
         }
       : null,
     activityTime
       ? {
-          icon: ClockIcon,
+          id: "time",
+          icon: "time" as const,
           label: "시간",
           value: activityTime,
         }
       : null,
     participantCount
       ? {
-          icon: MemberIcon,
+          id: "participants",
+          icon: "participants" as const,
           label: "참여 인원",
           value: participantCount,
         }
       : null,
     recruitmentDeadline
       ? {
-          icon: ExpireDateIcon,
+          id: "deadline",
+          icon: "deadline" as const,
           label: "신청 마감",
           value: recruitmentDeadline,
         }
       : null,
     posting.recruitOrg
       ? {
-          icon: VolunteerOrgIcon,
+          id: "volunteerOrganization",
+          icon: "volunteerOrganization" as const,
           label: "봉사 기관명",
           value: posting.recruitOrg,
         }
       : null,
     posting.registerOrg
       ? {
-          icon: PortalOrgIcon,
+          id: "portalOrganization",
+          icon: "portalOrganization" as const,
           label: "포털 등록 기관명",
           value: posting.registerOrg,
         }
       : null,
   ].filter(isInfoRow);
 
-  return (
-    <section
-      className={cn(
-        "rounded-xl border border-stroke bg-white px-3 py-4",
-        className,
-      )}
-    >
-      <dl className="flex flex-col gap-2">
-        {rows.map((row) => (
-          <DetailRow key={row.label} {...row} />
-        ))}
-      </dl>
-    </section>
-  );
+  return <VolunteerOpportunityInfoCard rows={rows} className={className} />;
 }
