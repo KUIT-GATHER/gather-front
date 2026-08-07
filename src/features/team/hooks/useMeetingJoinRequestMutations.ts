@@ -5,14 +5,6 @@ import {
   rejectMeetingJoinRequest,
 } from "@/features/team/api/team.api";
 import { teamKeys } from "@/features/team/api/team.queries";
-import type { MeetingJoinRequest } from "@/features/team/types/team.types";
-
-function removeJoinRequest(
-  requests: MeetingJoinRequest[] | undefined,
-  joinRequestId: number,
-) {
-  return requests?.filter((request) => request.joinRequestId !== joinRequestId);
-}
 
 export function useApproveMeetingJoinRequestMutation(meetingId: number) {
   const queryClient = useQueryClient();
@@ -22,13 +14,13 @@ export function useApproveMeetingJoinRequestMutation(meetingId: number) {
     mutationFn: (joinRequestId: number) =>
       approveMeetingJoinRequest(meetingId, joinRequestId),
 
-    onSuccess: (approvedRequest) => {
-      queryClient.setQueryData<MeetingJoinRequest[]>(
-        teamKeys.joinRequests(meetingId),
-        (requests) =>
-          removeJoinRequest(requests, approvedRequest.joinRequestId),
-      );
-
+    onSuccess: (_approvedRequest, joinRequestId) => {
+      void queryClient.invalidateQueries({
+        queryKey: [...teamKeys.detail(meetingId), "joinRequests"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.joinRequest(meetingId, joinRequestId),
+      });
       void queryClient.invalidateQueries({
         queryKey: teamKeys.home(meetingId),
       });
@@ -44,12 +36,13 @@ export function useRejectMeetingJoinRequestMutation(meetingId: number) {
     mutationFn: (joinRequestId: number) =>
       rejectMeetingJoinRequest(meetingId, joinRequestId),
 
-    onSuccess: (rejectedRequest) => {
-      queryClient.setQueryData<MeetingJoinRequest[]>(
-        teamKeys.joinRequests(meetingId),
-        (requests) =>
-          removeJoinRequest(requests, rejectedRequest.joinRequestId),
-      );
+    onSuccess: (_rejectedRequest, joinRequestId) => {
+      void queryClient.invalidateQueries({
+        queryKey: [...teamKeys.detail(meetingId), "joinRequests"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.joinRequest(meetingId, joinRequestId),
+      });
     },
   });
 }

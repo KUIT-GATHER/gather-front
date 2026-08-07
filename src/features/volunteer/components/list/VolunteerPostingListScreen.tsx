@@ -20,6 +20,7 @@ import PageHeader from "@/shared/ui/PageHeader";
 import Select from "@/shared/ui/Select";
 
 import { VolunteerPostingResults } from "./VolunteerPostingResults";
+import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 
 export function VolunteerPostingListScreen() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export function VolunteerPostingListScreen() {
           params={queryParams}
           emptyTitle="조건에 맞는 봉사 공고가 없어요"
           emptyDescription="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
-          onSelect={(postingId) => navigate(`/volunteers/${postingId}`)}
+          onSelect={(posting) => navigate(getPostingListItemPath(posting))}
         />
       </div>
 

@@ -6,10 +6,13 @@ import {
   formatVolunteerLocation,
   getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
-import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
+import type {
+  PostingListItem,
+  VolunteerPostingListItem,
+} from "@/features/volunteer/types/volunteer.types";
 
 type VolunteerPostingCardProps = {
-  posting: VolunteerPostingListItem;
+  posting: VolunteerPostingListItem | PostingListItem;
   onClick: () => void;
   variant?: "list" | "compact";
 };
@@ -19,13 +22,25 @@ export function VolunteerPostingCard({
   onClick,
   variant = "list",
 }: VolunteerPostingCardProps) {
-  const imageSrc = getVolunteerPostingImage(posting.category, posting.id);
-  const location = formatVolunteerLocation(posting);
+  const isUnifiedItem = "sourceType" in posting;
+  const imageSrc =
+    (isUnifiedItem ? posting.thumbnailUrl : null) ??
+    getVolunteerPostingImage(posting.category, posting.id);
+  const location = isUnifiedItem
+    ? posting.regionName || posting.place
+    : formatVolunteerLocation(posting);
+  const activityStartDate = isUnifiedItem
+    ? (posting.activityStartAt?.slice(0, 10) ?? null)
+    : posting.actStartDate;
   const activityDate =
     variant === "compact"
-      ? formatVolunteerHomeDate(posting.actStartDate)
-      : formatVolunteerDate(posting.actStartDate);
-  const recruitmentDDay = getRecruitmentDDay(posting.noticeEndDate);
+      ? formatVolunteerHomeDate(activityStartDate)
+      : formatVolunteerDate(activityStartDate);
+  const recruitmentDDay = getRecruitmentDDay(
+    isUnifiedItem
+      ? (posting.applyDeadlineAt?.slice(0, 10) ?? null)
+      : posting.noticeEndDate,
+  );
   const urgentRecruitmentDDay =
     recruitmentDDay === "D-day" || /^D-[1-7]$/.test(recruitmentDDay ?? "")
       ? recruitmentDDay
@@ -59,7 +74,9 @@ export function VolunteerPostingCard({
     <ActivityListCard
       imageSrc={imageSrc}
       title={posting.title}
-      description={posting.recruitOrg}
+      description={
+        isUnifiedItem ? posting.organizationName : posting.recruitOrg
+      }
       metadata={[location, activityDate]}
       dDay={urgentRecruitmentDDay}
       categories={[posting.category]}

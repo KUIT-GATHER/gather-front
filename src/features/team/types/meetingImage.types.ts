@@ -22,7 +22,20 @@ export type MeetingImageListResponse = {
   imageUrls: string[];
 };
 
+export type MeetingManageImage = {
+  objectKey: string;
+  imageUrl: string;
+  sortOrder: number;
+};
+
+export type RemoteMeetingImage = MeetingManageImage & {
+  id: string;
+  source: "remote";
+  previewUrl: string;
+};
+
 export type LocalMeetingImage = {
+  source?: "local";
   id: string;
   file: File;
   previewUrl: string;
