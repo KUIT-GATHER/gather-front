@@ -8,7 +8,7 @@ import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 
 export function TeamRecruitEditorPage() {
-  const { meetingId, isHost } = useTeamDetailContext();
+  const { meetingId, detail, isHost } = useTeamDetailContext();
   const { postId } = useParams();
   const parsedPostId = Number(postId);
   const editing = Number.isInteger(parsedPostId) && parsedPostId > 0;
@@ -17,6 +17,8 @@ export function TeamRecruitEditorPage() {
     enabled: isHost && editing,
   });
   if (!isHost) return <Navigate to={`/teams/${meetingId}/posts`} replace />;
+  if (!editing && detail.volunteerPostingId !== null)
+    return <Navigate to={`/teams/${meetingId}/posts`} replace />;
   if (editing && query.isLoading)
     return (
       <LoadingState className="min-h-dvh" label="모집 공고를 불러오는 중" />

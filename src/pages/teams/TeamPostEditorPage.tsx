@@ -16,7 +16,7 @@ const postTypeByParam: Record<string, EditableMeetingPostType> = {
 };
 
 export function TeamPostEditorPage() {
-  const { meetingId, isJoined, isHost } = useTeamDetailContext();
+  const { meetingId, detail, isJoined, isHost } = useTeamDetailContext();
   const { postType, postId } = useParams();
   const parsedPostId = Number(postId);
   const editing = Number.isInteger(parsedPostId) && parsedPostId > 0;
@@ -30,7 +30,10 @@ export function TeamPostEditorPage() {
       ? postTypeByParam[postType]
       : undefined;
   const writable = resolvedType
-    ? getWritableMeetingPostTypes(isHost).includes(resolvedType)
+    ? getWritableMeetingPostTypes(
+        isHost,
+        detail.volunteerPostingId !== null,
+      ).includes(resolvedType)
     : false;
 
   if (!isJoined) return <Navigate to={`/teams/${meetingId}/posts`} replace />;

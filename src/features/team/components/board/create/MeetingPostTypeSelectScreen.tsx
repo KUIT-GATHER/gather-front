@@ -13,6 +13,7 @@ import PageHeader from "@/shared/ui/PageHeader";
 type MeetingPostTypeSelectScreenProps = {
   meetingId: number;
   isHost: boolean;
+  isPostingBased: boolean;
 };
 
 const options: Array<{
@@ -48,9 +49,10 @@ const options: Array<{
 export function MeetingPostTypeSelectScreen({
   meetingId,
   isHost,
+  isPostingBased,
 }: MeetingPostTypeSelectScreenProps) {
   const navigate = useNavigate();
-  const writableTypes = getWritableMeetingPostTypes(isHost);
+  const writableTypes = getWritableMeetingPostTypes(isHost, isPostingBased);
   const availableOptions = options.filter((option) =>
     writableTypes.includes(option.type),
   );
