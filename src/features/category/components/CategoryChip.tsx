@@ -62,7 +62,7 @@ export function CategoryChip({ category, selected }: CategoryChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-1 rounded-[30px] border px-4 py-2.5 text-center text-xs leading-4 font-semibold whitespace-nowrap",
+        "inline-flex h-11 items-center justify-center gap-1 rounded-[30px] border px-4 py-2.5 text-center text-sm leading-4 font-semibold whitespace-nowrap",
         selected ? CHIP_STYLE[category].selected : CHIP_STYLE[category].idle,
         selected ? "text-text2" : "text-text-gray-400",
       )}

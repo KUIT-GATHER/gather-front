@@ -23,6 +23,10 @@ export function CategoryChipGroup({
   options = POSTING_CATEGORIES,
   className,
 }: CategoryChipGroupProps) {
+  const orderedOptions = [...options].sort(
+    (a, b) => Number(value.includes(b)) - Number(value.includes(a)),
+  );
+
   return (
     <div
       className={cn(
@@ -30,7 +34,7 @@ export function CategoryChipGroup({
         className,
       )}
     >
-      {options.map((category) => {
+      {orderedOptions.map((category) => {
         const selected = value.includes(category);
 
         return (
