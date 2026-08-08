@@ -4,12 +4,9 @@ import locationIcon from "@/assets/volunteer/location.svg";
 
 import mapIcon from "@/assets/icons/Map.svg";
 import calendarIcon from "@/assets/volunteer/calender.svg";
-import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
-import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import {
-  POSTING_CATEGORIES,
-  type PostingCategory,
-} from "@/features/category/types/postingCategory.types";
+import filterCloseIcon from "@/features/activity/assets/filter-close.svg";
+import { CategoryPuzzleGrid } from "@/features/category/components/CategoryPuzzleGrid";
+import { type PostingCategory } from "@/features/category/types/postingCategory.types";
 import { createRegionIndex } from "@/features/region/lib/createRegionIndex";
 import {
   getFullRegionSelectionLabel,
@@ -42,20 +39,6 @@ type FilterDraft = {
   regionId?: number;
   dateRange?: ActivityDateFilter;
   category?: PostingCategory;
-};
-
-const categoryLabelPositionClasses: Partial<Record<PostingCategory, string>> = {
-  COMMUNITY: "-translate-x-1 translate-y-1",
-  CULTURE: "-translate-x-1 -translate-y-1",
-};
-
-const categoryLabelColorClasses: Record<PostingCategory, string> = {
-  ENVIRONMENT: "text-[#17534C]",
-  EDUCATION: "text-[#111B55]",
-  CULTURE: "text-[#483811]",
-  COMMUNITY: "text-[#294C30]",
-  WELFARE: "text-[#591C59]",
-  OVERSEAS: "text-[#162D45]",
 };
 
 export type ActivityFilter = {
@@ -275,7 +258,13 @@ export function ActivityFilterSheet({
       onOpenChange={closeSheet}
       title={title}
       onBack={onBack}
+      closeIcon={<img src={filterCloseIcon} alt="" className="size-11" />}
       footer={footer}
+      footerClassName={
+        view === "main"
+          ? "pb-[calc(env(safe-area-inset-bottom)+36px)]"
+          : undefined
+      }
       className={cn(
         "rounded-t-[40px] bg-bg",
         view === "main"
@@ -285,13 +274,14 @@ export function ActivityFilterSheet({
             : undefined,
       )}
       contentClassName={cn(
+        view === "main" && "overflow-hidden py-0",
         view === "region" && "px-0 py-0",
         view === "date" &&
           "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
       )}
     >
       {view === "main" ? (
-        <div className="flex flex-col gap-7">
+        <div className="flex flex-col gap-6">
           <section>
             <h2 className="text-title-18 text-text">지역</h2>
             <div className="mt-3 flex gap-3.5">
@@ -328,7 +318,7 @@ export function ActivityFilterSheet({
                 src={calendarIcon}
                 alt=""
                 aria-hidden="true"
-                className="size-4"
+                className="size-6"
               />
               {draft.dateRange
                 ? formatTeamDateRange(
@@ -341,46 +331,17 @@ export function ActivityFilterSheet({
 
           <section>
             <h2 className="text-title-18 text-text">주제</h2>
-            <div className="mt-2 grid grid-cols-3 gap-x-2 gap-y-0">
-              {POSTING_CATEGORIES.map((category) => {
-                const selected = draft.category === category;
-
-                return (
-                  <button
-                    key={category}
-                    type="button"
-                    aria-pressed={selected}
-                    className="relative flex min-h-28 items-center justify-center rounded-xl p-1 text-sm text-text transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-                    onClick={() =>
-                      setDraft((current) => ({
-                        ...current,
-                        category:
-                          current.category === category ? undefined : category,
-                      }))
-                    }
-                  >
-                    <span className="relative block size-[105px]">
-                      <CategoryPuzzle
-                        category={category}
-                        selected={selected}
-                        className="size-full"
-                      />
-                      <span className="pointer-events-none absolute inset-0 grid place-items-center px-2">
-                        <span
-                          className={cn(
-                            "max-w-[78px] break-keep text-center text-lg font-medium leading-5",
-                            categoryLabelPositionClasses[category],
-                            categoryLabelColorClasses[category],
-                          )}
-                        >
-                          {POSTING_CATEGORY_LABEL[category]}
-                        </span>
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <CategoryPuzzleGrid
+              className="mt-2"
+              selectedCategories={draft.category ? [draft.category] : []}
+              onToggle={(category) =>
+                setDraft((current) => ({
+                  ...current,
+                  category:
+                    current.category === category ? undefined : category,
+                }))
+              }
+            />
           </section>
         </div>
       ) : null}
