@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
-import CameraIcon from "@/assets/icons/Camera.svg";
-import defaultProfileImage from "@/assets/icons/Profile.svg";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
 import {
@@ -23,11 +21,11 @@ import {
 } from "@/features/my/hooks/useMyProfileQuery";
 import { useUpdateMyProfileMutation } from "@/features/my/hooks/useUpdateMyProfileMutation";
 import { useUploadProfileImageMutation } from "@/features/my/hooks/useUploadProfileImageMutation";
-import { getProfileImageValidationError } from "@/features/my/lib/profileImageUpload";
 import {
   profileEditSchema,
   type ProfileEditFormValues,
 } from "@/features/my/schemas/profileEdit.schema";
+import { ProfileImagePicker } from "@/features/profile/components/ProfileImagePicker";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
@@ -55,11 +53,6 @@ export function ProfileEditScreen() {
   const uploadImageMutation = useUploadProfileImageMutation();
   const [isRegionSheetOpen, setIsRegionSheetOpen] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const profileImagePreview = useMemo(
-    () => (profileImageFile ? URL.createObjectURL(profileImageFile) : null),
-    [profileImageFile],
-  );
-  const [imageError, setImageError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<ProfileEditFormValues>({
@@ -107,12 +100,6 @@ export function ProfileEditScreen() {
     });
   }, [profileQuery.data, reset]);
 
-  useEffect(() => {
-    return () => {
-      if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
-    };
-  }, [profileImagePreview]);
-
   const regionById = useMemo(
     () =>
       new Map((regionsQuery.data ?? []).map((region) => [region.id, region])),
@@ -128,10 +115,6 @@ export function ProfileEditScreen() {
     : profileQuery.data?.activityRegion?.id === activityRegionId
       ? profileQuery.data.activityRegion.name
       : "활동 지역을 선택해 주세요";
-  const displayedProfileImage =
-    profileImagePreview ||
-    profileImageQuery.data?.profileImageUrl ||
-    defaultProfileImage;
   const isSaving =
     updateProfileMutation.isPending || uploadImageMutation.isPending;
 
@@ -216,40 +199,12 @@ export function ProfileEditScreen() {
 
       <form noValidate onSubmit={submit} className="pt-2">
         <div className="flex justify-center">
-          <label className="relative block size-[95px] cursor-pointer rounded-full focus-within:ring-2 focus-within:ring-button/40">
-            <img
-              src={displayedProfileImage}
-              alt="프로필 이미지"
-              className="size-full rounded-full object-cover"
-            />
-            <span className="absolute -bottom-0.5 -right-0.5 grid size-8 place-items-center rounded-full bg-white shadow">
-              <img src={CameraIcon} alt="" className="size-5" />
-            </span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-
-                const validationError = getProfileImageValidationError(file);
-                setImageError(validationError);
-                if (validationError) {
-                  setProfileImageFile(null);
-                } else {
-                  setProfileImageFile(file);
-                }
-                event.target.value = "";
-              }}
-            />
-          </label>
+          <ProfileImagePicker
+            file={profileImageFile}
+            imageUrl={profileImageQuery.data?.profileImageUrl}
+            onFileChange={setProfileImageFile}
+          />
         </div>
-        {imageError ? (
-          <p className="mt-2 text-center text-xs text-point-red">
-            {imageError}
-          </p>
-        ) : null}
 
         <div className="mt-7 space-y-6">
           <FormField

@@ -79,12 +79,14 @@ function KakaoSignupFlowContent({
     showExitDialog,
     showDuplicatePhoneDialog,
     verifiedPhoneNumber,
+    profileImageFile,
     isSignupPending,
     submitError,
     setDetailType,
     setShowExitDialog,
     setShowDuplicatePhoneDialog,
     setVerifiedPhoneNumber,
+    setProfileImageFile,
     clearSubmitError,
     handleBack,
     handleFormSubmit,
@@ -114,7 +116,12 @@ function KakaoSignupFlowContent({
               />
             ) : null}
 
-            {step === "profile" ? <ProfileStep /> : null}
+            {step === "profile" ? (
+              <ProfileStep
+                profileImageFile={profileImageFile}
+                onProfileImageFileChange={setProfileImageFile}
+              />
+            ) : null}
 
             {step === "terms" ? (
               <TermsStep

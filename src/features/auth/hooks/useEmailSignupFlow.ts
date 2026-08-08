@@ -13,6 +13,8 @@ import { useSignupMutation } from "@/features/auth/hooks/useSignupMutation";
 import { applySignupError } from "@/features/auth/lib/applySignupError";
 import { toEmailSignupRequest } from "@/features/auth/lib/signup.mapper";
 import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { uploadProfileImage } from "@/features/profile/lib/profileImageUpload";
 import type { LegalDocumentType } from "@/features/legal";
 import {
   emailSignupDefaultValues,
@@ -59,6 +61,7 @@ function getFocusableSignupField(field: EmailSignupStepField | undefined) {
 
 export function useEmailSignupFlow() {
   const navigate = useNavigate();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const methods = useForm<EmailSignupFormValues>({
     resolver: zodResolver(signupEmailSchema),
     mode: "onTouched",
@@ -72,6 +75,8 @@ export function useEmailSignupFlow() {
   const [detailType, setDetailType] = useState<LegalDocumentType | null>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [isCompletingSignup, setIsCompletingSignup] = useState(false);
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
   );
@@ -130,6 +135,7 @@ export function useEmailSignupFlow() {
     setVerifiedPhoneNumber(null);
     setSubmitError(null);
     setPendingFocusField(null);
+    setProfileImageFile(null);
   };
 
   const moveToFieldError = (
@@ -203,8 +209,9 @@ export function useEmailSignupFlow() {
     }
   };
 
-  const onValidSubmit = (values: EmailSignupFormValues) => {
+  const onValidSubmit = async (values: EmailSignupFormValues) => {
     if (values.phoneNumber !== verifiedPhoneNumber) {
+      setIsCompletingSignup(false);
       moveToFieldError(
         "basic",
         "phoneNumber",
@@ -214,32 +221,45 @@ export function useEmailSignupFlow() {
     }
 
     if (normalizeEmail(values.email) !== verifiedEmail) {
+      setIsCompletingSignup(false);
       moveToFieldError("account", "email", "이메일 인증을 완료해 주세요.");
       return;
     }
 
-    signupMutation.mutate(toEmailSignupRequest(values), {
-      onSuccess: (data) => {
-        resetSignupFlow();
-        navigate("/login/email", {
-          replace: true,
-          state: { email: data.email },
-        });
-      },
-      onError: (error) => {
-        applySignupError({
-          error,
-          methods,
-          setStep,
-          setVerifiedEmail,
-          setVerifiedPhoneNumber,
-          setSubmitError,
-        });
-      },
-    });
+    try {
+      const signupResult = await signupMutation.mutateAsync(
+        toEmailSignupRequest(values),
+      );
+
+      setAccessToken(signupResult.accessToken);
+
+      if (profileImageFile) {
+        try {
+          await uploadProfileImage(profileImageFile);
+        } catch {
+          // 회원가입은 이미 완료되었으므로 이미지 실패가 인증 상태를 되돌리지 않게 한다.
+          setAccessToken(signupResult.accessToken);
+        }
+      }
+
+      resetSignupFlow();
+      navigate("/home", { replace: true });
+    } catch (error) {
+      applySignupError({
+        error,
+        methods,
+        setStep,
+        setVerifiedEmail,
+        setVerifiedPhoneNumber,
+        setSubmitError,
+      });
+    } finally {
+      setIsCompletingSignup(false);
+    }
   };
 
   const onInvalidSubmit = (errors: FieldErrors<EmailSignupFormValues>) => {
+    setIsCompletingSignup(false);
     const errorStep = findFirstErrorStep(errors);
 
     if (!errorStep) {
@@ -257,7 +277,7 @@ export function useEmailSignupFlow() {
   const handleFormSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
-    if (signupMutation.isPending) {
+    if (signupMutation.isPending || isCompletingSignup) {
       return;
     }
 
@@ -273,6 +293,7 @@ export function useEmailSignupFlow() {
         return;
       case "terms":
         setSubmitError(null);
+        setIsCompletingSignup(true);
         void submitSignup();
     }
   };
@@ -290,12 +311,14 @@ export function useEmailSignupFlow() {
     showExitDialog,
     verifiedPhoneNumber,
     verifiedEmail,
-    isSignupPending: signupMutation.isPending,
+    profileImageFile,
+    isSignupPending: signupMutation.isPending || isCompletingSignup,
     submitError,
     setDetailType,
     setShowExitDialog,
     setVerifiedPhoneNumber,
     setVerifiedEmail,
+    setProfileImageFile,
     clearSubmitError: () => setSubmitError(null),
     handleBack,
     handleFormSubmit,
