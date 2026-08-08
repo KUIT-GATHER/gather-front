@@ -3,6 +3,7 @@ import type {
   RecruitParticipantSummary,
 } from "@/features/team/types/meetingRecruit.types";
 import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
+import { resolveMockMeetingThumbnail } from "@/mocks/data/mockMeetingImages";
 
 export type MockMeetingRecruit = MeetingRecruitDetail;
 
@@ -356,7 +357,7 @@ export function getExternalMockMeetingRecruitListItems(): PostingListItem[] {
         meetingId: recruit.meetingId,
         title: recruit.title,
         organizationName: recruit.meetingName,
-        thumbnailUrl: "/src/assets/icons/Temp-volunteer-posting.svg",
+        thumbnailUrl: resolveMockMeetingThumbnail(recruit.meetingId),
         regionId: recruit.regionId,
         regionName: recruit.regionName,
         place: recruit.place,

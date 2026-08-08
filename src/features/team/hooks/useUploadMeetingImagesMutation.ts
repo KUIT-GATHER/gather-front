@@ -5,6 +5,7 @@ import {
   uploadMeetingImages,
   type UploadMeetingImagesParams,
 } from "@/features/team/lib/meetingImageUpload";
+import { volunteerPostingKeys } from "@/features/volunteer/api/volunteer.queries";
 
 export function useUploadMeetingImagesMutation() {
   const queryClient = useQueryClient();
@@ -26,6 +27,18 @@ export function useUploadMeetingImagesMutation() {
       });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: teamKeys.my() });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.recommended("guest"),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.recommended("member"),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.bookmarkedLists(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: volunteerPostingKeys.lists(),
+      });
     },
   });
 }

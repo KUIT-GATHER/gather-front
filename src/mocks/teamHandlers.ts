@@ -16,6 +16,12 @@ import {
   findMockParticipation,
   updateMockParticipation,
 } from "./data/mockParticipations";
+import {
+  getMockMeetingImageUrls,
+  getMockMeetingManageImages,
+  replaceMockMeetingImages,
+  resolveMockMeetingThumbnail,
+} from "./data/mockMeetingImages";
 
 import {
   createUnauthorizedResponse,
@@ -322,22 +328,6 @@ const mockPostImageUrls = [
   mockPostImageTwo,
   mockPostImageThree,
 ] as const;
-const meetingImageUrlsByMeetingId = new Map<number, string[]>([
-  [1, [...mockPostImageUrls]],
-  [2, [mockPostImageOne]],
-  [10, [mockPostImageOne, mockPostImageTwo]],
-]);
-const meetingManageImagesByMeetingId = new Map(
-  [...meetingImageUrlsByMeetingId].map(([meetingId, imageUrls]) => [
-    meetingId,
-    imageUrls.map((imageUrl, sortOrder) => ({
-      objectKey: `meetings/${meetingId}/existing-${sortOrder + 1}.jpg`,
-      imageUrl,
-      sortOrder,
-    })),
-  ]),
-);
-
 const meetingMembersByMeetingId: Record<number, MeetingMember[]> = {
   1: [
     {
@@ -414,10 +404,6 @@ export function updateMockPendingJoinRequest(
   }
 
   return request;
-}
-
-export function getMockMeetingManageImages(meetingId: number) {
-  return meetingManageImagesByMeetingId.get(meetingId) ?? [];
 }
 
 export function removeMockMeetingMember(meetingId: number, userId: number) {
@@ -1170,6 +1156,7 @@ function toMeetingListItem(team: MockMeeting) {
     status: team.status,
     deadline: team.deadline,
     activityStartAt: team.activityStartAt,
+    thumbnailUrl: resolveMockMeetingThumbnail(team.meetingId),
   };
 }
 
@@ -1718,8 +1705,7 @@ export const teamHandlers = [
         }),
       );
       const imageUrls = nextManageImages.map((image) => image.imageUrl);
-      meetingManageImagesByMeetingId.set(meetingId, nextManageImages);
-      meetingImageUrlsByMeetingId.set(meetingId, imageUrls);
+      replaceMockMeetingImages(meetingId, nextManageImages);
 
       return HttpResponse.json({
         success: true,
@@ -1738,7 +1724,7 @@ export const teamHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { imageUrls: meetingImageUrlsByMeetingId.get(meetingId) ?? [] },
+      data: { imageUrls: getMockMeetingImageUrls(meetingId) },
       error: null,
     });
   }),
