@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router";
 import { teamQueries } from "@/features/team/api/team.queries";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useToggleMeetingRecruitParticipationMutation } from "@/features/team/hooks/useMeetingRecruitMutations";
+import { getEffectiveRecruitParticipationAction } from "@/features/team/lib/meetingRecruitParticipation";
 import { VolunteerOpportunityConditionCard } from "@/features/volunteer/components/detail/VolunteerOpportunityConditionCard";
 import { VolunteerOpportunityHero } from "@/features/volunteer/components/detail/VolunteerOpportunityHero";
 import {
@@ -170,10 +171,12 @@ export function MeetingRecruitDetailScreen({
     imagesQuery.data?.imageUrls[0] ??
     getVolunteerPostingImage(primaryCategory, recruit.postId);
   const infoRows = getMeetingRecruitInfoRows(recruit);
+  const effectiveParticipationAction =
+    getEffectiveRecruitParticipationAction(recruit);
   const actionLabel =
-    recruit.participationAction === "APPLY"
+    effectiveParticipationAction === "APPLY"
       ? "신청하기"
-      : recruit.participationAction === "CANCEL"
+      : effectiveParticipationAction === "CANCEL"
         ? "신청 완료"
         : recruit.participationStatus === "CONFIRMED"
           ? "참가 확정"
@@ -241,14 +244,14 @@ export function MeetingRecruitDetailScreen({
           fullWidth
           className="h-12"
           disabled={
-            recruit.participationAction === "NONE" ||
+            effectiveParticipationAction === "NONE" ||
             participationMutation.isPending
           }
           variant={
-            recruit.participationAction === "CANCEL" ? "dark" : "primary"
+            effectiveParticipationAction === "CANCEL" ? "dark" : "primary"
           }
           aria-label={
-            recruit.participationAction === "CANCEL"
+            effectiveParticipationAction === "CANCEL"
               ? "신청 완료, 누르면 신청 취소"
               : undefined
           }
@@ -260,7 +263,7 @@ export function MeetingRecruitDetailScreen({
       <ConfirmDialog
         open={confirmOpen}
         title={
-          recruit.participationAction === "CANCEL" ? (
+          effectiveParticipationAction === "CANCEL" ? (
             "봉사 신청을 취소하시겠어요?"
           ) : (
             <>
@@ -273,7 +276,7 @@ export function MeetingRecruitDetailScreen({
           )
         }
         confirmText={
-          recruit.participationAction === "CANCEL" ? "취소하기" : "확인"
+          effectiveParticipationAction === "CANCEL" ? "취소하기" : "확인"
         }
         isPending={participationMutation.isPending}
         onCancel={() => setConfirmOpen(false)}

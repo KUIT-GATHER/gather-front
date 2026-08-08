@@ -4,10 +4,7 @@ import type {
 } from "@/features/team/types/meetingRecruit.types";
 import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
 
-export type MockMeetingRecruit = MeetingRecruitDetail & {
-  confirmationStatus: "UNCONFIRMED" | "CONFIRMED";
-  confirmedAt: string | null;
-};
+export type MockMeetingRecruit = MeetingRecruitDetail;
 
 function formatLocalDateTime(offsetDays: number, time: string) {
   const date = new Date();
@@ -73,6 +70,7 @@ export const mockMeetingRecruitsByPostId = new Map<number, MockMeetingRecruit>([
       postId: 101,
       title: "[QA] 외부 공개 모집중",
       external: true,
+      categories: ["ENVIRONMENT", "COMMUNITY", "WELFARE"],
     }),
   ],
   [
@@ -357,7 +355,7 @@ export function getExternalMockMeetingRecruitListItems(): PostingListItem[] {
         applyDeadlineAt: recruit.applyDeadlineAt,
         maxParticipants: recruit.maxParticipants,
         appliedCount: recruit.appliedCount,
-        category: recruit.categories[0],
+        categories: recruit.categories,
         status: recruit.applicationOpen ? "RECRUITING" : "CLOSED",
       };
     });

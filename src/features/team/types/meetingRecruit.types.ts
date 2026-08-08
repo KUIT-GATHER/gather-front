@@ -40,6 +40,8 @@ export type MeetingRecruitDetail = MeetingRecruitRequest & {
   appliedCount: number;
   participationStatus: RecruitParticipationStatus | null;
   participationAction: RecruitParticipationAction;
+  confirmationStatus: RecruitConfirmationStatus;
+  confirmedAt: string | null;
   applicationOpen: boolean;
   full: boolean;
   canEdit: boolean;
