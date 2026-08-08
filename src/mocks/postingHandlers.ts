@@ -36,9 +36,9 @@ const SORTABLE_POSTING_FIELDS = [
   "actStartDate",
   "actEndDate",
   "noticeStartDate",
-  "noticeEndDate",
+  "applyDeadlineAt",
   "recruitCount",
-  "applicantCount",
+  "appliedCount",
   "createdAt",
   "updatedAt",
 ] as const;
@@ -46,6 +46,10 @@ const SORTABLE_POSTING_FIELDS = [
 type PostingSortField = (typeof SORTABLE_POSTING_FIELDS)[number];
 type PostingSort = {
   field: PostingSortField;
+  direction: "asc" | "desc";
+};
+type SourcePostingSort = {
+  field: keyof (typeof postings.data)[number];
   direction: "asc" | "desc";
 };
 type PostingMeetingSortField = "createdAt";
@@ -289,11 +293,11 @@ function getUnifiedPostingSortValue(
     case "actEndDate":
       return item.activityEndAt ?? "";
     case "noticeStartDate":
-    case "noticeEndDate":
+    case "applyDeadlineAt":
       return item.applyDeadlineAt ?? "";
     case "recruitCount":
       return item.maxParticipants ?? 0;
-    case "applicantCount":
+    case "appliedCount":
       return item.appliedCount ?? 0;
     case "createdAt":
     case "updatedAt":
@@ -467,7 +471,7 @@ function getPostingStatusPriority(status: string) {
 
 function sortPostings(
   items: (typeof postings.data)[number][],
-  sorts: PostingSort[],
+  sorts: SourcePostingSort[],
   applyStatusPriority: boolean,
 ) {
   return [...items].sort((left, right) => {
