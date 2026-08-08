@@ -23,9 +23,11 @@ export function VolunteerPostingCard({
   variant = "list",
 }: VolunteerPostingCardProps) {
   const isUnifiedItem = "sourceType" in posting;
+  const categories = isUnifiedItem ? posting.categories : [posting.category];
+  const primaryCategory = categories[0];
   const imageSrc =
     (isUnifiedItem ? posting.thumbnailUrl : null) ??
-    getVolunteerPostingImage(posting.category, posting.id);
+    getVolunteerPostingImage(primaryCategory, posting.id);
   const location = isUnifiedItem
     ? posting.regionName || posting.place
     : formatVolunteerLocation(posting);
@@ -79,7 +81,7 @@ export function VolunteerPostingCard({
       }
       metadata={[location, activityDate]}
       dDay={urgentRecruitmentDDay}
-      categories={[posting.category]}
+      categories={categories}
       onClick={onClick}
     />
   );

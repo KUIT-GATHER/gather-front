@@ -39,7 +39,7 @@ export function TeamCard({
         className="w-[193px] shrink-0 rounded-xl border border-[#c5c5c5] bg-white p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
       >
         <MeetingCover
-          meetingId={team.meetingId}
+          imageUrl={team.thumbnailUrl}
           className="h-[202px] w-[167px] rounded-[10px]"
         />
         <div className="mt-2.5">
@@ -70,7 +70,7 @@ export function TeamCard({
           className="block w-full p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
         >
           <MeetingCover
-            meetingId={team.meetingId}
+            imageUrl={team.thumbnailUrl}
             className="h-[136px] w-full rounded-[10px]"
           />
 
@@ -125,7 +125,7 @@ export function TeamCard({
     <ActivityListCard
       image={
         <MeetingCover
-          meetingId={team.meetingId}
+          imageUrl={team.thumbnailUrl}
           className="h-[106px] w-[91px] shrink-0 rounded-[10px]"
         />
       }

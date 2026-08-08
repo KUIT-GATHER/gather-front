@@ -3,11 +3,9 @@ import type {
   RecruitParticipantSummary,
 } from "@/features/team/types/meetingRecruit.types";
 import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
+import { resolveMockMeetingThumbnail } from "@/mocks/data/mockMeetingImages";
 
-export type MockMeetingRecruit = MeetingRecruitDetail & {
-  confirmationStatus: "UNCONFIRMED" | "CONFIRMED";
-  confirmedAt: string | null;
-};
+export type MockMeetingRecruit = MeetingRecruitDetail;
 
 function formatLocalDateTime(offsetDays: number, time: string) {
   const date = new Date();
@@ -73,6 +71,7 @@ export const mockMeetingRecruitsByPostId = new Map<number, MockMeetingRecruit>([
       postId: 101,
       title: "[QA] 외부 공개 모집중",
       external: true,
+      categories: ["ENVIRONMENT", "COMMUNITY", "WELFARE"],
     }),
   ],
   [
@@ -141,6 +140,19 @@ export const mockMeetingRecruitsByPostId = new Map<number, MockMeetingRecruit>([
       canEdit: false,
       confirmationStatus: "CONFIRMED",
       confirmedAt: formatLocalDateTime(-7, "23:59:59"),
+      participationAction: "NONE",
+    }),
+  ],
+  [
+    107,
+    createRecruit({
+      postId: 107,
+      title: "[QA] 마감 후 신청자 없음",
+      activityStartAt: formatLocalDateTime(3, "09:00:00"),
+      activityEndAt: formatLocalDateTime(3, "12:00:00"),
+      applyDeadlineAt: formatLocalDateTime(-1, "23:59:59"),
+      applicationOpen: false,
+      canEdit: false,
       participationAction: "NONE",
     }),
   ],
@@ -270,6 +282,7 @@ export const mockRecruitParticipantsByPostId = new Map<
       },
     ],
   ],
+  [107, []],
 ]);
 
 let nextParticipationId = 2000;
@@ -301,10 +314,6 @@ export function applyMockAutomaticConfirmation(recruit: MockMeetingRecruit) {
   const applied = (
     mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
   ).filter(({ participationStatus }) => participationStatus === "APPLIED");
-
-  if (applied.length === 0) {
-    return;
-  }
 
   applied.forEach((participant) => {
     participant.participationStatus = "CONFIRMED";
@@ -348,7 +357,7 @@ export function getExternalMockMeetingRecruitListItems(): PostingListItem[] {
         meetingId: recruit.meetingId,
         title: recruit.title,
         organizationName: recruit.meetingName,
-        thumbnailUrl: "/src/assets/icons/Temp-volunteer-posting.svg",
+        thumbnailUrl: resolveMockMeetingThumbnail(recruit.meetingId),
         regionId: recruit.regionId,
         regionName: recruit.regionName,
         place: recruit.place,
@@ -357,7 +366,7 @@ export function getExternalMockMeetingRecruitListItems(): PostingListItem[] {
         applyDeadlineAt: recruit.applyDeadlineAt,
         maxParticipants: recruit.maxParticipants,
         appliedCount: recruit.appliedCount,
-        category: recruit.categories[0],
+        categories: recruit.categories,
         status: recruit.applicationOpen ? "RECRUITING" : "CLOSED",
       };
     });

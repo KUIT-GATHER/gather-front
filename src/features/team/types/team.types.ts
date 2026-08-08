@@ -19,6 +19,7 @@ export type MeetingListItem = {
   status: MeetingStatus;
   deadline: string;
   activityStartAt: string;
+  thumbnailUrl: string | null;
 };
 
 export type MyMeetingListItem = MeetingListItem & {

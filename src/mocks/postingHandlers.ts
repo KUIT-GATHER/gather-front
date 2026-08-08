@@ -274,7 +274,7 @@ function toUnifiedPostingListItem(
       : null,
     maxParticipants: posting.recruitCount,
     appliedCount: posting.applicantCount,
-    category: posting.category as PostingListItem["category"],
+    categories: [posting.category as PostingListItem["categories"][number]],
     status: posting.status,
   };
 }
@@ -646,7 +646,10 @@ export const postingHandlers = [
           [meetingRecruitItem.title, meetingRecruitItem.organizationName].some(
             (value) => value?.includes(keyword),
           )) &&
-        (!category || meetingRecruitItem.category === category) &&
+        (!category ||
+          meetingRecruitItem.categories.includes(
+            category as PostingListItem["categories"][number],
+          )) &&
         (regionId === undefined ||
           getRegionIdsIncludingChildren([regionId]).has(
             meetingRecruitItem.regionId!,

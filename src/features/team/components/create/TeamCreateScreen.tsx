@@ -617,7 +617,7 @@ export function TeamCreateScreen() {
             모임을 만들지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.
           </p>
         ) : null}
-        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-app border-t border-stroke bg-bg/95 px-5.5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+        <div>
           {createPhase === "uploadFailed" ? (
             <div className="flex flex-col gap-2">
               <Button

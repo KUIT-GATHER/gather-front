@@ -21,6 +21,7 @@ import {
   mockRecruitParticipantsByPostId,
   syncMockRecruitCounts,
 } from "@/mocks/data/mockMeetingRecruits";
+import { getMockMeetingManageImages } from "@/mocks/data/mockMeetingImages";
 import { getMockUserById } from "@/mocks/data/mockUsers";
 import { findMockParticipation } from "@/mocks/data/mockParticipations";
 import {
@@ -31,7 +32,6 @@ import { mockPostings } from "@/mocks/postingHandlers";
 import {
   approveMockMeetingMember,
   getMockMeeting,
-  getMockMeetingManageImages,
   getMockMeetingMembers,
   getNextMockMeetingPostId,
   getMockMeetingRole,

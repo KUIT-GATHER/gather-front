@@ -83,7 +83,7 @@ export type PostingListItemBase = {
   applyDeadlineAt: string | null;
   maxParticipants: number | null;
   appliedCount: number | null;
-  category: PostingCategory;
+  categories: PostingCategory[];
   status: string;
 };
 
