@@ -10,6 +10,8 @@ type InfoRow = {
 
 type SharedMeetingInfoCardProps = {
   home: MeetingHome;
+  location: string | null;
+  linkedPostingTitle: string | null;
 };
 
 const MEETING_STATUS_LABEL = {
@@ -36,18 +38,22 @@ function DetailRow({ icon, label, value }: InfoRow) {
   );
 }
 
-export function SharedMeetingInfoCard({ home }: SharedMeetingInfoCardProps) {
+export function SharedMeetingInfoCard({
+  home,
+  location,
+  linkedPostingTitle,
+}: SharedMeetingInfoCardProps) {
   const infoRows: (InfoRow | null)[] = [
     {
       icon: "deadline",
       label: "모집 마감일",
       value: formatMeetingFullDate(home.deadline) ?? home.deadline,
     },
-    home.regionName
+    location
       ? {
           icon: "location",
           label: "장소",
-          value: home.regionName,
+          value: location,
         }
       : null,
     {
@@ -66,11 +72,11 @@ export function SharedMeetingInfoCard({ home }: SharedMeetingInfoCardProps) {
       label: "모집 상태",
       value: MEETING_STATUS_LABEL[home.status],
     },
-    home.linkedPostingTitle
+    linkedPostingTitle
       ? {
           icon: "portalOrganization",
           label: "연관 공고",
-          value: home.linkedPostingTitle,
+          value: linkedPostingTitle,
         }
       : null,
   ];
