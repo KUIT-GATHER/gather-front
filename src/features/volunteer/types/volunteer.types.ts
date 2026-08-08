@@ -109,9 +109,11 @@ export type VolunteerPostingPage = {
 export type VolunteerPostingMeeting = {
   meetingId: number;
   name: string;
-  category: PostingCategory;
+  categories: PostingCategory[];
   currentMemberCount: number;
   maxMember: number;
+  regionId: number;
+  regionName: string;
   status: MeetingStatus;
   member: boolean;
   host: boolean;

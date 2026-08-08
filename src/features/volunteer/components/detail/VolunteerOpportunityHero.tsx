@@ -29,27 +29,31 @@ export function VolunteerOpportunityHero({
 }: VolunteerOpportunityHeroProps) {
   return (
     <section>
-      <div className="overflow-hidden rounded-lg">
+      <div className="overflow-hidden rounded-[10px] border border-stroke">
         <img
           src={imageSrc}
           alt={imageAlt}
-          className="aspect-[344/175] w-full object-cover"
+          className="aspect-[36/19] w-full object-cover"
         />
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <div className="mt-3 flex flex-wrap gap-2">
         {categories.map((category) => (
-          <CategoryBadge key={category} category={category} />
+          <CategoryBadge
+            key={category}
+            category={category}
+            className="h-[23px] px-2 text-sm font-normal [&>img]:size-3"
+          />
         ))}
         {regionName ? <Tag>{regionName}</Tag> : null}
       </div>
 
-      <h2 className="mt-3 w-full break-keep whitespace-pre-line text-title-20 text-text">
+      <h2 className="mt-4 max-w-[306px] break-keep whitespace-pre-line text-[20px] leading-6 font-semibold text-text">
         {title}
       </h2>
       <p
         className={cn(
-          "mt-2 whitespace-pre-line text-[15px] leading-7 font-medium text-text",
+          "mt-3 whitespace-pre-line text-[15px] leading-7 font-medium text-text",
           !content && "text-text-gray-400",
         )}
       >

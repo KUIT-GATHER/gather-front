@@ -56,7 +56,7 @@ export function GuestJoinBar({
 
   return (
     <>
-      <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 z-30 w-full max-w-app -translate-x-1/2 px-11">
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 mx-auto w-[315px] max-w-[calc(100%-44px)]">
         <Button
           size="pill"
           fullWidth

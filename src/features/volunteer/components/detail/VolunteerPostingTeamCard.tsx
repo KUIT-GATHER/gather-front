@@ -26,7 +26,7 @@ export function VolunteerPostingTeamCard({
   return (
     <VolunteerOpportunityTeamCard
       name={meeting.name}
-      category={meeting.category}
+      category={meeting.categories[0]}
       activityLabel={getMeetingActivityLabel(meeting)}
       onClick={onClick}
     />

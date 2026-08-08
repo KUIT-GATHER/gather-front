@@ -176,12 +176,13 @@ export function VolunteerPostingDetail({
         isBookmarkPending={isBookmarkPending}
         onBookmarkToggle={handleBookmarkToggle}
         sticky
+        className="-mx-[11px] w-[calc(100%+22px)]"
       />
 
       <div className="pt-1">
         <VolunteerPostingHero posting={posting} />
-        <VolunteerPostingInfoCard posting={posting} className="mt-5" />
-        <VolunteerPostingConditionCard posting={posting} className="mt-4" />
+        <VolunteerPostingInfoCard posting={posting} className="mt-4" />
+        <VolunteerPostingConditionCard posting={posting} className="mt-6" />
         <VolunteerPostingTeamSection
           postingId={posting.id}
           showCreateTeamButton={

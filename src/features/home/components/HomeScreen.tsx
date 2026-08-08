@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import alarmIcon from "@/assets/icons/Alarm.svg";
@@ -7,7 +7,6 @@ import filterIcon from "@/assets/icons/Filter.svg";
 import gatherIcon from "@/assets/volunteer/Gather.svg";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useUnreadNotificationCountQuery } from "@/features/notification/hooks/useUnreadNotificationCountQuery";
-import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
 import { VolunteerPostingFilterSheet } from "@/features/volunteer/components/filter/VolunteerPostingFilterSheet";
@@ -71,7 +70,6 @@ export function HomeScreen() {
   const unreadCountQuery = useUnreadNotificationCountQuery(
     authInitialized && isAuthenticated,
   );
-  const regionsQuery = useRegionsQuery();
   const postingsQuery = useRecommendedVolunteerPostingsQuery();
   const meetingsQuery = useRecommendedMeetingsQuery();
 
@@ -85,13 +83,6 @@ export function HomeScreen() {
   const unreadBadgeLabel = unreadTotal > 99 ? "99+" : String(unreadTotal);
   const isPostingsLoading = !authInitialized || postingsQuery.isLoading;
   const isMeetingsLoading = !authInitialized || meetingsQuery.isLoading;
-  const regionNameById = useMemo(
-    () =>
-      new Map(
-        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
-      ),
-    [regionsQuery.data],
-  );
   return (
     <PageContainer size="narrow">
       <header className="flex items-center justify-between pt-8 pb-1.25">
@@ -200,7 +191,6 @@ export function HomeScreen() {
                 key={meeting.meetingId}
                 variant="compact"
                 team={meeting}
-                regionName={regionNameById.get(meeting.regionId) ?? null}
                 onClick={() => navigate(`/teams/${meeting.meetingId}`)}
               />
             ))}

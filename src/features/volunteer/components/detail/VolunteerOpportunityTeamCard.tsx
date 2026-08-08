@@ -22,12 +22,14 @@ export function VolunteerOpportunityTeamCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-22 w-full items-center gap-4 rounded-xl border border-stroke bg-white px-4 py-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-point-green focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+      className="flex min-h-20 w-full items-center gap-4 rounded-xl border border-stroke bg-white px-4 py-4 text-left transition hover:border-point-green focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
     >
       <div
         className={cn(
-          "flex size-12 shrink-0 items-center justify-center rounded-lg text-xs font-semibold",
-          POSTING_CATEGORY_BADGE_STYLE[category],
+          "flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
+          category === "ENVIRONMENT"
+            ? "bg-[#F1FFFD] text-[#82D3CA]"
+            : POSTING_CATEGORY_BADGE_STYLE[category],
         )}
       >
         {POSTING_CATEGORY_LABEL[category]}
@@ -42,18 +44,20 @@ export function VolunteerOpportunityTeamCard({
             src={activatingPeopleIcon}
             alt=""
             aria-hidden="true"
-            className="size-3.5 shrink-0"
+            className="size-4 shrink-0"
           />
           <span>{activityLabel}</span>
         </p>
       </div>
 
-      <img
-        src={rightArrowIcon}
-        alt=""
-        aria-hidden="true"
-        className="h-5.5 w-3 shrink-0"
-      />
+      <span className="flex size-12 shrink-0 items-center justify-center">
+        <img
+          src={rightArrowIcon}
+          alt=""
+          aria-hidden="true"
+          className="h-[21px] w-3"
+        />
+      </span>
     </button>
   );
 }

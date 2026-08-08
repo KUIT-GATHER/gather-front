@@ -17,7 +17,6 @@ import {
   toTeamListQueryParams,
   updateTeamListSearchParams,
 } from "@/features/team/lib/teamListSearchParams";
-import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import IconButton from "@/shared/ui/IconButton";
@@ -82,14 +81,6 @@ function TeamListTabs({
 
 function MyMeetingList({ enabled }: { enabled: boolean }) {
   const meetingsQuery = useMyMeetingsQuery({ enabled });
-  const regionsQuery = useRegionsQuery();
-  const regionNameById = useMemo(
-    () =>
-      new Map(
-        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
-      ),
-    [regionsQuery.data],
-  );
   const navigate = useNavigate();
 
   if (meetingsQuery.isLoading) {
@@ -138,7 +129,6 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
             team={team}
             variant="my"
             viewerRole={team.viewerRole}
-            regionName={regionNameById.get(team.regionId) ?? null}
             onClick={() => navigate(`/teams/${team.meetingId}/posts`)}
           />
         </li>
@@ -163,7 +153,6 @@ function MeetingDiscoverList({
   const navigate = useNavigate();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const topButtonThresholdRef = useRef<HTMLLIElement>(null);
-  const regionsQuery = useRegionsQuery();
   const sort = getTeamListSort(searchParams);
   const filter = useMemo<TeamFilter>(
     () => getTeamListFilter(searchParams),
@@ -176,13 +165,6 @@ function MeetingDiscoverList({
   const meetingsQuery = useInfiniteMeetingsQuery(queryParams);
   const meetings =
     meetingsQuery.data?.pages.flatMap((page) => page.content) ?? [];
-  const regionNameById = useMemo(
-    () =>
-      new Map(
-        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
-      ),
-    [regionsQuery.data],
-  );
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -266,7 +248,6 @@ function MeetingDiscoverList({
             >
               <TeamCard
                 team={team}
-                regionName={regionNameById.get(team.regionId) ?? null}
                 onClick={() => navigate(`/teams/${team.meetingId}`)}
               />
             </li>
@@ -387,19 +368,17 @@ export function TeamListScreen() {
         className="[&>div]:h-[70px]"
         rightAction={
           activeTab === "find" ? (
-            <div className="ml-3 flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1">
               <IconButton
                 label="필터 열기"
                 icon={<img src={filterIcon} alt="" />}
-                size="medium"
-                className="-m-3"
+                className="[&>span>img]:h-[21px] [&>span>img]:w-5"
                 onClick={() => setIsFilterOpen(true)}
               />
               <IconButton
                 label="모임 검색"
                 icon={<img src={searchIcon} alt="" />}
-                size="medium"
-                className="-m-3"
+                className="[&>span>img]:size-[27px]"
                 onClick={() => navigate("/teams/search")}
               />
             </div>
