@@ -1,6 +1,6 @@
-import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 
+import calendarIcon from "@/assets/volunteer/calender.svg";
 import { MeetingDateTimePickerSheet } from "@/features/team/components/form/MeetingDateTimePickerSheet";
 import { formatMeetingDateTimeSummary } from "@/features/team/lib/meetingDateTimeFormat";
 import {
@@ -72,7 +72,7 @@ export function MeetingDateTimeField({
             ? formatMeetingDateTimeSummary(selectedDate)
             : placeholder}
         </span>
-        <CalendarDays aria-hidden="true" className="size-5 text-icon" />
+        <img src={calendarIcon} alt="" aria-hidden="true" className="size-5" />
       </button>
       <MeetingDateTimePickerSheet
         open={open}

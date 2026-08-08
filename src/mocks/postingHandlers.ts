@@ -110,7 +110,10 @@ const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
   return {
     ...postings.data[0],
     id,
-    title: `봉사공고 무한스크롤 테스트 ${id}`,
+    title:
+      id === 27
+        ? "[QA] 한강공원 플로깅 한강공원 플로깅 한강공원 플로깅"
+        : `봉사공고 무한스크롤 테스트 ${id}`,
     status: "RECRUITING",
     recruitOrg: `테스트 모집기관 ${id}`,
     actStartDate: formatMockDate(recruitmentDeadlineOffset + 2),

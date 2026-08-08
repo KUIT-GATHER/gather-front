@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ImagePlus, MapPin } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 
+import locationIcon from "@/assets/volunteer/location.svg";
 import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
@@ -18,7 +19,6 @@ import { buildMeetingCreateDateTimePayload } from "@/features/team/lib/meetingCr
 import { getMeetingImageUploadErrorMessage } from "@/features/team/lib/meetingImageUpload";
 import {
   getMeetingImageSelectionErrorMessage,
-  MAX_MEETING_IMAGE_COUNT,
   validateMeetingImageSelection,
 } from "@/features/team/lib/meetingImageValidation";
 import type { LocalMeetingImage } from "@/features/team/types/meetingImage.types";
@@ -40,6 +40,8 @@ const NAME_MAX_LENGTH = 15;
 const DESCRIPTION_MAX_LENGTH = 200;
 const MAX_MEMBER = 30;
 const PARTICIPATION_CONDITION_MAX_LENGTH = 150;
+const TEAM_CREATE_MAX_IMAGE_COUNT = 1;
+const TEAM_CREATE_IMAGE_COUNT_ERROR_MESSAGE = `사진은 최대 ${TEAM_CREATE_MAX_IMAGE_COUNT}장까지 첨부할 수 있어요.`;
 
 type MeetingCreatePhase =
   | "editing"
@@ -157,9 +159,15 @@ export function TeamCreateScreen() {
     try {
       if (!files) return;
 
+      const selectedFiles = Array.from(files);
+      const remainingCount = Math.max(
+        0,
+        TEAM_CREATE_MAX_IMAGE_COUNT - images.length,
+      );
+      const filesWithinLimit = selectedFiles.slice(0, remainingCount);
       const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
         existingImages: images,
-        files: Array.from(files),
+        files: filesWithinLimit,
       });
       const nextImages = acceptedFiles.map((file) => {
         const previewUrl = URL.createObjectURL(file);
@@ -179,7 +187,9 @@ export function TeamCreateScreen() {
       setImageSelectionError(
         rejectedReasons.length > 0
           ? getMeetingImageSelectionErrorMessage(rejectedReasons)
-          : null,
+          : selectedFiles.length > filesWithinLimit.length
+            ? TEAM_CREATE_IMAGE_COUNT_ERROR_MESSAGE
+            : null,
       );
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -451,13 +461,13 @@ export function TeamCreateScreen() {
             className="flex w-full items-center gap-3 rounded-xl border border-dashed border-point-green bg-[#f8fbf8] px-4 py-3 text-left text-base font-semibold text-text-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={
               areImageControlsDisabled ||
-              images.length >= MAX_MEETING_IMAGE_COUNT
+              images.length >= TEAM_CREATE_MAX_IMAGE_COUNT
             }
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus aria-hidden="true" className="size-6" />
             <span id="meeting-image-label">
-              사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
+              사진 첨부 (선택, 최대 {TEAM_CREATE_MAX_IMAGE_COUNT}장)
             </span>
           </button>
           <input
@@ -465,7 +475,6 @@ export function TeamCreateScreen() {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             disabled={areImageControlsDisabled}
-            multiple
             className="sr-only"
             onChange={(event) => handleImageChange(event.target.files)}
           />
@@ -496,7 +505,12 @@ export function TeamCreateScreen() {
             className="relative flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 text-sm font-medium text-text focus:border-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:opacity-100"
             onClick={() => setIsRegionSheetOpen(true)}
           >
-            <MapPin aria-hidden="true" className="size-4 text-icon" />
+            <img
+              src={locationIcon}
+              alt=""
+              aria-hidden="true"
+              className="size-4"
+            />
             {isPostingBased
               ? postingQuery.data?.actPlace ||
                 postingQuery.data?.regionName ||
