@@ -24,6 +24,10 @@ import IconButton from "@/shared/ui/IconButton";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
+import {
+  SCROLL_TOP_BUTTON_THRESHOLD_INDEX,
+  ScrollTopButton,
+} from "@/shared/ui/ScrollTopButton";
 import Select from "@/shared/ui/Select";
 import { cn } from "@/shared/lib/cn";
 
@@ -158,6 +162,7 @@ function MeetingDiscoverList({
 }) {
   const navigate = useNavigate();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const topButtonThresholdRef = useRef<HTMLLIElement>(null);
   const regionsQuery = useRegionsQuery();
   const sort = getTeamListSort(searchParams);
   const filter = useMemo<TeamFilter>(
@@ -249,9 +254,16 @@ function MeetingDiscoverList({
       ) : null}
 
       {meetings.length > 0 ? (
-        <ul className="flex flex-col gap-2">
-          {meetings.map((team) => (
-            <li key={team.meetingId}>
+        <ul className="flex flex-col gap-3">
+          {meetings.map((team, index) => (
+            <li
+              key={team.meetingId}
+              ref={
+                index === SCROLL_TOP_BUTTON_THRESHOLD_INDEX
+                  ? topButtonThresholdRef
+                  : undefined
+              }
+            >
               <TeamCard
                 team={team}
                 regionName={regionNameById.get(team.regionId) ?? null}
@@ -289,12 +301,18 @@ function MeetingDiscoverList({
         <button
           type="button"
           onClick={() => navigate("/teams/new")}
-          className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-[calc(50%+27px)] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+          className="fixed right-[max(1.375rem,calc(50%-12.5625rem+1.375rem))] bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-20 flex h-12 items-center gap-2 rounded-full bg-button px-5 text-lg font-medium text-text2 shadow-sm active:bg-icon focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
         >
           <img src={plusIcon} alt="" className="size-5" />
           모임 만들기
         </button>
       ) : null}
+
+      <ScrollTopButton
+        itemCount={meetings.length}
+        thresholdRef={topButtonThresholdRef}
+        className="bottom-[calc(9.5rem+env(safe-area-inset-bottom))]"
+      />
 
       {isFilterOpen ? (
         <TeamFilterSheet
