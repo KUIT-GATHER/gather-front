@@ -4,6 +4,7 @@ import { ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 import { teamQueries } from "@/features/team/api/team.queries";
@@ -20,6 +21,7 @@ import {
   MEETING_IMAGE_MIME_TYPES,
   validateMeetingImageSelection,
 } from "@/features/team/lib/meetingImageValidation";
+import { getMeetingPostSaveErrorMessage } from "@/features/team/lib/meetingPostActionMessage";
 import { uploadMeetingPostImages } from "@/features/team/lib/postImageUpload";
 import {
   meetingPostSchema,
@@ -32,6 +34,7 @@ import type {
   ReviewSourceValue,
 } from "@/features/team/types/meetingPost.types";
 import type { MeetingPost } from "@/features/team/types/team.types";
+import { getActionErrorMessage } from "@/shared/lib/actionErrorMessage";
 import Button from "@/shared/ui/Button";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -208,8 +211,14 @@ export function MeetingPostEditorScreen({
       navigate(`/teams/${meetingId}/posts/${created.postId}`, {
         replace: true,
       });
-    } catch {
-      setSubmitError("게시글을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } catch (error) {
+      toast(
+        getActionErrorMessage(
+          error,
+          getMeetingPostSaveErrorMessage(postType, Boolean(post)),
+        ),
+        { id: "meeting-post-save-toast" },
+      );
     }
   });
 

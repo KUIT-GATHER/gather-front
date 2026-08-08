@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import CommentIcon from "@/assets/icons/Comment.svg";
 import FilledHeartIcon from "@/assets/icons/Filledheart.svg";
@@ -28,8 +28,12 @@ async function copyTextToClipboard(text: string) {
   textarea.style.top = "-9999px";
   document.body.appendChild(textarea);
   textarea.select();
-  document.execCommand("copy");
-  document.body.removeChild(textarea);
+  const copied = document.execCommand("copy");
+  textarea.remove();
+
+  if (!copied) {
+    throw new Error("Clipboard copy failed");
+  }
 }
 
 export function MeetingPostFooterActions({
@@ -39,25 +43,15 @@ export function MeetingPostFooterActions({
   isLikePending = false,
   onLikeToggle,
 }: MeetingPostFooterActionsProps) {
-  const [copyToastId, setCopyToastId] = useState(0);
-
-  useEffect(() => {
-    if (copyToastId === 0) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setCopyToastId(0);
-    }, 2000);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [copyToastId]);
-
   const handleCopyLink = async () => {
-    await copyTextToClipboard(window.location.href);
-    setCopyToastId((current) => current + 1);
+    try {
+      await copyTextToClipboard(window.location.href);
+      toast("링크를 복사했어요", { id: "clipboard-toast" });
+    } catch {
+      toast("복사에 실패했어요. 다시 시도해 주세요", {
+        id: "clipboard-toast",
+      });
+    }
   };
 
   return (
@@ -115,16 +109,6 @@ export function MeetingPostFooterActions({
           </button>
         </div>
       </div>
-
-      {copyToastId > 0 ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed top-1/2 left-1/2 z-50 flex h-12 w-[calc(100%-2.75rem)] max-w-[22.375rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-[#DCECDF] px-5.5 text-center text-[15px] leading-4 font-medium text-text"
-        >
-          링크가 복사 되었습니다.
-        </div>
-      ) : null}
     </>
   );
 }
