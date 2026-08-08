@@ -26,12 +26,12 @@ function isInfoRow(row: InfoRow | null): row is InfoRow {
 
 function DetailRow({ icon, label, value }: InfoRow) {
   return (
-    <div className="grid grid-cols-[1.5rem_auto_1fr] items-start gap-2">
+    <div className="grid grid-cols-[1.5rem_auto_1fr] items-center gap-x-3">
       <InfoIcon name={icon} />
-      <dt className="whitespace-nowrap pt-0.5 text-[15px] leading-normal font-normal text-text-gray-400">
+      <dt className="whitespace-nowrap text-[15px] leading-[normal] font-normal text-text-gray-400">
         {label}
       </dt>
-      <dd className="pt-0.5 text-right text-[15px] leading-normal font-normal text-text">
+      <dd className="text-right text-[15px] leading-[normal] font-normal text-text">
         {value}
       </dd>
     </div>
@@ -45,7 +45,7 @@ export function SharedMeetingInfoCard({
 }: SharedMeetingInfoCardProps) {
   const infoRows: (InfoRow | null)[] = [
     {
-      icon: "deadline",
+      icon: "date",
       label: "모집 마감일",
       value: formatMeetingFullDate(home.deadline) ?? home.deadline,
     },
@@ -68,13 +68,13 @@ export function SharedMeetingInfoCard({
       value: "확인 필요",
     },
     {
-      icon: "date",
+      icon: "portalOrganization",
       label: "모집 상태",
       value: MEETING_STATUS_LABEL[home.status],
     },
     linkedPostingTitle
       ? {
-          icon: "portalOrganization",
+          icon: "announcement",
           label: "연관 공고",
           value: linkedPostingTitle,
         }
@@ -84,7 +84,7 @@ export function SharedMeetingInfoCard({
 
   return (
     <section className="rounded-xl border border-stroke bg-white px-3 py-4">
-      <dl className="flex flex-col gap-2.75">
+      <dl className="flex flex-col gap-2">
         {rows.map((row) => (
           <DetailRow key={row.label} {...row} />
         ))}

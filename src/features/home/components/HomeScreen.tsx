@@ -87,29 +87,31 @@ export function HomeScreen() {
     <PageContainer size="narrow">
       <header className="flex items-center justify-between pt-8 pb-1.25">
         <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
-        <div className="flex items-center">
+        <div className="mr-[11px] flex items-center gap-5">
           <IconButton
             label="필터 열기"
             icon={<img src={filterIcon} alt="" />}
             size="medium"
+            className="size-6 [&>span>img]:h-[21px] [&>span>img]:w-5"
             onClick={() => setIsFilterOpen(true)}
           />
 
-          <div className="flex size-10 items-center justify-center">
+          <div className="flex size-[27px] items-center justify-center">
             <IconButton
               label="알림 확인"
               icon={
-                <span className="relative block size-6">
-                  <img src={alarmIcon} alt="" className="block size-6" />
+                <span className="relative flex size-[27px] items-center justify-center">
+                  <img src={alarmIcon} alt="" className="h-5 w-[18px]" />
 
                   {unreadTotal > 0 ? (
-                    <span className="pointer-events-none absolute -right-1.5 -top-1.5 flex min-w-4 items-center justify-center rounded-full bg-point-red px-1 text-[9px] leading-4 text-white">
+                    <span className="pointer-events-none absolute top-0 right-[3px] flex h-3 min-w-3 items-center justify-center rounded-[7px] bg-point-red px-0.5 text-[8px] leading-none text-white">
                       {unreadBadgeLabel}
                     </span>
                   ) : null}
                 </span>
               }
               size="medium"
+              className="size-[27px]"
               onClick={() => navigate("/notifications")}
             />
           </div>

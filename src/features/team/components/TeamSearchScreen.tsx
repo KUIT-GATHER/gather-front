@@ -38,12 +38,14 @@ function getSearchError(value: string) {
 type TeamSearchFormProps = {
   initialKeyword: string;
   onSubmit: (keyword: string) => void;
+  onActivate?: () => void;
   variant?: "initial" | "header";
 };
 
 function TeamSearchForm({
   initialKeyword,
   onSubmit,
+  onActivate,
   variant = "header",
 }: TeamSearchFormProps) {
   const [keyword, setKeyword] = useState(initialKeyword);
@@ -67,6 +69,7 @@ function TeamSearchForm({
             ? "mt-8 flex items-center gap-2 border-b-2 border-text"
             : "flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-stroke/55 px-3"
         }
+        onFocus={onActivate}
         onSubmit={(event) => {
           event.preventDefault();
           submit();
@@ -147,6 +150,7 @@ export function TeamSearchScreen() {
               key={keywordFromUrl}
               initialKeyword={keywordFromUrl}
               onSubmit={submitSearch}
+              onActivate={() => setSearchParams(new URLSearchParams())}
               variant="header"
             />
           </header>
@@ -155,11 +159,8 @@ export function TeamSearchScreen() {
             <TeamSearchResults
               params={queryParams}
               onSelect={(meetingId) => navigate(`/teams/${meetingId}`)}
-              renderMeta={(totalElements) => (
-                <div className="flex items-center justify-between py-4">
-                  <p className="text-body-14 text-text-gray-300">
-                    전체 {totalElements}개 모임
-                  </p>
+              renderMeta={() => (
+                <div className="flex items-center justify-end py-4">
                   <Select
                     ariaLabel="검색 결과 정렬"
                     value={sort}

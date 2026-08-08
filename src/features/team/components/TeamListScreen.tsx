@@ -115,6 +115,7 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
   if (meetings.length === 0) {
     return (
       <EmptyState
+        className="mt-4"
         title="아직 참여한 모임이 없어요"
         description="마음에 드는 모임을 찾아 참여해 보세요."
       />

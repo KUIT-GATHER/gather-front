@@ -35,14 +35,16 @@ export function CategorySelector() {
         }}
       />
 
-      {errors.interestCategories?.message ? (
-        <p
-          id={getSignupFieldErrorId("interestCategories")}
-          className="mt-1.5 text-xs text-point-red"
-        >
-          {errors.interestCategories.message}
-        </p>
-      ) : null}
+      <div className="mt-1.5 min-h-4">
+        {errors.interestCategories?.message ? (
+          <p
+            id={getSignupFieldErrorId("interestCategories")}
+            className="text-xs text-point-red"
+          >
+            {errors.interestCategories.message}
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }
