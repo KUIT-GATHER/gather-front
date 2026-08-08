@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 import ExtraIcon from "@/assets/icons/Extra.svg";
 import { useDeleteMeetingPostMutation } from "@/features/team/hooks/useMeetingPostMutations";
 import { formatMeetingPostDate } from "@/features/team/lib/formatMeetingPostDate";
+import {
+  getMeetingPostDeleteErrorMessage,
+  getMeetingPostDeleteSuccessMessage,
+} from "@/features/team/lib/meetingPostActionMessage";
 import type { MeetingPost } from "@/features/team/types/team.types";
+import { getActionErrorMessage } from "@/shared/lib/actionErrorMessage";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import { BoardActionMenuPanel } from "../shared/BoardActionMenuPanel";
@@ -62,8 +68,20 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
   const handleDeleteConfirm = () => {
     deletePostMutation.mutate(undefined, {
       onSuccess: () => {
+        toast(getMeetingPostDeleteSuccessMessage(post.type), {
+          id: "meeting-post-delete-toast",
+        });
         setIsDeleteDialogOpen(false);
         navigate(`/teams/${post.meetingId}/posts`, { replace: true });
+      },
+      onError: (error) => {
+        toast(
+          getActionErrorMessage(
+            error,
+            getMeetingPostDeleteErrorMessage(post.type),
+          ),
+          { id: "meeting-post-delete-toast" },
+        );
       },
     });
   };

@@ -1,6 +1,8 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { ApiError } from "@/shared/api/apiError";
+import { getActionErrorMessage } from "@/shared/lib/actionErrorMessage";
 
 const ONE_MINUTE = 60 * 1000;
 const TEN_MINUTES = 10 * ONE_MINUTE;
@@ -61,8 +63,23 @@ export function createQueryClient() {
     }),
 
     mutationCache: new MutationCache({
+      onSuccess: (_data, _variables, _onMutateResult, mutation) => {
+        const toastMeta = mutation.options.meta?.toast;
+
+        if (toastMeta?.success) {
+          toast(toastMeta.success, { id: toastMeta.id });
+        }
+      },
       onError: (error, _variables, _onMutateResult, mutation) => {
-        const errorMode = mutation.options.meta?.errorMode ?? "log";
+        const meta = mutation.options.meta;
+
+        if (meta?.toast?.error) {
+          toast(getActionErrorMessage(error, meta.toast.error), {
+            id: meta.toast.id,
+          });
+        }
+
+        const errorMode = meta?.errorMode ?? "log";
 
         if (errorMode === "silent") {
           return;

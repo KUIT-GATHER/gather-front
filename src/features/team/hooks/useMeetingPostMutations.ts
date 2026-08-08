@@ -193,6 +193,12 @@ export function useCreateMeetingPostCommentMutation(
     mutationKey: teamKeys.createPostComment(meetingId, postId),
     mutationFn: (payload: MeetingPostCommentCreateRequest) =>
       createMeetingPostComment(meetingId, postId, payload),
+    meta: {
+      toast: {
+        error: "댓글을 등록하지 못했어요. 다시 시도해 주세요.",
+        id: "comment-create-toast",
+      },
+    },
     onSuccess: () => {
       queryClient.setQueryData<MeetingPost>(
         teamKeys.post(meetingId, postId),
@@ -222,6 +228,12 @@ export function useUpdateMeetingPostCommentMutation(
     mutationKey: teamKeys.updatePostComment(meetingId, postId, commentId),
     mutationFn: (payload: MeetingPostCommentUpdateRequest) =>
       updateMeetingPostComment(meetingId, postId, commentId, payload),
+    meta: {
+      toast: {
+        error: "댓글을 수정하지 못했어요. 다시 시도해 주세요.",
+        id: "comment-update-toast",
+      },
+    },
     onSuccess: (comment) => {
       queryClient.setQueriesData<InfiniteData<MeetingPostCommentPage>>(
         { queryKey: teamKeys.postComments(meetingId, postId) },
@@ -244,6 +256,12 @@ export function useDeleteMeetingPostCommentMutation(
   return useMutation({
     mutationKey: teamKeys.deletePostComment(meetingId, postId, commentId),
     mutationFn: () => deleteMeetingPostComment(meetingId, postId, commentId),
+    meta: {
+      toast: {
+        error: "댓글을 삭제하지 못했어요. 다시 시도해 주세요.",
+        id: "comment-delete-toast",
+      },
+    },
     onSuccess: () => {
       queryClient.setQueryData<MeetingPost>(
         teamKeys.post(meetingId, postId),

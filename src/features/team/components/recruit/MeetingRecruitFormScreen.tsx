@@ -57,7 +57,6 @@ export function MeetingRecruitFormScreen({
     recruit?.postId ?? 0,
   );
   const [regionOpen, setRegionOpen] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
     control,
@@ -90,7 +89,6 @@ export function MeetingRecruitFormScreen({
   const pending = createMutation.isPending || updateMutation.isPending;
 
   const submit = handleSubmit(async (formValues) => {
-    setSubmitError(null);
     const request: MeetingRecruitRequest = {
       ...formValues,
       title: formValues.title.trim(),
@@ -110,9 +108,7 @@ export function MeetingRecruitFormScreen({
         : await createMutation.mutateAsync(request);
       navigate(`/teams/${meetingId}/posts/${result.postId}`, { replace: true });
     } catch {
-      setSubmitError(
-        "모집 공고를 저장하지 못했어요. 입력 내용을 확인해 주세요.",
-      );
+      return;
     }
   });
 
@@ -332,11 +328,6 @@ export function MeetingRecruitFormScreen({
             {...register("participationCondition")}
           />
         </FormField>
-        {submitError ? (
-          <p role="alert" className="text-sm text-point-red">
-            {submitError}
-          </p>
-        ) : null}
         <Button type="submit" fullWidth disabled={pending}>
           {pending ? "저장 중" : recruit ? "저장하기" : "등록하기"}
         </Button>
