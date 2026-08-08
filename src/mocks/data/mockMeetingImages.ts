@@ -1,12 +1,11 @@
 import mockMeetingImageOne from "@/assets/icons/Temp-volunteer-posting.svg";
-import mockMeetingImageThree from "@/assets/onboarding/onboarding-step2-center.svg";
 import mockMeetingImageTwo from "@/assets/onboarding/onboarding-step1-center.svg";
 import type { MeetingManageImage } from "@/features/team/types/meetingImage.types";
 
 const initialMeetingImageUrls = new Map<number, string[]>([
-  [1, [mockMeetingImageOne, mockMeetingImageTwo, mockMeetingImageThree]],
+  [1, [mockMeetingImageOne]],
   [2, [mockMeetingImageOne]],
-  [10, [mockMeetingImageOne, mockMeetingImageTwo]],
+  [10, [mockMeetingImageTwo]],
 ]);
 
 const meetingManageImagesByMeetingId = new Map<number, MeetingManageImage[]>(

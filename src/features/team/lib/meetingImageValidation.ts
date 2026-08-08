@@ -6,7 +6,8 @@ export const MEETING_IMAGE_MIME_TYPES = [
   "image/webp",
 ] as const;
 
-export const MAX_MEETING_IMAGE_COUNT = 3;
+export const MAX_MEETING_COVER_IMAGE_COUNT = 1;
+export const MAX_MEETING_POST_IMAGE_COUNT = 3;
 export const MAX_MEETING_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 type MeetingImageValidationReason =
@@ -35,10 +36,12 @@ export function validateMeetingImageSelection({
   existingImages,
   existingCount = existingImages.length,
   files,
+  maxCount = MAX_MEETING_POST_IMAGE_COUNT,
 }: {
   existingImages: Pick<LocalMeetingImage, "file">[];
   existingCount?: number;
   files: Iterable<File>;
+  maxCount?: number;
 }): MeetingImageSelectionResult {
   const knownFileKeys = new Set(
     existingImages.map((image) => getMeetingImageFileKey(image.file)),
@@ -69,7 +72,7 @@ export function validateMeetingImageSelection({
       continue;
     }
 
-    if (existingCount + acceptedFiles.length >= MAX_MEETING_IMAGE_COUNT) {
+    if (existingCount + acceptedFiles.length >= maxCount) {
       rejectedReasons.push("countExceeded");
       continue;
     }
@@ -83,6 +86,7 @@ export function validateMeetingImageSelection({
 
 export function getMeetingImageSelectionErrorMessage(
   rejectedReasons: MeetingImageValidationReason[],
+  maxCount = MAX_MEETING_POST_IMAGE_COUNT,
 ) {
   if (rejectedReasons.includes("unsupportedType")) {
     return "JPEG, PNG, WebP 형식의 사진만 첨부할 수 있어요.";
@@ -100,5 +104,5 @@ export function getMeetingImageSelectionErrorMessage(
     return "같은 사진은 한 번만 첨부할 수 있어요.";
   }
 
-  return `사진은 최대 ${MAX_MEETING_IMAGE_COUNT}장까지 첨부할 수 있어요.`;
+  return `사진은 최대 ${maxCount}장까지 첨부할 수 있어요.`;
 }
