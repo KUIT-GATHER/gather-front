@@ -1,14 +1,9 @@
-import CalendarIcon from "@/assets/volunteer/calender.svg";
-import ClockIcon from "@/assets/volunteer/clock.svg";
-import ExpireDateIcon from "@/assets/volunteer/expiredate.svg";
-import LocationIcon from "@/assets/volunteer/location.svg";
-import MemberIcon from "@/assets/volunteer/member.svg";
-import PortalOrgIcon from "@/assets/volunteer/portalorg.svg";
+import { InfoIcon, type InfoIconName } from "@/shared/ui/InfoIcon";
 import { formatMeetingFullDate } from "@/features/team/lib/teamFormatters";
 import type { MeetingHome } from "@/features/team/types/team.types";
 
 type InfoRow = {
-  icon: string;
+  icon: InfoIconName;
   label: string;
   value: string;
 };
@@ -30,9 +25,7 @@ function isInfoRow(row: InfoRow | null): row is InfoRow {
 function DetailRow({ icon, label, value }: InfoRow) {
   return (
     <div className="grid grid-cols-[1.5rem_auto_1fr] items-start gap-2">
-      <span className="flex size-6 items-center justify-center">
-        <img src={icon} alt="" className="max-h-5 max-w-5" />
-      </span>
+      <InfoIcon name={icon} />
       <dt className="whitespace-nowrap pt-0.5 text-[15px] leading-normal font-normal text-text-gray-400">
         {label}
       </dt>
@@ -44,43 +37,44 @@ function DetailRow({ icon, label, value }: InfoRow) {
 }
 
 export function SharedMeetingInfoCard({ home }: SharedMeetingInfoCardProps) {
-  const rows = [
+  const infoRows: (InfoRow | null)[] = [
     {
-      icon: ExpireDateIcon,
+      icon: "deadline",
       label: "모집 마감일",
       value: formatMeetingFullDate(home.deadline) ?? home.deadline,
     },
     home.regionName
       ? {
-          icon: LocationIcon,
+          icon: "location",
           label: "장소",
           value: home.regionName,
         }
       : null,
     {
-      icon: MemberIcon,
+      icon: "participants",
       label: "현재 인원",
       value: `${home.currentMemberCount}/${home.maxMember}명`,
     },
     {
-      icon: ClockIcon,
+      icon: "time",
       label: "시간 인증",
       // 백엔드 봉사시간 인증 기능 구현 전까지 항상 확인 필요로 표시합니다.
       value: "확인 필요",
     },
     {
-      icon: CalendarIcon,
+      icon: "date",
       label: "모집 상태",
       value: MEETING_STATUS_LABEL[home.status],
     },
     home.linkedPostingTitle
       ? {
-          icon: PortalOrgIcon,
+          icon: "portalOrganization",
           label: "연관 공고",
           value: home.linkedPostingTitle,
         }
       : null,
-  ].filter(isInfoRow);
+  ];
+  const rows = infoRows.filter(isInfoRow);
 
   return (
     <section className="rounded-xl border border-stroke bg-white px-3 py-4">

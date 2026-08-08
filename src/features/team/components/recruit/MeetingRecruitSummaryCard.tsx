@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
-import CalendarIcon from "@/assets/volunteer/calender.svg";
-import ClockIcon from "@/assets/volunteer/clock.svg";
-import LocationIcon from "@/assets/volunteer/location.svg";
+import CalendarIcon from "@/shared/assets/icons/info/calender.svg";
+import ClockIcon from "@/shared/assets/icons/info/clock.svg";
+import LocationIcon from "@/shared/assets/icons/info/location.svg";
 import { teamQueries } from "@/features/team/api/team.queries";
 import { useToggleMeetingRecruitParticipationMutation } from "@/features/team/hooks/useMeetingRecruitMutations";
 import {

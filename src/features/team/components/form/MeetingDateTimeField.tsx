@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import calendarIcon from "@/assets/volunteer/calender.svg";
+import calendarIcon from "@/shared/assets/icons/info/calender.svg";
 import { MeetingDateTimePickerSheet } from "@/features/team/components/form/MeetingDateTimePickerSheet";
 import { formatMeetingDateTimeSummary } from "@/features/team/lib/meetingDateTimeFormat";
 import {

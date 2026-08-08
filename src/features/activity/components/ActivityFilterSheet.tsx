@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import type { DateRange } from "@daypicker/react";
-import locationIcon from "@/assets/volunteer/location.svg";
+import locationIcon from "@/shared/assets/icons/info/location.svg";
 
 import mapIcon from "@/assets/icons/Map.svg";
-import calendarIcon from "@/assets/volunteer/calender.svg";
-import filterCloseIcon from "@/features/activity/assets/filter-close.svg";
+import calendarIcon from "@/shared/assets/icons/info/calender.svg";
+import closeIcon from "@/shared/assets/icons/close.svg";
 import { CategoryPuzzleGrid } from "@/features/category/components/CategoryPuzzleGrid";
 import { type PostingCategory } from "@/features/category/types/postingCategory.types";
 import { createRegionIndex } from "@/features/region/lib/createRegionIndex";
@@ -258,7 +258,7 @@ export function ActivityFilterSheet({
       onOpenChange={closeSheet}
       title={title}
       onBack={onBack}
-      closeIcon={<img src={filterCloseIcon} alt="" className="size-11" />}
+      closeIcon={<img src={closeIcon} alt="" className="size-11" />}
       footer={footer}
       footerClassName={
         view === "main"

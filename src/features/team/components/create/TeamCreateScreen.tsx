@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 
-import locationIcon from "@/assets/volunteer/location.svg";
+import locationIcon from "@/shared/assets/icons/info/location.svg";
 import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";

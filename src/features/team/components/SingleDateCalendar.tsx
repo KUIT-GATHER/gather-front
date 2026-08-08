@@ -1,10 +1,9 @@
-import { useState, type ButtonHTMLAttributes, type CSSProperties } from "react";
+﻿import { useState, type ButtonHTMLAttributes, type CSSProperties } from "react";
 import { DayPicker, type DayButtonProps } from "@daypicker/react";
 import { ko } from "@daypicker/react/locale/ko";
 import "@daypicker/react/style.css";
 
-import chevronLeftIcon from "@/features/team/assets/date-time-picker/chevron-left.svg";
-import chevronRightIcon from "@/features/team/assets/date-time-picker/chevron-right.svg";
+import chevronIcon from "@/shared/assets/icons/chevron.svg";
 
 import { cn } from "@/shared/lib/cn";
 
@@ -94,12 +93,7 @@ export function SingleDateCalendar({
           className="flex size-11 items-center justify-center justify-self-start rounded-full text-button hover:bg-button/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
           onClick={() => moveMonth(-1)}
         >
-          <img
-            src={chevronLeftIcon}
-            alt=""
-            aria-hidden="true"
-            className="size-9"
-          />
+          <img src={chevronIcon} alt="" aria-hidden="true" className="size-9" />
         </button>
         <p
           className="min-w-28 text-center text-xl font-semibold text-text-gray-300"
@@ -114,10 +108,10 @@ export function SingleDateCalendar({
           onClick={() => moveMonth(1)}
         >
           <img
-            src={chevronRightIcon}
+            src={chevronIcon}
             alt=""
             aria-hidden="true"
-            className="size-9"
+            className="size-9 rotate-180"
           />
         </button>
       </div>

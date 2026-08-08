@@ -1,5 +1,5 @@
-import calendarIcon from "@/features/team/assets/date-time-picker/calendar.svg";
-import closeIcon from "@/features/team/assets/date-time-picker/close.svg";
+﻿import calendarIcon from "@/features/team/assets/date-time-picker/calendar.svg";
+import closeIcon from "@/shared/assets/icons/close.svg";
 import refreshIcon from "@/features/team/assets/date-time-picker/refresh.svg";
 import { SingleDateCalendar } from "@/features/team/components/SingleDateCalendar";
 import { TimeWheelPicker } from "@/features/team/components/TimeWheelPicker";
