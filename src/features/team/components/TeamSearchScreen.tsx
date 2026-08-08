@@ -233,7 +233,7 @@ export function TeamSearchScreen() {
             </div>
             {recommendedKeywords.length > 0 ? (
               <div className="mt-8">
-                <h3 className="text-title-18 text-text">추천 검색어</h3>
+                <h3 className="text-title-18 text-text">인기 검색어</h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {recommendedKeywords.map((recommendation) => (
                     <button
