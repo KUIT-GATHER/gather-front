@@ -1,9 +1,12 @@
+import type { ReactNode } from "react";
+
 import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
 
 type ActivityListCardProps = {
-  imageSrc: string;
+  imageSrc?: string;
+  image?: ReactNode;
   title: string;
   description?: string | null;
   metadata: Array<string | null | undefined>;
@@ -14,6 +17,7 @@ type ActivityListCardProps = {
 
 export function ActivityListCard({
   imageSrc,
+  image,
   title,
   description,
   metadata,
@@ -30,11 +34,13 @@ export function ActivityListCard({
       onClick={onClick}
       className="flex w-full items-center gap-4 rounded-xl border border-stroke bg-white px-3 py-4 text-left transition-colors duration-200 hover:border-point-green hover:bg-[#f0f6f0] active:border-point-green active:bg-[#f0f6f0] focus:outline-none focus-visible:border-point-green focus-visible:bg-[#f0f6f0] focus-visible:ring-2 focus-visible:ring-point-green/30"
     >
-      <img
-        src={imageSrc}
-        alt=""
-        className="h-[106px] w-[91px] shrink-0 rounded-[10px] object-cover"
-      />
+      {image ?? (
+        <img
+          src={imageSrc}
+          alt=""
+          className="h-[106px] w-[91px] shrink-0 rounded-[10px] object-cover"
+        />
+      )}
       <div className="min-w-0 flex-1">
         <h2 className="truncate text-lg font-semibold leading-5 text-text">
           {title}

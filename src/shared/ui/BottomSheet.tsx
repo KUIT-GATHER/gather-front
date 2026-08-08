@@ -44,7 +44,7 @@ export default function BottomSheet({
           )}
         >
           <div className="relative flex shrink-0 items-center justify-between px-5.5 pt-5 pb-3">
-            <Dialog.Title className="absolute top-5 left-1/2 -translate-x-1/2 text-title-18 text-text">
+            <Dialog.Title className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-title-18 text-text">
               {title}
             </Dialog.Title>
             {leadingAction ? (
