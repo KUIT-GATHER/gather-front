@@ -1,6 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { getMyProfile, getMyProfileImage } from "./myProfile.api";
+import { getProfileImage } from "@/features/profile/api/profileImage.api";
+
+import { getMyProfile } from "./myProfile.api";
 
 export const myProfileKeys = {
   all: ["my-profile"] as const,
@@ -17,6 +19,6 @@ export const myProfileQueries = {
   image: () =>
     queryOptions({
       queryKey: myProfileKeys.image(),
-      queryFn: getMyProfileImage,
+      queryFn: getProfileImage,
     }),
 };

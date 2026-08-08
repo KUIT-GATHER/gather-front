@@ -20,6 +20,7 @@ import {
 } from "@/features/auth/schemas/kakaoSignup.schema";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useKakaoSignupStore } from "@/features/auth/store/kakaoSignup.store";
+import { uploadProfileImage } from "@/features/profile/lib/profileImageUpload";
 
 const FOCUSABLE_SIGNUP_FIELDS = new Set<KakaoSignupStepField>([
   "name",
@@ -86,6 +87,7 @@ export function useKakaoSignupFlow({
     useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitLocked, setIsSubmitLocked] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
   );
@@ -131,6 +133,7 @@ export function useKakaoSignupFlow({
     setSubmitError(null);
     setPendingFocusField(null);
     setShowDuplicatePhoneDialog(false);
+    setProfileImageFile(null);
   };
 
   const clearKakaoSignup = () => {
@@ -193,8 +196,9 @@ export function useKakaoSignupFlow({
     }
   };
 
-  const onValidSubmit = (values: KakaoSignupFormValues) => {
+  const onValidSubmit = async (values: KakaoSignupFormValues) => {
     if (values.phoneNumber !== verifiedPhoneNumber) {
+      setIsSubmitLocked(false);
       moveToFieldError(
         "basic",
         "phoneNumber",
@@ -203,40 +207,48 @@ export function useKakaoSignupFlow({
       return;
     }
 
-    signupMutation.mutate(
-      { payload: toKakaoSignupRequest(values), signupToken },
-      {
-        onSuccess: (tokens) => {
-          setAccessToken(tokens.accessToken);
-          clearKakaoSignup();
-          navigate(returnPath ?? "/home", { replace: true });
-        },
-        onError: (error) => {
-          const action = applyKakaoSignupError({
-            error,
-            methods,
-            setStep,
-            setVerifiedPhoneNumber,
-            setSubmitError,
-            onDuplicatePhoneNumber: () => setShowDuplicatePhoneDialog(true),
-          });
+    try {
+      const tokens = await signupMutation.mutateAsync({
+        payload: toKakaoSignupRequest(values),
+        signupToken,
+      });
 
-          if (action === "restart") {
-            clearKakaoSignup();
-            navigate("/login", {
-              replace: true,
-              state: {
-                kakaoSignupNotice:
-                  "카카오 가입 정보가 만료되었거나 이미 사용되었습니다. 카카오 로그인부터 다시 진행해 주세요.",
-              },
-            });
-          }
-        },
-        onSettled: () => {
-          setIsSubmitLocked(false);
-        },
-      },
-    );
+      setAccessToken(tokens.accessToken);
+
+      if (profileImageFile) {
+        try {
+          await uploadProfileImage(profileImageFile);
+        } catch {
+          // 가입 완료 후 선택 기능이므로 이미지 실패만 무시하고 인증은 유지한다.
+          setAccessToken(tokens.accessToken);
+        }
+      }
+
+      clearKakaoSignup();
+      navigate(returnPath ?? "/home", { replace: true });
+    } catch (error) {
+      const action = applyKakaoSignupError({
+        error,
+        methods,
+        setStep,
+        setVerifiedPhoneNumber,
+        setSubmitError,
+        onDuplicatePhoneNumber: () => setShowDuplicatePhoneDialog(true),
+      });
+
+      if (action === "restart") {
+        clearKakaoSignup();
+        navigate("/login", {
+          replace: true,
+          state: {
+            kakaoSignupNotice:
+              "카카오 가입 정보가 만료되었거나 이미 사용되었습니다. 카카오 로그인부터 다시 진행해 주세요.",
+          },
+        });
+      }
+    } finally {
+      setIsSubmitLocked(false);
+    }
   };
 
   const onInvalidSubmit = (errors: FieldErrors<KakaoSignupFormValues>) => {
@@ -294,12 +306,14 @@ export function useKakaoSignupFlow({
     showExitDialog,
     showDuplicatePhoneDialog,
     verifiedPhoneNumber,
+    profileImageFile,
     isSignupPending: signupMutation.isPending || isSubmitLocked,
     submitError,
     setDetailType,
     setShowExitDialog,
     setShowDuplicatePhoneDialog,
     setVerifiedPhoneNumber,
+    setProfileImageFile,
     clearSubmitError: () => setSubmitError(null),
     handleBack,
     handleFormSubmit,

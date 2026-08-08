@@ -1,9 +1,11 @@
 import {
   applyProfileImage,
   requestProfileImagePresignedUrl,
-} from "../api/myProfile.api";
+} from "@/features/profile/api/profileImage.api";
 
-const PROFILE_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const PROFILE_IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
+
+const PROFILE_IMAGE_TYPES = new Set(PROFILE_IMAGE_ACCEPT.split(","));
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export class ProfileImageUploadError extends Error {
@@ -17,7 +19,7 @@ export class ProfileImageUploadError extends Error {
 }
 
 export function getProfileImageValidationError(file: File) {
-  if (!PROFILE_IMAGE_TYPES.includes(file.type)) {
+  if (!PROFILE_IMAGE_TYPES.has(file.type)) {
     return "JPEG, PNG, WebP 이미지만 사용할 수 있어요.";
   }
   if (file.size <= 0) {

@@ -488,6 +488,8 @@ export const authHandlers = [
 
     addMockUser(newUser);
 
+    const refreshToken = createMockRefreshToken(newUser.id);
+
     return HttpResponse.json(
       {
         success: true,
@@ -496,10 +498,17 @@ export const authHandlers = [
           email: newUser.email,
           name: newUser.name,
           nickname: newUser.nickname,
+          accessToken: createMockAccessToken(newUser.id),
+          tokenType: "Bearer",
         },
         error: null,
       },
-      { status: 201 },
+      {
+        status: 201,
+        headers: {
+          "Set-Cookie": createRefreshTokenCookie(refreshToken),
+        },
+      },
     );
   }),
 
