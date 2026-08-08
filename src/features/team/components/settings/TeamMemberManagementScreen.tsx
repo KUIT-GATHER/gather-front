@@ -63,18 +63,22 @@ export function TeamMemberManagementScreen() {
                       setExpandedUserId(expanded ? null : member.userId)
                     }
                   >
-                    <span className="grid size-7 place-items-center rounded-full border border-stroke text-xs">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full border border-stroke text-xs">
                       {member.nickname.slice(0, 1)}
                     </span>
-                    <span className="truncate text-base font-medium">
-                      {member.nickname}
+
+                    <span className="flex min-w-0 items-center gap-1">
+                      <span className="truncate text-base font-medium">
+                        {member.nickname}
+                      </span>
+
+                      <ChevronDown
+                        className={cn(
+                          "size-4 shrink-0 text-text-gray-300 transition",
+                          expanded && "rotate-180",
+                        )}
+                      />
                     </span>
-                    <ChevronDown
-                      className={cn(
-                        "size-4 text-text-gray-300 transition",
-                        expanded && "rotate-180",
-                      )}
-                    />
                   </button>
                   {leader ? (
                     <Crown aria-label="팀장" className="size-5 text-icon" />
@@ -82,7 +86,7 @@ export function TeamMemberManagementScreen() {
                     <Button
                       variant="dangerOutline"
                       size="medium"
-                      className="h-8 px-3 text-xs"
+                      className="h-7 rounded-lg px-3 text-xs hover:bg-[#F76073] hover:text-[#FAFAF8]"
                       onClick={() => setRemoveTarget(member)}
                     >
                       내보내기

@@ -113,6 +113,8 @@ export function MeetingPostEditorScreen({
   const content = useWatch({ control, name: "content" });
   const reviewSourceValue = useWatch({ control, name: "reviewSourceValue" });
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const titleRegister = register("title");
+  const contentRegister = register("content");
 
   useEffect(() => () => previewsRef.current.forEach(URL.revokeObjectURL), []);
 
@@ -306,7 +308,11 @@ export function MeetingPostEditorScreen({
             maxLength={15}
             invalid={Boolean(errors.title)}
             placeholder="제목을 입력하세요"
-            {...register("title")}
+            {...titleRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 15);
+              titleRegister.onChange(event);
+            }}
           />
         </FormField>
         <FormField
@@ -323,7 +329,11 @@ export function MeetingPostEditorScreen({
             invalid={Boolean(errors.content)}
             placeholder="내용을 입력하세요"
             className="h-52"
-            {...register("content")}
+            {...contentRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 1000);
+              contentRegister.onChange(event);
+            }}
           />
         </FormField>
         <section>

@@ -88,6 +88,8 @@ export function MeetingRecruitFormScreen({
     ? regionsQuery.data?.find((item) => item.id === region.parentId)
     : undefined;
   const pending = createMutation.isPending || updateMutation.isPending;
+  const titleRegister = register("title");
+  const contentRegister = register("content");
 
   const submit = handleSubmit(async (formValues) => {
     setSubmitError(null);
@@ -159,7 +161,11 @@ export function MeetingRecruitFormScreen({
             maxLength={15}
             placeholder="활동 제목을 입력하세요"
             invalid={Boolean(errors.title)}
-            {...register("title")}
+            {...titleRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 15);
+              titleRegister.onChange(event);
+            }}
           />
         </FormField>
         <FormField
@@ -176,7 +182,11 @@ export function MeetingRecruitFormScreen({
             className="h-40"
             placeholder="활동에 대해 자세히 설명해 주세요"
             invalid={Boolean(errors.content)}
-            {...register("content")}
+            {...contentRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 1000);
+              contentRegister.onChange(event);
+            }}
           />
         </FormField>
         <FormField label="지역" required error={errors.regionId?.message}>
@@ -258,6 +268,7 @@ export function MeetingRecruitFormScreen({
                 value={field.value}
                 onChange={field.onChange}
                 maxSelected={3}
+                selectedFirst
               />
             )}
           />
