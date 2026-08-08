@@ -55,6 +55,16 @@ export function useSaveMeetingImagesMutation(meetingId: number) {
         queryKey: teamKeys.detail(meetingId),
       });
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: teamKeys.my() });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.recommended("guest"),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.recommended("member"),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: teamKeys.bookmarkedLists(),
+      });
       void queryClient.invalidateQueries({
         queryKey: volunteerPostingKeys.lists(),
       });

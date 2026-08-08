@@ -1,38 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
-import { teamQueries } from "@/features/team/api/team.queries";
 import defaultMeetingImage from "@/features/team/assets/meeting-images/default-meeting-img.svg";
 import { cn } from "@/shared/lib/cn";
 
 type MeetingCoverProps = {
-  meetingId: number;
+  imageUrl?: string | null;
   alt?: string;
   className?: string;
 };
 
 export function MeetingCover({
-  meetingId,
+  imageUrl,
   alt = "",
   className,
 }: MeetingCoverProps) {
-  const imagesQuery = useQuery(teamQueries.images(meetingId));
-  const imageUrl = imagesQuery.data?.imageUrls.find(Boolean);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const shouldShowRemote = Boolean(imageUrl) && failedUrl !== imageUrl;
 
   return (
     <div className={cn("relative overflow-hidden", className)}>
       <img
-        src={defaultMeetingImage}
-        alt=""
+        src={shouldShowRemote && imageUrl ? imageUrl : defaultMeetingImage}
+        alt={alt}
         className="size-full object-cover"
+        onError={() => {
+          if (shouldShowRemote && imageUrl) {
+            setFailedUrl(imageUrl);
+          }
+        }}
       />
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={alt}
-          className="absolute inset-0 size-full object-cover"
-          onError={(event) => event.currentTarget.remove()}
-        />
-      ) : null}
     </div>
   );
 }
