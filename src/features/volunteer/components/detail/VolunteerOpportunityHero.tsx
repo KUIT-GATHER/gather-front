@@ -44,7 +44,7 @@ export function VolunteerOpportunityHero({
         {regionName ? <Tag>{regionName}</Tag> : null}
       </div>
 
-      <h2 className="mt-3 whitespace-pre-line text-title-20 text-text">
+      <h2 className="mt-3 w-full break-keep whitespace-pre-line text-title-20 text-text">
         {title}
       </h2>
       <p
