@@ -209,15 +209,6 @@ export function ActivityFilterSheet({
     onOpenChange(false);
   };
 
-  const resetFilter = () => {
-    setDraft({});
-    setDateSelection(undefined);
-    setRegionSelectionId(undefined);
-    setActiveLevel1RegionId(undefined);
-    onApply({});
-    onOpenChange(false);
-  };
-
   const title =
     view === "date" ? dateLabel : view === "region" ? "지역" : "필터";
   const onBack =
@@ -271,15 +262,7 @@ export function ActivityFilterSheet({
         </Button>
       </div>
     ) : (
-      <div className="mx-auto grid w-full max-w-[315px] grid-cols-2 gap-3">
-        <Button
-          fullWidth
-          variant="primaryOutline"
-          className="active:bg-button/8"
-          onClick={resetFilter}
-        >
-          초기화
-        </Button>
+      <div className="mx-auto w-full max-w-[315px]">
         <Button fullWidth className="active:bg-icon" onClick={applyFilter}>
           설정하기
         </Button>

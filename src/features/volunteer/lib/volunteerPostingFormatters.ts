@@ -56,6 +56,20 @@ export function formatVolunteerHomeDate(value: string | null) {
   return `${month}.${day}(${weekday})`;
 }
 
+export function formatVolunteerShortDate(value: string | null) {
+  const date = parseLocalDate(value);
+
+  if (!date) {
+    return null;
+  }
+
+  const year = String(date.getFullYear()).slice(-2);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+}
+
 export function formatVolunteerPeriod(
   startDate: string | null,
   endDate: string | null,
@@ -197,7 +211,9 @@ export function getVolunteerDDay(value: string | null) {
 }
 
 export function getRecruitmentDDay(noticeEndDate: string | null) {
-  return getVolunteerDDay(noticeEndDate);
+  const dDay = getVolunteerDDay(noticeEndDate);
+
+  return dDay === "D-day" || /^D-[1-7]$/.test(dDay ?? "") ? dDay : null;
 }
 
 export function formatVolunteerLocation(

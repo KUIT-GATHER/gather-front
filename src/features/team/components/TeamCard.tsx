@@ -1,11 +1,11 @@
 import { Settings } from "lucide-react";
 
 import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
+import { MeetingCover } from "@/features/team/components/MeetingCover";
 import {
   formatMeetingActivityDate,
   getMeetingDDay,
 } from "@/features/team/lib/teamFormatters";
-import { getMeetingImage } from "@/features/team/lib/getMeetingImage";
 import type {
   MeetingListItem,
   MeetingMemberRole,
@@ -31,8 +31,6 @@ export function TeamCard({
   const deadline = getMeetingDDay(team.deadline);
   const urgentDeadline =
     deadline === "D-day" || /^D-[1-7]$/.test(deadline ?? "") ? deadline : null;
-  const imageSrc = getMeetingImage(team.categories[0], team.meetingId);
-
   if (variant === "compact") {
     return (
       <button
@@ -40,10 +38,9 @@ export function TeamCard({
         onClick={onClick}
         className="w-[193px] shrink-0 rounded-xl border border-[#c5c5c5] bg-white p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
       >
-        <img
-          src={imageSrc}
-          alt=""
-          className="h-[202px] w-[167px] rounded-[10px] object-cover"
+        <MeetingCover
+          meetingId={team.meetingId}
+          className="h-[202px] w-[167px] rounded-[10px]"
         />
         <div className="mt-2.5">
           <h3 className="truncate text-body-15-semibold text-text">
@@ -72,10 +69,9 @@ export function TeamCard({
           onClick={onClick}
           className="block w-full p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
         >
-          <img
-            src={imageSrc}
-            alt=""
-            className="h-[136px] w-full rounded-[10px] object-cover"
+          <MeetingCover
+            meetingId={team.meetingId}
+            className="h-[136px] w-full rounded-[10px]"
           />
 
           <div className="mt-2.5 min-w-0 pr-16">
@@ -127,7 +123,12 @@ export function TeamCard({
 
   return (
     <ActivityListCard
-      imageSrc={imageSrc}
+      image={
+        <MeetingCover
+          meetingId={team.meetingId}
+          className="h-[106px] w-[91px] shrink-0 rounded-[10px]"
+        />
+      }
       title={team.name}
       description={team.description}
       metadata={[

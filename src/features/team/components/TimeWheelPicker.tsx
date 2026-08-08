@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/shared/lib/cn";
 
 const ITEM_HEIGHT = 40;
-const WHEEL_PADDING = 100;
+const WHEEL_PADDING = 60;
 
 type WheelColumnProps<T extends string | number> = {
   label: string;
@@ -34,7 +34,7 @@ function WheelColumn<T extends string | number>({
         ref={ref}
         role="listbox"
         aria-label={label}
-        className="h-60 snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="h-40 snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={(event) => {
           const index = Math.max(
             0,
@@ -101,7 +101,7 @@ export function TimeWheelPicker({ value, onChange }: TimeWheelPickerProps) {
   };
 
   return (
-    <div className="relative h-[243px] overflow-hidden rounded-2xl border border-button bg-white px-4">
+    <div className="relative h-[163px] overflow-hidden rounded-2xl border border-button bg-white px-4">
       <div className="pointer-events-none absolute inset-x-4 top-1/2 z-0 h-12 -translate-y-1/2 rounded-xl bg-stroke" />
       <div className="relative z-10 grid grid-cols-3 gap-3">
         <WheelColumn
