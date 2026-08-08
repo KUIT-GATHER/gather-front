@@ -142,6 +142,19 @@ export const mockMeetingRecruitsByPostId = new Map<number, MockMeetingRecruit>([
       participationAction: "NONE",
     }),
   ],
+  [
+    107,
+    createRecruit({
+      postId: 107,
+      title: "[QA] 마감 후 신청자 없음",
+      activityStartAt: formatLocalDateTime(3, "09:00:00"),
+      activityEndAt: formatLocalDateTime(3, "12:00:00"),
+      applyDeadlineAt: formatLocalDateTime(-1, "23:59:59"),
+      applicationOpen: false,
+      canEdit: false,
+      participationAction: "NONE",
+    }),
+  ],
 ]);
 
 export const mockRecruitParticipantsByPostId = new Map<
@@ -268,6 +281,7 @@ export const mockRecruitParticipantsByPostId = new Map<
       },
     ],
   ],
+  [107, []],
 ]);
 
 let nextParticipationId = 2000;
@@ -299,10 +313,6 @@ export function applyMockAutomaticConfirmation(recruit: MockMeetingRecruit) {
   const applied = (
     mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
   ).filter(({ participationStatus }) => participationStatus === "APPLIED");
-
-  if (applied.length === 0) {
-    return;
-  }
 
   applied.forEach((participant) => {
     participant.participationStatus = "CONFIRMED";
