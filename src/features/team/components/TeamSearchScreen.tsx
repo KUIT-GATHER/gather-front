@@ -77,18 +77,20 @@ function TeamSearchForm({
         </label>
         <Input
           id="team-keyword"
-          value={keyword}
+          value={error ? "" : keyword}
           onChange={(event) => {
             setKeyword(event.target.value);
             if (error) setError(undefined);
           }}
           placeholder={
-            variant === "initial"
+            error ??
+            (variant === "initial"
               ? "검색어를 입력해주세요"
-              : "모임 이름 또는 설명"
+              : "모임 이름 또는 설명")
           }
-          className="border-0 bg-transparent px-0 focus:border-0"
+          className={`border-0 bg-transparent px-0 focus:border-0 ${error ? "placeholder:text-point-red" : ""}`}
           aria-describedby={error ? "team-search-error" : undefined}
+          aria-invalid={Boolean(error)}
           autoFocus={!initialKeyword}
         />
         <IconButton
@@ -97,12 +99,12 @@ function TeamSearchForm({
           size={variant === "initial" ? "medium" : "small"}
           type="submit"
         />
+        {error ? (
+          <p id="team-search-error" className="sr-only">
+            {error}
+          </p>
+        ) : null}
       </form>
-      {error ? (
-        <p id="team-search-error" className="mt-2 text-sm text-point-red">
-          {error}
-        </p>
-      ) : null}
     </>
   );
 }

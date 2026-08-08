@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, Search, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import {
@@ -15,6 +15,9 @@ import {
 } from "@/features/volunteer/lib/volunteerPostingSearchParams";
 import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
+import arrowBackIcon from "@/features/volunteer/assets/search/arrow-back.svg";
+import searchIcon from "@/features/volunteer/assets/search/search.svg";
+import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -37,12 +40,14 @@ function getSearchError(value: string) {
 type VolunteerPostingSearchFormProps = {
   initialKeyword: string;
   onSubmit: (keyword: string) => void;
+  onActivate?: () => void;
   variant?: "initial" | "header";
 };
 
 function VolunteerPostingSearchForm({
   initialKeyword,
   onSubmit,
+  onActivate,
   variant = "header",
 }: VolunteerPostingSearchFormProps) {
   const [keyword, setKeyword] = useState(initialKeyword);
@@ -64,8 +69,9 @@ function VolunteerPostingSearchForm({
         className={
           variant === "initial"
             ? "mt-10 flex items-center gap-2 border-b-2 border-text"
-            : "flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-stroke/55 px-3"
+            : "flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-[#e8e8e8] px-3"
         }
+        onFocus={onActivate}
         onSubmit={(event) => {
           event.preventDefault();
           submit();
@@ -76,32 +82,38 @@ function VolunteerPostingSearchForm({
         </label>
         <Input
           id="volunteer-keyword"
-          value={keyword}
+          value={error ? "" : keyword}
           onChange={(event) => {
             setKeyword(event.target.value);
             if (error) setError(undefined);
           }}
-          placeholder="공고 제목 또는 모집기관명"
-          className={
+          placeholder={error ?? "공고 제목 또는 모집기관명"}
+          className={cn(
             variant === "initial"
               ? "border-0 bg-transparent px-0 focus:border-0"
-              : "border-0 bg-transparent pl-2 pr-0 focus:border-0"
-          }
+              : "border-0 bg-transparent pl-3 pr-0 text-xl font-semibold tracking-[-0.5px] focus:border-0",
+            error && "placeholder:text-point-red",
+          )}
           aria-describedby={error ? "volunteer-search-error" : undefined}
+          aria-invalid={Boolean(error)}
           autoFocus={!initialKeyword}
         />
         <IconButton
           label="검색"
-          icon={<Search />}
+          icon={
+            <span className="flex size-11 items-center justify-center">
+              <img src={searchIcon} alt="" className="size-11" />
+            </span>
+          }
           size={variant === "initial" ? "medium" : "small"}
           type="submit"
         />
+        {error ? (
+          <p id="volunteer-search-error" className="sr-only">
+            {error}
+          </p>
+        ) : null}
       </form>
-      {error ? (
-        <p id="volunteer-search-error" className="mt-2 text-sm text-point-red">
-          {error}
-        </p>
-      ) : null}
     </>
   );
 }
@@ -137,50 +149,55 @@ export function VolunteerPostingSearchScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-8">
       {keywordFromUrl ? (
         <>
-          <header className="-ml-4 flex items-center gap-1 pt-[env(safe-area-inset-top)]">
+          <header className="-ml-4 flex h-[70px] items-center gap-1 pt-[env(safe-area-inset-top)]">
             <IconButton
               label="뒤로가기"
-              icon={<ChevronLeft />}
+              icon={
+                <span className="flex size-9 items-center justify-center">
+                  <img src={arrowBackIcon} alt="" className="size-9" />
+                </span>
+              }
+              variant="plain"
               onClick={() => navigate(-1)}
             />
             <VolunteerPostingSearchForm
               key={keywordFromUrl}
               initialKeyword={keywordFromUrl}
               onSubmit={submitSearch}
+              onActivate={() => setSearchParams(new URLSearchParams())}
               variant="header"
             />
           </header>
-          <section className="mt-5">
-            <h2 className="text-body-14 text-text">검색결과</h2>
-            <VolunteerPostingResults
-              params={queryParams}
-              emptyTitle="검색 결과가 없어요"
-              emptyDescription="다른 검색어로 다시 찾아보세요."
-              onSelect={(posting) => navigate(getPostingListItemPath(posting))}
-              renderMeta={(totalElements) => (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-body-14 text-text-gray-300">
-                    전체 {totalElements}개 활동
-                  </p>
-                  <Select
-                    ariaLabel="검색 결과 정렬"
-                    value={sort}
-                    options={volunteerPostingListSortOptions}
-                    onChange={(value) => {
-                      if (!isVolunteerPostingListSort(value)) return;
-                      setSearchParams(
-                        updateVolunteerPostingSearchParams(
-                          new URLSearchParams(),
-                          {},
-                          { keyword: keywordFromUrl, sort: value },
-                        ),
-                      );
-                      window.scrollTo({ top: 0, behavior: "auto" });
-                    }}
-                  />
-                </div>
-              )}
-            />
+          <section className="mt-0.5">
+            <div className="flex h-11 items-center justify-between">
+              <h2 className="text-body-14 text-text">검색결과</h2>
+              <Select
+                ariaLabel="검색 결과 정렬"
+                value={sort}
+                options={volunteerPostingListSortOptions}
+                onChange={(value) => {
+                  if (!isVolunteerPostingListSort(value)) return;
+                  setSearchParams(
+                    updateVolunteerPostingSearchParams(
+                      new URLSearchParams(),
+                      {},
+                      { keyword: keywordFromUrl, sort: value },
+                    ),
+                  );
+                  window.scrollTo({ top: 0, behavior: "auto" });
+                }}
+              />
+            </div>
+            <div className="-mt-px">
+              <VolunteerPostingResults
+                params={queryParams}
+                emptyTitle="검색 결과가 없어요"
+                emptyDescription="다른 검색어로 다시 찾아보세요."
+                onSelect={(posting) =>
+                  navigate(getPostingListItemPath(posting))
+                }
+              />
+            </div>
           </section>
         </>
       ) : (
