@@ -44,7 +44,7 @@ export function RecruitParticipantCard({
 
   return (
     <li className="overflow-hidden rounded-xl border border-stroke bg-white font-sans">
-      <div className="flex h-20 items-center gap-2 px-3">
+      <div className="flex h-17 items-center gap-2 px-3">
         <button
           type="button"
           aria-expanded={expanded}
@@ -55,20 +55,24 @@ export function RecruitParticipantCard({
           <span className="grid size-8 shrink-0 place-items-center rounded-full border border-stroke text-body-14 text-text">
             {participant.nickname.slice(0, 1)}
           </span>
-          <span className="truncate text-base font-medium leading-5 text-text">
-            {participant.nickname}
+
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate text-base font-medium leading-5 text-text">
+              {participant.nickname}
+            </span>
+
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                "size-4 shrink-0 text-text-gray-300 transition",
+                expanded && "rotate-180",
+              )}
+            />
           </span>
-          <ChevronDown
-            aria-hidden="true"
-            className={cn(
-              "size-4 shrink-0 text-text-gray-300 transition",
-              expanded && "rotate-180",
-            )}
-          />
         </button>
 
         {!showAttendance ? (
-          <span className="flex h-6 shrink-0 items-center rounded-lg border border-text-gray-300 px-3 text-body-14 text-text-gray-300">
+          <span className="flex h-6 shrink-0 items-center border  border-text-gray-400 bg-white text-[12px] rounded-lg px-3 text-text-gray-400">
             {participant.applicantType === "MEMBER" ? "팀원" : "외부"}
           </span>
         ) : null}
@@ -78,7 +82,7 @@ export function RecruitParticipantCard({
             type="button"
             className={cn(
               compactActionClassName,
-              "border border-point-red bg-point-red/8 text-point-red focus-visible:ring-point-red/40",
+              "border border-point-red bg-[#FAEEEE] w-12 text-[12px] hover:bg-point-red hover:text-white text-point-red focus-visible:ring-point-red/40",
             )}
             disabled={rejectPending}
             onClick={onReject}
@@ -95,7 +99,7 @@ export function RecruitParticipantCard({
               disabled={attendanceDisabled || attendancePending}
               className={cn(
                 compactActionClassName,
-                "border border-button transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-40",
+                "border border-button transition w-12 text-[12px] hover:bg-button hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-40",
                 isPresent ? "bg-button text-white" : "text-button",
               )}
               onClick={() => onAttendanceChange("PRESENT")}
@@ -108,7 +112,7 @@ export function RecruitParticipantCard({
               disabled={attendanceDisabled || attendancePending}
               className={cn(
                 compactActionClassName,
-                "border border-point-red transition focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/40 disabled:cursor-not-allowed disabled:opacity-40",
+                "border border-point-red transition w-12 text-[12px] hover:bg-point-red hover:text-white font-regular focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/40 disabled:cursor-not-allowed disabled:opacity-40",
                 isAbsent ? "bg-point-red text-white" : "text-point-red",
               )}
               onClick={() => onAttendanceChange("ABSENT")}
