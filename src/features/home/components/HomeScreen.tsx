@@ -118,7 +118,7 @@ export function HomeScreen() {
         </div>
       </header>
 
-      <div className="pt-6 pb-4">
+      <div className="pt-6 pb-12">
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[18px] font-semibold leading-7">
