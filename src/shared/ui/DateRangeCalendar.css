@@ -16,6 +16,11 @@
   display: none;
 }
 
+.date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_previous,
+.date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_next {
+  z-index: 2;
+}
+
 .date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_previous {
   inset-inline-start: calc(50% - 86px);
 }
