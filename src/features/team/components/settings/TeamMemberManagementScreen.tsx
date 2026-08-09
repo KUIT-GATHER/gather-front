@@ -86,7 +86,7 @@ export function TeamMemberManagementScreen() {
                     <Button
                       variant="dangerOutline"
                       size="medium"
-                      className="h-7 rounded-lg px-3 text-xs hover:bg-[#F76073] hover:text-[#FAFAF8]"
+                      className="h-7 rounded-lg px-3 text-xs hover:bg-point-red hover:text-text2"
                       onClick={() => setRemoveTarget(member)}
                     >
                       내보내기

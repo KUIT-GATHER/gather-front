@@ -21,19 +21,19 @@ export function MeetingPersonDetail({
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-[13px] text-black/50 ">
         <div className="flex min-w-0 gap-1.5 items-baseline">
           <dt className="shrink-0 text-[14px]">전화번호</dt>
-          <dd className="truncate text-[#0A0A0A]">{phoneNumber}</dd>
+          <dd className="truncate text-text">{phoneNumber}</dd>
         </div>
         <div className="flex min-w-0 gap-1.5 items-baseline">
           <dt className="shrink-0 text-[14px]">생년월일</dt>
-          <dd className="truncate text-[#0A0A0A]">{birthDate}</dd>
+          <dd className="truncate text-text">{birthDate}</dd>
         </div>
         <div className="flex min-w-0 gap-1.5 items-baseline">
           <dt className="shrink-0 text-[14px]">지역</dt>
-          <dd className="truncate text-[#0A0A0A]">{regionName}</dd>
+          <dd className="truncate text-text">{regionName}</dd>
         </div>
         <div className="flex min-w-0 gap-1.5 items-baseline">
           <dt className="shrink-0 text-[14px]">관심 분야</dt>
-          <dd className="truncate text-[#0A0A0A]">
+          <dd className="truncate text-text">
             {interestCategories
               .map((category) => POSTING_CATEGORY_LABEL[category])
               .join(", ")}

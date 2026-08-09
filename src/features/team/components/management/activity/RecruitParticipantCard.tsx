@@ -72,7 +72,7 @@ export function RecruitParticipantCard({
         </button>
 
         {!showAttendance ? (
-          <span className="flex h-6 shrink-0 items-center border  border-[#5E5E5D] bg-white text-[12px] rounded-lg px-3 text-[#5E5E5D]">
+          <span className="flex h-6 shrink-0 items-center border  border-text-gray-400 bg-white text-[12px] rounded-lg px-3 text-text-gray-400">
             {participant.applicantType === "MEMBER" ? "팀원" : "외부"}
           </span>
         ) : null}
@@ -82,7 +82,7 @@ export function RecruitParticipantCard({
             type="button"
             className={cn(
               compactActionClassName,
-              "border border-[#F76073] bg-[#FAEEEE] w-12 text-[12px] hover:bg-[#F76073] hover:text-white text-point-red focus-visible:ring-point-red/40",
+              "border border-point-red bg-[#FAEEEE] w-12 text-[12px] hover:bg-point-red hover:text-white text-point-red focus-visible:ring-point-red/40",
             )}
             disabled={rejectPending}
             onClick={onReject}
@@ -99,7 +99,7 @@ export function RecruitParticipantCard({
               disabled={attendanceDisabled || attendancePending}
               className={cn(
                 compactActionClassName,
-                "border border-[#00C77B] transition w-12 text-[12px] hover:bg-[#00C77B] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-40",
+                "border border-button transition w-12 text-[12px] hover:bg-button hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-40",
                 isPresent ? "bg-button text-white" : "text-button",
               )}
               onClick={() => onAttendanceChange("PRESENT")}
@@ -112,7 +112,7 @@ export function RecruitParticipantCard({
               disabled={attendanceDisabled || attendancePending}
               className={cn(
                 compactActionClassName,
-                "border border-[#F76073] transition w-12 text-[12px] hover:bg-[#F76073] hover:text-white font-regular focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/40 disabled:cursor-not-allowed disabled:opacity-40",
+                "border border-point-red transition w-12 text-[12px] hover:bg-point-red hover:text-white font-regular focus:outline-none focus-visible:ring-2 focus-visible:ring-point-red/40 disabled:cursor-not-allowed disabled:opacity-40",
                 isAbsent ? "bg-point-red text-white" : "text-point-red",
               )}
               onClick={() => onAttendanceChange("ABSENT")}
