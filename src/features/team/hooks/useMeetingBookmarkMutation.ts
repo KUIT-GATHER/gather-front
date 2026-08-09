@@ -31,6 +31,13 @@ export function useAddMeetingBookmarkMutation(meetingId: number) {
   return useMutation({
     mutationKey: teamKeys.bookmark(meetingId),
     mutationFn: () => addMeetingBookmark(meetingId),
+    meta: {
+      toast: {
+        success: "북마크에 저장했어요",
+        error: "북마크에 저장하지 못했어요. 다시 시도해 주세요.",
+        id: "bookmark-toast",
+      },
+    },
     onSuccess: (bookmark) => {
       queryClient.setQueryData<MeetingDetail>(
         teamKeys.detailForViewer(meetingId, true),
@@ -53,6 +60,13 @@ export function useRemoveMeetingBookmarkMutation(meetingId: number) {
   return useMutation({
     mutationKey: teamKeys.bookmark(meetingId),
     mutationFn: () => removeMeetingBookmark(meetingId),
+    meta: {
+      toast: {
+        success: "북마크를 해제했어요",
+        error: "북마크를 해제하지 못했어요. 다시 시도해 주세요.",
+        id: "bookmark-toast",
+      },
+    },
     onSuccess: (bookmark) => {
       queryClient.setQueryData<MeetingDetail>(
         teamKeys.detailForViewer(meetingId, true),

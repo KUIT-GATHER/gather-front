@@ -20,7 +20,7 @@ export function TeamSettingsMenuItem({
       className="flex min-h-20 w-full items-center justify-between rounded-[12px] border border-stroke bg-white px-5 py-4 text-left"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <img src={iconSrc} alt="" className="size-[44px] shrink-0" />
+        <img src={iconSrc} alt="" className={"size-[40px] shrink-0"} />
 
         <div className="flex min-w-0 flex-col gap-2">
           <p className="truncate text-[18px] leading-none font-medium text-text">

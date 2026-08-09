@@ -57,7 +57,6 @@ export function MeetingRecruitFormScreen({
     recruit?.postId ?? 0,
   );
   const [regionOpen, setRegionOpen] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
     control,
@@ -88,9 +87,10 @@ export function MeetingRecruitFormScreen({
     ? regionsQuery.data?.find((item) => item.id === region.parentId)
     : undefined;
   const pending = createMutation.isPending || updateMutation.isPending;
+  const titleRegister = register("title");
+  const contentRegister = register("content");
 
   const submit = handleSubmit(async (formValues) => {
-    setSubmitError(null);
     const request: MeetingRecruitRequest = {
       ...formValues,
       title: formValues.title.trim(),
@@ -110,9 +110,7 @@ export function MeetingRecruitFormScreen({
         : await createMutation.mutateAsync(request);
       navigate(`/teams/${meetingId}/posts/${result.postId}`, { replace: true });
     } catch {
-      setSubmitError(
-        "모집 공고를 저장하지 못했어요. 입력 내용을 확인해 주세요.",
-      );
+      return;
     }
   });
 
@@ -159,7 +157,11 @@ export function MeetingRecruitFormScreen({
             maxLength={15}
             placeholder="활동 제목을 입력하세요"
             invalid={Boolean(errors.title)}
-            {...register("title")}
+            {...titleRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 15);
+              titleRegister.onChange(event);
+            }}
           />
         </FormField>
         <FormField
@@ -176,7 +178,11 @@ export function MeetingRecruitFormScreen({
             className="h-40"
             placeholder="활동에 대해 자세히 설명해 주세요"
             invalid={Boolean(errors.content)}
-            {...register("content")}
+            {...contentRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 1000);
+              contentRegister.onChange(event);
+            }}
           />
         </FormField>
         <FormField label="지역" required error={errors.regionId?.message}>
@@ -258,6 +264,7 @@ export function MeetingRecruitFormScreen({
                 value={field.value}
                 onChange={field.onChange}
                 maxSelected={3}
+                selectedFirst
               />
             )}
           />
@@ -332,11 +339,6 @@ export function MeetingRecruitFormScreen({
             {...register("participationCondition")}
           />
         </FormField>
-        {submitError ? (
-          <p role="alert" className="text-sm text-point-red">
-            {submitError}
-          </p>
-        ) : null}
         <Button type="submit" fullWidth disabled={pending}>
           {pending ? "저장 중" : recruit ? "저장하기" : "등록하기"}
         </Button>

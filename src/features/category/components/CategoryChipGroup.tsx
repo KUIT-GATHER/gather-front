@@ -13,6 +13,7 @@ type CategoryChipGroupProps = {
   disabled?: boolean;
   options?: readonly PostingCategory[];
   className?: string;
+  selectedFirst?: boolean;
 };
 
 export function CategoryChipGroup({
@@ -22,10 +23,14 @@ export function CategoryChipGroup({
   disabled = false,
   options = POSTING_CATEGORIES,
   className,
+  selectedFirst = false,
 }: CategoryChipGroupProps) {
-  const orderedOptions = [...options].sort(
-    (a, b) => Number(value.includes(b)) - Number(value.includes(a)),
-  );
+  const orderedOptions = selectedFirst
+    ? [
+        ...value.filter((category) => options.includes(category)),
+        ...options.filter((category) => !value.includes(category)),
+      ]
+    : options;
 
   return (
     <div
