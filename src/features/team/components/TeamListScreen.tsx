@@ -23,10 +23,7 @@ import IconButton from "@/shared/ui/IconButton";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
-import {
-  SCROLL_TOP_BUTTON_THRESHOLD_INDEX,
-  ScrollTopButton,
-} from "@/shared/ui/ScrollTopButton";
+import { ScrollTopButton } from "@/shared/ui/ScrollTopButton";
 import Select from "@/shared/ui/Select";
 import { cn } from "@/shared/lib/cn";
 
@@ -153,7 +150,6 @@ function MeetingDiscoverList({
 }) {
   const navigate = useNavigate();
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const topButtonThresholdRef = useRef<HTMLLIElement>(null);
   const sort = getTeamListSort(searchParams);
   const filter = useMemo<TeamFilter>(
     () => getTeamListFilter(searchParams),
@@ -238,15 +234,8 @@ function MeetingDiscoverList({
 
       {meetings.length > 0 ? (
         <ul className="flex flex-col gap-3">
-          {meetings.map((team, index) => (
-            <li
-              key={team.meetingId}
-              ref={
-                index === SCROLL_TOP_BUTTON_THRESHOLD_INDEX
-                  ? topButtonThresholdRef
-                  : undefined
-              }
-            >
+          {meetings.map((team) => (
+            <li key={team.meetingId}>
               <TeamCard
                 team={team}
                 onClick={() => navigate(`/teams/${team.meetingId}`)}
@@ -290,11 +279,7 @@ function MeetingDiscoverList({
         </button>
       ) : null}
 
-      <ScrollTopButton
-        itemCount={meetings.length}
-        thresholdRef={topButtonThresholdRef}
-        className="bottom-[calc(9.5rem+env(safe-area-inset-bottom))]"
-      />
+      <ScrollTopButton className="bottom-[calc(9.5rem+env(safe-area-inset-bottom))]" />
 
       {isFilterOpen ? (
         <TeamFilterSheet

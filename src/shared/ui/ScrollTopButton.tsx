@@ -1,44 +1,29 @@
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useState } from "react";
 
 import topIcon from "@/assets/icons/Top.svg";
 import { cn } from "@/shared/lib/cn";
 
-type ScrollTopButtonProps<T extends HTMLElement> = {
-  itemCount: number;
-  thresholdRef: RefObject<T | null>;
-  minItemCount?: number;
+type ScrollTopButtonProps = {
   className?: string;
 };
 
-export const SCROLL_TOP_BUTTON_THRESHOLD_INDEX = 29;
-
-export function ScrollTopButton<T extends HTMLElement>({
-  itemCount,
-  thresholdRef,
-  minItemCount = 30,
-  className,
-}: ScrollTopButtonProps<T>) {
+export function ScrollTopButton({ className }: ScrollTopButtonProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const updateVisibility = () => {
-      const target = thresholdRef.current;
-
-      setVisible(
-        itemCount >= minItemCount
-          ? target !== null &&
-              target.getBoundingClientRect().top <= window.innerHeight
-          : false,
-      );
+      setVisible(window.scrollY >= window.innerHeight);
     };
 
     updateVisibility();
     window.addEventListener("scroll", updateVisibility, { passive: true });
+    window.addEventListener("resize", updateVisibility);
 
     return () => {
       window.removeEventListener("scroll", updateVisibility);
+      window.removeEventListener("resize", updateVisibility);
     };
-  }, [itemCount, minItemCount, thresholdRef]);
+  }, []);
 
   if (!visible) {
     return null;
