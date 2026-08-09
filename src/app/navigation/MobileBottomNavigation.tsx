@@ -35,7 +35,7 @@ export function MobileBottomNavigation() {
       className={cn(
         "fixed bottom-0 left-1/2 z-30",
         "w-full max-w-app -translate-x-1/2",
-        "border-t border-[#ECECEC] bg-white",
+        "border-t border-[#ECECEC] bg-bg",
       )}
       aria-label="하단 내비게이션"
     >

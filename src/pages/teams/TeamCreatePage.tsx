@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { TeamCreateScreen } from "@/features/team/components/create/TeamCreateScreen";
 
 export function TeamCreatePage() {
-  return <PageContainer size="narrow">TeamCreatePage</PageContainer>;
+  return <TeamCreateScreen />;
 }

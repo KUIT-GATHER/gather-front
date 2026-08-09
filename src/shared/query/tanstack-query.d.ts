@@ -1,7 +1,12 @@
 import "@tanstack/react-query";
 
 export type GlobalErrorMode = "silent" | "log";
-// 추후 Toast 로 확장 가능, 혹은 Sentry 같은 모니터링 도구로 확장 가능
+
+export interface AppMutationToastMeta {
+  success?: string;
+  error?: string;
+  id?: string;
+}
 
 export interface AppQueryMeta extends Record<string, unknown> {
   /**
@@ -18,11 +23,16 @@ export interface AppQueryMeta extends Record<string, unknown> {
   errorMode?: GlobalErrorMode;
 }
 
+export interface AppMutationMeta extends AppQueryMeta {
+  /** 설정한 결과에만 전역 Toast를 표시한다. */
+  toast?: AppMutationToastMeta;
+}
+
 declare module "@tanstack/react-query" {
   interface Register {
     defaultError: unknown;
     queryMeta: AppQueryMeta;
-    mutationMeta: AppQueryMeta;
+    mutationMeta: AppMutationMeta;
   }
 }
 

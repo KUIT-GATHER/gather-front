@@ -1,12 +1,29 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
+import EmailIcon from "@/assets/icons/Email.svg";
+import KakaoIcon from "@/assets/icons/Kakao.svg";
 import { AuthLogo } from "@/features/auth/components/login/AuthLogo";
+import { startKakaoLogin } from "@/features/auth/lib/kakaoOAuth";
 import Button from "@/shared/ui/Button";
 import PageContainer from "@/shared/ui/PageContainer";
 
 export function LoginStartScreen() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isKakaoLoginStarting, setIsKakaoLoginStarting] = useState(false);
+  const [kakaoLoginError, setKakaoLoginError] = useState<string | null>(null);
+  const loginNotice =
+    typeof (location.state as { kakaoSignupNotice?: unknown } | null)
+      ?.kakaoSignupNotice === "string"
+      ? (location.state as { kakaoSignupNotice: string }).kakaoSignupNotice
+      : null;
+  const returnPath =
+    typeof (location.state as { from?: unknown } | null)?.from === "string" &&
+    (location.state as { from: string }).from.startsWith("/") &&
+    !(location.state as { from: string }).from.startsWith("//")
+      ? (location.state as { from: string }).from
+      : undefined;
 
   return (
     <PageContainer
@@ -20,18 +37,32 @@ export function LoginStartScreen() {
           <Button
             fullWidth
             type="button"
-            className="h-13.5 bg-[#FEE84D] text-base font-semibold text-text hover:brightness-95"
+            disabled={isKakaoLoginStarting}
+            aria-busy={isKakaoLoginStarting}
+            className="h-13.5 gap-0.5 bg-[#FEE84D] text-base font-semibold text-text hover:brightness-95"
+            leftIcon={<img src={KakaoIcon} alt="" aria-hidden="true" />}
             onClick={() => {
-              // TODO: 카카오 로그인 연동 시 구현
+              setKakaoLoginError(null);
+              setIsKakaoLoginStarting(true);
+
+              try {
+                startKakaoLogin(returnPath);
+              } catch {
+                setIsKakaoLoginStarting(false);
+                setKakaoLoginError(
+                  "카카오 로그인을 시작하지 못했습니다. 다시 시도해 주세요.",
+                );
+              }
             }}
           >
-            카카오로 시작하기
+            {isKakaoLoginStarting ? "카카오로 이동 중" : "카카오로 시작하기"}
           </Button>
 
           <Button
             fullWidth
             type="button"
-            className="h-13.5 border border-button bg-[#EAF8EF] text-base font-semibold text-text-gray-300 hover:bg-[#DFF4E7]"
+            className="h-13.5 gap-0.5 border border-button bg-[#EAF8EF] text-base font-semibold text-text-gray-300 hover:bg-[#DFF4E7]"
+            leftIcon={<img src={EmailIcon} alt="" aria-hidden="true" />}
             onClick={() => {
               navigate("/login/email", {
                 state: location.state,
@@ -43,11 +74,17 @@ export function LoginStartScreen() {
 
           <button
             type="button"
-            className="mt-4 text-[13px] font-medium text-text-gray-100"
+            className="mt-4 self-center text-[13px] font-medium text-text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
             onClick={() => navigate("/signup")}
           >
             회원가입
           </button>
+
+          {loginNotice || kakaoLoginError ? (
+            <p role="alert" className="text-center text-sm text-point-red">
+              {kakaoLoginError ?? loginNotice}
+            </p>
+          ) : null}
         </div>
       </div>
     </PageContainer>

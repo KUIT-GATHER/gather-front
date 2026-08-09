@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { MyPageScreen } from "@/features/my/components/MyPageScreen";
 
 export function MyPage() {
-  return <PageContainer size="narrow">MyPage</PageContainer>;
+  return <MyPageScreen />;
 }

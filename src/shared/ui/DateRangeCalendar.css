@@ -1,0 +1,120 @@
+.date-range-calendar .rdp-day_button {
+  font-family: Pretendard, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+}
+
+.date-range-calendar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.date-range-calendar::-webkit-scrollbar {
+  display: none;
+}
+
+.date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_previous,
+.date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_next {
+  z-index: 2;
+}
+
+.date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_previous {
+  inset-inline-start: calc(50% - 86px);
+}
+
+.date-range-calendar.rdp-root[data-nav-layout="around"] .rdp-button_next {
+  inset-inline-end: calc(50% - 86px);
+}
+
+.date-range-calendar .rdp-chevron {
+  width: 32px;
+  height: 32px;
+}
+
+.date-range-calendar .rdp-outside .rdp-day_button {
+  color: var(--color-text-gray-100);
+}
+
+.date-range-calendar .rdp-range_start,
+.date-range-calendar .rdp-range_middle,
+.date-range-calendar .rdp-range_end {
+  position: relative;
+  background: transparent;
+}
+
+.date-range-calendar .rdp-range_start::before,
+.date-range-calendar .rdp-range_middle::before,
+.date-range-calendar .rdp-range_end::before {
+  position: absolute;
+  z-index: 0;
+  inset-block: 2px;
+  content: "";
+  pointer-events: none;
+  background: var(--rdp-range_middle-background-color);
+}
+
+.date-range-calendar .rdp-range_start::before {
+  inset-inline: calc(50% - 20px) 0;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+}
+
+.date-range-calendar .rdp-range_middle::before {
+  inset-inline: 0;
+}
+
+.date-range-calendar .rdp-range_end::before {
+  inset-inline: 0 calc(50% - 20px);
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+}
+
+.date-range-calendar .rdp-range_start.rdp-range_end::before {
+  inset-inline: calc(50% - 20px);
+  border-radius: var(--radius-xl);
+}
+
+.date-range-calendar .rdp-range_middle .rdp-day_button {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--color-icon);
+}
+
+.date-range-calendar .rdp-range_start .rdp-day_button,
+.date-range-calendar .rdp-range_end .rdp-day_button {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  transform: none;
+  width: 100%;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background-color: transparent;
+  color: var(--color-icon);
+  box-shadow: none;
+}
+
+.date-range-calendar .rdp-range_start .rdp-day_button::before,
+.date-range-calendar .rdp-range_end .rdp-day_button::before {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 31px;
+  transform: translate(-50%, -50%);
+  border-radius: 12px;
+  content: "";
+  background-color: var(--color-white);
+  box-shadow: 1px 3px 4px 0 rgb(0 0 0 / 25%);
+}

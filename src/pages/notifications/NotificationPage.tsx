@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { NotificationScreen } from "@/features/notification/components/NotificationScreen";
 
 export function NotificationPage() {
-  return <PageContainer size="narrow">NotificationPage</PageContainer>;
+  return <NotificationScreen />;
 }

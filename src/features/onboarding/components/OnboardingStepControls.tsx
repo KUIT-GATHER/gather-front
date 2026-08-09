@@ -42,7 +42,7 @@ export function OnboardingStepControls({
         })}
       </nav>
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col gap-3 px-6">
         <Button
           fullWidth
           size="large"

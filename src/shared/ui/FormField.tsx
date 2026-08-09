@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/cn";
 
 type FormFieldProps = {
-  label: string;
+  label: ReactNode;
   required?: boolean;
   count?: number;
   maxLength?: number;

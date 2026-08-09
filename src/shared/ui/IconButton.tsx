@@ -3,7 +3,7 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "@/shared/lib/cn";
 
 type IconButtonSize = "small" | "medium";
-type IconButtonVariant = "ghost" | "surface";
+type IconButtonVariant = "ghost" | "surface" | "plain";
 
 export type IconButtonProps = ComponentPropsWithRef<"button"> & {
   label: string;
@@ -24,6 +24,7 @@ const iconSizeClasses: Record<IconButtonSize, string> = {
 
 const variantClasses: Record<IconButtonVariant, string> = {
   ghost: "bg-transparent text-text hover:bg-text/5 active:bg-text/10",
+  plain: "bg-transparent text-text hover:bg-transparent active:bg-transparent",
   surface:
     "border border-stroke bg-white text-text shadow-sm hover:bg-bg active:bg-stroke/50",
 };

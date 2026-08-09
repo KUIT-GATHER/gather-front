@@ -1,15 +1,15 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
-import type { SignupStep } from "@/features/auth/constants/signupFlow.constants";
-import type { SignupFormValues } from "@/features/auth/schemas/signup.schema";
+import type { EmailSignupStep } from "@/features/auth/constants/signupFlow.constants";
+import type { EmailSignupFormValues } from "@/features/auth/schemas/emailSignup.schema";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 
 type ApplySignupErrorParams = {
   error: unknown;
-  methods: UseFormReturn<SignupFormValues>;
-  setStep: Dispatch<SetStateAction<SignupStep>>;
+  methods: UseFormReturn<EmailSignupFormValues>;
+  setStep: Dispatch<SetStateAction<EmailSignupStep>>;
   setVerifiedEmail: Dispatch<SetStateAction<string | null>>;
   setVerifiedPhoneNumber: Dispatch<SetStateAction<string | null>>;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
@@ -24,8 +24,8 @@ export function applySignupError({
   setSubmitError,
 }: ApplySignupErrorParams) {
   const moveToFieldError = (
-    step: SignupStep,
-    field: keyof SignupFormValues,
+    step: EmailSignupStep,
+    field: keyof EmailSignupFormValues,
     message: string,
   ) => {
     setSubmitError(null);
@@ -51,6 +51,18 @@ export function applySignupError({
     case API_ERROR_CODE.DUPLICATE_PHONE_NUMBER: {
       setVerifiedPhoneNumber(null);
       moveToFieldError("basic", "phoneNumber", "이미 가입된 전화번호입니다.");
+
+      return;
+    }
+
+    case API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED:
+    case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN: {
+      setVerifiedPhoneNumber(null);
+      moveToFieldError(
+        "basic",
+        "phoneNumber",
+        "탈퇴 후 7일간 재가입할 수 없습니다.",
+      );
 
       return;
     }
@@ -105,7 +117,7 @@ export function applySignupError({
     case API_ERROR_CODE.INVALID_INTEREST_CATEGORY_COUNT: {
       moveToFieldError(
         "profile",
-        "interestCategoryIds",
+        "interestCategories",
         "관심 카테고리를 1개 이상 선택해 주세요.",
       );
 
@@ -115,7 +127,7 @@ export function applySignupError({
     case API_ERROR_CODE.CATEGORY_NOT_FOUND: {
       moveToFieldError(
         "profile",
-        "interestCategoryIds",
+        "interestCategories",
         "관심 카테고리를 다시 선택해 주세요.",
       );
 

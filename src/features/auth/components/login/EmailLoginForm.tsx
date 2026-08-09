@@ -35,8 +35,12 @@ function getLoginErrorMessage(error: unknown) {
     return "정지된 계정입니다. 관리자에게 문의해 주세요.";
   }
 
-  if (error.code === API_ERROR_CODE.WITHDRAWN_USER) {
-    return "탈퇴한 계정입니다.";
+  if (
+    error.code === API_ERROR_CODE.WITHDRAWN_USER ||
+    error.code === API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED ||
+    error.code === API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN
+  ) {
+    return "탈퇴 후 7일간 재가입할 수 없습니다.";
   }
 
   if (error.code === API_ERROR_CODE.VALIDATION_ERROR) {

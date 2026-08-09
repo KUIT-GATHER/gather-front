@@ -16,7 +16,7 @@ export function OnboardingLayout({ children, onSkip }: OnboardingLayoutProps) {
     >
       <OnboardingHeader onSkip={onSkip} />
 
-      <div className="relative z-10 flex min-h-dvh w-full flex-col px-5 pt-[calc(env(safe-area-inset-top)+40px)] pb-[calc(env(safe-area-inset-bottom)+36px)]">
+      <div className="relative z-10 flex min-h-dvh w-full flex-col pt-[calc(env(safe-area-inset-top)+40px)] pb-[calc(env(safe-area-inset-bottom)+36px)]">
         {children}
       </div>
     </PageContainer>

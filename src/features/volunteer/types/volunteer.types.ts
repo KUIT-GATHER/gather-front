@@ -1,73 +1,102 @@
-export type VolunteerPostingStatus =
-  | "RECRUITING"
-  | "CLOSED"
-  | "COMPLETED";
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
+import type { MeetingStatus } from "@/features/team/types/team.types";
+
+export type VolunteerPostingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
 
 export type VolunteerPostingLocation = {
   locationSeq: number;
-  address: string;
-  latitude: number;
-  longitude: number;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type VolunteerPosting = {
   id: number;
   title: string;
   status: VolunteerPostingStatus;
-  content: string;
+  content: string | null;
 
-  recruitOrg: string;
-  registerOrg: string;
+  recruitOrg: string | null;
+  registerOrg: string | null;
 
-  actStartDate: string;
-  actEndDate: string;
-  actStartTime: string;
-  actEndTime: string;
-  noticeStartDate: string;
-  noticeEndDate: string;
-  actWkdy: string;
+  actStartDate: string | null;
+  actEndDate: string | null;
+  actStartTime: string | null;
+  actEndTime: string | null;
+  noticeStartDate: string | null;
+  noticeEndDate: string | null;
+  actWkdy: string | null;
 
-  recruitCount: number;
-  applicantCount: number;
-  isAdult: boolean;
-  isTeen: boolean;
-  isGroup: boolean;
+  recruitCount: number | null;
+  applicantCount: number | null;
+  isAdult: boolean | null;
+  isTeen: boolean | null;
+  isGroup: boolean | null;
 
-  actPlace: string;
+  actPlace: string | null;
 
-  managerName: string;
-  managerTel: string;
-  managerFax: string;
-  managerEmail: string;
-  managerAddress: string;
+  managerName: string | null;
+  managerTel: string | null;
+  managerFax: string | null;
+  managerEmail: string | null;
+  managerAddress: string | null;
 
-  regionId: number;
-  regionName: string;
-  categoryId: number;
-  categoryName: string;
+  regionId: number | null;
+  regionName: string | null;
+  category: PostingCategory;
 
   locations: VolunteerPostingLocation[];
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+  bookmarked: boolean;
+  participationStatus: VolunteerPostingParticipationStatus | null;
+  participationAction: VolunteerPostingParticipationAction;
 };
 
-export type VolunteerPostingListItem = Pick<
-  VolunteerPosting,
-  | "id"
-  | "title"
-  | "status"
-  | "recruitOrg"
-  | "actStartDate"
-  | "actEndDate"
-  | "actPlace"
-  | "recruitCount"
-  | "applicantCount"
-  | "regionId"
-  | "regionName"
-  | "categoryId"
-  | "categoryName"
->;
+export type VolunteerPostingListItem = {
+  id: number;
+  title: string;
+  status: VolunteerPostingStatus;
+  recruitOrg: string | null;
+  actStartDate: string | null;
+  actEndDate: string | null;
+  actPlace: string | null;
+  recruitCount: number | null;
+  applicantCount: number | null;
+  regionId: number | null;
+  regionName: string | null;
+  category: PostingCategory;
+  noticeEndDate: string | null;
+};
+
+export type PostingListItemBase = {
+  id: number;
+  title: string;
+  organizationName: string | null;
+  thumbnailUrl: string | null;
+  regionId: number | null;
+  regionName: string | null;
+  place: string | null;
+  activityStartAt: string | null;
+  activityEndAt: string | null;
+  applyDeadlineAt: string | null;
+  maxParticipants: number | null;
+  appliedCount: number | null;
+  categories: PostingCategory[];
+  status: string;
+};
+
+export type PostingListItem =
+  | (PostingListItemBase & { sourceType: "POSTING"; meetingId: null })
+  | (PostingListItemBase & {
+      sourceType: "MEETING_RECRUIT";
+      meetingId: number;
+    });
+
+export type PostingListPage = Omit<VolunteerPostingPage, "content"> & {
+  content: PostingListItem[];
+};
 
 export type VolunteerPostingPage = {
   content: VolunteerPostingListItem[];
@@ -77,18 +106,86 @@ export type VolunteerPostingPage = {
   size: number;
 };
 
-export type VolunteerPostingListParams = {
+export type VolunteerPostingMeeting = {
+  meetingId: number;
+  name: string;
+  categories: PostingCategory[];
+  currentMemberCount: number;
+  maxMember: number;
+  regionId: number;
+  regionName: string;
+  status: MeetingStatus;
+  member: boolean;
+  host: boolean;
+};
+
+export type VolunteerPostingMeetingPage = {
+  content: VolunteerPostingMeeting[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+};
+
+export type VolunteerPostingMeetingListParams = {
   page?: number;
   size?: number;
   sort?: string[];
-  regionId?: number;
+};
+
+export type VolunteerPostingBookmarkResponse = {
+  postingId: number;
+  bookmarked: boolean;
+};
+
+export type VolunteerPostingParticipationStatus =
+  | "APPLIED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "REVIEWED";
+
+export type VolunteerPostingParticipationAction =
+  | "APPLY"
+  | "CANCEL"
+  | "COMPLETE"
+  | "NONE";
+
+export type VolunteerPostingParticipationResponse = {
+  participationId: number;
+  status: VolunteerPostingParticipationStatus;
+  applicationUrl: string;
+};
+
+type VolunteerPostingRegionFilter =
+  | {
+      regionId?: never;
+      regionGroupId?: never;
+    }
+  | {
+      regionId: number;
+      regionGroupId?: never;
+    }
+  | {
+      regionId?: never;
+      regionGroupId: number;
+    };
+
+type VolunteerPostingBaseParams = {
+  page?: number;
+  size?: number;
+  sort?: string[];
   status?: VolunteerPostingStatus;
   noticeStartDate?: string;
   noticeEndDate?: string;
   keyword?: string;
+  category?: PostingCategory;
 };
 
-export type VolunteerPostingBookmark = {
-  postingId: number;
-  bookmarked: boolean;
-};
+export type VolunteerPostingListParams = VolunteerPostingBaseParams &
+  VolunteerPostingRegionFilter;
+
+export type VolunteerPostingInfiniteParams = Omit<
+  VolunteerPostingBaseParams,
+  "page"
+> &
+  VolunteerPostingRegionFilter;

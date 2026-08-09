@@ -48,6 +48,10 @@
   --text-title-18--line-height: 28px;
   --text-title-18--font-weight: 600;
 
+  --text-body-15: 15px;
+  --text-body-15--line-height: 20px;
+  --text-body-15--font-weight: 400;
+
   --text-body-15-semibold: 15px;
   --text-body-15-semibold--line-height: 20px;
   --text-body-15-semibold--font-weight: 600;
@@ -63,6 +67,7 @@
 
 @layer base {
   html {
+    scrollbar-gutter: stable;
     font-family:
       Pretendard,
       system-ui,

@@ -1,5 +1,5 @@
-import PageContainer from "@/shared/ui/PageContainer";
+import { TeamSearchScreen } from "@/features/team/components/TeamSearchScreen";
 
 export function TeamSearchPage() {
-  return <PageContainer size="narrow">TeamSearchPage</PageContainer>;
+  return <TeamSearchScreen />;
 }

@@ -1,19 +1,20 @@
 import { cn } from "@/shared/lib/cn";
 
-import { getCategoryPuzzleAssets } from "../constants/categoryPuzzleAssets";
+import { POSTING_CATEGORY_PUZZLE_ASSETS } from "../constants/postingCategoryPuzzleAssets";
+import type { PostingCategory } from "../types/postingCategory.types";
 
 type CategoryPuzzleProps = {
-  code: string;
+  category: PostingCategory;
   selected: boolean;
   className?: string;
 };
 
 export function CategoryPuzzle({
-  code,
+  category,
   selected,
   className,
 }: CategoryPuzzleProps) {
-  const { defaultSrc, selectedSrc } = getCategoryPuzzleAssets(code);
+  const { defaultSrc, selectedSrc } = POSTING_CATEGORY_PUZZLE_ASSETS[category];
 
   return (
     <span
@@ -23,6 +24,7 @@ export function CategoryPuzzle({
       <img
         src={defaultSrc}
         alt=""
+        draggable={false}
         className={cn(
           "absolute inset-0 m-auto block max-h-full max-w-full",
           "transition-opacity duration-150",
@@ -33,6 +35,7 @@ export function CategoryPuzzle({
       <img
         src={selectedSrc}
         alt=""
+        draggable={false}
         className={cn(
           "absolute inset-0 m-auto block max-h-full max-w-full",
           "transition-opacity duration-150",

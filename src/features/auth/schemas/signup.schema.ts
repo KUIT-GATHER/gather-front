@@ -1,9 +1,12 @@
 import { z } from "zod";
 
 import {
-  isRealPastOrTodayBirthDate,
+  isAllowedBirthDate,
   normalizeBirthDate,
 } from "@/features/auth/lib/signupFormatters";
+import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.types";
+
+import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
 export type SignupFormValues = {
   name: string;
@@ -17,7 +20,7 @@ export type SignupFormValues = {
   nickname: string;
   introduction: string;
   activityRegionId: number | null;
-  interestCategoryIds: number[];
+  interestCategories: PostingCategory[];
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
   marketingAgreed: boolean;
@@ -35,7 +38,7 @@ export const signupDefaultValues: SignupFormValues = {
   nickname: "",
   introduction: "",
   activityRegionId: null,
-  interestCategoryIds: [],
+  interestCategories: [],
   serviceTermsAgreed: false,
   privacyPolicyAgreed: false,
   marketingAgreed: false,
@@ -81,7 +84,7 @@ function createKoreanOrEnglishTextSchema(label: "이름" | "닉네임") {
   });
 }
 
-function hasUniqueNumbers(values: number[]) {
+function hasUniqueCategories(values: PostingCategory[]) {
   return new Set(values).size === values.length;
 }
 
@@ -106,8 +109,8 @@ export const signupSchema = z
         (value) => /^\d{4}-\d{2}-\d{2}$/.test(normalizeBirthDate(value)),
         { error: "생년월일은 YYYY. MM. DD 형식으로 입력해 주세요." },
       )
-      .refine(isRealPastOrTodayBirthDate, {
-        error: "실제 존재하는 과거 또는 오늘 날짜를 입력해 주세요.",
+      .refine(isAllowedBirthDate, {
+        error: "생년월일은 1900년 1월 1일부터 오늘까지 입력해 주세요.",
       }),
 
     gender: z
@@ -127,12 +130,14 @@ export const signupSchema = z
     password: z
       .string()
       .min(6, { error: "비밀번호는 6자 이상이어야 합니다." })
-      .max(12, { error: "비밀번호는 12자 이하이어야 합니다." }),
+      .max(12, { error: "비밀번호는 12자 이하이어야 합니다." })
+      .regex(/^\S+$/, { error: "비밀번호에는 공백을 사용할 수 없습니다." }),
 
     passwordConfirm: z
       .string()
       .min(6, { error: "비밀번호 확인은 6자 이상이어야 합니다." })
-      .max(12, { error: "비밀번호 확인은 12자 이하이어야 합니다." }),
+      .max(12, { error: "비밀번호 확인은 12자 이하이어야 합니다." })
+      .regex(/^\S+$/, { error: "비밀번호에는 공백을 사용할 수 없습니다." }),
 
     nickname: createKoreanOrEnglishTextSchema("닉네임"),
 
@@ -147,10 +152,10 @@ export const signupSchema = z
         error: "활동 지역을 선택해 주세요.",
       }),
 
-    interestCategoryIds: z
-      .array(z.number())
+    interestCategories: z
+      .array(z.enum(POSTING_CATEGORIES))
       .min(1, { error: "관심 카테고리를 1개 이상 선택해 주세요." })
-      .refine(hasUniqueNumbers, {
+      .refine(hasUniqueCategories, {
         error: "관심 카테고리는 중복 선택할 수 없습니다.",
       }),
 
@@ -189,7 +194,7 @@ export const profileFields = [
   "nickname",
   "introduction",
   "activityRegionId",
-  "interestCategoryIds",
+  "interestCategories",
 ] satisfies SignupStepField[];
 
 export const termsFields = [

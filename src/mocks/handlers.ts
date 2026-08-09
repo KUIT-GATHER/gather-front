@@ -1,15 +1,38 @@
-import { volunteerHandlers } from "./volunteerHandlers";
+import { HttpResponse, http } from "msw";
+
+import { postingHandlers } from "./postingHandlers";
 import { authHandlers } from "./authHandlers";
-import { categoryHandlers } from "./categoryHandlers";
+import { notificationHandlers } from "./notificationHandlers";
 import { regionHandlers } from "./regionHandlers";
 import { teamHandlers } from "./teamHandlers";
-import { homeHandlers } from "./homeHandlers";
+import { badgeHandlers } from "./badgeHandlers";
+import { myProfileHandlers } from "./myProfileHandlers";
+import { meetingManagementHandlers } from "./meetingManagementHandlers";
 
 export const handlers = [
-  ...volunteerHandlers,
+  ...postingHandlers,
   ...authHandlers,
+  ...notificationHandlers,
   ...regionHandlers,
-  ...categoryHandlers,
+  ...meetingManagementHandlers,
   ...teamHandlers,
-  ...homeHandlers,
+  ...myProfileHandlers,
+  ...badgeHandlers,
+  http.all("*/api/*", ({ request }) => {
+    console.error(
+      `[MSW] Unhandled API request: ${request.method} ${request.url}`,
+    );
+
+    return HttpResponse.json(
+      {
+        success: false,
+        data: null,
+        error: {
+          code: "MSW_HANDLER_NOT_FOUND",
+          message: "등록되지 않은 MSW API 요청입니다.",
+        },
+      },
+      { status: 501 },
+    );
+  }),
 ];

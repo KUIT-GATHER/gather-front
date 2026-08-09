@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ChevronLeft } from "lucide-react";
+import ArrowIcon from "@/assets/icons/Arrow.svg";
 
 import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
@@ -30,13 +30,18 @@ export default function PageHeader({
   const resolvedLeftAction =
     leftAction ??
     (onBack ? (
-      <IconButton label={backLabel} icon={<ChevronLeft />} onClick={onBack} />
+      <IconButton
+        label={backLabel}
+        icon={<img src={ArrowIcon} alt="" className="rotate-180" />}
+        className="size-9 [&>span>img]:size-9"
+        onClick={onBack}
+      />
     ) : null);
 
   return (
     <header
       className={cn(
-        "relative w-full bg-white pt-[env(safe-area-inset-top)]",
+        "relative w-full bg-bg pt-[env(safe-area-inset-top)]",
         sticky && "sticky top-0 z-40",
         className,
       )}
@@ -44,14 +49,14 @@ export default function PageHeader({
       <div className="relative flex h-14 items-center justify-between">
         <div
           className={cn(
-            "z-10 flex items-center justify-start",
+            "z-10 -ml-3 flex items-center justify-start",
             titleAlign === "left" ? "min-w-0 flex-1" : "min-w-11",
           )}
         >
           {resolvedLeftAction}
 
           {title && titleAlign === "left" ? (
-            <h1 className="min-w-0 truncate text-title-18 text-text">
+            <h1 className="min-w-0 truncate text-[20px] font-semibold text-text">
               {title}
             </h1>
           ) : null}

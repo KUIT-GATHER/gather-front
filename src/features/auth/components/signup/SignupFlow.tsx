@@ -1,6 +1,6 @@
 import { FormProvider } from "react-hook-form";
 
-import { useSignupFlow } from "@/features/auth/hooks/useSignupFlow";
+import { useEmailSignupFlow } from "@/features/auth/hooks/useEmailSignupFlow";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import { SignupShell } from "./SignupShell";
@@ -18,17 +18,19 @@ export function SignupFlow() {
     showExitDialog,
     verifiedPhoneNumber,
     verifiedEmail,
+    profileImageFile,
     isSignupPending,
     submitError,
     setDetailType,
     setShowExitDialog,
     setVerifiedPhoneNumber,
     setVerifiedEmail,
+    setProfileImageFile,
     clearSubmitError,
     handleBack,
     handleFormSubmit,
     confirmExit,
-  } = useSignupFlow();
+  } = useEmailSignupFlow();
 
   if (detailType) {
     return <SignupTermsDetail type={detailType} onBack={handleBack} />;
@@ -37,7 +39,7 @@ export function SignupFlow() {
   return (
     <FormProvider {...methods}>
       <form noValidate onSubmit={handleFormSubmit}>
-        <SignupShell step={step} onBack={handleBack}>
+        <SignupShell step={step} flow="email" onBack={handleBack}>
           {step === "basic" ? (
             <BasicInfoStep
               verifiedPhoneNumber={verifiedPhoneNumber}
@@ -52,7 +54,12 @@ export function SignupFlow() {
             />
           ) : null}
 
-          {step === "profile" ? <ProfileStep /> : null}
+          {step === "profile" ? (
+            <ProfileStep
+              profileImageFile={profileImageFile}
+              onProfileImageFileChange={setProfileImageFile}
+            />
+          ) : null}
 
           {step === "terms" ? (
             <TermsStep
