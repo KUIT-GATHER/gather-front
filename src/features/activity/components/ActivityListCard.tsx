@@ -65,11 +65,7 @@ export function ActivityListCard({
         ) : null}
         <div className="mt-2 flex flex-wrap gap-1">
           {categories.map((category) => (
-            <CategoryBadge
-              key={category}
-              category={category}
-              className="text-sm"
-            />
+            <CategoryBadge key={category} category={category} />
           ))}
         </div>
       </div>

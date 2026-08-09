@@ -1,11 +1,8 @@
-import CommunityPuzzle from "@/shared/assets/category-tags/community.svg";
-import CulturePuzzle from "@/shared/assets/category-tags/culture.svg";
-import EducationPuzzle from "@/shared/assets/category-tags/education.svg";
-import EnvironmentPuzzle from "@/shared/assets/category-tags/environment.svg";
-import OverseasPuzzle from "@/shared/assets/category-tags/overseas.svg";
-import WelfarePuzzle from "@/shared/assets/category-tags/welfare.svg";
-
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
+import {
+  FLIPPED_POSTING_CATEGORY_TAGS,
+  POSTING_CATEGORY_TAG_ICON,
+} from "@/features/category/constants/postingCategoryTagAssets";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
 
@@ -37,22 +34,6 @@ const CHIP_STYLE: Record<PostingCategory, { idle: string; selected: string }> =
     },
   };
 
-const CHIP_ICON: Record<PostingCategory, string> = {
-  ENVIRONMENT: EnvironmentPuzzle,
-  EDUCATION: EducationPuzzle,
-  WELFARE: WelfarePuzzle,
-  CULTURE: CulturePuzzle,
-  COMMUNITY: CommunityPuzzle,
-  OVERSEAS: OverseasPuzzle,
-};
-
-const FLIPPED_ICONS: PostingCategory[] = [
-  "ENVIRONMENT",
-  "CULTURE",
-  "COMMUNITY",
-  "OVERSEAS",
-];
-
 type CategoryChipProps = {
   category: PostingCategory;
   selected: boolean;
@@ -68,12 +49,12 @@ export function CategoryChip({ category, selected }: CategoryChipProps) {
       )}
     >
       <img
-        src={CHIP_ICON[category]}
+        src={POSTING_CATEGORY_TAG_ICON[category]}
         alt=""
         aria-hidden="true"
         className={cn(
           "size-[18px]",
-          FLIPPED_ICONS.includes(category) && "-scale-y-100",
+          FLIPPED_POSTING_CATEGORY_TAGS.includes(category) && "-scale-y-100",
         )}
       />
       {POSTING_CATEGORY_LABEL[category]}

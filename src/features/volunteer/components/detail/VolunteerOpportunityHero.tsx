@@ -39,11 +39,7 @@ export function VolunteerOpportunityHero({
 
       <div className="mt-3 flex flex-wrap gap-2">
         {categories.map((category) => (
-          <CategoryBadge
-            key={category}
-            category={category}
-            className="h-[23px] px-2 text-sm font-normal [&>img]:size-3"
-          />
+          <CategoryBadge key={category} category={category} />
         ))}
         {regionName ? <Tag>{regionName}</Tag> : null}
       </div>

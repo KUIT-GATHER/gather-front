@@ -1,7 +1,7 @@
 import activatingPeopleIcon from "@/assets/volunteer/activatingpeople.svg";
 import rightArrowIcon from "@/assets/volunteer/rightarrow.svg";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import { POSTING_CATEGORY_BADGE_STYLE } from "@/features/category/constants/postingCategoryStyles";
+import { POSTING_CATEGORY_TILE_STYLE } from "@/features/category/constants/postingCategoryStyles";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
 
@@ -29,7 +29,7 @@ export function VolunteerOpportunityTeamCard({
           "flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
           category === "ENVIRONMENT"
             ? "bg-[#F1FFFD] text-[#82D3CA]"
-            : POSTING_CATEGORY_BADGE_STYLE[category],
+            : POSTING_CATEGORY_TILE_STYLE[category],
         )}
       >
         {POSTING_CATEGORY_LABEL[category]}
