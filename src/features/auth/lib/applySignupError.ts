@@ -55,6 +55,7 @@ export function applySignupError({
       return;
     }
 
+    case API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED:
     case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN: {
       setVerifiedPhoneNumber(null);
       moveToFieldError(

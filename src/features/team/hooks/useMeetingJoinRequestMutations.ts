@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   approveMeetingJoinRequest,
   rejectMeetingJoinRequest,
-} from "@/features/team/api/team.api";
+} from "@/features/team/api/meetingManagement.api";
 import { teamKeys } from "@/features/team/api/team.queries";
 
 export function useApproveMeetingJoinRequestMutation(meetingId: number) {

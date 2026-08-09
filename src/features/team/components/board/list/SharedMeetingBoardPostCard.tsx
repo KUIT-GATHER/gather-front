@@ -6,6 +6,7 @@ import FilledHeartIcon from "@/assets/icons/Filledheart.svg";
 import UnfilledHeartIcon from "@/assets/icons/Unfilledheart.svg";
 import { formatMeetingPostDate } from "@/features/team/lib/formatMeetingPostDate";
 import type { MeetingPostSummary } from "@/features/team/types/team.types";
+import { getPublicNickname } from "@/shared/types/user.types";
 
 import { MeetingPostTypeBadge } from "../shared/MeetingPostTypeBadge";
 
@@ -20,6 +21,10 @@ export function SharedMeetingBoardPostCard({
 }: SharedMeetingBoardPostCardProps) {
   const firstImageUrl = post.imageUrls[0];
   const postDetailPath = `/teams/${meetingId}/posts/${post.postId}`;
+  const authorNickname = getPublicNickname(
+    post.authorNickname,
+    post.userStatus,
+  );
   const contentRef = useRef<HTMLParagraphElement>(null);
   const [isContentTruncated, setIsContentTruncated] = useState(false);
 
@@ -108,7 +113,7 @@ export function SharedMeetingBoardPostCard({
             {formatMeetingPostDate(post.createdAt)}
           </span>
           <span className="min-w-0 truncate text-[14px] leading-5 font-medium text-text">
-            {post.authorNickname}
+            {authorNickname}
           </span>
         </div>
 

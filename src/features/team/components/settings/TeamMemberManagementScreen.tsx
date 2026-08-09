@@ -10,6 +10,7 @@ import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext
 import type { MeetingMember } from "@/features/team/types/team.types";
 import { ApiError } from "@/shared/api/apiError";
 import { cn } from "@/shared/lib/cn";
+import { getPublicNickname } from "@/shared/types/user.types";
 import Button from "@/shared/ui/Button";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -49,6 +50,10 @@ export function TeamMemberManagementScreen() {
           {members.map((member) => {
             const leader = isHostMember(member);
             const expanded = expandedUserId === member.userId;
+            const nickname = getPublicNickname(
+              member.nickname,
+              member.userStatus,
+            );
             return (
               <li
                 key={member.userId}
@@ -64,12 +69,12 @@ export function TeamMemberManagementScreen() {
                     }
                   >
                     <span className="grid size-7 shrink-0 place-items-center rounded-full border border-stroke text-xs">
-                      {member.nickname.slice(0, 1)}
+                      {nickname.slice(0, 1)}
                     </span>
 
                     <span className="flex min-w-0 items-center gap-1">
                       <span className="truncate text-base font-medium">
-                        {member.nickname}
+                        {nickname}
                       </span>
 
                       <ChevronDown

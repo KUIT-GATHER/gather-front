@@ -6,10 +6,28 @@ import { useLogoutMutation } from "@/features/auth/hooks/useLogoutMutation";
 import { useWithdrawAccountMutation } from "@/features/auth/hooks/useWithdrawAccountMutation";
 import type { NotificationSettingsView } from "@/features/notification/components/NotificationSettingsSheet";
 import { ApiError } from "@/shared/api/apiError";
+import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import packageJson from "../../../../package.json";
+
+const MEETING_HOST_WITHDRAWAL_ERROR_MESSAGE =
+  "운영 중인 모임이 있어 탈퇴할 수 없어요.\n모임을 정리한 후 다시 시도해 주세요.";
+const UNKNOWN_WITHDRAWAL_ERROR_MESSAGE =
+  "회원탈퇴 결과를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+
+function getWithdrawalErrorMessage(error: unknown) {
+  if (!(error instanceof ApiError)) {
+    return UNKNOWN_WITHDRAWAL_ERROR_MESSAGE;
+  }
+
+  if (error.code === API_ERROR_CODE.ACCOUNT_WITHDRAWAL_BLOCKED_MEETING_HOST) {
+    return error.message || MEETING_HOST_WITHDRAWAL_ERROR_MESSAGE;
+  }
+
+  return error.message;
+}
 
 type SettingsBottomSheetProps = {
   open: boolean;
@@ -69,11 +87,7 @@ export function SettingsBottomSheet({
         navigate("/login", { replace: true });
       },
       onError: (error) => {
-        setWithdrawError(
-          error instanceof ApiError
-            ? error.message
-            : "회원탈퇴 결과를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-        );
+        setWithdrawError(getWithdrawalErrorMessage(error));
       },
     });
   };
@@ -158,7 +172,7 @@ export function SettingsBottomSheet({
             {withdrawError ? (
               <span
                 role="alert"
-                className="mt-3 block text-body-14 text-point-red"
+                className="mt-3 block text-body-14 whitespace-pre-line text-point-red"
               >
                 {withdrawError}
               </span>

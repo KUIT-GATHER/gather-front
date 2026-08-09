@@ -87,7 +87,7 @@ export function TeamJoinRequestManagementScreen() {
               "relative h-12 text-sm",
               filter === item.value
                 ? "font-semibold text-text"
-                : "text-text-gray-200",
+                : "text-text-gray-100",
             )}
             onClick={() => setFilter(item.value)}
           >
@@ -146,7 +146,7 @@ export function TeamJoinRequestManagementScreen() {
                           )}
                         />
                       </span>
-                      <span className="mt-1 block text-xs text-text-gray-200">
+                      <span className="mt-1 block text-xs text-text-gray-100">
                         신청일{" "}
                         {request.requestedAt.slice(0, 10).replaceAll("-", ".")}
                       </span>

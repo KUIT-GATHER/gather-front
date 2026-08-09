@@ -212,7 +212,7 @@ function anonymizeMockUser(user: MockUser) {
   user.name = "탈퇴한 사용자";
   user.email = `withdrawn-${user.id}@example.invalid`;
   user.phoneNumber = `withdrawn-${user.id}`;
-  user.nickname = "탈퇴한 사용자";
+  user.nickname = `withdrawn-${user.id}`;
   user.introduction = null;
   user.password = "";
   user.userStatus = "WITHDRAWN";

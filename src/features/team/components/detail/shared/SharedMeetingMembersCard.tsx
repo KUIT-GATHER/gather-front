@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { MeetingMember } from "@/features/team/types/team.types";
 import { cn } from "@/shared/lib/cn";
+import { getPublicNickname } from "@/shared/types/user.types";
 
 type SharedMeetingMembersCardProps = {
   members: MeetingMember[];
@@ -80,18 +81,25 @@ export function SharedMeetingMembersCard({
       </h2>
 
       <ul ref={listRef} className="mt-3 flex items-center gap-3">
-        {visibleMembers.map((member, index) => (
-          <li key={member.userId} className="shrink-0">
-            <span
-              className={cn(
-                "flex size-11 items-center justify-center rounded-[23px] text-[14px] leading-[28px] font-semibold text-text2",
-                getAvatarColorClass(index),
-              )}
-            >
-              {getInitial(member.nickname)}
-            </span>
-          </li>
-        ))}
+        {visibleMembers.map((member, index) => {
+          const nickname = getPublicNickname(
+            member.nickname,
+            member.userStatus,
+          );
+
+          return (
+            <li key={member.userId} className="shrink-0">
+              <span
+                className={cn(
+                  "flex size-11 items-center justify-center rounded-[23px] text-[14px] leading-[28px] font-semibold text-text2",
+                  getAvatarColorClass(index),
+                )}
+              >
+                {getInitial(nickname)}
+              </span>
+            </li>
+          );
+        })}
         {hiddenMemberCount > 0 ? (
           <li className="shrink-0">
             <span className="flex size-11 items-center justify-center rounded-[23px] bg-stroke text-[14px] leading-[28px] font-semibold text-text2">

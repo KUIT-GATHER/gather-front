@@ -37,6 +37,7 @@ function getLoginErrorMessage(error: unknown) {
 
   if (
     error.code === API_ERROR_CODE.WITHDRAWN_USER ||
+    error.code === API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED ||
     error.code === API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN
   ) {
     return "탈퇴 후 7일간 재가입할 수 없습니다.";

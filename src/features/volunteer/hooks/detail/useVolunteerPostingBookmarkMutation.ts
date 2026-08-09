@@ -41,7 +41,7 @@ export function useAddVolunteerPostingBookmarkMutation(postingId: number) {
     },
     onSuccess: (bookmark) => {
       queryClient.setQueryData<VolunteerPosting>(
-        volunteerPostingKeys.detail(postingId),
+        volunteerPostingKeys.detailForViewer(postingId, "member"),
         (posting) => updateVolunteerPostingBookmarkState(posting, bookmark),
       );
       void queryClient.invalidateQueries({
@@ -72,7 +72,7 @@ export function useRemoveVolunteerPostingBookmarkMutation(postingId: number) {
     },
     onSuccess: (bookmark) => {
       queryClient.setQueryData<VolunteerPosting>(
-        volunteerPostingKeys.detail(postingId),
+        volunteerPostingKeys.detailForViewer(postingId, "member"),
         (posting) => updateVolunteerPostingBookmarkState(posting, bookmark),
       );
       void queryClient.invalidateQueries({

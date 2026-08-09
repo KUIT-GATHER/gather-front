@@ -134,11 +134,13 @@ export function MyBadgesScreen() {
               <img src={activityBadgeIcon} alt="" className="size-6" />
             </div>
             <div>
-              <p className="text-body-16 font-medium text-text">획득한 뱃지</p>
+              <p className="text-[16px] leading-5 font-medium text-text">
+                획득한 뱃지
+              </p>
               <p className="text-[22px] leading-[33px] font-semibold text-text">
                 {earnedCount} / {badges.length}개
               </p>
-              <p className="mt-1 text-body-14 font-medium text-text-gray-200">
+              <p className="mt-1 text-body-14 font-medium text-text-gray-100">
                 더 많은 활동으로 뱃지를 모아보세요!
               </p>
             </div>

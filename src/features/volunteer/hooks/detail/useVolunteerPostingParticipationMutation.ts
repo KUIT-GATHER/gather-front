@@ -93,7 +93,7 @@ export function useApplyVolunteerPostingParticipationMutation(
     mutationFn: () => applyVolunteerPostingParticipation(postingId),
     onSuccess: (participation) => {
       queryClient.setQueryData<VolunteerPosting>(
-        volunteerPostingKeys.detail(postingId),
+        volunteerPostingKeys.detailForViewer(postingId, "member"),
         (posting) =>
           updateVolunteerPostingParticipationStatus(
             posting,
@@ -121,7 +121,7 @@ export function useCancelVolunteerPostingParticipationMutation(
     mutationFn: () => cancelVolunteerPostingParticipation(postingId),
     onSuccess: () => {
       queryClient.setQueryData<VolunteerPosting>(
-        volunteerPostingKeys.detail(postingId),
+        volunteerPostingKeys.detailForViewer(postingId, "member"),
         (posting) =>
           updateVolunteerPostingParticipationStatus(posting, postingId, null),
       );
