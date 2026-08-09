@@ -15,9 +15,9 @@ export const volunteerPostingListSortOptions = [
 ] satisfies SelectOption[];
 
 export const VOLUNTEER_POSTING_SORT_PARAMS = {
-  latest: ["id,desc"],
-  popular: ["applicantCount,desc", "id,desc"],
-  deadline: ["noticeEndDate,asc", "id,desc"],
+  latest: ["createdAt,desc", "id,desc"],
+  popular: ["appliedCount,desc", "id,desc"],
+  deadline: ["applyDeadlineAt,asc", "id,desc"],
 } satisfies Record<VolunteerPostingListSort, string[]>;
 
 export function isVolunteerPostingListSort(

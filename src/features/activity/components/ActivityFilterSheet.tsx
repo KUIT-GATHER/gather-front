@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import type { DateRange } from "@daypicker/react";
-import { CalendarDays, MapPin } from "lucide-react";
+import locationIcon from "@/assets/volunteer/location.svg";
 
 import mapIcon from "@/assets/icons/Map.svg";
+import calendarIcon from "@/assets/volunteer/calender.svg";
 import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
 import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
 import {
@@ -233,7 +234,12 @@ export function ActivityFilterSheet({
         {selectedRegion ? (
           <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-md">
             <span className="grid size-8 place-items-center rounded-full bg-button/12 text-icon">
-              <MapPin className="size-5" aria-hidden="true" />
+              <img
+                src={locationIcon}
+                alt=""
+                aria-hidden="true"
+                className="size-5"
+              />
             </span>
             <div>
               <p className="text-xs text-text-gray-300">선택된 지역</p>
@@ -278,7 +284,11 @@ export function ActivityFilterSheet({
             ? "max-h-[min(88dvh,48rem)]"
             : undefined,
       )}
-      contentClassName={view === "region" ? "px-0 py-0" : undefined}
+      contentClassName={cn(
+        view === "region" && "px-0 py-0",
+        view === "date" &&
+          "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+      )}
     >
       {view === "main" ? (
         <div className="flex flex-col gap-7">
@@ -301,6 +311,7 @@ export function ActivityFilterSheet({
                 label="지역 선택 열기"
                 icon={<img src={mapIcon} alt="" />}
                 variant="surface"
+                className="rounded-xl"
                 onClick={openRegionView}
               />
             </div>
@@ -313,7 +324,12 @@ export function ActivityFilterSheet({
               className="mt-3 flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-stroke bg-white px-4 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
               onClick={openDateView}
             >
-              <CalendarDays className="size-5 text-icon" aria-hidden="true" />
+              <img
+                src={calendarIcon}
+                alt=""
+                aria-hidden="true"
+                className="size-4"
+              />
               {draft.dateRange
                 ? formatTeamDateRange(
                     draft.dateRange.startDate,
@@ -448,7 +464,7 @@ export function ActivityFilterSheet({
                       "mt-1 w-full rounded-lg px-4 py-3 text-left text-sm text-text-gray-300",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
                       regionSelectionId === region.id &&
-                        "bg-icon/10 font-medium text-text",
+                        "bg-[rgba(217,217,217,0.44)] font-medium text-text",
                     )}
                     onClick={() => setRegionSelectionId(region.id)}
                   >

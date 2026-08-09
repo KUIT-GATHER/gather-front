@@ -32,6 +32,13 @@ export function useAddVolunteerPostingBookmarkMutation(postingId: number) {
   return useMutation({
     mutationKey: volunteerPostingKeys.bookmark(postingId),
     mutationFn: () => addVolunteerPostingBookmark(postingId),
+    meta: {
+      toast: {
+        success: "북마크에 저장했어요",
+        error: "북마크에 저장하지 못했어요. 다시 시도해 주세요.",
+        id: "bookmark-toast",
+      },
+    },
     onSuccess: (bookmark) => {
       queryClient.setQueryData<VolunteerPosting>(
         volunteerPostingKeys.detail(postingId),
@@ -56,6 +63,13 @@ export function useRemoveVolunteerPostingBookmarkMutation(postingId: number) {
   return useMutation({
     mutationKey: volunteerPostingKeys.bookmark(postingId),
     mutationFn: () => removeVolunteerPostingBookmark(postingId),
+    meta: {
+      toast: {
+        success: "북마크를 해제했어요",
+        error: "북마크를 해제하지 못했어요. 다시 시도해 주세요.",
+        id: "bookmark-toast",
+      },
+    },
     onSuccess: (bookmark) => {
       queryClient.setQueryData<VolunteerPosting>(
         volunteerPostingKeys.detail(postingId),

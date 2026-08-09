@@ -42,6 +42,12 @@ export function useCreateMeetingRecruitMutation(meetingId: number) {
     mutationKey: [...teamKeys.posts(meetingId), "createRecruit"],
     mutationFn: (request: MeetingRecruitRequest) =>
       createMeetingRecruit(meetingId, request),
+    meta: {
+      toast: {
+        error: "봉사 공고를 등록하지 못했어요. 다시 시도해 주세요.",
+        id: "meeting-recruit-save-toast",
+      },
+    },
     onSuccess: (recruit) =>
       invalidateRecruitData(queryClient, meetingId, recruit.postId),
   });
@@ -56,6 +62,12 @@ export function useUpdateMeetingRecruitMutation(
     mutationKey: [...teamKeys.recruit(meetingId, postId), "update"],
     mutationFn: (request: MeetingRecruitRequest) =>
       updateMeetingRecruit(meetingId, postId, request),
+    meta: {
+      toast: {
+        error: "봉사 공고를 수정하지 못했어요. 다시 시도해 주세요.",
+        id: "meeting-recruit-save-toast",
+      },
+    },
     onSuccess: () => invalidateRecruitData(queryClient, meetingId, postId),
   });
 }

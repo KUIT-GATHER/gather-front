@@ -43,6 +43,7 @@ export default function DateRangeCalendar({
       onSelect={onSelect}
       navLayout="around"
       numberOfMonths={1}
+      showOutsideDays
       formatters={{
         formatCaption: (month) =>
           `${month.getFullYear()}.${month.getMonth() + 1}`,

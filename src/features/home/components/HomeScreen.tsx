@@ -94,7 +94,7 @@ export function HomeScreen() {
   );
   return (
     <PageContainer size="narrow">
-      <header className="flex items-center justify-between pb-8 pt-8">
+      <header className="flex items-center justify-between pt-8 pb-1.25">
         <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
         <div className="flex items-center">
           <IconButton
@@ -125,7 +125,7 @@ export function HomeScreen() {
         </div>
       </header>
 
-      <div className="pt-6">
+      <div className="pt-6 pb-4">
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[18px] font-semibold leading-7">
@@ -166,10 +166,8 @@ export function HomeScreen() {
           </div>
         </section>
 
-        <div className="-mx-5.5 my-6 h-1.5 bg-[#f1f1f1]" />
-
         <section>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mt-14 mb-4 flex items-center justify-between">
             <h2 className="text-[18px] font-semibold leading-7">
               같이 갈 사람 찾는 중 🙌
             </h2>

@@ -65,7 +65,7 @@ export function confirmEmailVerification(
 
 export function signup(payload: SignupRequest) {
   return fetchClient<SignupResponse>("/api/v1/auth/signup", {
-    ...publicOptions,
+    ...cookieAuthOptions,
     method: "POST",
     body: JSON.stringify(payload),
   });

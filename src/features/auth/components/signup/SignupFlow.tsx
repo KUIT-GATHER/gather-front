@@ -18,12 +18,14 @@ export function SignupFlow() {
     showExitDialog,
     verifiedPhoneNumber,
     verifiedEmail,
+    profileImageFile,
     isSignupPending,
     submitError,
     setDetailType,
     setShowExitDialog,
     setVerifiedPhoneNumber,
     setVerifiedEmail,
+    setProfileImageFile,
     clearSubmitError,
     handleBack,
     handleFormSubmit,
@@ -52,7 +54,12 @@ export function SignupFlow() {
             />
           ) : null}
 
-          {step === "profile" ? <ProfileStep /> : null}
+          {step === "profile" ? (
+            <ProfileStep
+              profileImageFile={profileImageFile}
+              onProfileImageFileChange={setProfileImageFile}
+            />
+          ) : null}
 
           {step === "terms" ? (
             <TermsStep

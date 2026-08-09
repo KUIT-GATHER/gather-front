@@ -1,5 +1,4 @@
-import SplashLeftIcon from "@/assets/icons/SplashLeftIcon.svg";
-import SplashRightIcon from "@/assets/icons/SplashRightIcon.svg";
+import gatherLogo from "@/assets/images/Gather-logo.png";
 import PageContainer from "@/shared/ui/PageContainer";
 
 export function Splash() {
@@ -7,18 +6,13 @@ export function Splash() {
     <main>
       <PageContainer
         size="narrow"
-        className="flex min-h-dvh flex-col items-center overflow-hidden px-0"
+        className="flex min-h-dvh flex-col items-center justify-center overflow-hidden px-0"
       >
-        <section className="relative mt-65.25 h-[127.89px] w-full shrink-0">
+        <section className="flex h-[127.89px] w-full shrink-0 items-center justify-center">
           <img
-            src={SplashLeftIcon}
-            alt="스플래시좌측아이콘"
-            className="absolute left-23.5 top-0 z-20 h-auto w-[32.34%] max-w-32.5"
-          />
-          <img
-            src={SplashRightIcon}
-            alt="스플래시우측아이콘"
-            className="absolute top-[21.89px] right-23.25 z-10 h-auto w-[26.62%] max-w-26.75"
+            src={gatherLogo}
+            alt="Gather 로고"
+            className="h-auto w-57.5 max-w-[64%]"
           />
         </section>
 

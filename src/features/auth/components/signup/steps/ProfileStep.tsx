@@ -1,12 +1,11 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import CameraIcon from "@/assets/icons/Camera.svg";
-import ProfileIcon from "@/assets/icons/Profile.svg";
 import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
 import type { SignupCommonFormValues } from "@/features/auth/schemas/signupCommon.schema";
+import { ProfileImagePicker } from "@/features/profile/components/ProfileImagePicker";
 import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 
@@ -14,7 +13,15 @@ import { CategorySelector } from "./CategorySelector";
 import { RegionSelector } from "./RegionSelector";
 import { SignupStepButton } from "../SignupFormParts";
 
-export function ProfileStep() {
+type ProfileStepProps = {
+  profileImageFile: File | null;
+  onProfileImageFileChange: (file: File | null) => void;
+};
+
+export function ProfileStep({
+  profileImageFile,
+  onProfileImageFileChange,
+}: ProfileStepProps) {
   const {
     control,
     register,
@@ -25,15 +32,16 @@ export function ProfileStep() {
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex justify-center">
-        <div className="relative size-29">
-          <img src={ProfileIcon} alt="" className="size-full" />
-          <span
-            aria-hidden="true"
-            className="absolute right-0 bottom-1 flex size-8 items-center justify-center rounded-full bg-white text-text-gray-300 shadow"
-          >
-            <img src={CameraIcon} alt="" className="size-6" />
-          </span>
-        </div>
+        <ProfileImagePicker
+          file={profileImageFile}
+          onFileChange={onProfileImageFileChange}
+          className="size-29"
+          alt={
+            profileImageFile
+              ? "선택한 프로필 이미지 미리보기"
+              : "기본 프로필 이미지"
+          }
+        />
       </div>
 
       <div className="mt-7 space-y-6">

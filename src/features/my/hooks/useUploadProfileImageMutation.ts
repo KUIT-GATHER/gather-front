@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { uploadProfileImage } from "@/features/profile/lib/profileImageUpload";
+
 import { myProfileKeys } from "../api/myProfile.queries";
 import { myPageKeys } from "../api/myPage.queries";
-import { uploadProfileImage } from "../lib/profileImageUpload";
 
 export function useUploadProfileImageMutation() {
   const queryClient = useQueryClient();

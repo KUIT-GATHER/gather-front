@@ -8,6 +8,7 @@ import {
 import { useVolunteerPostingApplicationFlow } from "@/features/volunteer/hooks/detail/useVolunteerPostingApplicationFlow";
 import { useVolunteerPostingCompleteFlow } from "@/features/volunteer/hooks/detail/useVolunteerPostingCompleteFlow";
 import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/detail/useVolunteerPostingDetail";
+import { formatVolunteerPostingHeaderTitle } from "@/features/volunteer/lib/volunteerPostingTitle";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -169,7 +170,7 @@ export function VolunteerPostingDetail({
   return (
     <article className="pb-[calc(env(safe-area-inset-bottom)+7.25rem)]">
       <VolunteerPostingHeader
-        title={posting.title}
+        title={formatVolunteerPostingHeaderTitle(posting.title)}
         onBack={() => navigate(-1)}
         isBookmarked={posting.bookmarked}
         isBookmarkPending={isBookmarkPending}

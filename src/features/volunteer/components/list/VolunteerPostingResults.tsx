@@ -8,6 +8,10 @@ import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerP
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
+import {
+  SCROLL_TOP_BUTTON_THRESHOLD_INDEX,
+  ScrollTopButton,
+} from "@/shared/ui/ScrollTopButton";
 
 type VolunteerPostingResultsProps = {
   params: VolunteerPostingInfiniteParams;
@@ -25,6 +29,7 @@ export function VolunteerPostingResults({
   renderMeta,
 }: VolunteerPostingResultsProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const topButtonThresholdRef = useRef<HTMLLIElement>(null);
   const query = useInfiniteVolunteerPostingsQuery(params);
   const postings = query.data?.pages.flatMap((page) => page.content) ?? [];
   const totalElements = query.data?.pages[0]?.totalElements ?? 0;
@@ -76,8 +81,15 @@ export function VolunteerPostingResults({
       {postings.length > 0 ? (
         <>
           <ul className="flex flex-col gap-3">
-            {postings.map((posting) => (
-              <li key={getPostingListItemKey(posting)}>
+            {postings.map((posting, index) => (
+              <li
+                key={getPostingListItemKey(posting)}
+                ref={
+                  index === SCROLL_TOP_BUTTON_THRESHOLD_INDEX
+                    ? topButtonThresholdRef
+                    : undefined
+                }
+              >
                 <VolunteerPostingCard
                   posting={posting}
                   onClick={() => onSelect(posting)}
@@ -113,6 +125,11 @@ export function VolunteerPostingResults({
               모든 봉사 공고를 확인했어요.
             </p>
           ) : null}
+          <ScrollTopButton
+            itemCount={postings.length}
+            thresholdRef={topButtonThresholdRef}
+            className="bottom-[calc(0.75rem+env(safe-area-inset-bottom))]"
+          />
         </>
       ) : null}
     </>

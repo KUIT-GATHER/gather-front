@@ -72,6 +72,8 @@ export type SignupResponse = {
   email: string;
   name: string;
   nickname: string;
+  accessToken: string;
+  tokenType: "Bearer";
 };
 
 export type TokenResponse = {
