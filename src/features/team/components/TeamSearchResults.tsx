@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
-import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
 import { useInfiniteMeetingsQuery } from "@/features/team/hooks/useInfiniteMeetingsQuery";
 import type { MeetingInfiniteParams } from "@/features/team/types/team.types";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -22,16 +21,8 @@ export function TeamSearchResults({
 }: TeamSearchResultsProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const query = useInfiniteMeetingsQuery(params);
-  const regionsQuery = useRegionsQuery();
   const meetings = query.data?.pages.flatMap((page) => page.content) ?? [];
   const totalElements = query.data?.pages[0]?.totalElements ?? 0;
-  const regionNameById = useMemo(
-    () =>
-      new Map(
-        (regionsQuery.data ?? []).map((region) => [region.id, region.name]),
-      ),
-    [regionsQuery.data],
-  );
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -87,7 +78,6 @@ export function TeamSearchResults({
               <li key={meeting.meetingId}>
                 <TeamCard
                   team={meeting}
-                  regionName={regionNameById.get(meeting.regionId) ?? null}
                   onClick={() => onSelect(meeting.meetingId)}
                 />
               </li>

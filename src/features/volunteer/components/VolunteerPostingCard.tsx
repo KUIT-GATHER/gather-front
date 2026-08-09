@@ -1,9 +1,8 @@
-import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
 import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
+import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
 import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
-  formatVolunteerLocation,
   getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type {
@@ -24,13 +23,10 @@ export function VolunteerPostingCard({
 }: VolunteerPostingCardProps) {
   const isUnifiedItem = "sourceType" in posting;
   const categories = isUnifiedItem ? posting.categories : [posting.category];
-  const primaryCategory = categories[0];
   const imageSrc =
     (isUnifiedItem ? posting.thumbnailUrl : null) ??
-    getVolunteerPostingImage(primaryCategory, posting.id);
-  const location = isUnifiedItem
-    ? posting.regionName || posting.place
-    : formatVolunteerLocation(posting);
+    getVolunteerPostingImage(categories[0], posting.id);
+  const location = posting.regionName;
   const activityStartDate = isUnifiedItem
     ? (posting.activityStartAt?.slice(0, 10) ?? null)
     : posting.actStartDate;

@@ -4,12 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
-import { CategoryPuzzle } from "@/features/category/components/CategoryPuzzle";
-import { POSTING_CATEGORY_LABEL } from "@/features/category/constants/postingCategory.constants";
-import {
-  POSTING_CATEGORIES,
-  type PostingCategory,
-} from "@/features/category/types/postingCategory.types";
+import { CategoryPuzzleGrid } from "@/features/category/components/CategoryPuzzleGrid";
 import {
   formatBirthDateInput,
   isAllowedBirthDate,
@@ -38,11 +33,6 @@ import Input from "@/shared/ui/Input";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
-
-const categoryLabelPosition: Partial<Record<PostingCategory, string>> = {
-  COMMUNITY: "-translate-x-1 translate-y-1",
-  CULTURE: "-translate-x-1 -translate-y-1",
-};
 
 export function ProfileEditScreen() {
   const navigate = useNavigate();
@@ -342,44 +332,21 @@ export function ProfileEditScreen() {
             <h2 className="text-[15px] font-semibold leading-5 text-text">
               관심 카테고리
             </h2>
-            <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-3">
-              {POSTING_CATEGORIES.map((category) => {
+            <CategoryPuzzleGrid
+              className="mt-5"
+              selectedCategories={selectedCategories}
+              onToggle={(category) => {
                 const selected = selectedCategories.includes(category);
-                return (
-                  <button
-                    key={category}
-                    type="button"
-                    aria-pressed={selected}
-                    className="relative grid min-h-24 place-items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-                    onClick={() => {
-                      const next = selected
-                        ? selectedCategories.filter(
-                            (value) => value !== category,
-                          )
-                        : [...selectedCategories, category];
-                      setValue("interestCategories", next, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                    }}
-                  >
-                    <CategoryPuzzle
-                      category={category}
-                      selected={selected}
-                      className="size-[92px]"
-                    />
-                    <span
-                      className={cn(
-                        "pointer-events-none absolute inset-0 grid place-items-center px-2 text-center text-[15px] font-medium text-text",
-                        categoryLabelPosition[category],
-                      )}
-                    >
-                      {POSTING_CATEGORY_LABEL[category]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                const next = selected
+                  ? selectedCategories.filter((value) => value !== category)
+                  : [...selectedCategories, category];
+
+                setValue("interestCategories", next, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+              }}
+            />
             {errors.interestCategories?.message ? (
               <p className="mt-1.5 text-xs text-point-red">
                 {errors.interestCategories.message}

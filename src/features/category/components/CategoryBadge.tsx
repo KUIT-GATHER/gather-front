@@ -1,8 +1,11 @@
 import { Puzzle } from "lucide-react";
 
 import { POSTING_CATEGORY_LABEL } from "../constants/postingCategory.constants";
-import { POSTING_CATEGORY_PUZZLE_ASSETS } from "../constants/postingCategoryPuzzleAssets";
 import { POSTING_CATEGORY_BADGE_STYLE } from "../constants/postingCategoryStyles";
+import {
+  FLIPPED_POSTING_CATEGORY_TAGS,
+  POSTING_CATEGORY_TAG_ICON,
+} from "../constants/postingCategoryTagAssets";
 import {
   POSTING_CATEGORIES,
   type PostingCategory,
@@ -22,24 +25,31 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
   const knownCategory = isKnownCategory
     ? (category as PostingCategory)
     : undefined;
-  const selectedSrc = knownCategory
-    ? POSTING_CATEGORY_PUZZLE_ASSETS[knownCategory].selectedSrc
-    : undefined;
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
+        "inline-flex h-[23px] items-center gap-1 rounded-[30px] border px-2 text-sm leading-4 font-normal text-[#5E5E5D]",
         knownCategory
           ? POSTING_CATEGORY_BADGE_STYLE[knownCategory]
           : "border-stroke bg-bg text-text-gray-300",
         className,
       )}
     >
-      {selectedSrc ? (
-        <img src={selectedSrc} alt="" aria-hidden="true" className="size-3.5" />
+      {knownCategory ? (
+        <img
+          src={POSTING_CATEGORY_TAG_ICON[knownCategory]}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className={cn(
+            "size-3",
+            FLIPPED_POSTING_CATEGORY_TAGS.includes(knownCategory) &&
+              "-scale-y-100",
+          )}
+        />
       ) : (
-        <Puzzle aria-hidden="true" className="size-3.5" />
+        <Puzzle aria-hidden="true" className="size-3" />
       )}
       {knownCategory ? POSTING_CATEGORY_LABEL[knownCategory] : "기타"}
     </span>

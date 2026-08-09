@@ -15,8 +15,8 @@ import {
 import { getMockUserById } from "./data/mockUsers";
 import { getExternalMockMeetingRecruitListItems } from "./data/mockMeetingRecruits";
 import regions from "./data/regions.json";
-import teams from "./data/teams.json";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
+import { getMockMeetings, type MockMeeting } from "./teamHandlers";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const RECOMMENDATION_COUNT = 5;
@@ -503,7 +503,7 @@ function sortPostings(
 }
 
 function sortPostingMeetings(
-  items: (typeof teams.data)[number][],
+  items: MockMeeting[],
   sorts: PostingMeetingSort[],
 ) {
   return [...items].sort((left, right) => {
@@ -839,7 +839,7 @@ export const postingHandlers = [
     }
 
     const items = sortPostingMeetings(
-      teams.data.filter((team) => team.volunteerPostingId === postingId),
+      getMockMeetings().filter((team) => team.volunteerPostingId === postingId),
       sorts,
     );
     const startIndex = page * size;
@@ -852,13 +852,17 @@ export const postingHandlers = [
           categories,
           currentMemberCount,
           maxMember,
+          regionId,
+          regionName,
           status,
         }) => ({
           meetingId,
           name,
-          category: categories[0],
+          categories,
           currentMemberCount,
           maxMember,
+          regionId,
+          regionName,
           status,
           member: false,
           host: false,

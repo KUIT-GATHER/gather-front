@@ -4,10 +4,7 @@ import {
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
 
-import {
-  VolunteerOpportunityInfoCard,
-  type VolunteerOpportunityInfoRow,
-} from "./VolunteerOpportunityInfoCard";
+import { VolunteerOpportunityInfoCard } from "./VolunteerOpportunityInfoCard";
 
 type VolunteerPostingInfoCardProps = {
   posting: VolunteerPosting;
@@ -26,9 +23,7 @@ function getParticipantCount(posting: VolunteerPosting) {
   return `${posting.applicantCount ?? "-"}/${posting.recruitCount ?? "-"}명`;
 }
 
-function isInfoRow(
-  row: VolunteerOpportunityInfoRow | null,
-): row is VolunteerOpportunityInfoRow {
+function isInfoRow<T>(row: T | null): row is T {
   return row !== null;
 }
 

@@ -167,7 +167,7 @@ export function TeamJoinRequestManagementScreen() {
                   {expanded ? (
                     <div
                       id={`join-detail-${request.joinRequestId}`}
-                      className="mx-3 rounded-xl bg-point-green/10 p-3"
+                      className="mx-3 mb-3 rounded-xl bg-point-green/10 p-3"
                     >
                       {detailQuery.isLoading ? (
                         <LoadingState
@@ -185,7 +185,7 @@ export function TeamJoinRequestManagementScreen() {
                     </div>
                   ) : null}
                   {request.status === "PENDING" ? (
-                    <div className="grid grid-cols-2 gap-2 p-3">
+                    <div className="grid grid-cols-2 gap-2 px-3 pb-3">
                       <Button
                         variant="primaryOutline"
                         size="medium"
@@ -193,6 +193,7 @@ export function TeamJoinRequestManagementScreen() {
                         onClick={() =>
                           rejectMutation.mutate(request.joinRequestId)
                         }
+                        className="text-[15px] font-semibold"
                       >
                         반려
                       </Button>
@@ -202,6 +203,7 @@ export function TeamJoinRequestManagementScreen() {
                         onClick={() =>
                           approveMutation.mutate(request.joinRequestId)
                         }
+                        className="text-[15px] font-semibold"
                       >
                         승인
                       </Button>

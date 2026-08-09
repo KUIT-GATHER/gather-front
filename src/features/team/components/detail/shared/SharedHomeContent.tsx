@@ -3,6 +3,8 @@ import type {
   MeetingHome,
 } from "@/features/team/types/team.types";
 
+import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/detail/useVolunteerPostingDetail";
+
 import { SharedMeetingConditionCard } from "./SharedMeetingConditionCard";
 import { SharedMeetingInfoCard } from "./SharedMeetingInfoCard";
 import { SharedMeetingMembersCard } from "./SharedMeetingMembersCard";
@@ -20,10 +22,25 @@ export function SharedHomeContent({
   detail,
   imageUrls,
 }: SharedHomeContentProps) {
+  const linkedPostingId =
+    home.linkedPostingId ?? detail.volunteerPostingId ?? undefined;
+  const linkedPostingQuery = useVolunteerPostingDetail(linkedPostingId);
+  const linkedPosting = linkedPostingQuery.data;
+
   return (
     <div className="flex flex-col gap-4 px-5.5 py-4">
       <SharedMeetingSummary home={home} detail={detail} imageUrls={imageUrls} />
-      <SharedMeetingInfoCard home={home} />
+      <SharedMeetingInfoCard
+        home={home}
+        location={
+          linkedPosting?.actPlace ??
+          linkedPosting?.regionName ??
+          home.regionName
+        }
+        linkedPostingTitle={
+          home.linkedPostingTitle ?? linkedPosting?.title ?? null
+        }
+      />
       <SharedMeetingMembersCard members={home.members} />
       <SharedMeetingConditionCard
         participationCondition={home.participationCondition}

@@ -143,11 +143,11 @@ export function RecruitParticipantsScreen() {
             {uiState?.showConfirm ? (
               <Button
                 fullWidth
-                className="mb-5"
+                className="mb-5 mt-1 rounded-[12px] text-[16px] font-medium h-11"
                 disabled={appliedCount === 0 || confirmMutation.isPending}
                 onClick={() => setPendingDialog({ type: "confirm" })}
               >
-                현재 신청 인원 확정하기
+                인원 확정하기
               </Button>
             ) : null}
             {uiState?.showAttendance && uiState.attendanceDisabled ? (

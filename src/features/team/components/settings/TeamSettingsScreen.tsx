@@ -107,7 +107,15 @@ export function TeamSettingsScreen() {
       <ConfirmDialog
         open={isDissolveDialogOpen}
         title="정말 모임을 해산하시겠습니까?"
-        description="모임과 게시글은 더 이상 확인할 수 없고 복구할 수 없습니다. 완료한 봉사 기록, 인정시간, 후기와 뱃지는 유지됩니다."
+        description={
+          <>
+            <span>
+              "해산한 모임의 기록은 모두 사라지고
+              <br />
+              되돌릴 수 없습니다"
+            </span>
+          </>
+        }
         confirmText="확인"
         confirmVariant="primary"
         onCancel={() => {

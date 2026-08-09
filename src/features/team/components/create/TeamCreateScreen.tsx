@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
 
-import locationIcon from "@/assets/volunteer/location.svg";
+import locationIcon from "@/shared/assets/icons/info/location.svg";
 import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
@@ -118,11 +118,7 @@ export function TeamCreateScreen() {
     (isPostingBased && postingQuery.data?.regionId
       ? String(postingQuery.data.regionId)
       : "");
-  const resolvedCategories = isPostingBased
-    ? postingQuery.data?.category
-      ? [postingQuery.data.category]
-      : []
-    : categories;
+  const resolvedCategories = categories;
   const resolvedDeadline = deadline || (postingDefaultDeadline ?? "");
   const regions = useMemo(() => regionsQuery.data ?? [], [regionsQuery.data]);
   const regionById = useMemo(
@@ -380,7 +376,7 @@ export function TeamCreateScreen() {
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-32">
+    <PageContainer size="narrow" className="min-h-dvh pb-48">
       <PageHeader
         title={isPostingBased ? "공고 기반 모임 만들기" : "자유 모임 만들기"}
         onBack={() => navigate(-1)}
@@ -408,7 +404,11 @@ export function TeamCreateScreen() {
 
       <form className="mt-5 flex flex-col gap-6" onSubmit={handleSubmit}>
         {isPostingBased ? (
-          <FormField label="연관 공고" error={errors.activity}>
+          <FormField
+            label="연관 공고"
+            labelClassName="mb-2 font-medium"
+            error={errors.activity}
+          >
             <div className="flex h-12 items-center rounded-xl border border-stroke bg-white px-4 text-[15px] text-text">
               {postingQuery.isLoading
                 ? "공고 정보를 불러오는 중이에요."
@@ -420,6 +420,7 @@ export function TeamCreateScreen() {
         ) : null}
         <FormField
           label="모임 이름"
+          labelClassName="mb-2 font-medium"
           required
           htmlFor="meeting-name"
           count={name.length}
@@ -441,6 +442,7 @@ export function TeamCreateScreen() {
         </FormField>
         <FormField
           label="모임 소개"
+          labelClassName="mb-2 font-medium"
           required
           htmlFor="meeting-description"
           count={description.length}
@@ -501,7 +503,8 @@ export function TeamCreateScreen() {
           />
         </section>
         <FormField
-          label={isPostingBased ? "활동 장소" : "활동 지역"}
+          label="활동 지역"
+          labelClassName="mb-2 font-medium"
           required
           error={errors.region}
         >
@@ -515,7 +518,7 @@ export function TeamCreateScreen() {
               src={locationIcon}
               alt=""
               aria-hidden="true"
-              className="size-4"
+              className="h-4 w-3"
             />
             {isPostingBased
               ? postingQuery.data?.actPlace ||
@@ -530,22 +533,34 @@ export function TeamCreateScreen() {
           </button>
         </FormField>{" "}
         <FormField
-          label={`최대 인원 (${maxMemberLimit}명)`}
+          label={
+            <>
+              최대 인원{" "}
+              <span className="text-[15px]">({maxMemberLimit}명)</span>
+            </>
+          }
+          labelClassName="mb-2 font-medium"
           htmlFor="max-member"
         >
-          <Input
-            id="max-member"
-            type="number"
-            inputMode="numeric"
-            min={2}
-            max={maxMemberLimit}
-            value={maxMember}
-            disabled={isFormLocked}
-            onChange={(event) => setMaxMember(event.target.value)}
-          />
+          <div className="relative w-18">
+            <Input
+              id="max-member"
+              type="number"
+              inputMode="numeric"
+              min={2}
+              max={maxMemberLimit}
+              value={maxMember}
+              disabled={isFormLocked}
+              className="w-18 pr-7 text-text-gray-100 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              onChange={(event) => setMaxMember(event.target.value)}
+            />
+            <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-[15px] text-text-gray-100">
+              명
+            </span>
+          </div>
         </FormField>
         {isPostingBased ? (
-          <div className="flex h-14 items-center justify-between rounded-xl border border-stroke bg-white px-4">
+          <div className="flex h-[50px] items-center justify-between rounded-xl border border-stroke bg-white px-4">
             <label
               htmlFor="meeting-time-recognized"
               className="text-base font-medium text-text"
@@ -561,15 +576,15 @@ export function TeamCreateScreen() {
           </div>
         ) : null}
         <FormField
-          label="카테고리 (최대 3개)"
+          label="카테고리"
+          labelClassName="mb-2 font-medium"
           required
           error={errors.categories}
         >
           <CategoryChipGroup
             value={resolvedCategories}
-            options={isPostingBased ? resolvedCategories : undefined}
             maxSelected={3}
-            disabled={isPostingBased || isFormLocked}
+            disabled={isFormLocked}
             onChange={(nextCategories) => {
               setCategories(nextCategories);
               clearError("categories");
@@ -578,6 +593,7 @@ export function TeamCreateScreen() {
         </FormField>
         <FormField
           label="신청 마감일"
+          labelClassName="mb-2 font-medium"
           htmlFor="meeting-deadline"
           error={errors.deadline}
         >
@@ -602,6 +618,7 @@ export function TeamCreateScreen() {
         </FormField>
         <FormField
           label="활동 안내 및 참여 조건"
+          labelClassName="mb-2 font-medium"
           htmlFor="participation-condition"
           count={participationCondition.length}
           maxLength={PARTICIPATION_CONDITION_MAX_LENGTH}
@@ -612,9 +629,9 @@ export function TeamCreateScreen() {
             maxLength={PARTICIPATION_CONDITION_MAX_LENGTH}
             disabled={isFormLocked}
             placeholder={
-              "만 19세 이상\n매주 토요일 11:00~12:30 진행\n건대입구역 2번출구 앞에서 만나요"
+              "예 : 만 19세 이상\n매주 토요일 11:00~12:30 진행\n건대입구역 2번출구 앞에서 만나요"
             }
-            className="h-28"
+            className="h-[83px] overflow-hidden text-[15px] leading-[19px]"
             onChange={(event) => setParticipationCondition(event.target.value)}
           />
         </FormField>
@@ -623,7 +640,7 @@ export function TeamCreateScreen() {
             모임을 만들지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.
           </p>
         ) : null}
-        <div>
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom)+29px)] left-1/2 z-20 w-[calc(100%-46px)] max-w-[356px] -translate-x-1/2">
           {createPhase === "uploadFailed" ? (
             <div className="flex flex-col gap-2">
               <Button

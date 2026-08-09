@@ -1,9 +1,9 @@
-import { useState, type ButtonHTMLAttributes, type CSSProperties } from "react";
+﻿import { useState, type ButtonHTMLAttributes, type CSSProperties } from "react";
 import { DayPicker, type DayButtonProps } from "@daypicker/react";
 import { ko } from "@daypicker/react/locale/ko";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
 import "@daypicker/react/style.css";
+
+import chevronIcon from "@/shared/assets/icons/chevron.svg";
 
 import { cn } from "@/shared/lib/cn";
 
@@ -38,7 +38,7 @@ function CalendarDayButton({
       className={cn(
         className,
         modifiers.selected &&
-          "!h-[47px] !w-[49px] !rounded-[6px] !border-0 !bg-button !font-normal",
+          "!h-[47px] !w-[49px] !rounded-[6px] !border-0 !bg-button !font-medium",
       )}
       {...buttonProps}
     >
@@ -93,14 +93,10 @@ export function SingleDateCalendar({
           className="flex size-11 items-center justify-center justify-self-start rounded-full text-button hover:bg-button/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
           onClick={() => moveMonth(-1)}
         >
-          <ChevronLeft
-            aria-hidden="true"
-            className="size-8"
-            strokeWidth={2.5}
-          />
+          <img src={chevronIcon} alt="" aria-hidden="true" className="size-9" />
         </button>
         <p
-          className="min-w-28 text-center text-xl font-semibold text-text-gray-400"
+          className="min-w-28 text-center text-xl font-semibold text-text-gray-300"
           aria-live="polite"
         >
           {visibleMonth.getFullYear()}.{visibleMonth.getMonth() + 1}
@@ -111,10 +107,11 @@ export function SingleDateCalendar({
           className="flex size-11 items-center justify-center justify-self-end rounded-full text-button hover:bg-button/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
           onClick={() => moveMonth(1)}
         >
-          <ChevronRight
+          <img
+            src={chevronIcon}
+            alt=""
             aria-hidden="true"
-            className="size-8"
-            strokeWidth={2.5}
+            className="size-9 rotate-180"
           />
         </button>
       </div>

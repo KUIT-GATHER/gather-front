@@ -14,7 +14,6 @@ export function VolunteerPostingHero({ posting }: VolunteerPostingHeroProps) {
       content={posting.content}
       imageSrc={getVolunteerPostingImage(posting.category, posting.id)}
       categories={[posting.category]}
-      regionName={posting.regionName}
     />
   );
 }

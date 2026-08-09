@@ -201,7 +201,6 @@ export function MyBookmarksScreen() {
             <TeamCard
               key={meeting.meetingId}
               team={meeting}
-              regionName={meeting.regionName}
               onClick={() => navigate(`/teams/${meeting.meetingId}`)}
             />
           ))

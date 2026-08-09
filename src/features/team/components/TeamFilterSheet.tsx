@@ -29,7 +29,7 @@ export function TeamFilterSheet({
       open={open}
       onOpenChange={onOpenChange}
       filter={value}
-      dateLabel="활동 기간"
+      dateLabel="날짜"
       onApply={(next) =>
         onApply({
           regionId: next.regionId,

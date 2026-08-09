@@ -40,6 +40,7 @@ export function VolunteerPostingListScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-8">
       <PageHeader
         sticky
+        className="[&>div]:h-[70px]"
         title="봉사 공고"
         onBack={() => navigate(-1)}
         rightAction={
@@ -47,11 +48,13 @@ export function VolunteerPostingListScreen() {
             <IconButton
               label="필터 열기"
               icon={<img src={filterIcon} alt="" />}
+              className="[&>span>img]:h-[21px] [&>span>img]:w-5"
               onClick={() => setIsFilterOpen(true)}
             />
             <IconButton
               label="봉사 공고 검색"
               icon={<img src={searchIcon} alt="" />}
+              className="[&>span>img]:size-[27px]"
               onClick={() => navigate("/volunteers/search")}
             />
           </div>

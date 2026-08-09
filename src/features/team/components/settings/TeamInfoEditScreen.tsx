@@ -39,6 +39,7 @@ import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
 import Switch from "@/shared/ui/Switch";
 import Textarea from "@/shared/ui/Textarea";
+import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 export function TeamInfoEditScreen({
   home,
@@ -62,6 +63,7 @@ export function TeamInfoEditScreen({
     null,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const {
     register,
     control,
@@ -81,6 +83,9 @@ export function TeamInfoEditScreen({
       timeRecognized: detail.timeRecognized,
     },
   });
+  const nameRegister = register("name");
+  const descriptionRegister = register("description");
+  const participationConditionRegister = register("participationCondition");
   const values = useWatch({ control });
   const pending = updateMutation.isPending || imagesMutation.isPending;
   const selectedRegion = regionsQuery.data?.find(
@@ -231,13 +236,32 @@ export function TeamInfoEditScreen({
 
   return (
     <main className="min-h-dvh bg-bg px-5.5">
-      <PageHeader title="팀 정보 수정" onBack={() => navigate(-1)} sticky />
+      <PageHeader
+        title="팀 정보 수정"
+        onBack={() => setLeaveDialogOpen(true)}
+        sticky
+      />
       <form className="flex flex-col gap-6 pb-28" noValidate onSubmit={submit}>
         {basedOnPosting ? (
           <FormField label="연관 공고">
             <Input value={home.linkedPostingTitle ?? ""} disabled />
           </FormField>
         ) : null}
+
+        {!basedOnPosting ? (
+          <div className="rounded-xl border border-button bg-[#f8fbf8] px-3 py-2.5 text-[13px] leading-5 text-text-gray-400">
+            <p>자유 모임은 여러 봉사활동을 함께하는 커뮤니티입니다.</p>
+            <p>
+              활동별 날짜와 장소는{" "}
+              <strong className="font-semibold text-text-green-600">
+                모임 생성 후 봉사 모집 글
+              </strong>
+              에서
+            </p>
+            <p> 등록할 수 있습니다.</p>
+          </div>
+        ) : null}
+
         <FormField
           label="모임 이름"
           required
@@ -250,7 +274,11 @@ export function TeamInfoEditScreen({
             id="meeting-name"
             maxLength={15}
             invalid={Boolean(errors.name)}
-            {...register("name")}
+            {...nameRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 15);
+              nameRegister.onChange(event);
+            }}
           />
         </FormField>
         <FormField
@@ -266,7 +294,11 @@ export function TeamInfoEditScreen({
             maxLength={200}
             className="h-36"
             invalid={Boolean(errors.description)}
-            {...register("description")}
+            {...descriptionRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 200);
+              descriptionRegister.onChange(event);
+            }}
           />
         </FormField>
         <section>
@@ -308,7 +340,6 @@ export function TeamInfoEditScreen({
         </FormField>
         <FormField
           label="최대 인원 (30명)"
-          required
           htmlFor="meeting-max"
           error={errors.maxMember?.message}
         >
@@ -317,6 +348,7 @@ export function TeamInfoEditScreen({
             type="number"
             min={home.currentMemberCount}
             max={30}
+            className="w-20"
             {...register("maxMember", { valueAsNumber: true })}
           />
         </FormField>
@@ -347,13 +379,13 @@ export function TeamInfoEditScreen({
                 maxSelected={3}
                 disabled={basedOnPosting}
                 onChange={field.onChange}
+                selectedFirst
               />
             )}
           />
         </FormField>
         <FormField
           label="신청 마감일"
-          required
           htmlFor="meeting-deadline"
           error={errors.deadline?.message}
         >
@@ -381,7 +413,11 @@ export function TeamInfoEditScreen({
             id="meeting-condition"
             maxLength={150}
             className="h-28"
-            {...register("participationCondition")}
+            {...participationConditionRegister}
+            onChange={(event) => {
+              event.target.value = event.target.value.slice(0, 150);
+              participationConditionRegister.onChange(event);
+            }}
           />
         </FormField>
         {submitError ? (
@@ -401,6 +437,12 @@ export function TeamInfoEditScreen({
           setValue("regionId", value, { shouldValidate: true })
         }
         title="활동 지역"
+      />
+      <ConfirmDialog
+        open={leaveDialogOpen}
+        title="뒤로 가면 작성 중인 내용이 사라집니다."
+        onCancel={() => setLeaveDialogOpen(false)}
+        onConfirm={() => navigate(-1)}
       />
     </main>
   );

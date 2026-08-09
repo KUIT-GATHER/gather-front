@@ -46,7 +46,7 @@ export function VolunteerPostingFilterSheet({
       open={open}
       onOpenChange={onOpenChange}
       filter={value}
-      dateLabel="모집 기간"
+      dateLabel="날짜"
       onApply={(next) => onApply(toVolunteerPostingFilter(next))}
     />
   );

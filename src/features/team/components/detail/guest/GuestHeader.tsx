@@ -18,7 +18,7 @@ export function GuestHeader({
 }: GuestHeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-bg pt-[env(safe-area-inset-top)]">
-      <div className="flex h-17.5 items-center gap-1 px-3">
+      <div className="flex h-17.5 items-center gap-2.5 px-2.5">
         <button
           type="button"
           aria-label="뒤로가기"
@@ -28,7 +28,7 @@ export function GuestHeader({
           <img
             src={ArrowIcon}
             alt=""
-            className="size-10 rotate-180"
+            className="size-9 rotate-180"
             aria-hidden="true"
           />
         </button>

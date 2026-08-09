@@ -42,8 +42,7 @@ function getMeetingRecruitInfoRows({
   appliedCount,
   maxParticipants,
   applyDeadlineAt,
-  timeRecognized,
-  recognizedMinutes,
+  meetingName,
 }: {
   regionName: string;
   place: string;
@@ -52,8 +51,7 @@ function getMeetingRecruitInfoRows({
   appliedCount: number;
   maxParticipants: number;
   applyDeadlineAt: string;
-  timeRecognized: boolean;
-  recognizedMinutes: number | null;
+  meetingName: string;
 }): VolunteerOpportunityInfoRow[] {
   return [
     {
@@ -95,13 +93,22 @@ function getMeetingRecruitInfoRows({
       value: formatMeetingRecruitDeadline(applyDeadlineAt),
     },
     {
-      id: "recognizedTime",
-      icon: "time",
-      label: "인정 시간",
-      value: timeRecognized ? `${recognizedMinutes ?? 0}분` : "미인정",
+      id: "volunteerOrganization",
+      icon: "volunteerOrganization",
+      label: "봉사 기관명",
+      value: meetingName,
+    },
+    {
+      id: "portalOrganization",
+      icon: "portalOrganization",
+      label: "포털 등록 기관명",
+      value: "Gather",
     },
   ];
 }
+
+const TIME_RECOGNITION_NOTICE = `봉사 시간 인증 불가/추가 절차가 필요한 봉사입니다
+자세한 사항은 설명을 참고해주세요`;
 
 export function MeetingRecruitDetailScreen({
   meetingId,
@@ -212,12 +219,14 @@ export function MeetingRecruitDetailScreen({
             imageSrc={heroImage}
             imageAlt={`${recruit.meetingName} 대표 이미지`}
             categories={recruit.categories}
-            regionName={recruit.regionName}
           />
           <VolunteerOpportunityInfoCard rows={infoRows} className="mt-5" />
-          {participationCondition ? (
+          {participationCondition || !recruit.timeRecognized ? (
             <VolunteerOpportunityConditionCard
-              condition={participationCondition}
+              condition={participationCondition || undefined}
+              notice={
+                recruit.timeRecognized ? undefined : TIME_RECOGNITION_NOTICE
+              }
               className="mt-4"
             />
           ) : null}

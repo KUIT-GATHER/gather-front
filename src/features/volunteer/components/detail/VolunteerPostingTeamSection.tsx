@@ -90,7 +90,7 @@ export function VolunteerPostingTeamSection({
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
           )}
         >
-          <img src={teamPlusIcon} alt="" className="h-3.5 w-3.5" />
+          <img src={teamPlusIcon} alt="" className="size-6" />
           <span>이 봉사로 팀 만들기</span>
         </button>
       ) : null}

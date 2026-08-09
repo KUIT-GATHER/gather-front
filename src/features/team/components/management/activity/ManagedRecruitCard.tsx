@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router";
 
-import CalendarIcon from "@/assets/volunteer/calender.svg";
-import ClockIcon from "@/assets/volunteer/clock.svg";
-import LocationIcon from "@/assets/volunteer/location.svg";
+import CalendarIcon from "@/shared/assets/icons/info/calender.svg";
+import ClockIcon from "@/shared/assets/icons/info/clock.svg";
+import LocationIcon from "@/shared/assets/icons/info/location.svg";
 import {
   formatMeetingRecruitActivitySchedule,
   formatMeetingRecruitApplicationDeadline,
@@ -12,7 +12,7 @@ import Button from "@/shared/ui/Button";
 
 function SummaryIcon({ src }: { src: string }) {
   return (
-    <span className="flex size-5 shrink-0 items-center justify-center">
+    <span className="flex size-[13.5px] shrink-0 items-center justify-center">
       <img
         src={src}
         alt=""
@@ -45,7 +45,7 @@ export function ManagedRecruitCard({
         </h2>
         <button
           type="button"
-          className="shrink-0 pt-1 text-body-14 text-text-gray-400 underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+          className="shrink-0 pt-1 items-center text-body-14 text-text-gray-400 underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
           onClick={() =>
             navigate(
               `/volunteers/meeting-recruits/${meetingId}/${activity.postId}`,
@@ -59,7 +59,7 @@ export function ManagedRecruitCard({
       <div className="mt-5">
         <h3 className="text-base font-semibold text-text">봉사 일정 및 장소</h3>
         <dl className="mt-3 flex flex-col gap-2">
-          <div className="flex items-start gap-3">
+          <div className="flex  gap-3  items-center">
             <SummaryIcon src={CalendarIcon} />
             <dt className="sr-only">봉사 일정</dt>
             <dd className="min-w-0 text-body-14 text-text">
@@ -69,7 +69,7 @@ export function ManagedRecruitCard({
               )}
             </dd>
           </div>
-          <div className="flex items-start gap-3">
+          <div className="flex gap-3 items-center">
             <SummaryIcon src={LocationIcon} />
             <dt className="sr-only">봉사 장소</dt>
             <dd className="min-w-0 text-body-14 text-text">{activity.place}</dd>
@@ -79,9 +79,9 @@ export function ManagedRecruitCard({
 
       <div className="mt-5">
         <h3 className="text-base font-semibold text-text">신청 마감일</h3>
-        <div className="mt-3 flex items-start gap-3">
+        <div className="mt-3 flex gap-3 items-center">
           <SummaryIcon src={ClockIcon} />
-          <p className="min-w-0 text-body-14 text-text">
+          <p className="min-w-0 text-body-14 text-text ">
             {formatMeetingRecruitApplicationDeadline(activity.applyDeadlineAt)}
           </p>
         </div>
@@ -104,7 +104,7 @@ export function ManagedRecruitCard({
         <Button
           variant="primaryOutline"
           size="medium"
-          className="text-body-14"
+          className="text-[15px] h-10"
           disabled={!activity.canEdit}
           onClick={() =>
             navigate(
@@ -117,7 +117,7 @@ export function ManagedRecruitCard({
         <Button
           variant="primaryOutline"
           size="medium"
-          className="text-body-14"
+          className="text-[15px] h-10"
           onClick={() =>
             navigate(
               `/teams/${meetingId}/settings/activities/${activity.postId}/applicants`,

@@ -39,10 +39,10 @@ export function VolunteerPostingApplyBar({
         : "primary";
   const buttonClassName =
     participationAction === "COMPLETE"
-      ? "h-12 text-base font-normal disabled:bg-icon disabled:text-text2"
+      ? "mx-auto h-12 max-w-[315px] text-[18px] font-semibold disabled:bg-icon disabled:text-text2"
       : isNeutralButton
-        ? "h-12"
-        : "h-12 text-base font-normal";
+        ? "mx-auto h-12 max-w-[315px] text-[18px] font-semibold"
+        : "mx-auto h-12 max-w-[315px] text-[18px] font-semibold";
 
   const buttonLabel = (() => {
     if (isApplyPending) {
@@ -70,7 +70,7 @@ export function VolunteerPostingApplyBar({
   })();
 
   return (
-    <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-app -translate-x-1/2 bg-bg px-5.5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+    <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-app -translate-x-1/2 bg-bg px-5.5 pt-3 pb-[calc(env(safe-area-inset-bottom)+36px)]">
       {errorMessage ? (
         <p
           role="alert"

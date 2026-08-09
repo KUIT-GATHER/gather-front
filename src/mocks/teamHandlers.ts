@@ -1011,7 +1011,7 @@ function toMeetingPostCommentResponse(
   };
 }
 
-function getMockMeetings() {
+export function getMockMeetings() {
   return [
     ...(baseMockMeetings as MockMeeting[]),
     ...qaMockMeetings,
