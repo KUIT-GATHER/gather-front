@@ -12,6 +12,7 @@ import {
   useUpdateMeetingPostCommentMutation,
 } from "@/features/team/hooks/useMeetingPostMutations";
 import type { MeetingPostComment as MeetingPostCommentType } from "@/features/team/types/team.types";
+import { getPublicNickname } from "@/shared/types/user.types";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import { BoardActionMenuPanel } from "../shared/BoardActionMenuPanel";
@@ -105,6 +106,10 @@ export function MeetingPostCommentItem({
     comment.commentId,
   );
   const trimmedEditContent = editContent.trim();
+  const authorNickname = getPublicNickname(
+    comment.authorNickname,
+    comment.userStatus,
+  );
 
   useEffect(() => {
     if (!isEditing) {
@@ -277,13 +282,13 @@ export function MeetingPostCommentItem({
   return (
     <li className="border-b border-stroke py-3">
       <div className="flex gap-2">
-        <CommentAvatar nickname={comment.authorNickname} />
+        <CommentAvatar nickname={authorNickname} />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14px] leading-5 font-semibold text-text">
-                {comment.authorNickname}
+                {authorNickname}
               </p>
               {isEditing ? (
                 <textarea

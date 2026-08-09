@@ -63,6 +63,26 @@ export function getMeetingJoinRequest(
   );
 }
 
+export function approveMeetingJoinRequest(
+  meetingId: number,
+  joinRequestId: number,
+) {
+  return fetchClient<MeetingJoinRequest>(
+    `${meetingsEndpoint}/${meetingId}/join-requests/${joinRequestId}/approve`,
+    { method: "PATCH" },
+  );
+}
+
+export function rejectMeetingJoinRequest(
+  meetingId: number,
+  joinRequestId: number,
+) {
+  return fetchClient<MeetingJoinRequest>(
+    `${meetingsEndpoint}/${meetingId}/join-requests/${joinRequestId}/reject`,
+    { method: "PATCH" },
+  );
+}
+
 export function restoreMeetingJoinRequest(
   meetingId: number,
   joinRequestId: number,

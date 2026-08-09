@@ -11,6 +11,7 @@ import {
 } from "@/features/team/lib/meetingPostActionMessage";
 import type { MeetingPost } from "@/features/team/types/team.types";
 import { getActionErrorMessage } from "@/shared/lib/actionErrorMessage";
+import { getPublicNickname } from "@/shared/types/user.types";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 
 import { BoardActionMenuPanel } from "../shared/BoardActionMenuPanel";
@@ -29,6 +30,10 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
   const deletePostMutation = useDeleteMeetingPostMutation(
     post.meetingId,
     post.postId,
+  );
+  const authorNickname = getPublicNickname(
+    post.authorNickname,
+    post.userStatus,
   );
 
   useEffect(() => {
@@ -141,7 +146,7 @@ export function MeetingPostMainBoard({ post }: MeetingPostMainBoardProps) {
       <div className="mt-3.5 flex items-center gap-1 text-[14px] leading-4 font-medium text-text-gray-400">
         <span>{formatMeetingPostDate(post.createdAt)}</span>
         <span> | </span>
-        <span>{post.authorNickname}</span>
+        <span>{authorNickname}</span>
       </div>
 
       <p className="mt-4.75 whitespace-pre-line text-[16px] leading-6 font-medium text-text">

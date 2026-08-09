@@ -10,7 +10,6 @@ import type {
   MeetingCreateRequest,
   MeetingDetail,
   MeetingHome,
-  MeetingJoinRequest,
   MeetingListItem,
   MeetingListParams,
   MeetingPage,
@@ -317,36 +316,6 @@ export function getMyMeetingActivityAppliedRecruits(
 ) {
   return fetchClient<MyAppliedRecruitPage>(
     buildMyMeetingActivityEndpoint(meetingId, "applied-recruits", params),
-  );
-}
-
-export function getMeetingJoinRequests(meetingId: number) {
-  return fetchClient<MeetingJoinRequest[]>(
-    `${MEETING_ENDPOINT}/${meetingId}/join-requests`,
-  );
-}
-
-export function approveMeetingJoinRequest(
-  meetingId: number,
-  joinRequestId: number,
-) {
-  return fetchClient<MeetingJoinRequest>(
-    `${MEETING_ENDPOINT}/${meetingId}/join-requests/${joinRequestId}/approve`,
-    {
-      method: "PATCH",
-    },
-  );
-}
-
-export function rejectMeetingJoinRequest(
-  meetingId: number,
-  joinRequestId: number,
-) {
-  return fetchClient<MeetingJoinRequest>(
-    `${MEETING_ENDPOINT}/${meetingId}/join-requests/${joinRequestId}/reject`,
-    {
-      method: "PATCH",
-    },
   );
 }
 
