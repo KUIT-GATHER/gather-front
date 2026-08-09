@@ -90,9 +90,9 @@ export function VolunteerPostingApplyConfirmSheet({
       </div>
 
       <p className="mt-2 text-[13px] leading-[21.125px] font-normal text-text-gray-400">
-        카드 클릭 시 외부 링크로 이동하여 봉사 신청이 가능합니다.
+        신청 버튼 클릭 시 신청 상태로 변경 후 외부 신청 링크로 이동합니다.
         <br />
-        공식 페이지 신청 후 신청 버튼을 눌러 상태를 변경해 주세요.
+        신청하지 않은 봉사는 공고 혹은 마이페이지에서 신청 취소해주세요.
       </p>
 
       {errorMessage ? (
