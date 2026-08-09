@@ -57,16 +57,6 @@ type PostingMeetingSort = {
   field: PostingMeetingSortField;
   direction: "asc" | "desc";
 };
-type MockPostingParticipationStatus =
-  | "APPLIED"
-  | "CONFIRMED"
-  | "COMPLETED"
-  | "REVIEWED";
-type MockPostingParticipation = {
-  participationId: number;
-  status: MockPostingParticipationStatus;
-  recognizedMinutes?: number;
-};
 
 function formatMockDate(offsetDays: number) {
   const date = new Date();
@@ -133,19 +123,22 @@ const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
 });
 
 export const mockPostings = [...baseMockPostings, ...additionalMockPostings];
-const bookmarkedPostingIds = new Set(
-  Array.from({ length: 21 }, (_, index) => index + 3),
-);
-const participatedPostingIds = new Map<number, MockPostingParticipation>(
-  getMockParticipations(1).map((participation) => [
-    participation.postingId,
-    {
-      participationId: participation.participationId,
-      status: participation.status,
-      recognizedMinutes: participation.recognizedMinutes,
-    },
-  ]),
-);
+const bookmarkedPostingIdsByUserId = new Map<number, Set<number>>([
+  [1, new Set(Array.from({ length: 21 }, (_, index) => index + 3))],
+]);
+
+function getBookmarkedPostingIds(userId: number) {
+  const existingPostingIds = bookmarkedPostingIdsByUserId.get(userId);
+
+  if (existingPostingIds) {
+    return existingPostingIds;
+  }
+
+  const postingIds = new Set<number>();
+  bookmarkedPostingIdsByUserId.set(userId, postingIds);
+
+  return postingIds;
+}
 
 function parseMockLocalDate(value: string | null | undefined) {
   if (!value) {
@@ -336,7 +329,14 @@ function sortUnifiedPostings(
 function getRecommendedMockPostings(userId: number | null) {
   const user = userId === null ? null : getMockUserById(userId);
   const preferredCategories = user?.interestCategories ?? [];
-  const appliedPostingIds = user?.id === 1 ? participatedPostingIds : null;
+  const appliedPostingIds =
+    userId === null
+      ? null
+      : new Set(
+          getMockParticipations(userId).map(
+            (participation) => participation.postingId,
+          ),
+        );
 
   return mockPostings
     .filter(isMockPostingRecruiting)
@@ -360,8 +360,12 @@ function getRecommendedMockPostings(userId: number | null) {
     .map(toVolunteerPostingListItem);
 }
 
-function getMockPostingParticipationAction(postingId: number) {
-  const participation = participatedPostingIds.get(postingId);
+function getMockPostingParticipationAction(
+  postingId: number,
+  userId: number | null,
+) {
+  const participation =
+    userId === null ? null : findMockParticipation(userId, postingId);
 
   if (!participation) {
     return "APPLY";
@@ -726,6 +730,7 @@ export const postingHandlers = [
       );
     }
 
+    const bookmarkedPostingIds = getBookmarkedPostingIds(userId);
     let items = mockPostings.filter((posting) =>
       bookmarkedPostingIds.has(posting.id),
     );
@@ -882,9 +887,12 @@ export const postingHandlers = [
     });
   }),
 
-  http.get("*/api/v1/postings/:postingId", ({ params }) => {
+  http.get("*/api/v1/postings/:postingId", ({ params, request }) => {
     const postingId = Number(params.postingId);
     const posting = mockPostings.find((item) => item.id === postingId);
+    const userId = getMockUserId(request);
+    const participation =
+      userId === null ? null : findMockParticipation(userId, postingId);
 
     if (!posting) {
       return HttpResponse.json(
@@ -904,20 +912,27 @@ export const postingHandlers = [
       success: true,
       data: {
         ...posting,
-        bookmarked: bookmarkedPostingIds.has(postingId),
-        participationStatus:
-          participatedPostingIds.get(postingId)?.status ?? null,
-        participationAction: getMockPostingParticipationAction(postingId),
+        bookmarked:
+          userId === null
+            ? false
+            : getBookmarkedPostingIds(userId).has(postingId),
+        participationStatus: participation?.status ?? null,
+        participationAction: getMockPostingParticipationAction(
+          postingId,
+          userId,
+        ),
       },
       error: null,
     });
   }),
 
   http.post("*/api/v1/postings/:postingId/bookmark", ({ params, request }) => {
-    const postingId = Number(params.postingId);
-    bookmarkedPostingIds.add(postingId);
     const userId = getMockUserId(request);
-    if (userId) addMockBadgeProgress(userId, "BOOKMARK_5");
+    if (!userId) return createUnauthorizedResponse();
+
+    const postingId = Number(params.postingId);
+    getBookmarkedPostingIds(userId).add(postingId);
+    addMockBadgeProgress(userId, "BOOKMARK_5");
 
     return HttpResponse.json({
       success: true,
@@ -952,7 +967,7 @@ export const postingHandlers = [
         );
       }
 
-      if (participatedPostingIds.has(postingId)) {
+      if (findMockParticipation(userId, postingId)) {
         return HttpResponse.json(
           {
             success: false,
@@ -980,12 +995,7 @@ export const postingHandlers = [
         );
       }
 
-      const savedParticipation = addMockParticipation(userId, postingId);
-      const participationId = savedParticipation.participationId;
-      participatedPostingIds.set(postingId, {
-        participationId,
-        status: "APPLIED",
-      });
+      const { participationId } = addMockParticipation(userId, postingId);
 
       return HttpResponse.json({
         success: true,
@@ -1002,9 +1012,12 @@ export const postingHandlers = [
   http.patch(
     "*/api/v1/postings/:postingId/participations/complete",
     ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
       const postingId = Number(params.postingId);
       const posting = mockPostings.find((item) => item.id === postingId);
-      const participation = participatedPostingIds.get(postingId);
+      const participation = findMockParticipation(userId, postingId);
 
       if (!posting) {
         return HttpResponse.json(
@@ -1065,16 +1078,9 @@ export const postingHandlers = [
         );
       }
 
-      participatedPostingIds.set(postingId, {
-        ...participation,
-        status: "COMPLETED",
-      });
-      updateMockParticipation(1, postingId, { status: "COMPLETED" });
-      const userId = getMockUserId(request);
-      if (userId) {
-        addMockBadgeProgress(userId, "FIRST_COMPLETION");
-        addMockBadgeProgress(userId, "COMPLETION_5");
-      }
+      updateMockParticipation(userId, postingId, { status: "COMPLETED" });
+      addMockBadgeProgress(userId, "FIRST_COMPLETION");
+      addMockBadgeProgress(userId, "COMPLETION_5");
 
       return HttpResponse.json({
         success: true,
@@ -1087,8 +1093,11 @@ export const postingHandlers = [
   http.patch(
     "*/api/v1/postings/:postingId/participations/hours",
     async ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
       const postingId = Number(params.postingId);
-      const participation = participatedPostingIds.get(postingId);
+      const participation = findMockParticipation(userId, postingId);
       const body = (await request.json().catch(() => null)) as {
         recognizedMinutes?: unknown;
       } | null;
@@ -1156,11 +1165,7 @@ export const postingHandlers = [
         );
       }
 
-      participatedPostingIds.set(postingId, {
-        ...participation,
-        recognizedMinutes,
-      });
-      updateMockParticipation(1, postingId, { recognizedMinutes });
+      updateMockParticipation(userId, postingId, { recognizedMinutes });
 
       return HttpResponse.json({
         success: true,
@@ -1211,7 +1216,6 @@ export const postingHandlers = [
         );
       }
 
-      participatedPostingIds.delete(postingId);
       removeMockParticipation(userId, postingId);
 
       return HttpResponse.json({
@@ -1225,10 +1229,12 @@ export const postingHandlers = [
   http.delete(
     "*/api/v1/postings/:postingId/bookmark",
     ({ params, request }) => {
-      const postingId = Number(params.postingId);
-      bookmarkedPostingIds.delete(postingId);
       const userId = getMockUserId(request);
-      if (userId) addMockBadgeProgress(userId, "BOOKMARK_5", -1);
+      if (!userId) return createUnauthorizedResponse();
+
+      const postingId = Number(params.postingId);
+      getBookmarkedPostingIds(userId).delete(postingId);
+      addMockBadgeProgress(userId, "BOOKMARK_5", -1);
 
       return HttpResponse.json({
         success: true,

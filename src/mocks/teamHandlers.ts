@@ -934,7 +934,7 @@ function getPublicUser(userId: number, nickname: string) {
   const user = getMockUserById(userId);
 
   return {
-    nickname: user?.userStatus === "WITHDRAWN" ? user.nickname : nickname,
+    nickname: user?.userStatus === "WITHDRAWN" ? "탈퇴한 사용자" : nickname,
     userStatus: user?.userStatus ?? "ACTIVE",
   } as const;
 }
