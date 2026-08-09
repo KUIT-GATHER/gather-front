@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
@@ -66,7 +66,7 @@ export function ProfileEditScreen() {
     setValue,
     clearErrors,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = form;
 
   const introduction = useWatch({ control, name: "introduction" });
@@ -76,19 +76,22 @@ export function ProfileEditScreen() {
     name: "interestCategories",
   });
 
-  useEffect(() => {
-    if (!profileQuery.data) return;
+  useLayoutEffect(() => {
+    if (!profileQuery.data || isDirty) return;
 
-    reset({
-      name: profileQuery.data.name,
-      nickname: profileQuery.data.nickname,
-      introduction: profileQuery.data.introduction ?? "",
-      birthDate: profileQuery.data.birthDate,
-      gender: profileQuery.data.gender,
-      activityRegionId: profileQuery.data.activityRegion?.id ?? null,
-      interestCategories: profileQuery.data.interestCategories,
-    });
-  }, [profileQuery.data, reset]);
+    reset(
+      {
+        name: profileQuery.data.name,
+        nickname: profileQuery.data.nickname,
+        introduction: profileQuery.data.introduction ?? "",
+        birthDate: profileQuery.data.birthDate,
+        gender: profileQuery.data.gender,
+        activityRegionId: profileQuery.data.activityRegion?.id ?? null,
+        interestCategories: profileQuery.data.interestCategories,
+      },
+      { keepFieldsRef: true },
+    );
+  }, [isDirty, profileQuery.data, reset]);
 
   const regionById = useMemo(
     () =>
@@ -153,7 +156,7 @@ export function ProfileEditScreen() {
     }
   });
 
-  if (profileQuery.isLoading || profileImageQuery.isLoading) {
+  if (profileQuery.isLoading) {
     return (
       <PageContainer className="flex min-h-dvh items-center justify-center">
         <LoadingState label="프로필을 불러오는 중이에요." />
@@ -161,7 +164,7 @@ export function ProfileEditScreen() {
     );
   }
 
-  if (profileQuery.isError || profileImageQuery.isError) {
+  if (profileQuery.isError) {
     return (
       <PageContainer className="flex min-h-dvh items-center justify-center">
         <ErrorState
@@ -171,7 +174,6 @@ export function ProfileEditScreen() {
             label: "다시 시도",
             onClick: () => {
               void profileQuery.refetch();
-              void profileImageQuery.refetch();
             },
           }}
           secondaryAction={{
