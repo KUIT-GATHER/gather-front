@@ -42,6 +42,7 @@ function getMeetingRecruitInfoRows({
   appliedCount,
   maxParticipants,
   applyDeadlineAt,
+  meetingName,
 }: {
   regionName: string;
   place: string;
@@ -50,6 +51,7 @@ function getMeetingRecruitInfoRows({
   appliedCount: number;
   maxParticipants: number;
   applyDeadlineAt: string;
+  meetingName: string;
 }): VolunteerOpportunityInfoRow[] {
   return [
     {
@@ -89,6 +91,18 @@ function getMeetingRecruitInfoRows({
       icon: "deadline",
       label: "신청 마감",
       value: formatMeetingRecruitDeadline(applyDeadlineAt),
+    },
+    {
+      id: "volunteerOrganization",
+      icon: "volunteerOrganization",
+      label: "봉사 기관명",
+      value: meetingName,
+    },
+    {
+      id: "portalOrganization",
+      icon: "portalOrganization",
+      label: "포털 등록 기관명",
+      value: "Gather",
     },
   ];
 }
