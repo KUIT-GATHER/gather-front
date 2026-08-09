@@ -33,6 +33,7 @@ export function VolunteerPostingDetail({
   postingId,
 }: VolunteerPostingDetailProps) {
   const navigate = useNavigate();
+  const authInitialized = useAuthStore((state) => state.authInitialized);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const postingQuery = useVolunteerPostingDetail(postingId);
   const addBookmarkMutation = useAddVolunteerPostingBookmarkMutation(postingId);
@@ -64,7 +65,7 @@ export function VolunteerPostingDetail({
     onClearParticipationErrors: applicationFlow.clearErrors,
   });
 
-  if (postingQuery.isLoading) {
+  if (!authInitialized || postingQuery.isLoading) {
     return (
       <>
         <VolunteerPostingHeader onBack={() => navigate(-1)} />

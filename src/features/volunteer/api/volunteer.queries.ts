@@ -16,6 +16,7 @@ import type {
 } from "../types/volunteer.types";
 
 type RecommendationScope = "guest" | "member";
+type ViewerScope = RecommendationScope;
 
 function withPage(
   params: VolunteerPostingInfiniteParams,
@@ -49,6 +50,8 @@ export const volunteerPostingKeys = {
   details: () => [...volunteerPostingKeys.all, "detail"] as const,
   detail: (postingId: number) =>
     [...volunteerPostingKeys.details(), postingId] as const,
+  detailForViewer: (postingId: number, viewer: ViewerScope) =>
+    [...volunteerPostingKeys.detail(postingId), "viewer", viewer] as const,
   bookmark: (postingId: number) =>
     [...volunteerPostingKeys.detail(postingId), "bookmark"] as const,
   meetings: (
@@ -111,9 +114,9 @@ export const volunteerPostingQueries = {
       },
     }),
 
-  detail: (postingId: number) =>
+  detail: (postingId: number, viewer: ViewerScope) =>
     queryOptions({
-      queryKey: volunteerPostingKeys.detail(postingId),
+      queryKey: volunteerPostingKeys.detailForViewer(postingId, viewer),
       queryFn: () => getVolunteerPosting(postingId),
     }),
 
