@@ -24,6 +24,7 @@ export function CategoryPuzzle({
       <img
         src={defaultSrc}
         alt=""
+        draggable={false}
         className={cn(
           "absolute inset-0 m-auto block max-h-full max-w-full",
           "transition-opacity duration-150",
@@ -34,6 +35,7 @@ export function CategoryPuzzle({
       <img
         src={selectedSrc}
         alt=""
+        draggable={false}
         className={cn(
           "absolute inset-0 m-auto block max-h-full max-w-full",
           "transition-opacity duration-150",

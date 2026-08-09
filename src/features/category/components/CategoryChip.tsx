@@ -52,6 +52,7 @@ export function CategoryChip({ category, selected }: CategoryChipProps) {
         src={POSTING_CATEGORY_TAG_ICON[category]}
         alt=""
         aria-hidden="true"
+        draggable={false}
         className={cn(
           "size-[18px]",
           FLIPPED_POSTING_CATEGORY_TAGS.includes(category) && "-scale-y-100",

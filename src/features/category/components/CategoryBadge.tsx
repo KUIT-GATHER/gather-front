@@ -41,6 +41,7 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
           src={POSTING_CATEGORY_TAG_ICON[knownCategory]}
           alt=""
           aria-hidden="true"
+          draggable={false}
           className={cn(
             "size-3",
             FLIPPED_POSTING_CATEGORY_TAGS.includes(knownCategory) &&
