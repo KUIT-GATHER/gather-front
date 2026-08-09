@@ -17,7 +17,7 @@ import {
 } from "@/features/team/hooks/useMeetingPostMutations";
 import {
   getMeetingImageSelectionErrorMessage,
-  MAX_MEETING_IMAGE_COUNT,
+  MAX_MEETING_POST_IMAGE_COUNT,
   MEETING_IMAGE_MIME_TYPES,
   validateMeetingImageSelection,
 } from "@/features/team/lib/meetingImageValidation";
@@ -127,6 +127,7 @@ export function MeetingPostEditorScreen({
     const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
       existingImages: files.map((file) => ({ file })),
       files: selected,
+      maxCount: MAX_MEETING_POST_IMAGE_COUNT,
     });
 
     if (acceptedFiles.length > 0) {
@@ -138,7 +139,10 @@ export function MeetingPostEditorScreen({
 
     setImageSelectionError(
       rejectedReasons.length > 0
-        ? getMeetingImageSelectionErrorMessage(rejectedReasons)
+        ? getMeetingImageSelectionErrorMessage(
+            rejectedReasons,
+            MAX_MEETING_POST_IMAGE_COUNT,
+          )
         : null,
     );
     setSubmitError(null);
@@ -350,12 +354,12 @@ export function MeetingPostEditorScreen({
             variant="primaryOutline"
             size="medium"
             fullWidth
-            disabled={files.length >= MAX_MEETING_IMAGE_COUNT || isPending}
+            disabled={files.length >= MAX_MEETING_POST_IMAGE_COUNT || isPending}
             className="h-12 border-point-green text-base text-button"
             leftIcon={<ImagePlus className="size-5" aria-hidden="true" />}
             onClick={() => fileInputRef.current?.click()}
           >
-            사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
+            사진 첨부 (선택, 최대 {MAX_MEETING_POST_IMAGE_COUNT}장)
           </Button>
           <input
             ref={fileInputRef}

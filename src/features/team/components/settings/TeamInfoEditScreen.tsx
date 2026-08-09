@@ -19,7 +19,7 @@ import {
 import type { EditableMeetingImage } from "@/features/team/lib/meetingImageEditor";
 import {
   getMeetingImageSelectionErrorMessage,
-  MAX_MEETING_IMAGE_COUNT,
+  MAX_MEETING_COVER_IMAGE_COUNT,
   validateMeetingImageSelection,
 } from "@/features/team/lib/meetingImageValidation";
 import { buildMeetingUpdatePayload } from "@/features/team/lib/meetingUpdatePayload";
@@ -100,6 +100,7 @@ export function TeamInfoEditScreen({
     setImages(
       [...manageImagesQuery.data]
         .sort((a, b) => a.sortOrder - b.sortOrder)
+        .slice(0, MAX_MEETING_COVER_IMAGE_COUNT)
         .map((image) => ({
           ...image,
           id: `remote-${image.objectKey}`,
@@ -122,10 +123,17 @@ export function TeamInfoEditScreen({
         (image): image is Extract<EditableMeetingImage, { source: "local" }> =>
           image.source === "local",
       );
+      const selectedFiles = Array.from(files);
+      const remainingCount = Math.max(
+        0,
+        MAX_MEETING_COVER_IMAGE_COUNT - images.length,
+      );
+      const filesWithinLimit = selectedFiles.slice(0, remainingCount);
       const { acceptedFiles, rejectedReasons } = validateMeetingImageSelection({
         existingImages: localImages,
         existingCount: images.length,
-        files: Array.from(files),
+        files: filesWithinLimit,
+        maxCount: MAX_MEETING_COVER_IMAGE_COUNT,
       });
       const additions = acceptedFiles.map((file) => {
         const previewUrl = URL.createObjectURL(file);
@@ -143,8 +151,16 @@ export function TeamInfoEditScreen({
       }
       setImageSelectionError(
         rejectedReasons.length > 0
-          ? getMeetingImageSelectionErrorMessage(rejectedReasons)
-          : null,
+          ? getMeetingImageSelectionErrorMessage(
+              rejectedReasons,
+              MAX_MEETING_COVER_IMAGE_COUNT,
+            )
+          : selectedFiles.length > filesWithinLimit.length
+            ? getMeetingImageSelectionErrorMessage(
+                ["countExceeded"],
+                MAX_MEETING_COVER_IMAGE_COUNT,
+              )
+            : null,
       );
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -288,18 +304,17 @@ export function TeamInfoEditScreen({
         <section>
           <button
             type="button"
-            disabled={images.length >= MAX_MEETING_IMAGE_COUNT}
+            disabled={images.length >= MAX_MEETING_COVER_IMAGE_COUNT}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-point-green text-button disabled:opacity-40"
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus className="size-5" />
-            사진 첨부 (선택, 최대 {MAX_MEETING_IMAGE_COUNT}장)
+            사진 첨부 (선택, 최대 {MAX_MEETING_COVER_IMAGE_COUNT}장)
           </button>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            multiple
             className="sr-only"
             onChange={(event) => addImages(event.target.files)}
           />

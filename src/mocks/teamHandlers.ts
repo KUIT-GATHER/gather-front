@@ -43,7 +43,7 @@ import type {
   ReviewSourceType,
 } from "@/features/team/types/meetingPost.types";
 import {
-  MAX_MEETING_IMAGE_COUNT,
+  MAX_MEETING_COVER_IMAGE_COUNT,
   MAX_MEETING_IMAGE_SIZE_BYTES,
   isMeetingImageMimeType,
 } from "@/features/team/lib/meetingImageValidation";
@@ -314,6 +314,7 @@ const pendingMeetingImageUploads = new Map<
     publicUrl: string;
     contentType: string;
     fileSize: number;
+    imageData?: ArrayBuffer;
     uploaded: boolean;
     applied: boolean;
   }
@@ -1544,7 +1545,7 @@ export const teamHandlers = [
         );
       }
 
-      if (getPendingUploadCount(meetingId) >= MAX_MEETING_IMAGE_COUNT) {
+      if (getPendingUploadCount(meetingId) >= MAX_MEETING_COVER_IMAGE_COUNT) {
         return createMeetingErrorResponse(
           "MEETING_IMAGE_UPLOAD_LIMIT_EXCEEDED",
           "대기 중인 이미지 업로드 요청이 너무 많습니다.",
@@ -1555,7 +1556,7 @@ export const teamHandlers = [
       const uploadId = String(nextMeetingImageUploadId++);
       const extension = contentType.split("/")[1];
       const objectKey = `meetings/${meetingId}/mock-${uploadId}.${extension}`;
-      const publicUrl = `https://mock-s3.gather.local/${objectKey}`;
+      const publicUrl = `/__mock-s3/meeting-images/${uploadId}/public`;
 
       pendingMeetingImageUploads.set(uploadId, {
         meetingId,
@@ -1571,7 +1572,7 @@ export const teamHandlers = [
       return HttpResponse.json({
         success: true,
         data: {
-          uploadUrl: `http://localhost:5173/__mock-s3/meeting-images/${uploadId}`,
+          uploadUrl: `/__mock-s3/meeting-images/${uploadId}`,
           objectKey,
           publicUrl,
           expiresInSeconds: 300,
@@ -1601,12 +1602,14 @@ export const teamHandlers = [
         return new HttpResponse(null, { status: 400 });
       }
 
-      const fileSize = (await request.arrayBuffer()).byteLength;
+      const imageData = await request.arrayBuffer();
+      const fileSize = imageData.byteLength;
 
       if (fileSize !== upload.fileSize) {
         return new HttpResponse(null, { status: 400 });
       }
 
+      upload.imageData = imageData;
       upload.uploaded = true;
       uploadedMockObjects.set(upload.objectKey, {
         meetingId: upload.meetingId,
@@ -1617,6 +1620,21 @@ export const teamHandlers = [
       return new HttpResponse(null, { status: 200 });
     },
   ),
+
+  http.get("*/__mock-s3/meeting-images/:uploadId/public", ({ params }) => {
+    const upload = pendingMeetingImageUploads.get(String(params.uploadId));
+
+    if (!upload?.uploaded || !upload.imageData) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    return new HttpResponse(upload.imageData, {
+      headers: {
+        "Content-Type": upload.contentType,
+        "Cache-Control": "no-store",
+      },
+    });
+  }),
 
   http.patch(
     "*/api/v1/meetings/:meetingId/images",
@@ -1643,11 +1661,11 @@ export const teamHandlers = [
 
       if (
         !Array.isArray(objectKeys) ||
-        objectKeys.length > MAX_MEETING_IMAGE_COUNT
+        objectKeys.length > MAX_MEETING_COVER_IMAGE_COUNT
       ) {
         return createMeetingErrorResponse(
           "MEETING_IMAGE_COUNT_EXCEEDED",
-          "모임 사진은 최대 3장까지 등록할 수 있습니다.",
+          `모임 사진은 최대 ${MAX_MEETING_COVER_IMAGE_COUNT}장까지 등록할 수 있습니다.`,
           400,
         );
       }
