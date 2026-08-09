@@ -193,7 +193,8 @@ function MeetingDiscoverList({
           ariaLabel="모임 정렬"
           value={sort}
           options={teamListSortOptions}
-          contentClassName="w-[206px]"
+          className="w-14"
+          contentClassName="w-[200px]"
           onChange={(value) => {
             if (!isTeamListSort(value)) return;
             setSearchParams(
