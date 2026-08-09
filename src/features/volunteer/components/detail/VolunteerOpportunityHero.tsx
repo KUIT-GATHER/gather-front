@@ -8,16 +8,7 @@ type VolunteerOpportunityHeroProps = {
   imageSrc: string;
   imageAlt?: string;
   categories: readonly PostingCategory[];
-  regionName?: string | null;
 };
-
-function Tag({ children }: { children: string }) {
-  return (
-    <span className="inline-flex h-6 items-center rounded-full bg-point-green/20 px-2.5 text-xs font-medium text-icon">
-      {children}
-    </span>
-  );
-}
 
 export function VolunteerOpportunityHero({
   title,
@@ -25,7 +16,6 @@ export function VolunteerOpportunityHero({
   imageSrc,
   imageAlt = "",
   categories,
-  regionName,
 }: VolunteerOpportunityHeroProps) {
   return (
     <section>
@@ -41,7 +31,6 @@ export function VolunteerOpportunityHero({
         {categories.map((category) => (
           <CategoryBadge key={category} category={category} />
         ))}
-        {regionName ? <Tag>{regionName}</Tag> : null}
       </div>
 
       <h2 className="mt-4 max-w-[306px] break-keep whitespace-pre-line text-[20px] leading-6 font-semibold text-text">
