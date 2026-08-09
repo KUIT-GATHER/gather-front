@@ -97,11 +97,11 @@ function createWithdrawalCooldownResponse() {
       success: false,
       data: null,
       error: {
-        code: "WITHDRAWN_ACCOUNT_COOLDOWN",
-        message: "탈퇴 후 7일간 재가입할 수 없습니다.",
+        code: "ACCOUNT_REJOIN_BLOCKED",
+        message: "탈퇴 후 7일 동안 재가입할 수 없습니다.",
       },
     },
-    { status: 403 },
+    { status: 409 },
   );
 }
 

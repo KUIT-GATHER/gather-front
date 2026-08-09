@@ -35,6 +35,7 @@ function getCallbackError(error: unknown): CallbackError {
 
   if (
     error.code === API_ERROR_CODE.WITHDRAWN_USER ||
+    error.code === API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED ||
     error.code === API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN
   ) {
     return "withdrawn";
