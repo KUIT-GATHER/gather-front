@@ -25,16 +25,16 @@ export function VolunteerPostingHeader({
   return (
     <header
       className={cn(
-        "relative w-full bg-bg pt-[env(safe-area-inset-top)]",
+        "relative -mx-[11px] w-[calc(100%+22px)] bg-bg pt-[env(safe-area-inset-top)]",
         sticky && "sticky top-0 z-40",
         className,
       )}
     >
-      <div className="flex h-17.5 items-center gap-1">
+      <div className="flex h-17.5 items-center gap-2.5">
         <button
           type="button"
           aria-label="뒤로가기"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
           onClick={onBack}
         >
           <img
@@ -45,7 +45,7 @@ export function VolunteerPostingHeader({
           />
         </button>
 
-        <h1 className="min-w-0 flex-1 truncate text-[20px] leading-5 font-semibold text-text">
+        <h1 className="min-w-0 flex-1 truncate text-[20px] leading-4 font-semibold text-text">
           {title}
         </h1>
 
@@ -64,7 +64,7 @@ export function VolunteerPostingHeader({
               src={isBookmarked ? FilledHeartIcon : UnfilledHeartIcon}
               alt=""
               aria-hidden="true"
-              className="size-5"
+              className="h-[18px] w-5"
             />
           </button>
         ) : null}

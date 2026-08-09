@@ -1,20 +1,7 @@
-import CalendarIcon from "@/assets/volunteer/calender.svg";
-import ClockIcon from "@/assets/volunteer/clock.svg";
-import ExpireDateIcon from "@/assets/volunteer/expiredate.svg";
-import LocationIcon from "@/assets/volunteer/location.svg";
-import MemberIcon from "@/assets/volunteer/member.svg";
-import PortalOrgIcon from "@/assets/volunteer/portalorg.svg";
-import VolunteerOrgIcon from "@/assets/volunteer/volunteerorg.svg";
+import { InfoIcon, type InfoIconName } from "@/shared/ui/InfoIcon";
 import { cn } from "@/shared/lib/cn";
 
-export type VolunteerOpportunityInfoIcon =
-  | "location"
-  | "date"
-  | "time"
-  | "participants"
-  | "deadline"
-  | "volunteerOrganization"
-  | "portalOrganization";
+export type VolunteerOpportunityInfoIcon = InfoIconName;
 
 export type VolunteerOpportunityInfoRow = {
   id: string;
@@ -28,22 +15,10 @@ type VolunteerOpportunityInfoCardProps = {
   className?: string;
 };
 
-const iconByType: Record<VolunteerOpportunityInfoIcon, string> = {
-  location: LocationIcon,
-  date: CalendarIcon,
-  time: ClockIcon,
-  participants: MemberIcon,
-  deadline: ExpireDateIcon,
-  volunteerOrganization: VolunteerOrgIcon,
-  portalOrganization: PortalOrgIcon,
-};
-
 function DetailRow({ icon, label, value }: VolunteerOpportunityInfoRow) {
   return (
-    <div className="grid grid-cols-[1.5rem_auto_1fr] items-start gap-2">
-      <span className="flex size-6 items-center justify-center">
-        <img src={iconByType[icon]} alt="" className="max-h-5 max-w-5" />
-      </span>
+    <div className="grid grid-cols-[1.5rem_auto_1fr] items-start gap-x-3">
+      <InfoIcon name={icon} />
       <dt className="whitespace-nowrap pt-0.5 text-[15px] leading-normal font-normal text-text-gray-400">
         {label}
       </dt>

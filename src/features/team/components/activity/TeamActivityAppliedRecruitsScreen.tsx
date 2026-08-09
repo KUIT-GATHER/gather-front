@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 
-import CalendarIcon from "@/assets/volunteer/calender.svg";
-import LocationIcon from "@/assets/volunteer/location.svg";
+import CalendarIcon from "@/shared/assets/icons/info/calender.svg";
+import LocationIcon from "@/shared/assets/icons/info/location.svg";
 import { useMyMeetingActivityAppliedRecruitsQuery } from "@/features/team/hooks/useMyMeetingActivityQuery";
 import { useTeamDetailContext } from "@/features/team/hooks/useTeamDetailContext";
 import type { MyAppliedRecruit } from "@/features/team/types/team.types";

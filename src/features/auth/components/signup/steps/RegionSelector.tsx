@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
-import locationIcon from "@/assets/volunteer/location.svg";
+import locationIcon from "@/shared/assets/icons/info/location.svg";
 import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,

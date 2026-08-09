@@ -13,10 +13,9 @@ import type {
 import { cn } from "@/shared/lib/cn";
 
 type TeamCardProps = {
-  team: Omit<MeetingListItem, "regionName">;
+  team: Omit<MeetingListItem, "regionName"> & { regionName?: string | null };
   onClick: () => void;
   variant?: "list" | "compact" | "my";
-  regionName?: string | null;
   viewerRole?: MeetingMemberRole;
 };
 
@@ -24,7 +23,6 @@ export function TeamCard({
   team,
   onClick,
   variant = "list",
-  regionName,
   viewerRole,
 }: TeamCardProps) {
   const deadlineDate = formatMeetingActivityDate(team.deadline);
@@ -52,7 +50,7 @@ export function TeamCard({
             </p>
           ) : null}
           <p className="mt-[3px] truncate text-sm leading-4 text-text-gray-100">
-            {regionName ? `${regionName} \u00b7 ` : ""}
+            {team.regionName ? `${team.regionName} \u00b7 ` : ""}
             {team.currentMemberCount}/{team.maxMember}명
             {deadlineDate ? ` · ${deadlineDate}` : ""}
           </p>
@@ -84,7 +82,7 @@ export function TeamCard({
               </p>
             ) : null}
             <p className="mt-1 truncate text-sm leading-4 text-text-gray-400">
-              {regionName ? `${regionName} · ` : ""}
+              {team.regionName ? `${team.regionName} · ` : ""}
               {team.currentMemberCount}/{team.maxMember}명
               {deadlineDate ? ` · ${deadlineDate}` : ""}
             </p>
@@ -132,7 +130,7 @@ export function TeamCard({
       title={team.name}
       description={team.description}
       metadata={[
-        regionName,
+        team.regionName,
         `${team.currentMemberCount}/${team.maxMember}명`,
         deadlineDate,
       ]}

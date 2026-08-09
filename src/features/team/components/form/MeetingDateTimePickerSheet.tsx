@@ -1,5 +1,6 @@
-import { CalendarDays, RefreshCw } from "lucide-react";
-
+﻿import calendarIcon from "@/features/team/assets/date-time-picker/calendar.svg";
+import closeIcon from "@/shared/assets/icons/close.svg";
+import refreshIcon from "@/features/team/assets/date-time-picker/refresh.svg";
 import { SingleDateCalendar } from "@/features/team/components/SingleDateCalendar";
 import { TimeWheelPicker } from "@/features/team/components/TimeWheelPicker";
 import { formatMeetingDateTimeSummary } from "@/features/team/lib/meetingDateTimeFormat";
@@ -34,16 +35,27 @@ export function MeetingDateTimePickerSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      className="max-h-[min(96dvh,55rem)] rounded-t-[40px] bg-bg"
-      contentClassName="px-5.5 pt-3 pb-1"
+      className="h-[881px] max-h-none origin-bottom scale-[min(1,calc(100dvh/881px))] rounded-t-[40px] bg-bg"
+      contentClassName="overflow-hidden px-5.5 pt-3.5 pb-0"
+      footerClassName="pt-[7px] pb-[37px]"
+      closeIcon={
+        <span className="flex size-11 items-center justify-center">
+          <img src={closeIcon} alt="" className="size-11" />
+        </span>
+      }
       leadingAction={
         <button
           type="button"
-          className="inline-flex h-11 items-center gap-1 text-xs font-medium text-point-red"
+          className="inline-flex h-11 items-center text-xs font-medium text-point-red"
           onClick={onReset}
         >
           재설정
-          <RefreshCw aria-hidden="true" className="size-4" />
+          <img
+            src={refreshIcon}
+            alt=""
+            aria-hidden="true"
+            className="h-11 w-[19px]"
+          />
         </button>
       }
       footer={
@@ -51,7 +63,7 @@ export function MeetingDateTimePickerSheet({
           <Button
             type="button"
             fullWidth
-            className="max-w-[315px] active:bg-icon"
+            className="h-12 max-w-[315px] active:bg-icon"
             onClick={onApply}
           >
             적용하기
@@ -60,11 +72,18 @@ export function MeetingDateTimePickerSheet({
       }
     >
       <div className="flex flex-col gap-5">
-        <div className="flex h-[68px] items-center justify-between rounded-2xl border border-button bg-white px-4">
-          <p className="text-base font-medium text-text-gray-400">
+        <div className="flex h-[68px] w-[calc(100%+3px)] self-center items-center justify-between rounded-2xl border border-button bg-white px-4">
+          <p className="text-base font-medium text-text-gray-300">
             {formatMeetingDateTimeSummary(value)}
           </p>
-          <CalendarDays aria-hidden="true" className="size-6 text-icon" />
+          <span className="flex size-6 items-center justify-center">
+            <img
+              src={calendarIcon}
+              alt=""
+              aria-hidden="true"
+              className="h-[20.814px] w-[18px]"
+            />
+          </span>
         </div>
         <div className="min-h-[348px] rounded-2xl border border-button bg-white px-1 pb-2">
           <SingleDateCalendar

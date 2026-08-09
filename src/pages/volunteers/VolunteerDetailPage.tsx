@@ -10,7 +10,7 @@ export function VolunteerDetailPage() {
   const hasValidPostingId = Number.isInteger(postingId) && postingId > 0;
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh bg-bg">
+    <PageContainer size="narrow" className="min-h-dvh bg-bg px-[21px]">
       {hasValidPostingId ? (
         <VolunteerPostingDetail postingId={postingId} />
       ) : (

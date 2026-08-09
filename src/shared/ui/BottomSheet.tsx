@@ -14,9 +14,11 @@ type BottomSheetProps = {
   footer?: ReactNode;
   className?: string;
   contentClassName?: string;
+  footerClassName?: string;
   onBack?: () => void;
   backLabel?: string;
   leadingAction?: ReactNode;
+  closeIcon?: ReactNode;
 };
 
 export default function BottomSheet({
@@ -28,9 +30,11 @@ export default function BottomSheet({
   footer,
   className,
   contentClassName,
+  footerClassName,
   onBack,
   backLabel = "이전 화면으로",
   leadingAction,
+  closeIcon,
 }: BottomSheetProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -60,7 +64,11 @@ export default function BottomSheet({
               <span className="size-11" aria-hidden="true" />
             )}
             <Dialog.Close asChild>
-              <IconButton label="닫기" icon={<X />} variant="plain" />
+              <IconButton
+                label="닫기"
+                icon={closeIcon ?? <X />}
+                variant="plain"
+              />
             </Dialog.Close>
           </div>
           <Dialog.Description
@@ -79,7 +87,12 @@ export default function BottomSheet({
             {children}
           </div>
           {footer ? (
-            <div className="shrink-0 px-5.5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+            <div
+              className={cn(
+                "shrink-0 px-5.5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]",
+                footerClassName,
+              )}
+            >
               {footer}
             </div>
           ) : null}
