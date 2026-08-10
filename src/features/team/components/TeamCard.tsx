@@ -15,6 +15,7 @@ import { cn } from "@/shared/lib/cn";
 type TeamCardProps = {
   team: Omit<MeetingListItem, "regionName"> & { regionName?: string | null };
   onClick: () => void;
+  onSettingsClick?: () => void;
   variant?: "list" | "compact" | "my";
   viewerRole?: MeetingMemberRole;
 };
@@ -22,6 +23,7 @@ type TeamCardProps = {
 export function TeamCard({
   team,
   onClick,
+  onSettingsClick,
   variant = "list",
   viewerRole,
 }: TeamCardProps) {
@@ -105,10 +107,10 @@ export function TeamCard({
             {viewerRole === "HOST" ? (
               <button
                 type="button"
-                disabled
                 aria-label="모임 설정 준비 중"
                 title="모임 설정은 준비 중입니다."
                 className="grid size-7 place-items-center text-text-gray-300 disabled:cursor-not-allowed"
+                onClick={onSettingsClick}
               >
                 <Settings className="size-5" aria-hidden="true" />
               </button>
