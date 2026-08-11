@@ -19,6 +19,7 @@ type MeetingDateTimeFieldProps = {
   invalid?: boolean;
   maxDate?: Date;
   validate?: (date: Date) => string | undefined;
+  valueClassName?: string;
 };
 
 function getInitialDate(value: string, maxDate?: Date) {
@@ -40,6 +41,7 @@ export function MeetingDateTimeField({
   invalid = false,
   maxDate,
   validate,
+  valueClassName,
 }: MeetingDateTimeFieldProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(() => getInitialDate(value, maxDate));
@@ -71,7 +73,12 @@ export function MeetingDateTimeField({
         onClick={openPicker}
       >
         {selectedDate ? (
-          <span className="flex items-center gap-2 text-text-gray-300">
+          <span
+            className={cn(
+              "flex items-center gap-2 text-text-gray-300",
+              valueClassName,
+            )}
+          >
             <span>{dateText}</span>
             <span
               aria-hidden="true"

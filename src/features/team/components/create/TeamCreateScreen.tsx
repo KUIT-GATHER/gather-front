@@ -440,6 +440,7 @@ export function TeamCreateScreen() {
             maxLength={NAME_MAX_LENGTH}
             invalid={Boolean(errors.name)}
             placeholder="모임 이름을 입력해 주세요."
+            className="text-text"
             onChange={(event) => {
               setName(event.target.value);
               clearError("name");
@@ -462,7 +463,7 @@ export function TeamCreateScreen() {
             maxLength={DESCRIPTION_MAX_LENGTH}
             invalid={Boolean(errors.description)}
             placeholder="모임을 소개해주세요."
-            className="h-36"
+            className="h-36 text-text"
             onChange={(event) => {
               setDescription(event.target.value);
               clearError("description");
@@ -551,20 +552,19 @@ export function TeamCreateScreen() {
           <div className="relative w-18">
             <Input
               id="max-member"
-              type="number"
+              type="text"
               inputMode="numeric"
-              min={2}
-              max={maxMemberLimit}
+              pattern="[0-9]*"
               placeholder={String(maxMemberLimit)}
               value={maxMember}
               disabled={isFormLocked}
               className="w-18 pr-7 text-text placeholder:text-text-gray-100 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               onChange={(event) => {
-                const value = event.target.value;
+                const digits = event.target.value.replace(/\D/g, "");
                 setMaxMember(
-                  value === ""
-                    ? value
-                    : String(Math.min(Number(value), maxMemberLimit)),
+                  digits === ""
+                    ? digits
+                    : String(Math.min(Number(digits), maxMemberLimit)),
                 );
               }}
             />
@@ -617,6 +617,7 @@ export function TeamCreateScreen() {
             id="meeting-deadline"
             title="신청 마감일"
             value={resolvedDeadline}
+            valueClassName="text-text"
             disabled={isFormLocked}
             invalid={Boolean(errors.deadline)}
             maxDate={isPostingBased ? postingMaxDeadline : undefined}
@@ -647,7 +648,7 @@ export function TeamCreateScreen() {
             placeholder={
               "예 : 만 19세 이상\n매주 토요일 11:00~12:30 진행\n건대입구역 2번출구 앞에서 만나요"
             }
-            className="h-[83px] overflow-hidden text-[15px] leading-[19px]"
+            className="h-[83px] overflow-hidden text-[15px] leading-[19px] text-text"
             onChange={(event) => setParticipationCondition(event.target.value)}
           />
         </FormField>
