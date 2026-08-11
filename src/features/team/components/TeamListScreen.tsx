@@ -128,7 +128,9 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
             variant="my"
             viewerRole={team.viewerRole}
             onClick={() => navigate(`/teams/${team.meetingId}/posts`)}
-            onSettingsClick={() => navigate(`/teams/${team.meetingId}/posts`)}
+            onSettingsClick={() =>
+              navigate(`/teams/${team.meetingId}/settings`)
+            }
           />
         </li>
       ))}
