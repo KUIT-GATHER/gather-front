@@ -13,6 +13,7 @@ import type {
 
 function toCommonSignupRequest(
   values: KakaoSignupFormValues,
+  phoneVerificationId: string,
 ): CommonSignupRequest {
   if (values.gender === "" || values.activityRegionId === null) {
     throw new Error("Invalid signup form state");
@@ -23,6 +24,7 @@ function toCommonSignupRequest(
     birthDate: normalizeBirthDate(values.birthDate),
     gender: values.gender,
     phoneNumber: normalizePhoneNumber(values.phoneNumber),
+    phoneVerificationId,
     nickname: values.nickname.trim(),
     introduction: values.introduction.trim() || null,
     activityRegionId: values.activityRegionId,
@@ -35,9 +37,10 @@ function toCommonSignupRequest(
 
 export function toEmailSignupRequest(
   values: EmailSignupFormValues,
+  phoneVerificationId: string,
 ): SignupRequest {
   return {
-    ...toCommonSignupRequest(values),
+    ...toCommonSignupRequest(values, phoneVerificationId),
     email: normalizeEmail(values.email),
     password: values.password,
     passwordConfirm: values.passwordConfirm,
@@ -46,6 +49,7 @@ export function toEmailSignupRequest(
 
 export function toKakaoSignupRequest(
   values: KakaoSignupFormValues,
+  phoneVerificationId: string,
 ): KakaoSignupRequest {
-  return toCommonSignupRequest(values);
+  return toCommonSignupRequest(values, phoneVerificationId);
 }
