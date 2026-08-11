@@ -39,7 +39,8 @@ import Textarea from "@/shared/ui/Textarea";
 
 const NAME_MAX_LENGTH = 15;
 const DESCRIPTION_MAX_LENGTH = 200;
-const MAX_MEMBER = 30;
+const FREE_MEETING_MAX_MEMBER = 100;
+const POSTING_MEETING_MAX_MEMBER = 30;
 const PARTICIPATION_CONDITION_MAX_LENGTH = 150;
 
 type MeetingCreatePhase =
@@ -73,7 +74,7 @@ export function TeamCreateScreen() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [regionId, setRegionId] = useState("");
-  const [maxMember, setMaxMember] = useState("30");
+  const [maxMember, setMaxMember] = useState("");
   const [categories, setCategories] = useState<PostingCategory[]>([]);
   const [deadline, setDeadline] = useState("");
   const [participationCondition, setParticipationCondition] = useState("");
@@ -128,7 +129,9 @@ export function TeamCreateScreen() {
   const selectedRegion = resolvedRegionId
     ? regionById.get(Number(resolvedRegionId))
     : undefined;
-  const maxMemberLimit = MAX_MEMBER;
+  const maxMemberLimit = isPostingBased
+    ? POSTING_MEETING_MAX_MEMBER
+    : FREE_MEETING_MAX_MEMBER;
   const selectedRegionParent = selectedRegion?.parentId
     ? regionById.get(selectedRegion.parentId)
     : undefined;
@@ -354,7 +357,10 @@ export function TeamCreateScreen() {
             description: description.trim(),
             maxMember: Math.min(
               maxMemberLimit,
-              Math.max(2, Number.parseInt(maxMember, 10) || 2),
+              Math.max(
+                2,
+                Number.parseInt(maxMember || String(maxMemberLimit), 10),
+              ),
             ),
             regionId: Number(resolvedRegionId),
             categories: resolvedCategories,
@@ -549,12 +555,22 @@ export function TeamCreateScreen() {
               inputMode="numeric"
               min={2}
               max={maxMemberLimit}
+              placeholder={String(maxMemberLimit)}
               value={maxMember}
               disabled={isFormLocked}
-              className="w-18 pr-7 text-text-gray-100 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              onChange={(event) => setMaxMember(event.target.value)}
+              className="w-18 pr-7 text-text placeholder:text-text-gray-100 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              onChange={(event) => {
+                const value = event.target.value;
+                setMaxMember(
+                  value === ""
+                    ? value
+                    : String(Math.min(Number(value), maxMemberLimit)),
+                );
+              }}
             />
-            <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-[15px] text-text-gray-100">
+            <span
+              className={`pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-[15px] ${maxMember ? "text-text" : "text-text-gray-100"}`}
+            >
               명
             </span>
           </div>
