@@ -395,6 +395,10 @@ export function getMockPostingParticipationAction(
     return "APPLY";
   }
 
+  if (participation.participationAction) {
+    return participation.participationAction;
+  }
+
   switch (participation.status) {
     case "APPLIED":
     case "CONFIRMED":

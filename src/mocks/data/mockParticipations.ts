@@ -3,6 +3,7 @@ export type MockParticipation = {
   userId: number;
   postingId: number;
   status: "APPLIED" | "CONFIRMED" | "COMPLETED" | "REVIEWED";
+  participationAction?: "CANCEL" | "NONE";
   participationStartDate?: string;
   participationEndDate?: string;
   recognizedMinutes?: number;
@@ -36,6 +37,7 @@ const defaultParticipations: MockParticipation[] = [
     userId: 1,
     postingId: 2,
     status: "CONFIRMED",
+    participationAction: "NONE",
     participationStartDate: formatMockDate(2),
     participationEndDate: formatMockDate(5),
   },

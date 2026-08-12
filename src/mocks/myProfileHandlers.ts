@@ -197,18 +197,23 @@ export const myProfileHandlers = [
     const participations = getMockParticipations(userId);
     const participationActivities: MyPageActivity[] = participations.flatMap(
       (participation) => {
+        if (
+          participation.status !== "APPLIED" &&
+          participation.status !== "CONFIRMED"
+        ) {
+          return [];
+        }
+
         const posting = mockPostings.find(
           (item) => item.id === participation.postingId,
         );
 
         if (!posting) return [];
 
-        const participationAction = getMockPostingParticipationAction(
-          posting.id,
-          userId,
-        );
-
-        if (participationAction === "APPLY") return [];
+        const participationAction =
+          getMockPostingParticipationAction(posting.id, userId) === "CANCEL"
+            ? "CANCEL"
+            : "NONE";
 
         return [
           {
@@ -243,8 +248,8 @@ export const myProfileHandlers = [
 
       if (
         !participant ||
-        participant.participationStatus === "CANCELLED" ||
-        participant.participationStatus === "REJECTED"
+        (participant.participationStatus !== "APPLIED" &&
+          participant.participationStatus !== "CONFIRMED")
       ) {
         return [];
       }

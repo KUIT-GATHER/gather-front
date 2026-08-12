@@ -16,13 +16,15 @@ export type MyVolunteerActivityStatus =
   | "COMPLETED"
   | "REVIEWED";
 
+export type MyPageParticipationAction = "CANCEL" | "NONE";
+
 export type MyVolunteerActivity = MyPageActivityBase & {
   activityType: "VOLUNTEER";
   participationId: number;
   postingId: number;
   meetingId: null;
   status: MyVolunteerActivityStatus;
-  participationAction: "CANCEL" | "COMPLETE" | "NONE";
+  participationAction: MyPageParticipationAction;
 };
 
 export type MyMeetingRecruitActivity = MyPageActivityBase & {
@@ -31,7 +33,7 @@ export type MyMeetingRecruitActivity = MyPageActivityBase & {
   meetingId: number;
   postId: number;
   status: MyVolunteerActivityStatus;
-  participationAction: "CANCEL" | "NONE";
+  participationAction: MyPageParticipationAction;
 };
 
 export type MyPageActivity = MyVolunteerActivity | MyMeetingRecruitActivity;
