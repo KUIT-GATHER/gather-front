@@ -175,12 +175,22 @@ export function BasicInfoStep({
     phoneNumber.length > 0 &&
     phoneNumber === verifiedPhoneNumber &&
     Boolean(phoneVerificationId);
-  const isPending =
-    startMutation.isPending ||
-    qrMutation.isPending ||
-    confirmMutation.isPending;
+  const usesSmsVerification = shouldUseSmsVerification();
+  const canReopenQr =
+    !usesSmsVerification &&
+    isVerificationActive &&
+    !isPhoneVerified &&
+    Boolean(qrMutation.data?.qrCode);
+  const isVerificationActionPending =
+    startMutation.isPending || qrMutation.isPending;
+  const isPending = isVerificationActionPending || confirmMutation.isPending;
   const isVerificationInProgress =
     startMutation.isPending || isVerificationActive;
+  const isVerificationButtonDisabled =
+    !isPhoneNumberValid ||
+    isPhoneVerified ||
+    isVerificationActionPending ||
+    (isVerificationInProgress && !canReopenQr);
 
   useEffect(() => {
     phoneNumberRef.current = phoneNumber;
@@ -421,6 +431,11 @@ export function BasicInfoStep({
   };
 
   const handleVerifyPhone = () => {
+    if (canReopenQr) {
+      setIsQrDialogOpen(true);
+      return;
+    }
+
     handleStartVerification();
   };
 
@@ -580,26 +595,24 @@ export function BasicInfoStep({
             <Button
               type="button"
               size="medium"
-              disabled={
-                isVerificationInProgress ||
-                !isPhoneNumberValid ||
-                isPhoneVerified
-              }
+              disabled={isVerificationButtonDisabled}
               onClick={handleVerifyPhone}
               className={cn(
                 "h-12 shrink-0 rounded-xl px-5 text-[15px] font-medium",
-                isPhoneNumberValid &&
-                  !isPhoneVerified &&
-                  !isVerificationInProgress
+                !isVerificationButtonDisabled
                   ? "bg-button text-white"
                   : "bg-[#BFBFBF] text-text",
               )}
             >
               {isPhoneVerified
                 ? "인증 완료"
-                : isVerificationInProgress
-                  ? "인증 중"
-                  : "인증하기"}
+                : isVerificationActionPending
+                  ? "확인 중"
+                  : canReopenQr
+                    ? "QR 다시 보기"
+                    : isVerificationInProgress
+                      ? "인증 중"
+                      : "인증하기"}
             </Button>
           </div>
         </FormField>
