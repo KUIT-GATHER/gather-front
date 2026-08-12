@@ -16,8 +16,6 @@ export type MyVolunteerActivityStatus =
   | "COMPLETED"
   | "REVIEWED";
 
-export type MyMeetingActivityStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
-
 export type MyVolunteerActivity = MyPageActivityBase & {
   activityType: "VOLUNTEER";
   participationId: number;
@@ -26,26 +24,16 @@ export type MyVolunteerActivity = MyPageActivityBase & {
   status: MyVolunteerActivityStatus;
 };
 
-export type MyMeetingActivity = MyPageActivityBase & {
-  activityType: "MEETING";
-  participationId: null;
-  postingId: null;
+export type MyMeetingRecruitActivity = MyPageActivityBase & {
+  activityType: "MEETING_RECRUIT";
+  participationId: number;
   meetingId: number;
-  volunteerPostingId: number | null;
-  status: null;
-  meetingStatus: MyMeetingActivityStatus;
-  postingParticipationStatus: MyVolunteerActivityStatus | null;
+  postId: number;
+  status: MyVolunteerActivityStatus;
+  participationAction: "CANCEL" | "NONE";
 };
 
-export type MyPageActivity = MyVolunteerActivity | MyMeetingActivity;
-
-export type MyLinkedMeetingActivity = MyMeetingActivity & {
-  volunteerPostingId: number;
-  postingParticipationStatus: MyVolunteerActivityStatus;
-};
-export type MyDisplayablePageActivity =
-  | MyVolunteerActivity
-  | MyLinkedMeetingActivity;
+export type MyPageActivity = MyVolunteerActivity | MyMeetingRecruitActivity;
 
 export type MyActivitySummary = {
   totalCompletedCount: number;

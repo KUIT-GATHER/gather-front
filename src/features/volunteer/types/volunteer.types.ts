@@ -2,6 +2,7 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 import type { MeetingStatus } from "@/features/team/types/team.types";
 
 export type VolunteerPostingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
+export type VolunteerPostingSource = "API_1365" | "VMS_CRAWL";
 
 export type VolunteerPostingLocation = {
   locationSeq: number;
@@ -49,8 +50,12 @@ export type VolunteerPosting = {
 
   createdAt: string | null;
   updatedAt: string | null;
+  source: VolunteerPostingSource;
+  applicationUrl: string | null;
   bookmarked: boolean;
   participationStatus: VolunteerPostingParticipationStatus | null;
+  participationStartDate: string | null;
+  participationEndDate: string | null;
   participationAction: VolunteerPostingParticipationAction;
 };
 
@@ -153,7 +158,13 @@ export type VolunteerPostingParticipationAction =
 export type VolunteerPostingParticipationResponse = {
   participationId: number;
   status: VolunteerPostingParticipationStatus;
-  applicationUrl: string;
+  participationStartDate: string;
+  participationEndDate: string;
+};
+
+export type VolunteerPostingParticipationApplyRequest = {
+  participationStartDate: string;
+  participationEndDate: string;
 };
 
 type VolunteerPostingRegionFilter =

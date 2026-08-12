@@ -10,14 +10,16 @@ import { useNavigate } from "react-router";
 
 import { useMyActivitiesQuery } from "@/features/my/hooks/useMyActivitiesQuery";
 import {
-  getMeetingActivityLabel,
-  isDisplayableMyPageActivity,
+  canCancelMeetingRecruitActivity,
+  getMyActivityStatusLabel,
 } from "@/features/my/lib/myActivity";
+import { formatMyActivityDateRange } from "@/features/my/lib/myActivityDate";
 import type {
-  MyLinkedMeetingActivity,
+  MyMeetingRecruitActivity,
   MyPageActivity,
   MyVolunteerActivity,
 } from "@/features/my/types/myActivity.types";
+import { useToggleMeetingRecruitParticipationMutation } from "@/features/team/hooks/useMeetingRecruitMutations";
 import { useCancelVolunteerPostingParticipationMutation } from "@/features/volunteer/hooks/detail/useVolunteerPostingParticipationMutation";
 import { cn } from "@/shared/lib/cn";
 
@@ -41,28 +43,22 @@ function isActivityOnDate(activity: MyPageActivity, dateKey: string) {
   );
 }
 
-function formatActivityDate(dateKey: string) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return `${year}.${pad(month)}.${pad(day)} (${DAY_LABELS[date.getDay()]})`;
-}
-
 function formatActivityTime(startTime: string | null, endTime: string | null) {
   if (startTime && endTime) return `${startTime}–${endTime}`;
   return startTime ?? endTime ?? null;
 }
 
 function getActivityLocation(activity: MyPageActivity) {
-  const location =
-    activity.activityType === "VOLUNTEER"
-      ? activity.actPlace
-      : activity.regionName;
+  const location = activity.actPlace ?? activity.regionName;
 
   return location?.trim() || "장소 미정";
 }
 
 function formatActivityMetadata(activity: MyPageActivity) {
-  const date = formatActivityDate(activity.actStartDate);
+  const date = formatMyActivityDateRange(
+    activity.actStartDate,
+    activity.actEndDate,
+  );
   const time = formatActivityTime(activity.actStartTime, activity.actEndTime);
   const schedule = time ? `${date} ${time}` : date;
 
@@ -108,44 +104,38 @@ function VolunteerActivityCard({
   );
 }
 
-function MeetingActivityCard({
+function MeetingRecruitActivityCard({
   activity,
 }: {
-  activity: MyLinkedMeetingActivity;
+  activity: MyMeetingRecruitActivity;
 }) {
   const navigate = useNavigate();
-  const cancelMutation = useCancelVolunteerPostingParticipationMutation(
-    activity.volunteerPostingId,
+  const participationMutation = useToggleMeetingRecruitParticipationMutation(
+    activity.meetingId,
+    activity.postId,
   );
-  const isCancelable =
-    activity.volunteerPostingId !== null &&
-    (activity.postingParticipationStatus === "APPLIED" ||
-      activity.postingParticipationStatus === "CONFIRMED");
+  const isCancelable = canCancelMeetingRecruitActivity(activity);
+  const detailPath = `/volunteers/meeting-recruits/${activity.meetingId}/${activity.postId}`;
 
   return (
     <ActivityCardFrame
       activity={activity}
-      statusLabel={getMeetingActivityLabel(activity)}
+      statusLabel={getMyActivityStatusLabel(activity.status)}
     >
       {isCancelable ? (
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            disabled={cancelMutation.isPending}
-            onClick={() => cancelMutation.mutate()}
+            disabled={participationMutation.isPending}
+            onClick={() => participationMutation.mutate()}
             className="h-9 rounded-[10px] border border-stroke text-body-14 font-medium text-text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {cancelMutation.isPending ? "취소 중..." : "신청 취소"}
+            {participationMutation.isPending ? "취소 중..." : "신청 취소"}
           </button>
-          <ActivityDetailButton
-            onClick={() => navigate(`/teams/${activity.meetingId}`)}
-          />
+          <ActivityDetailButton onClick={() => navigate(detailPath)} />
         </div>
       ) : (
-        <ActivityDetailButton
-          fullWidth
-          onClick={() => navigate(`/teams/${activity.meetingId}`)}
-        />
+        <ActivityDetailButton fullWidth onClick={() => navigate(detailPath)} />
       )}
     </ActivityCardFrame>
   );
@@ -211,7 +201,7 @@ export function ActivityCalendarSection() {
   const yearMonth = `${year}-${pad(monthIndex + 1)}`;
   const activitiesQuery = useMyActivitiesQuery(yearMonth);
   const activities = useMemo(
-    () => (activitiesQuery.data ?? []).filter(isDisplayableMyPageActivity),
+    () => activitiesQuery.data ?? [],
     [activitiesQuery.data],
   );
   const lastDay = new Date(year, monthIndex + 1, 0).getDate();
@@ -339,8 +329,8 @@ export function ActivityCalendarSection() {
                 activity={activity}
               />
             ) : (
-              <MeetingActivityCard
-                key={`meeting-${activity.meetingId}`}
+              <MeetingRecruitActivityCard
+                key={`meeting-recruit-${activity.participationId}`}
                 activity={activity}
               />
             ),

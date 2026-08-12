@@ -71,11 +71,23 @@ function formatMockDate(offsetDays: number) {
 }
 
 const baseMockPostings = postings.data.map((posting) => {
+  const externalApplication =
+    posting.id % 2 === 0
+      ? {
+          source: "VMS_CRAWL" as const,
+          applicationUrl: `https://www.vms.or.kr/partspace/recruitView.do?seq=${posting.id}`,
+        }
+      : {
+          source: "API_1365" as const,
+          applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${posting.id}`,
+        };
+
   if (posting.id === 1) {
     return {
       ...posting,
-      actStartDate: formatMockDate(7),
-      actEndDate: formatMockDate(7),
+      ...externalApplication,
+      actStartDate: formatMockDate(1),
+      actEndDate: formatMockDate(30),
       noticeStartDate: formatMockDate(-14),
       noticeEndDate: formatMockDate(0),
     };
@@ -84,14 +96,15 @@ const baseMockPostings = postings.data.map((posting) => {
   if (posting.id === 2) {
     return {
       ...posting,
+      ...externalApplication,
       actStartDate: formatMockDate(2),
-      actEndDate: formatMockDate(2),
+      actEndDate: formatMockDate(10),
       noticeStartDate: formatMockDate(-14),
       noticeEndDate: formatMockDate(-1),
     };
   }
 
-  return posting;
+  return { ...posting, ...externalApplication };
 });
 
 const recruitmentDeadlineOffsets = [1, 3, 7, 8, 10, 14, 21, 30, 45, 60, 90];
@@ -103,6 +116,11 @@ const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
 
   return {
     ...postings.data[0],
+    source: id % 2 === 0 ? ("VMS_CRAWL" as const) : ("API_1365" as const),
+    applicationUrl:
+      id % 2 === 0
+        ? `https://www.vms.or.kr/partspace/recruitView.do?seq=${id}`
+        : `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${id}`,
     id,
     title:
       id === 27
@@ -161,10 +179,13 @@ function parseMockLocalDate(value: string | null | undefined) {
     : undefined;
 }
 
-function isMockPostingActivityEnded(postingId: number) {
+function isMockPostingActivityEnded(postingId: number, userId: number) {
   const posting = mockPostings.find((item) => item.id === postingId);
+  const participation = findMockParticipation(userId, postingId);
   const endDate = parseMockLocalDate(
-    posting?.actEndDate ?? posting?.actStartDate,
+    participation?.participationEndDate ??
+      posting?.actEndDate ??
+      posting?.actStartDate,
   );
 
   if (!endDate) {
@@ -364,8 +385,11 @@ function getMockPostingParticipationAction(
   postingId: number,
   userId: number | null,
 ) {
-  const participation =
-    userId === null ? null : findMockParticipation(userId, postingId);
+  if (userId === null) {
+    return "APPLY";
+  }
+
+  const participation = findMockParticipation(userId, postingId);
 
   if (!participation) {
     return "APPLY";
@@ -374,7 +398,9 @@ function getMockPostingParticipationAction(
   switch (participation.status) {
     case "APPLIED":
     case "CONFIRMED":
-      return isMockPostingActivityEnded(postingId) ? "COMPLETE" : "CANCEL";
+      return isMockPostingActivityEnded(postingId, userId)
+        ? "COMPLETE"
+        : "CANCEL";
     case "COMPLETED":
     case "REVIEWED":
       return "NONE";
@@ -917,6 +943,8 @@ export const postingHandlers = [
             ? false
             : getBookmarkedPostingIds(userId).has(postingId),
         participationStatus: participation?.status ?? null,
+        participationStartDate: participation?.participationStartDate ?? null,
+        participationEndDate: participation?.participationEndDate ?? null,
         participationAction: getMockPostingParticipationAction(
           postingId,
           userId,
@@ -946,12 +974,16 @@ export const postingHandlers = [
 
   http.post(
     "*/api/v1/postings/:postingId/participations",
-    ({ params, request }) => {
+    async ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
 
       const postingId = Number(params.postingId);
       const posting = mockPostings.find((item) => item.id === postingId);
+      const body = (await request.json().catch(() => null)) as {
+        participationStartDate?: unknown;
+        participationEndDate?: unknown;
+      } | null;
 
       if (!posting) {
         return HttpResponse.json(
@@ -995,14 +1027,60 @@ export const postingHandlers = [
         );
       }
 
-      const { participationId } = addMockParticipation(userId, postingId);
+      const participationStartDate =
+        typeof body?.participationStartDate === "string"
+          ? body.participationStartDate
+          : undefined;
+      const participationEndDate =
+        typeof body?.participationEndDate === "string"
+          ? body.participationEndDate
+          : undefined;
+      const startDate = parseMockLocalDate(participationStartDate);
+      const endDate = parseMockLocalDate(participationEndDate);
+      const postingStartDate = parseMockLocalDate(posting.actStartDate);
+      const postingEndDate = parseMockLocalDate(posting.actEndDate);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (
+        !participationStartDate ||
+        !participationEndDate ||
+        !startDate ||
+        !endDate ||
+        !postingStartDate ||
+        !postingEndDate ||
+        startDate > endDate ||
+        startDate < today ||
+        startDate < postingStartDate ||
+        endDate > postingEndDate
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "선택한 봉사 일정이 신청 가능 기간에 포함되지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const { participationId } = addMockParticipation(
+        userId,
+        postingId,
+        participationStartDate,
+        participationEndDate,
+      );
 
       return HttpResponse.json({
         success: true,
         data: {
           participationId,
           status: "APPLIED",
-          applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
+          participationStartDate,
+          participationEndDate,
         },
         error: null,
       });
@@ -1064,7 +1142,7 @@ export const postingHandlers = [
         );
       }
 
-      if (!isMockPostingActivityEnded(postingId)) {
+      if (!isMockPostingActivityEnded(postingId, userId)) {
         return HttpResponse.json(
           {
             success: false,

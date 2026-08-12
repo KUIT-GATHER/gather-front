@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { DayPicker, type DateRange } from "@daypicker/react";
+import { DayPicker, type DateRange, type Matcher } from "@daypicker/react";
 import { ko } from "@daypicker/react/locale/ko";
 
 import "@daypicker/react/style.css";
@@ -11,6 +11,9 @@ import { cn } from "@/shared/lib/cn";
 type DateRangeCalendarProps = {
   selected?: DateRange;
   defaultMonth?: Date;
+  startMonth?: Date;
+  endMonth?: Date;
+  disabled?: Matcher | Matcher[];
   onSelect: (range: DateRange | undefined) => void;
   className?: string;
 };
@@ -31,6 +34,9 @@ const calendarStyle = {
 export default function DateRangeCalendar({
   selected,
   defaultMonth,
+  startMonth,
+  endMonth,
+  disabled,
   onSelect,
   className,
 }: DateRangeCalendarProps) {
@@ -40,6 +46,9 @@ export default function DateRangeCalendar({
       locale={ko}
       selected={selected}
       defaultMonth={defaultMonth}
+      startMonth={startMonth}
+      endMonth={endMonth}
+      disabled={disabled}
       onSelect={onSelect}
       navLayout="around"
       numberOfMonths={1}
