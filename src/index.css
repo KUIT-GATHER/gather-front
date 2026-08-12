@@ -67,7 +67,7 @@
 
 @layer base {
   html {
-    scrollbar-gutter: stable;
+    /*scrollbar-gutter: stable;*/
     font-family:
       Pretendard,
       system-ui,

@@ -313,11 +313,7 @@ export function TeamListScreen() {
   if (!authInitialized) {
     return (
       <PageContainer size="narrow" className="min-h-dvh pb-28">
-        <PageHeader
-          title="모임"
-          onBack={() => navigate(-1)}
-          className="[&>div]:h-[70px]"
-        />
+        <PageHeader title="모임" className="[&>div]:h-[70px]" />
         <LoadingState
           label="로그인 정보를 확인하고 있습니다."
           className="min-h-55"
@@ -354,8 +350,7 @@ export function TeamListScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-28">
       <PageHeader
         title="모임"
-        onBack={() => navigate(-1)}
-        className="[&>div]:h-[70px]"
+        className="[&>div]:h-[70px] [&_h1]:ml-2"
         rightAction={
           activeTab === "find" ? (
             <div className="flex shrink-0 items-center gap-1">

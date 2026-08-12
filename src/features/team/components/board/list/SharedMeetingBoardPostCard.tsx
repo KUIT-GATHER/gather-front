@@ -99,7 +99,7 @@ export function SharedMeetingBoardPostCard({
         <img
           src={firstImageUrl}
           alt={`${post.title} 이미지`}
-          className="mt-3 w-full rounded-xl object-cover"
+          className="mt-3 max-h-40 w-full rounded-xl object-contain"
         />
       ) : null}
 
@@ -123,7 +123,7 @@ export function SharedMeetingBoardPostCard({
               aria-hidden="true"
               src={post.liked ? FilledHeartIcon : UnfilledHeartIcon}
               alt=""
-              className="h-3 w-[13.333px]"
+              className="h-[16px] w-[16px]"
             />
             <span className="text-[14px] leading-5 font-medium">
               {post.likeCount}
