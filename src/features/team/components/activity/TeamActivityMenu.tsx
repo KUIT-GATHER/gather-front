@@ -115,7 +115,7 @@ function TeamActivityMenuCard({ item }: { item: TeamActivityMenuItem }) {
         src={arrowIcon}
         alt=""
         aria-hidden
-        className="size-11 shrink-0 object-contain"
+        className="size-8 shrink-0 object-contain"
       />
     </>
   );

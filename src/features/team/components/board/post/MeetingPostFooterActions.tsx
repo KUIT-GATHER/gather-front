@@ -74,7 +74,7 @@ export function MeetingPostFooterActions({
                 aria-hidden="true"
                 src={isLiked ? FilledHeartIcon : UnfilledHeartIcon}
                 alt=""
-                className="h-4 w-[17.778px]"
+                className="h-[19px] w-[21px]"
               />
               <span className="text-[16px] leading-5 font-medium">
                 {likeCount}
