@@ -4,7 +4,6 @@ import locationIcon from "@/shared/assets/icons/info/location.svg";
 
 import mapIcon from "@/assets/icons/Map.svg";
 import calendarIcon from "@/shared/assets/icons/info/calender.svg";
-import closeIcon from "@/shared/assets/icons/close.svg";
 import { CategoryPuzzleGrid } from "@/features/category/components/CategoryPuzzleGrid";
 import { type PostingCategory } from "@/features/category/types/postingCategory.types";
 import { createRegionIndex } from "@/features/region/lib/createRegionIndex";
@@ -194,15 +193,12 @@ export function ActivityFilterSheet({
 
   const title =
     view === "date" ? dateLabel : view === "region" ? "지역" : "필터";
-  const onBack =
-    view === "date" || view === "region" ? () => setView("main") : undefined;
-
   const footer =
     view === "date" ? (
       <Button
         fullWidth
         disabled={!dateSelection?.from || !dateSelection.to}
-        className="active:bg-icon"
+        className="mx-auto flex h-12 max-w-[315px] active:bg-icon"
         onClick={applyDateSelection}
       >
         {dateSelection?.from && dateSelection.to
@@ -238,7 +234,7 @@ export function ActivityFilterSheet({
         <Button
           fullWidth
           disabled={!selectedRegion}
-          className="active:bg-icon"
+          className="mx-auto flex h-12 max-w-[315px] active:bg-icon"
           onClick={applyRegionSelection}
         >
           적용하기
@@ -246,7 +242,7 @@ export function ActivityFilterSheet({
       </div>
     ) : (
       <div className="mx-auto w-full max-w-[315px]">
-        <Button fullWidth className="active:bg-icon" onClick={applyFilter}>
+        <Button fullWidth className="h-12 active:bg-icon" onClick={applyFilter}>
           설정하기
         </Button>
       </div>
@@ -257,17 +253,17 @@ export function ActivityFilterSheet({
       open={open}
       onOpenChange={closeSheet}
       title={title}
-      onBack={onBack}
-      closeIcon={<img src={closeIcon} alt="" className="size-11" />}
       footer={footer}
       footerClassName={
         view === "main"
-          ? "pb-[calc(env(safe-area-inset-bottom)+36px)]"
-          : undefined
+          ? "pt-0 pb-[calc(env(safe-area-inset-bottom)+36px)]"
+          : view === "date"
+            ? "pt-0 pb-[calc(env(safe-area-inset-bottom)+39px)]"
+            : undefined
       }
       className={cn(
         "rounded-t-[40px] bg-bg",
-        view === "main"
+        view === "main" || view === "date"
           ? "h-[min(673px,90dvh)] max-h-[min(673px,90dvh)]"
           : view === "region"
             ? "max-h-[min(88dvh,48rem)]"
@@ -277,11 +273,11 @@ export function ActivityFilterSheet({
         view === "main" && "overflow-hidden py-0",
         view === "region" && "px-0 py-0",
         view === "date" &&
-          "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "overflow-hidden pt-[68px] pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
       )}
     >
       {view === "main" ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
           <section>
             <h2 className="text-title-18 text-text">지역</h2>
             <div className="mt-3 flex gap-3.5">
@@ -347,7 +343,7 @@ export function ActivityFilterSheet({
       ) : null}
 
       {view === "date" ? (
-        <div className="rounded-3xl border-2 border-button px-3 py-4">
+        <div className="h-[348px] overflow-hidden rounded-[20px] border border-button px-3 py-4">
           <DateRangeCalendar
             selected={dateSelection}
             defaultMonth={dateSelection?.from}
