@@ -37,7 +37,7 @@ export function VolunteerPostingApplyConfirmSheet({
     <VolunteerPostingBottomSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="봉사 신청 안내"
+      title="신청 확인"
       className="rounded-t-[40px] bg-bg"
     >
       <div className="rounded-xl border border-[#C5C5C5] bg-white px-[11px] py-[15px]">
@@ -77,19 +77,31 @@ export function VolunteerPostingApplyConfirmSheet({
         </div>
       </div>
 
-      <div className="mt-5">
-        <p className="text-body-14 text-text-gray-400">
-          외부 봉사 사이트에서 신청을 먼저 완료해 주세요.
+      <div className="mt-2">
+        <p className="text-[13px] leading-[21.125px] font-normal text-text-gray-400">
+          신청 버튼 클릭 시 외부 신청 링크가 새 탭으로 열립니다.
+          <br />
+          외부 신청 완료 후 Gather에서 신청 일정을 등록해 주세요.
         </p>
-        <Button
-          type="button"
-          fullWidth
-          className="mt-3 h-12"
-          disabled={!posting.applicationUrl}
-          onClick={onOpenExternalApplication}
-        >
-          외부 신청 페이지 열기
-        </Button>
+        <div className="mt-5 grid grid-cols-2 gap-5">
+          <Button
+            type="button"
+            fullWidth
+            variant="primaryOutline"
+            className="border-transparent bg-point-green/25 text-text"
+            onClick={() => onOpenChange(false)}
+          >
+            취소
+          </Button>
+          <Button
+            type="button"
+            fullWidth
+            disabled={!posting.applicationUrl}
+            onClick={onOpenExternalApplication}
+          >
+            신청
+          </Button>
+        </div>
         {!posting.applicationUrl ? (
           <p className="mt-2 text-body-14 text-point-red">
             외부 신청 페이지를 열 수 없는 공고예요.
