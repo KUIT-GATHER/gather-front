@@ -147,6 +147,13 @@ export function EmailLoginForm({
             </button>
           </div>
         </FormField>
+
+        <button
+          type="button"
+          className="ml-auto block text-xs leading-5.5 text-text-gray-100"
+        >
+          비밀번호 찾기
+        </button>
       </div>
 
       {errors.root?.message ? (
@@ -159,7 +166,7 @@ export function EmailLoginForm({
         fullWidth
         type="submit"
         disabled={!isValid || loginMutation.isPending}
-        className="mt-10.5 h-13.5 text-lg font-semibold"
+        className="mt-12.5 h-13 text-lg font-semibold"
       >
         {loginMutation.isPending ? "로그인 중..." : "로그인"}
       </Button>
