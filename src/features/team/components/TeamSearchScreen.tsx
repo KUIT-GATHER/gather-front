@@ -188,7 +188,6 @@ export function TeamSearchScreen() {
           <PageHeader
             title="모임 찾기"
             onBack={() => navigate(-1)}
-            className="[&>div]:h-[70px]"
           />
           <section className="mt-10">
             <h2 className="flex items-end gap-2 whitespace-pre-line text-title-24 text-text">

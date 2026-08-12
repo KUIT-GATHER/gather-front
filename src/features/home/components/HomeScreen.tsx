@@ -80,7 +80,7 @@ export function HomeScreen() {
   const isMeetingsLoading = !authInitialized || meetingsQuery.isLoading;
   return (
     <PageContainer size="narrow">
-      <header className="flex items-center justify-between pt-8 pb-1.25">
+      <header className="flex h-[calc(70px+env(safe-area-inset-top))] items-center justify-between pt-[env(safe-area-inset-top)]">
         <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
         <div className="mr-[11px] flex items-center gap-5">
           <div className="flex size-[27px] items-center justify-center">

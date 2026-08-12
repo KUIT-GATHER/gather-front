@@ -46,7 +46,7 @@ export default function PageHeader({
         className,
       )}
     >
-      <div className="relative flex h-14 items-center justify-between">
+      <div className="relative flex h-[70px] items-center justify-between">
         <div
           className={cn(
             "z-10 -ml-3 flex items-center justify-start",
