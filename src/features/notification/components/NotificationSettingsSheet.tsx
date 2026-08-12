@@ -52,7 +52,7 @@ function SettingsMenu({
   return (
     <section>
       <h2 className="text-body-15-semibold text-text">알림</h2>
-      <div className="mt-2 divide-y divide-stroke/70">
+      <div className="mt-2">
         <button
           type="button"
           className="flex min-h-13 w-full items-center justify-between py-3 text-left text-body-14 text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
