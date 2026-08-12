@@ -6,8 +6,10 @@ import type {
   KakaoLoginRequest,
   KakaoLoginResponse,
   KakaoSignupRequest,
-  PhoneAvailabilityRequest,
-  PhoneAvailabilityResponse,
+  PhoneVerificationConfirmResponse,
+  PhoneVerificationQrCodeResponse,
+  PhoneVerificationStartRequest,
+  PhoneVerificationStartResponse,
   SendEmailVerificationRequest,
   SendEmailVerificationResponse,
   SignupRequest,
@@ -28,13 +30,33 @@ const cookieAuthOptions = {
   withCredentials: true,
 } as const;
 
-export function checkPhoneAvailability(payload: PhoneAvailabilityRequest) {
-  return fetchClient<PhoneAvailabilityResponse>(
-    "/api/v1/auth/phone-numbers/availability",
+export function startPhoneVerification(payload: PhoneVerificationStartRequest) {
+  return fetchClient<PhoneVerificationStartResponse>(
+    "/api/v1/auth/phone-verifications",
     {
       ...publicOptions,
       method: "POST",
       body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function createPhoneVerificationQrCode(verificationId: string) {
+  return fetchClient<PhoneVerificationQrCodeResponse>(
+    `/api/v1/auth/phone-verifications/${encodeURIComponent(verificationId)}/qr-code`,
+    {
+      ...publicOptions,
+      method: "POST",
+    },
+  );
+}
+
+export function confirmPhoneVerification(verificationId: string) {
+  return fetchClient<PhoneVerificationConfirmResponse>(
+    `/api/v1/auth/phone-verifications/${encodeURIComponent(verificationId)}/confirm`,
+    {
+      ...publicOptions,
+      method: "POST",
     },
   );
 }

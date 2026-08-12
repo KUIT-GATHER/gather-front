@@ -52,8 +52,8 @@ function hasUniqueCategories(values: PostingCategory[]) {
   return new Set(values).size === values.length;
 }
 
-export const signupPhoneNumberSchema = z.string().regex(/^\d{10,11}$/, {
-  error: "전화번호는 10~11자리 숫자로 입력해 주세요.",
+export const signupPhoneNumberSchema = z.string().regex(/^010\d{8}$/, {
+  error: "전화번호는 010으로 시작하는 11자리 숫자로 입력해 주세요.",
 });
 
 export const signupCommonSchema = z.object({

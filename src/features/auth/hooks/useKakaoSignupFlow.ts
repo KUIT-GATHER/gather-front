@@ -91,6 +91,9 @@ export function useKakaoSignupFlow({
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
   );
+  const [phoneVerificationId, setPhoneVerificationId] = useState<string | null>(
+    null,
+  );
   const watchedPhoneNumber = useWatch({
     control: methods.control,
     name: "phoneNumber",
@@ -123,6 +126,7 @@ export function useKakaoSignupFlow({
 
     previousPhoneNumberRef.current = watchedPhoneNumber;
     setVerifiedPhoneNumber(null);
+    setPhoneVerificationId(null);
   }, [watchedPhoneNumber]);
 
   const resetSignupFlow = () => {
@@ -130,6 +134,7 @@ export function useKakaoSignupFlow({
     setStep("basic");
     setDetailType(null);
     setVerifiedPhoneNumber(null);
+    setPhoneVerificationId(null);
     setSubmitError(null);
     setPendingFocusField(null);
     setShowDuplicatePhoneDialog(false);
@@ -179,9 +184,12 @@ export function useKakaoSignupFlow({
       return;
     }
 
-    if (methods.getValues("phoneNumber") !== verifiedPhoneNumber) {
+    if (
+      methods.getValues("phoneNumber") !== verifiedPhoneNumber ||
+      !phoneVerificationId
+    ) {
       methods.setError("phoneNumber", {
-        message: "전화번호 중복 확인을 완료해 주세요.",
+        message: "휴대폰 인증을 완료해 주세요.",
       });
       return;
     }
@@ -197,19 +205,15 @@ export function useKakaoSignupFlow({
   };
 
   const onValidSubmit = async (values: KakaoSignupFormValues) => {
-    if (values.phoneNumber !== verifiedPhoneNumber) {
+    if (values.phoneNumber !== verifiedPhoneNumber || !phoneVerificationId) {
       setIsSubmitLocked(false);
-      moveToFieldError(
-        "basic",
-        "phoneNumber",
-        "전화번호 중복 확인을 완료해 주세요.",
-      );
+      moveToFieldError("basic", "phoneNumber", "휴대폰 인증을 완료해 주세요.");
       return;
     }
 
     try {
       const tokens = await signupMutation.mutateAsync({
-        payload: toKakaoSignupRequest(values),
+        payload: toKakaoSignupRequest(values, phoneVerificationId),
         signupToken,
       });
 
@@ -232,6 +236,7 @@ export function useKakaoSignupFlow({
         methods,
         setStep,
         setVerifiedPhoneNumber,
+        setPhoneVerificationId,
         setSubmitError,
         onDuplicatePhoneNumber: () => setShowDuplicatePhoneDialog(true),
       });
@@ -306,6 +311,7 @@ export function useKakaoSignupFlow({
     showExitDialog,
     showDuplicatePhoneDialog,
     verifiedPhoneNumber,
+    phoneVerificationId,
     profileImageFile,
     isSignupPending: signupMutation.isPending || isSubmitLocked,
     submitError,
@@ -313,6 +319,7 @@ export function useKakaoSignupFlow({
     setShowExitDialog,
     setShowDuplicatePhoneDialog,
     setVerifiedPhoneNumber,
+    setPhoneVerificationId,
     setProfileImageFile,
     clearSubmitError: () => setSubmitError(null),
     handleBack,

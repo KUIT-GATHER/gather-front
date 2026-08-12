@@ -60,8 +60,8 @@ describe("signupCommonSchema", () => {
     expect(parseSignupData({ birthDate: "2025. 02. 29" }).success).toBe(false);
   });
 
-  it.each(["010123456", "010123456789"])(
-    "%s 자리 전화번호를 거부한다",
+  it.each(["010123456", "0101234567", "010123456789", "01112345678"])(
+    "010으로 시작하는 11자리 형식이 아닌 전화번호를 거부한다: %s",
     (phoneNumber) => {
       expect(parseSignupData({ phoneNumber }).success).toBe(false);
     },
