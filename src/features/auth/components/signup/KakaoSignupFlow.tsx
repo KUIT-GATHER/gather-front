@@ -117,6 +117,7 @@ function KakaoSignupFlowContent({
                 phoneVerificationId={phoneVerificationId}
                 onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
                 onPhoneVerificationIdChange={setPhoneVerificationId}
+                onDuplicatePhoneNumber={() => setShowDuplicatePhoneDialog(true)}
               />
             ) : null}
 
