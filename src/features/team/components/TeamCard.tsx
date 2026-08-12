@@ -107,9 +107,9 @@ export function TeamCard({
             {viewerRole === "HOST" ? (
               <button
                 type="button"
-                aria-label="모임 설정 준비 중"
-                title="모임 설정은 준비 중입니다."
-                className="grid size-7 place-items-center text-text-gray-300 disabled:cursor-not-allowed"
+                aria-label="모임 설정"
+                title="모임 설정"
+                className="grid size-7 place-items-center text-text-gray-300"
                 onClick={onSettingsClick}
               >
                 <Settings className="size-5" aria-hidden="true" />
