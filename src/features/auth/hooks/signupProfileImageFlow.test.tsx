@@ -15,6 +15,7 @@ import { server } from "@/mocks/server";
 import { createTestQueryClient } from "@/test/createTestQueryClient";
 
 const uploadProfileImageMock = vi.hoisted(() => vi.fn());
+const TEST_PHONE_VERIFICATION_ID = "5c5d5db1-4187-43d0-8580-672307994878";
 
 vi.mock("@/features/profile/lib/profileImageUpload", async (importOriginal) => {
   const actual =
@@ -105,6 +106,7 @@ async function moveEmailFlowToTerms(result: {
   act(() =>
     result.current.setVerifiedPhoneNumber(emailSignupValues.phoneNumber),
   );
+  act(() => result.current.setPhoneVerificationId(TEST_PHONE_VERIFICATION_ID));
   await submitStep(result.current.handleFormSubmit);
   await waitFor(() => expect(result.current.step).toBe("account"));
   act(() => {
@@ -127,6 +129,7 @@ async function moveKakaoFlowToProfile(result: {
   act(() =>
     result.current.setVerifiedPhoneNumber(kakaoSignupValues.phoneNumber),
   );
+  act(() => result.current.setPhoneVerificationId(TEST_PHONE_VERIFICATION_ID));
   await submitStep(result.current.handleFormSubmit);
   await waitFor(() => expect(result.current.step).toBe("profile"));
 }

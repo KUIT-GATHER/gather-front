@@ -12,6 +12,7 @@ type ApplySignupErrorParams = {
   setStep: Dispatch<SetStateAction<EmailSignupStep>>;
   setVerifiedEmail: Dispatch<SetStateAction<string | null>>;
   setVerifiedPhoneNumber: Dispatch<SetStateAction<string | null>>;
+  setPhoneVerificationId: Dispatch<SetStateAction<string | null>>;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
 };
 
@@ -21,6 +22,7 @@ export function applySignupError({
   setStep,
   setVerifiedEmail,
   setVerifiedPhoneNumber,
+  setPhoneVerificationId,
   setSubmitError,
 }: ApplySignupErrorParams) {
   const moveToFieldError = (
@@ -50,6 +52,7 @@ export function applySignupError({
 
     case API_ERROR_CODE.DUPLICATE_PHONE_NUMBER: {
       setVerifiedPhoneNumber(null);
+      setPhoneVerificationId(null);
       moveToFieldError("basic", "phoneNumber", "이미 가입된 전화번호입니다.");
 
       return;
@@ -58,10 +61,25 @@ export function applySignupError({
     case API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED:
     case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN: {
       setVerifiedPhoneNumber(null);
+      setPhoneVerificationId(null);
       moveToFieldError(
         "basic",
         "phoneNumber",
         "탈퇴 후 7일간 재가입할 수 없습니다.",
+      );
+
+      return;
+    }
+
+    case API_ERROR_CODE.PHONE_VERIFICATION_REQUIRED:
+    case API_ERROR_CODE.PHONE_VERIFICATION_EXPIRED:
+    case API_ERROR_CODE.PHONE_VERIFICATION_NOT_FOUND: {
+      setVerifiedPhoneNumber(null);
+      setPhoneVerificationId(null);
+      moveToFieldError(
+        "basic",
+        "phoneNumber",
+        "휴대폰 인증을 다시 완료해 주세요.",
       );
 
       return;
