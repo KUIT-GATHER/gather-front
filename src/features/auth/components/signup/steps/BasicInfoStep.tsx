@@ -164,10 +164,9 @@ export function BasicInfoStep({
     phoneNumber.length > 0 &&
     phoneNumber === verifiedPhoneNumber &&
     Boolean(phoneVerificationId);
-  const isPending =
-    startMutation.isPending ||
-    qrMutation.isPending ||
-    confirmMutation.isPending;
+  const isVerificationActionPending =
+    startMutation.isPending || qrMutation.isPending;
+  const isPending = isVerificationActionPending || confirmMutation.isPending;
 
   const stopConfirmPolling = () => {
     activeVerificationIdRef.current = null;
@@ -521,7 +520,11 @@ export function BasicInfoStep({
             <Button
               type="button"
               size="medium"
-              disabled={isPending || !isPhoneNumberValid || isPhoneVerified}
+              disabled={
+                isVerificationActionPending ||
+                !isPhoneNumberValid ||
+                isPhoneVerified
+              }
               onClick={handleVerifyPhone}
               className={cn(
                 "h-12 shrink-0 rounded-xl px-5 text-[15px] font-medium",
@@ -530,7 +533,7 @@ export function BasicInfoStep({
                   : "bg-[#BFBFBF] text-text",
               )}
             >
-              {isPending
+              {isVerificationActionPending
                 ? "확인 중"
                 : isPhoneVerified
                   ? "인증 완료"
