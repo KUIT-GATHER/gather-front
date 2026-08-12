@@ -58,6 +58,7 @@ const phoneVerificationRequests = new Map<
     phoneNumber: string;
     messageText: string;
     expiresAt: number;
+    confirmAttempts: number;
     verifiedAt: number | null;
     consumedAt: number | null;
   }
@@ -207,6 +208,7 @@ export const authHandlers = [
       phoneNumber,
       messageText,
       expiresAt,
+      confirmAttempts: 0,
       verifiedAt: null,
       consumedAt: null,
     });
@@ -327,6 +329,28 @@ export const authHandlers = [
           },
           { status: 409 },
         );
+      }
+
+      if (verification.verifiedAt !== null) {
+        return HttpResponse.json({
+          success: true,
+          data: {
+            status: "VERIFIED",
+          },
+          error: null,
+        });
+      }
+
+      verification.confirmAttempts += 1;
+
+      if (verification.confirmAttempts === 1) {
+        return HttpResponse.json({
+          success: true,
+          data: {
+            status: "PENDING",
+          },
+          error: null,
+        });
       }
 
       verification.verifiedAt = Date.now();
