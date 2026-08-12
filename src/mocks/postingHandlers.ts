@@ -381,7 +381,7 @@ function getRecommendedMockPostings(userId: number | null) {
     .map(toVolunteerPostingListItem);
 }
 
-function getMockPostingParticipationAction(
+export function getMockPostingParticipationAction(
   postingId: number,
   userId: number | null,
 ) {

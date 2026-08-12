@@ -8,7 +8,10 @@ import {
 } from "./data/mockMeetingRecruits";
 import { getMockParticipations } from "./data/mockParticipations";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
-import { mockPostings } from "./postingHandlers";
+import {
+  getMockPostingParticipationAction,
+  mockPostings,
+} from "./postingHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
@@ -200,6 +203,13 @@ export const myProfileHandlers = [
 
         if (!posting) return [];
 
+        const participationAction = getMockPostingParticipationAction(
+          posting.id,
+          userId,
+        );
+
+        if (participationAction === "APPLY") return [];
+
         return [
           {
             activityType: "VOLUNTEER",
@@ -218,6 +228,7 @@ export const myProfileHandlers = [
             actPlace: posting.actPlace ?? null,
             regionName: null,
             status: participation.status,
+            participationAction,
           },
         ];
       },

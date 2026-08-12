@@ -74,12 +74,13 @@ function VolunteerActivityCard({
   const cancelMutation = useCancelVolunteerPostingParticipationMutation(
     activity.postingId,
   );
-  const isCancelable =
-    activity.status === "APPLIED" || activity.status === "CONFIRMED";
-  const statusLabel = isCancelable ? "신청중" : "봉사 완료";
+  const isCancelable = activity.participationAction === "CANCEL";
 
   return (
-    <ActivityCardFrame activity={activity} statusLabel={statusLabel}>
+    <ActivityCardFrame
+      activity={activity}
+      statusLabel={getMyActivityStatusLabel(activity.status)}
+    >
       {isCancelable ? (
         <div className="grid grid-cols-2 gap-3">
           <button

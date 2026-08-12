@@ -22,6 +22,7 @@ export type MyVolunteerActivity = MyPageActivityBase & {
   postingId: number;
   meetingId: null;
   status: MyVolunteerActivityStatus;
+  participationAction: "CANCEL" | "COMPLETE" | "NONE";
 };
 
 export type MyMeetingRecruitActivity = MyPageActivityBase & {
