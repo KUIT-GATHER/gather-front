@@ -1,16 +1,12 @@
-import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import alarmIcon from "@/assets/icons/Alarm.svg";
 import arrowIcon from "@/assets/icons/Arrow.svg";
-import filterIcon from "@/assets/icons/Filter.svg";
 import gatherIcon from "@/assets/volunteer/Gather.svg";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useUnreadNotificationCountQuery } from "@/features/notification/hooks/useUnreadNotificationCountQuery";
 import { TeamCard } from "@/features/team/components/TeamCard";
 import { VolunteerPostingCard } from "@/features/volunteer/components/VolunteerPostingCard";
-import { VolunteerPostingFilterSheet } from "@/features/volunteer/components/filter/VolunteerPostingFilterSheet";
-import { updateVolunteerPostingSearchParams } from "@/features/volunteer/lib/volunteerPostingSearchParams";
 import { useRecommendedMeetingsQuery } from "@/features/team/hooks/useRecommendedMeetingsQuery";
 import { useRecommendedVolunteerPostingsQuery } from "@/features/volunteer/hooks/useRecommendedVolunteerPostingsQuery";
 import IconButton from "@/shared/ui/IconButton";
@@ -64,7 +60,6 @@ function HomeSectionState({
 
 export function HomeScreen() {
   const navigate = useNavigate();
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const authInitialized = useAuthStore((state) => state.authInitialized);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const unreadCountQuery = useUnreadNotificationCountQuery(
@@ -88,14 +83,6 @@ export function HomeScreen() {
       <header className="flex items-center justify-between pt-8 pb-1.25">
         <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
         <div className="mr-[11px] flex items-center gap-5">
-          <IconButton
-            label="필터 열기"
-            icon={<img src={filterIcon} alt="" />}
-            size="medium"
-            className="size-6 [&>span>img]:h-[21px] [&>span>img]:w-5"
-            onClick={() => setIsFilterOpen(true)}
-          />
-
           <div className="flex size-[27px] items-center justify-center">
             <IconButton
               label="알림 확인"
@@ -199,20 +186,6 @@ export function HomeScreen() {
           </div>
         </section>
       </div>
-      {isFilterOpen ? (
-        <VolunteerPostingFilterSheet
-          open
-          onOpenChange={setIsFilterOpen}
-          filter={{}}
-          onApply={(filter) => {
-            const query = updateVolunteerPostingSearchParams(
-              new URLSearchParams(),
-              filter,
-            ).toString();
-            navigate(query ? `/volunteers?${query}` : "/volunteers");
-          }}
-        />
-      ) : null}
     </PageContainer>
   );
 }
