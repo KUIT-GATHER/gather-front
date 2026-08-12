@@ -22,7 +22,7 @@ export function NotificationItem({
       type="button"
       className={cn(
         "flex w-full items-center gap-5 px-7 py-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-button/40 disabled:cursor-not-allowed",
-        notification.read ? "bg-white" : "bg-point-green/15",
+        notification.read ? "bg-bg" : "bg-point-green/15",
       )}
       aria-label={`${readStatus}: ${notification.message}`}
       disabled={disabled}
