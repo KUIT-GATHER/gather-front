@@ -5,10 +5,10 @@ export const TEAM_SORTS = ["latest", "popular", "deadline", "posting"] as const;
 export type TeamListSort = (typeof TEAM_SORTS)[number];
 
 export const teamListSortOptions = [
-  { value: "latest", label: "최신순 ✨" },
-  { value: "popular", label: "인기순 🔥" },
-  { value: "deadline", label: "마감임박 ⏰" },
-  { value: "posting", label: "공고기반" },
+  { value: "latest", label: "최신순 ✨", selectedLabel: "최신순" },
+  { value: "popular", label: "인기순 🔥", selectedLabel: "인기순" },
+  { value: "deadline", label: "마감임박 ⏰", selectedLabel: "마감임박" },
+  { value: "posting", label: "공고기반", selectedLabel: "공고기반" },
 ] satisfies SelectOption[];
 
 export const TEAM_SORT_PARAMS = {
