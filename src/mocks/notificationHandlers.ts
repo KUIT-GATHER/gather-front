@@ -38,7 +38,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: false,
-    createdAt: "2026-07-30T11:00:00",
+    createdAt: "2026-07-30T02:00:00Z",
     deleted: false,
   },
   {
@@ -53,7 +53,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: false,
-    createdAt: "2026-07-29T11:30:00",
+    createdAt: "2026-07-29T02:30:00Z",
     deleted: false,
   },
   {
@@ -68,7 +68,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: true,
-    createdAt: "2026-07-28T09:30:00",
+    createdAt: "2026-07-28T00:30:00Z",
     deleted: false,
   },
   {
@@ -82,7 +82,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: false,
-    createdAt: "2026-07-27T10:00:00",
+    createdAt: "2026-07-27T01:00:00Z",
     deleted: false,
   },
   {
@@ -98,7 +98,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-30T10:30:00",
+    createdAt: "2026-07-30T01:30:00Z",
     deleted: false,
   },
   {
@@ -112,7 +112,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: true,
-    createdAt: "2026-07-29T09:20:00",
+    createdAt: "2026-07-29T00:20:00Z",
     deleted: false,
   },
   {
@@ -127,7 +127,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-28T08:30:00",
+    createdAt: "2026-07-27T23:30:00Z",
     deleted: false,
   },
   {
@@ -141,7 +141,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: 1,
     thumbnailUrl: null,
     read: true,
-    createdAt: "2026-07-27T09:30:00",
+    createdAt: "2026-07-27T00:30:00Z",
     deleted: false,
   },
   {
@@ -156,7 +156,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1531481540919-6a67ca4ec1a3?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-26T13:00:00",
+    createdAt: "2026-07-26T04:00:00Z",
     deleted: false,
   },
   {
@@ -171,7 +171,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=200&q=80",
     read: true,
-    createdAt: "2026-07-25T18:10:00",
+    createdAt: "2026-07-25T09:10:00Z",
     deleted: false,
   },
   {
@@ -187,7 +187,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-24T15:00:00",
+    createdAt: "2026-07-24T06:00:00Z",
     deleted: false,
   },
 ];
@@ -205,7 +205,7 @@ const generatedActivityNotifications = Array.from(
     targetMeetingId: null,
     thumbnailUrl: null,
     read: index % 3 === 0,
-    createdAt: `2026-07-${String(24 - index).padStart(2, "0")}T09:00:00`,
+    createdAt: `2026-07-${String(24 - index).padStart(2, "0")}T00:00:00Z`,
     deleted: false,
   }),
 );

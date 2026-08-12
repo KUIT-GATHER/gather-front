@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import { MobileBottomNavigation } from "@/app/navigation/MobileBottomNavigation";
-import { TeamActivityMainHeader } from "@/features/team/components/activity/TeamActivityMainHeader";
 import type {
   MeetingHome,
   TeammateViewerRole,
@@ -56,7 +55,7 @@ export function TeammateDetail({
   const isSettingsPage = isSettingsRootPage || isSettingsSubPage;
 
   const headerAction =
-    isBoardPage && viewerRole === "leader"
+    (isBoardPage || isActivityMainPage) && viewerRole === "leader"
       ? "settings"
       : isHomePage
         ? "bookmark"
@@ -76,11 +75,7 @@ export function TeammateDetail({
 
   const showTeamHeader = !isSettingsSubPage && !isPostWritePage;
 
-  const showTabs =
-    !isPostDetailPage &&
-    !isSettingsPage &&
-    !isActivityMainPage &&
-    !isActivitySubPage;
+  const showTabs = !isPostDetailPage && !isSettingsPage && !isActivitySubPage;
 
   const handleBack = () => {
     if (isActivitySubPage) {
@@ -99,9 +94,7 @@ export function TeammateDetail({
           : "min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]"
       }
     >
-      {isActivityMainPage ? (
-        <TeamActivityMainHeader title={home.name} />
-      ) : showTeamHeader ? (
+      {showTeamHeader ? (
         <TeammateHeader
           title={headerTitle}
           viewerRole={viewerRole}

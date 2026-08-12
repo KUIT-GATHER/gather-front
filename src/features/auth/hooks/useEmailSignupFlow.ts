@@ -80,6 +80,9 @@ export function useEmailSignupFlow() {
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
     null,
   );
+  const [phoneVerificationId, setPhoneVerificationId] = useState<string | null>(
+    null,
+  );
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const watchedPhoneNumber = useWatch({
     control: methods.control,
@@ -115,6 +118,7 @@ export function useEmailSignupFlow() {
 
     previousPhoneNumberRef.current = watchedPhoneNumber;
     setVerifiedPhoneNumber(null);
+    setPhoneVerificationId(null);
   }, [watchedPhoneNumber]);
 
   useEffect(() => {
@@ -133,6 +137,7 @@ export function useEmailSignupFlow() {
     setDetailType(null);
     setVerifiedEmail(null);
     setVerifiedPhoneNumber(null);
+    setPhoneVerificationId(null);
     setSubmitError(null);
     setPendingFocusField(null);
     setProfileImageFile(null);
@@ -176,9 +181,12 @@ export function useEmailSignupFlow() {
       return;
     }
 
-    if (methods.getValues("phoneNumber") !== verifiedPhoneNumber) {
+    if (
+      methods.getValues("phoneNumber") !== verifiedPhoneNumber ||
+      !phoneVerificationId
+    ) {
       methods.setError("phoneNumber", {
-        message: "전화번호 중복 확인을 완료해 주세요.",
+        message: "휴대폰 인증을 완료해 주세요.",
       });
       return;
     }
@@ -210,13 +218,9 @@ export function useEmailSignupFlow() {
   };
 
   const onValidSubmit = async (values: EmailSignupFormValues) => {
-    if (values.phoneNumber !== verifiedPhoneNumber) {
+    if (values.phoneNumber !== verifiedPhoneNumber || !phoneVerificationId) {
       setIsCompletingSignup(false);
-      moveToFieldError(
-        "basic",
-        "phoneNumber",
-        "전화번호 중복 확인을 완료해 주세요.",
-      );
+      moveToFieldError("basic", "phoneNumber", "휴대폰 인증을 완료해 주세요.");
       return;
     }
 
@@ -228,7 +232,7 @@ export function useEmailSignupFlow() {
 
     try {
       const signupResult = await signupMutation.mutateAsync(
-        toEmailSignupRequest(values),
+        toEmailSignupRequest(values, phoneVerificationId),
       );
 
       setAccessToken(signupResult.accessToken);
@@ -251,6 +255,7 @@ export function useEmailSignupFlow() {
         setStep,
         setVerifiedEmail,
         setVerifiedPhoneNumber,
+        setPhoneVerificationId,
         setSubmitError,
       });
     } finally {
@@ -310,6 +315,7 @@ export function useEmailSignupFlow() {
     detailType,
     showExitDialog,
     verifiedPhoneNumber,
+    phoneVerificationId,
     verifiedEmail,
     profileImageFile,
     isSignupPending: signupMutation.isPending || isCompletingSignup,
@@ -317,6 +323,7 @@ export function useEmailSignupFlow() {
     setDetailType,
     setShowExitDialog,
     setVerifiedPhoneNumber,
+    setPhoneVerificationId,
     setVerifiedEmail,
     setProfileImageFile,
     clearSubmitError: () => setSubmitError(null),
