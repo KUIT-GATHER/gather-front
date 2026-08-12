@@ -442,7 +442,7 @@ export function TeamCreateScreen() {
             placeholder="모임 이름을 입력해 주세요."
             className="text-text"
             onChange={(event) => {
-              setName(event.target.value);
+              setName(event.target.value.slice(0, NAME_MAX_LENGTH));
               clearError("name");
             }}
           />
@@ -465,7 +465,9 @@ export function TeamCreateScreen() {
             placeholder="모임을 소개해주세요."
             className="h-36 text-text"
             onChange={(event) => {
-              setDescription(event.target.value);
+              setDescription(
+                event.target.value.slice(0, DESCRIPTION_MAX_LENGTH),
+              );
               clearError("description");
             }}
           />
@@ -605,6 +607,7 @@ export function TeamCreateScreen() {
               setCategories(nextCategories);
               clearError("categories");
             }}
+            selectedFirst
           />
         </FormField>
         <FormField
@@ -649,7 +652,11 @@ export function TeamCreateScreen() {
               "예 : 만 19세 이상\n매주 토요일 11:00~12:30 진행\n건대입구역 2번출구 앞에서 만나요"
             }
             className="h-[83px] overflow-hidden text-[15px] leading-[19px] text-text"
-            onChange={(event) => setParticipationCondition(event.target.value)}
+            onChange={(event) =>
+              setParticipationCondition(
+                event.target.value.slice(0, PARTICIPATION_CONDITION_MAX_LENGTH),
+              )
+            }
           />
         </FormField>
         {createMeetingMutation.isError && createdMeetingId === null ? (
