@@ -1,6 +1,3 @@
-const LOCAL_DATE_TIME_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/;
-
 function getSeoulCurrentYear() {
   return Number(
     new Intl.DateTimeFormat("en-US", {
@@ -36,7 +33,7 @@ function formatOffsetDateTime(date: Date) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    hour12: true,
+    hourCycle: "h23",
     timeZone: "Asia/Seoul",
   });
   const parts = new Map(
@@ -50,29 +47,12 @@ function formatOffsetDateTime(date: Date) {
     year: Number(parts.get("year")),
     month: Number(parts.get("month")),
     day: Number(parts.get("day")),
-    hour:
-      parts.get("dayPeriod") === "오후"
-        ? (Number(parts.get("hour")) % 12) + 12
-        : Number(parts.get("hour")) % 12,
+    hour: Number(parts.get("hour")),
     minute: Number(parts.get("minute")),
   });
 }
 
 export function formatNotificationCreatedAt(createdAt: string) {
-  const localDateTimeMatch = createdAt.match(LOCAL_DATE_TIME_PATTERN);
-
-  if (localDateTimeMatch) {
-    const [, year, month, day, hour, minute] = localDateTimeMatch;
-
-    return formatKoreanDateTime({
-      year: Number(year),
-      month: Number(month),
-      day: Number(day),
-      hour: Number(hour),
-      minute: Number(minute),
-    });
-  }
-
   const date = new Date(createdAt);
 
   return Number.isNaN(date.getTime()) ? createdAt : formatOffsetDateTime(date);
