@@ -52,8 +52,9 @@ const IOS_USER_AGENT_PATTERN = /iPhone|iPad|iPod/i;
 const PHONE_NUMBER_ERROR_MESSAGE =
   "전화번호는 010으로 시작하는 11자리 숫자로 입력해 주세요.";
 const CONFIRM_POLL_INITIAL_DELAY_MS = 3_000;
-const CONFIRM_POLL_INTERVAL_MS = 10_000;
+const CONFIRM_POLL_INTERVAL_MS = 5_000;
 const CONFIRM_POLL_FALLBACK_EXPIRES_MS = 5 * 60 * 1000;
+const PHONE_VERIFICATION_RESEND_INTERVAL_MS = 60 * 1000;
 const basicInfoCompletionSchema = signupCommonSchema.pick({
   name: true,
   birthDate: true,
@@ -152,12 +153,15 @@ export function BasicInfoStep({
   const qrMutation = useCreatePhoneVerificationQrCodeMutation();
   const confirmMutation = useConfirmPhoneVerificationMutation();
   const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
-  const [isVerificationActive, setIsVerificationActive] = useState(false);
   const activeVerificationIdRef = useRef<string | null>(null);
   const confirmPollingDelayRef = useRef<number | null>(null);
   const confirmPollingIntervalRef = useRef<number | null>(null);
   const confirmPollingExpiresRef = useRef<number | null>(null);
   const isConfirmPollingRequestPendingRef = useRef(false);
+  const lastVerificationRequestRef = useRef<{
+    phoneNumber: string;
+    requestedAt: number;
+  } | null>(null);
   const name = useWatch({ control, name: "name" });
   const birthDate = useWatch({ control, name: "birthDate" });
   const gender = useWatch({ control, name: "gender" });
@@ -175,22 +179,11 @@ export function BasicInfoStep({
     phoneNumber.length > 0 &&
     phoneNumber === verifiedPhoneNumber &&
     Boolean(phoneVerificationId);
-  const usesSmsVerification = shouldUseSmsVerification();
-  const canReopenQr =
-    !usesSmsVerification &&
-    isVerificationActive &&
-    !isPhoneVerified &&
-    Boolean(qrMutation.data?.qrCode);
   const isVerificationActionPending =
     startMutation.isPending || qrMutation.isPending;
   const isPending = isVerificationActionPending || confirmMutation.isPending;
-  const isVerificationInProgress =
-    startMutation.isPending || isVerificationActive;
   const isVerificationButtonDisabled =
-    !isPhoneNumberValid ||
-    isPhoneVerified ||
-    isVerificationActionPending ||
-    (isVerificationInProgress && !canReopenQr);
+    !isPhoneNumberValid || isPhoneVerified || isVerificationActionPending;
 
   useEffect(() => {
     phoneNumberRef.current = phoneNumber;
@@ -199,7 +192,6 @@ export function BasicInfoStep({
   const stopConfirmPolling = () => {
     activeVerificationIdRef.current = null;
     isConfirmPollingRequestPendingRef.current = false;
-    setIsVerificationActive(false);
 
     if (confirmPollingDelayRef.current !== null) {
       window.clearTimeout(confirmPollingDelayRef.current);
@@ -312,7 +304,6 @@ export function BasicInfoStep({
   ) => {
     stopConfirmPolling();
     activeVerificationIdRef.current = session.verificationId;
-    setIsVerificationActive(true);
 
     const expiresAtTime = Date.parse(expiresAt);
     const timeoutDelay = Number.isNaN(expiresAtTime)
@@ -352,6 +343,8 @@ export function BasicInfoStep({
           return;
         }
 
+        setIsQrDialogOpen(false);
+
         if (shouldResetVerificationSession(error)) {
           resetPhoneVerification();
           startMutation.reset();
@@ -383,6 +376,31 @@ export function BasicInfoStep({
       return;
     }
 
+    const lastVerificationRequest = lastVerificationRequestRef.current;
+
+    const elapsedSinceLastRequest =
+      lastVerificationRequest?.phoneNumber === requestedPhoneNumber
+        ? Date.now() - lastVerificationRequest.requestedAt
+        : PHONE_VERIFICATION_RESEND_INTERVAL_MS;
+
+    if (elapsedSinceLastRequest < PHONE_VERIFICATION_RESEND_INTERVAL_MS) {
+      const remainingSeconds = Math.ceil(
+        (PHONE_VERIFICATION_RESEND_INTERVAL_MS - elapsedSinceLastRequest) /
+          1000,
+      );
+
+      setError("phoneNumber", {
+        message: `${remainingSeconds}초 후 다시 요청할 수 있어요.`,
+      });
+      return;
+    }
+
+    stopConfirmPolling();
+    setIsQrDialogOpen(false);
+    onVerifiedPhoneNumberChange(null);
+    onPhoneVerificationIdChange(null);
+    qrMutation.reset();
+
     startMutation.mutate(
       { phoneNumber: requestedPhoneNumber },
       {
@@ -396,10 +414,11 @@ export function BasicInfoStep({
             phoneNumber: requestedPhoneNumber,
           };
 
-          stopConfirmPolling();
-          onVerifiedPhoneNumberChange(null);
-          onPhoneVerificationIdChange(null);
-          qrMutation.reset();
+          lastVerificationRequestRef.current = {
+            phoneNumber: requestedPhoneNumber,
+            requestedAt: Date.now(),
+          };
+
           clearErrors("phoneNumber");
           startConfirmPolling(session, data.expiresAt);
 
@@ -431,11 +450,6 @@ export function BasicInfoStep({
   };
 
   const handleVerifyPhone = () => {
-    if (canReopenQr) {
-      setIsQrDialogOpen(true);
-      return;
-    }
-
     handleStartVerification();
   };
 
@@ -608,11 +622,7 @@ export function BasicInfoStep({
                 ? "인증 완료"
                 : isVerificationActionPending
                   ? "확인 중"
-                  : canReopenQr
-                    ? "QR 다시 보기"
-                    : isVerificationInProgress
-                      ? "인증 중"
-                      : "인증하기"}
+                  : "인증하기"}
             </Button>
           </div>
         </FormField>
@@ -656,31 +666,6 @@ export function BasicInfoStep({
                   aria-label="QR 코드 로딩 중"
                   className="size-10 animate-spin rounded-full border-4 border-stroke border-t-button"
                 />
-              ) : qrMutation.isError ? (
-                <div
-                  role="alert"
-                  className="flex max-w-80 flex-col items-center gap-5 px-6 text-center"
-                >
-                  <p className="text-sm leading-6 text-text-gray-400">
-                    {getPhoneVerificationErrorMessage(
-                      qrMutation.error,
-                      "QR 코드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
-                    )}
-                  </p>
-                  <Button
-                    type="button"
-                    size="medium"
-                    onClick={() => {
-                      const verificationId = activeVerificationIdRef.current;
-
-                      if (verificationId) {
-                        loadQrCode(verificationId);
-                      }
-                    }}
-                  >
-                    QR 다시 불러오기
-                  </Button>
-                </div>
               ) : null}
             </div>
           </Dialog.Content>
