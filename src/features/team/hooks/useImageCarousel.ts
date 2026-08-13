@@ -53,7 +53,7 @@ export function useImageCarousel(
   };
 
   const finishGesture = (
-    event: PointerEvent<HTMLDivElement>,
+    event: PointerEvent<HTMLElement>,
     wasCancelled = false,
   ) => {
     const gesture = gestureRef.current;
@@ -87,7 +87,7 @@ export function useImageCarousel(
     isDragging,
     hasMultipleImages,
     moveImage,
-    onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => {
       if (!hasMultipleImages || event.button !== 0) {
         return;
       }
@@ -101,7 +101,7 @@ export function useImageCarousel(
       event.currentTarget.setPointerCapture(event.pointerId);
       setIsDragging(true);
     },
-    onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
+    onPointerMove: (event: PointerEvent<HTMLElement>) => {
       const gesture = gestureRef.current;
 
       if (gesture.pointerId !== event.pointerId) {
@@ -129,7 +129,7 @@ export function useImageCarousel(
       setDragOffset(getDragOffset(deltaX));
     },
     onPointerUp: finishGesture,
-    onPointerCancel: (event: PointerEvent<HTMLDivElement>) =>
+    onPointerCancel: (event: PointerEvent<HTMLElement>) =>
       finishGesture(event, true),
   };
 }
