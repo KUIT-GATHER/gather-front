@@ -39,8 +39,6 @@ import Textarea from "@/shared/ui/Textarea";
 
 const NAME_MAX_LENGTH = 15;
 const DESCRIPTION_MAX_LENGTH = 200;
-const FREE_MEETING_MAX_MEMBER = 100;
-const POSTING_MEETING_MAX_MEMBER = 30;
 const PARTICIPATION_CONDITION_MAX_LENGTH = 150;
 
 type MeetingCreatePhase =
@@ -129,9 +127,7 @@ export function TeamCreateScreen() {
   const selectedRegion = resolvedRegionId
     ? regionById.get(Number(resolvedRegionId))
     : undefined;
-  const maxMemberLimit = isPostingBased
-    ? POSTING_MEETING_MAX_MEMBER
-    : FREE_MEETING_MAX_MEMBER;
+  const maxMemberLimit = 30;
   const selectedRegionParent = selectedRegion?.parentId
     ? regionById.get(selectedRegion.parentId)
     : undefined;
