@@ -51,6 +51,7 @@ const SMS_DEVICE_USER_AGENT_PATTERN =
 const IOS_USER_AGENT_PATTERN = /iPhone|iPad|iPod/i;
 const PHONE_NUMBER_ERROR_MESSAGE =
   "전화번호는 010으로 시작하는 11자리 숫자로 입력해 주세요.";
+const PHONE_VERIFICATION_GUIDE_ID = "phoneNumber-description";
 const CONFIRM_POLL_INITIAL_DELAY_MS = 3_000;
 const CONFIRM_POLL_INTERVAL_MS = 10_000;
 const CONFIRM_POLL_FALLBACK_EXPIRES_MS = 5 * 60 * 1000;
@@ -191,6 +192,12 @@ export function BasicInfoStep({
     isPhoneVerified ||
     isVerificationActionPending ||
     (isVerificationInProgress && !canReopenQr);
+  const showPhoneVerificationGuide =
+    isPhoneNumberValid &&
+    !isPhoneVerified &&
+    !isVerificationInProgress &&
+    !isVerificationActionPending &&
+    !errors.phoneNumber;
 
   useEffect(() => {
     phoneNumberRef.current = phoneNumber;
@@ -553,6 +560,17 @@ export function BasicInfoStep({
           required
           error={errors.phoneNumber?.message}
           errorId={getSignupFieldErrorId("phoneNumber")}
+          descriptionId={PHONE_VERIFICATION_GUIDE_ID}
+          description={
+            showPhoneVerificationGuide ? (
+              <span className="text-button">
+                인증하기를 누른 뒤 안내에 따라 문자 메시지를 전송해 주세요.
+                <br />
+                화면에 표기된 인증코드를 그대로 전송하면 인증이 자동으로
+                완료됩니다.
+              </span>
+            ) : undefined
+          }
           labelClassName="mb-3 text-[15px] font-semibold leading-5"
         >
           <div className="flex gap-3">
@@ -570,10 +588,15 @@ export function BasicInfoStep({
                   placeholder="010-0000-0000"
                   value={formatPhoneNumber(field.value)}
                   invalid={Boolean(errors.phoneNumber)}
-                  aria-describedby={getSignupFieldDescribedBy(
-                    "phoneNumber",
-                    Boolean(errors.phoneNumber),
-                  )}
+                  aria-describedby={
+                    getSignupFieldDescribedBy(
+                      "phoneNumber",
+                      Boolean(errors.phoneNumber),
+                    ) ??
+                    (showPhoneVerificationGuide
+                      ? PHONE_VERIFICATION_GUIDE_ID
+                      : undefined)
+                  }
                   onChange={(event) => {
                     const nextPhoneNumber = normalizePhoneNumber(
                       event.target.value,
