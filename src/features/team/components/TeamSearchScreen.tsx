@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, Puzzle, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, Search, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
+
+import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
 
 import {
   isTeamListSort,
@@ -98,7 +100,7 @@ function TeamSearchForm({
         />
         <IconButton
           label="검색"
-          icon={<Search />}
+          icon={<Search className="size-[35px]" />}
           size={variant === "initial" ? "medium" : "small"}
           type="submit"
         />
@@ -185,14 +187,11 @@ export function TeamSearchScreen() {
         </>
       ) : (
         <>
-          <PageHeader
-            title="모임 찾기"
-            onBack={() => navigate(-1)}
-          />
+          <PageHeader title="모임 찾기" onBack={() => navigate(-1)} />
           <section className="mt-10">
             <h2 className="flex items-end gap-2 whitespace-pre-line text-title-24 text-text">
               <span>{"어떤 모임을\n찾고 계시나요?"}</span>
-              <Puzzle className="mb-1 size-6 fill-button text-button" />
+              <img src={greenPuzzle} alt="" className="mb-1 size-6" />
             </h2>
             <TeamSearchForm
               key={keywordFromUrl}
@@ -202,14 +201,16 @@ export function TeamSearchScreen() {
             />
             <div className="mt-8">
               <div className="flex items-center justify-between">
-                <h3 className="text-title-18 text-text">최근 검색어</h3>
+                <h3 className="text-[18px] font-medium leading-7 text-text">
+                  최근 검색어
+                </h3>
                 {recentSearches.length > 0 ? (
                   <button
                     type="button"
                     className="inline-flex h-11 items-center gap-1 text-sm text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                     onClick={clearRecentSearches}
                   >
-                    <Trash2 className="size-5 text-icon" aria-hidden="true" />
+                    <Trash2 className="size-6 text-icon" aria-hidden="true" />
                     지우기
                   </button>
                 ) : null}
@@ -235,13 +236,15 @@ export function TeamSearchScreen() {
             </div>
             {recommendedKeywords.length > 0 ? (
               <div className="mt-8">
-                <h3 className="text-title-18 text-text">인기 검색어</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <h3 className="text-[18px] font-medium leading-7 text-text">
+                  인기 검색어
+                </h3>
+                <div className="mt-4 flex flex-wrap gap-x-2 gap-y-3">
                   {recommendedKeywords.map((recommendation) => (
                     <button
                       key={recommendation}
                       type="button"
-                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button first:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recommendation)}
                     >
                       # {recommendation}

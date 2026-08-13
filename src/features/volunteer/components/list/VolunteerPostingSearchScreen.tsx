@@ -68,7 +68,7 @@ function VolunteerPostingSearchForm({
       <form
         className={
           variant === "initial"
-            ? "mt-10 flex items-center gap-2 border-b-2 border-text"
+            ? "mt-8 flex items-center gap-2 border-b-2 border-text"
             : "flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-[#e8e8e8] px-3"
         }
         onFocus={onActivate}
@@ -87,7 +87,12 @@ function VolunteerPostingSearchForm({
             setKeyword(event.target.value);
             if (error) setError(undefined);
           }}
-          placeholder={error ?? "공고 제목 또는 모집기관명"}
+          placeholder={
+            error ??
+            (variant === "initial"
+              ? "검색어를 입력해주세요"
+              : "공고 제목 또는 모집기관명")
+          }
           className={cn(
             variant === "initial"
               ? "border-0 bg-transparent px-0 focus:border-0"
@@ -102,7 +107,7 @@ function VolunteerPostingSearchForm({
           label="검색"
           icon={
             <span className="flex size-11 items-center justify-center">
-              <img src={searchIcon} alt="" className="size-11" />
+              <img src={searchIcon} alt="" className="size-[35px]" />
             </span>
           }
           size={variant === "initial" ? "medium" : "small"}
@@ -203,7 +208,7 @@ export function VolunteerPostingSearchScreen() {
       ) : (
         <>
           <PageHeader title="봉사 찾기" onBack={() => navigate(-1)} />
-          <section className="mt-14">
+          <section className="mt-10">
             <h2 className="text-title-24 text-text">
               <span className="block">어떤 봉사를</span>
               <span className="inline-flex items-center gap-2 whitespace-nowrap">
@@ -219,28 +224,33 @@ export function VolunteerPostingSearchScreen() {
             />
             <div className="mt-9">
               <div className="flex items-center justify-between">
-                <h3 className="text-body-15-semibold text-text">최근 검색어</h3>
+                <h3 className="text-[18px] font-medium leading-7 text-text">
+                  최근 검색어
+                </h3>
                 {recentSearches.length > 0 ? (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 text-sm text-text-gray-300 transition-colors hover:bg-text/5 active:bg-text/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                    className="inline-flex h-11 items-center gap-1 text-sm text-text transition-colors hover:bg-text/5 active:bg-text/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                     onClick={clearRecentSearches}
                   >
-                    <Trash2 aria-hidden="true" className="size-4" />
+                    <Trash2
+                      aria-hidden="true"
+                      className="size-[18px] text-icon"
+                    />
                     지우기
                   </button>
                 ) : null}
               </div>
               {recentSearches.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-x-2 gap-y-3">
                   {recentSearches.map((recent) => (
                     <button
                       key={recent}
                       type="button"
-                      className="rounded-full border border-stroke px-3 py-2 text-sm text-text transition-colors hover:border-[#5E5E5D] hover:bg-[#5E5E5D] hover:text-[#FAFAF8] active:text-[#FAFAF8] active:border-[#5E5E5D] active:bg-[#5E5E5D] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-text-gray-300 px-3 text-[15px] font-medium text-text-gray-300 transition-colors hover:border-[#5E5E5D] hover:bg-[#5E5E5D] hover:text-[#FAFAF8] active:text-[#FAFAF8] active:border-[#5E5E5D] active:bg-[#5E5E5D] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recent)}
                     >
-                      #{recent}
+                      # {recent}
                     </button>
                   ))}
                 </div>
@@ -252,16 +262,18 @@ export function VolunteerPostingSearchScreen() {
             </div>
             {recommendedKeywords.length > 0 ? (
               <div className="mt-9">
-                <h3 className="text-body-15-semibold text-text">인기 검색어</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <h3 className="text-[18px] font-medium leading-7 text-text">
+                  인기 검색어
+                </h3>
+                <div className="mt-4 flex flex-wrap gap-x-2 gap-y-3">
                   {recommendedKeywords.map((recommendation) => (
                     <button
                       key={recommendation}
                       type="button"
-                      className="rounded-full border border-button px-3 py-2 text-sm text-icon transition-colors hover:bg-[#F0F6F0] hover:text-[#00C77B] active:text-[#00C77B]  active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button transition-colors hover:bg-[#F0F6F0] hover:text-[#00C77B] active:text-[#00C77B]  active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recommendation)}
                     >
-                      #{recommendation}
+                      # {recommendation}
                     </button>
                   ))}
                 </div>
