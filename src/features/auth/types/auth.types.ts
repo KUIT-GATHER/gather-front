@@ -1,13 +1,24 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
-export type PhoneAvailabilityRequest = {
+export type PhoneVerificationStartRequest = {
   phoneNumber: string;
 };
 
-export type PhoneAvailabilityResponse = {
-  phoneNumber: string;
-  available: boolean;
-  reason?: "WITHDRAWN_COOLDOWN";
+export type PhoneVerificationStartResponse = {
+  verificationId: string;
+  receiverNumber: string;
+  messageText: string;
+  expiresAt: string;
+};
+
+export type PhoneVerificationQrCodeResponse = {
+  qrCode: string;
+};
+
+export type PhoneVerificationStatus = "PENDING" | "VERIFIED";
+
+export type PhoneVerificationConfirmResponse = {
+  status: PhoneVerificationStatus;
 };
 
 export type SendEmailVerificationRequest = {
@@ -36,6 +47,7 @@ export type EmailSignupRequest = {
   birthDate: string;
   gender: "MALE" | "FEMALE";
   phoneNumber: string;
+  phoneVerificationId: string;
   nickname: string;
   introduction?: string | null;
   activityRegionId: number;
@@ -56,6 +68,7 @@ export type CommonSignupRequest = {
   birthDate: string;
   gender: "MALE" | "FEMALE";
   phoneNumber: string;
+  phoneVerificationId: string;
   nickname: string;
   introduction?: string | null;
   activityRegionId: number;

@@ -17,6 +17,7 @@ export function SignupFlow() {
     detailType,
     showExitDialog,
     verifiedPhoneNumber,
+    phoneVerificationId,
     verifiedEmail,
     profileImageFile,
     isSignupPending,
@@ -24,6 +25,7 @@ export function SignupFlow() {
     setDetailType,
     setShowExitDialog,
     setVerifiedPhoneNumber,
+    setPhoneVerificationId,
     setVerifiedEmail,
     setProfileImageFile,
     clearSubmitError,
@@ -43,7 +45,9 @@ export function SignupFlow() {
           {step === "basic" ? (
             <BasicInfoStep
               verifiedPhoneNumber={verifiedPhoneNumber}
+              phoneVerificationId={phoneVerificationId}
               onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
+              onPhoneVerificationIdChange={setPhoneVerificationId}
             />
           ) : null}
 
