@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, Search, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
@@ -17,6 +17,9 @@ import {
   toTeamListQueryParams,
   updateTeamListSearchParams,
 } from "@/features/team/lib/teamListSearchParams";
+import arrowBackIcon from "@/features/volunteer/assets/search/arrow-back.svg";
+import searchIcon from "@/features/volunteer/assets/search/search.svg";
+import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
@@ -69,7 +72,7 @@ function TeamSearchForm({
         className={
           variant === "initial"
             ? "mt-8 flex items-center gap-2 border-b-2 border-text"
-            : "flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-stroke/55 px-3"
+            : "flex h-11 min-w-0 max-w-[323px] flex-1 items-center gap-2 rounded-full bg-[#e8e8e8] px-3"
         }
         onFocus={onActivate}
         onSubmit={(event) => {
@@ -93,14 +96,23 @@ function TeamSearchForm({
               ? "검색어를 입력해주세요"
               : "모임 이름 또는 설명")
           }
-          className={`border-0 bg-transparent px-0 focus:border-0 ${error ? "placeholder:text-point-red" : ""}`}
+          className={cn(
+            variant === "initial"
+              ? "border-0 bg-transparent px-0 focus:border-0"
+              : "border-0 bg-transparent pl-3 pr-0 text-xl font-semibold tracking-[-0.5px] focus:border-0",
+            error && "placeholder:text-point-red",
+          )}
           aria-describedby={error ? "team-search-error" : undefined}
           aria-invalid={Boolean(error)}
           autoFocus={!initialKeyword}
         />
         <IconButton
           label="검색"
-          icon={<Search className="size-[35px]" />}
+          icon={
+            <span className="flex size-11 items-center justify-center">
+              <img src={searchIcon} alt="" className="size-11" />
+            </span>
+          }
           size={variant === "initial" ? "medium" : "small"}
           type="submit"
         />
@@ -141,10 +153,14 @@ export function TeamSearchScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-8">
       {keywordFromUrl ? (
         <>
-          <header className="flex items-center gap-1 pt-[env(safe-area-inset-top)]">
+          <header className="-ml-4 flex h-[70px] items-center gap-[7px] pt-[env(safe-area-inset-top)]">
             <IconButton
               label="뒤로가기"
-              icon={<ChevronLeft />}
+              icon={
+                <span className="flex size-9 items-center justify-center">
+                  <img src={arrowBackIcon} alt="" className="size-9" />
+                </span>
+              }
               variant="plain"
               onClick={() => navigate(-1)}
             />
@@ -156,33 +172,33 @@ export function TeamSearchScreen() {
               variant="header"
             />
           </header>
-          <section className="mt-5">
-            <h2 className="text-body-14 text-text">검색결과</h2>
-            <TeamSearchResults
-              params={queryParams}
-              onSelect={(meetingId) => navigate(`/teams/${meetingId}`)}
-              renderMeta={() => (
-                <div className="flex items-center justify-end py-4">
-                  <Select
-                    ariaLabel="검색 결과 정렬"
-                    value={sort}
-                    options={teamListSortOptions}
-                    contentClassName="w-[206px]"
-                    onChange={(value) => {
-                      if (!isTeamListSort(value)) return;
-                      setSearchParams(
-                        updateTeamListSearchParams(
-                          searchParams,
-                          getTeamListFilter(searchParams),
-                          { sort: value },
-                        ),
-                      );
-                      window.scrollTo({ top: 0, behavior: "auto" });
-                    }}
-                  />
-                </div>
-              )}
-            />
+          <section className="mt-0.5">
+            <div className="flex h-11 items-center justify-between">
+              <h2 className="text-body-14 text-text">검색결과</h2>
+              <Select
+                ariaLabel="검색 결과 정렬"
+                value={sort}
+                options={teamListSortOptions}
+                contentClassName="w-[206px]"
+                onChange={(value) => {
+                  if (!isTeamListSort(value)) return;
+                  setSearchParams(
+                    updateTeamListSearchParams(
+                      searchParams,
+                      getTeamListFilter(searchParams),
+                      { sort: value },
+                    ),
+                  );
+                  window.scrollTo({ top: 0, behavior: "auto" });
+                }}
+              />
+            </div>
+            <div className="-mt-px">
+              <TeamSearchResults
+                params={queryParams}
+                onSelect={(meetingId) => navigate(`/teams/${meetingId}`)}
+              />
+            </div>
           </section>
         </>
       ) : (

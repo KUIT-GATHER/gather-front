@@ -69,7 +69,7 @@ function VolunteerPostingSearchForm({
         className={
           variant === "initial"
             ? "mt-8 flex items-center gap-2 border-b-2 border-text"
-            : "flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-[#e8e8e8] px-3"
+            : "flex h-11 min-w-0 max-w-[323px] flex-1 items-center gap-2 rounded-full bg-[#e8e8e8] px-3"
         }
         onFocus={onActivate}
         onSubmit={(event) => {
@@ -107,7 +107,7 @@ function VolunteerPostingSearchForm({
           label="검색"
           icon={
             <span className="flex size-11 items-center justify-center">
-              <img src={searchIcon} alt="" className="size-[35px]" />
+              <img src={searchIcon} alt="" className="size-11" />
             </span>
           }
           size={variant === "initial" ? "medium" : "small"}
@@ -154,7 +154,7 @@ export function VolunteerPostingSearchScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-8">
       {keywordFromUrl ? (
         <>
-          <header className="-ml-4 flex h-[70px] items-center gap-1 pt-[env(safe-area-inset-top)]">
+          <header className="-ml-4 flex h-[70px] items-center gap-[7px] pt-[env(safe-area-inset-top)]">
             <IconButton
               label="뒤로가기"
               icon={
