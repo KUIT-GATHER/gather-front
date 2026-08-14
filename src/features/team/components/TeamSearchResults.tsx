@@ -5,6 +5,7 @@ import type { MeetingInfiniteParams } from "@/features/team/types/team.types";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
+import { ScrollTopButton } from "@/shared/ui/ScrollTopButton";
 
 import { TeamCard } from "./TeamCard";
 
@@ -73,7 +74,7 @@ export function TeamSearchResults({
       ) : null}
       {meetings.length > 0 ? (
         <>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-3">
             {meetings.map((meeting) => (
               <li key={meeting.meetingId}>
                 <TeamCard
@@ -108,6 +109,7 @@ export function TeamSearchResults({
               모든 모임을 확인했어요.
             </p>
           ) : null}
+          <ScrollTopButton className="bottom-[calc(0.75rem+env(safe-area-inset-bottom))]" />
         </>
       ) : null}
     </>

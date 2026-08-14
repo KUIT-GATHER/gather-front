@@ -19,6 +19,7 @@ type MeetingDateTimeFieldProps = {
   invalid?: boolean;
   maxDate?: Date;
   validate?: (date: Date) => string | undefined;
+  valueClassName?: string;
 };
 
 function getInitialDate(value: string, maxDate?: Date) {
@@ -40,11 +41,15 @@ export function MeetingDateTimeField({
   invalid = false,
   maxDate,
   validate,
+  valueClassName,
 }: MeetingDateTimeFieldProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(() => getInitialDate(value, maxDate));
   const [pickerError, setPickerError] = useState<string>();
   const selectedDate = parseLocalDateTimeInput(value);
+  const [dateText, timeText] = selectedDate
+    ? formatMeetingDateTimeSummary(selectedDate).split("  |  ")
+    : [];
 
   const openPicker = () => {
     setDraft(getInitialDate(value, maxDate));
@@ -67,11 +72,23 @@ export function MeetingDateTimeField({
         )}
         onClick={openPicker}
       >
-        <span className={selectedDate ? "text-text" : "text-text-gray-100"}>
-          {selectedDate
-            ? formatMeetingDateTimeSummary(selectedDate)
-            : placeholder}
-        </span>
+        {selectedDate ? (
+          <span
+            className={cn(
+              "flex items-center gap-2 text-text-gray-300",
+              valueClassName,
+            )}
+          >
+            <span>{dateText}</span>
+            <span
+              aria-hidden="true"
+              className="h-[15px] border-l border-stroke"
+            />
+            <span>{timeText}</span>
+          </span>
+        ) : (
+          <span className="text-text-gray-100">{placeholder}</span>
+        )}
         <img src={calendarIcon} alt="" aria-hidden="true" className="size-5" />
       </button>
       <MeetingDateTimePickerSheet
