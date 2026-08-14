@@ -22,6 +22,11 @@ import {
   syncMockRecruitCounts,
 } from "@/mocks/data/mockMeetingRecruits";
 import { getMockMeetingManageImages } from "@/mocks/data/mockMeetingImages";
+import {
+  createMockPostImageUpload,
+  getMockPostImage,
+  storeMockPostImage,
+} from "@/mocks/data/mockPostImages";
 import { getMockUserById } from "@/mocks/data/mockUsers";
 import { findMockParticipation } from "@/mocks/data/mockParticipations";
 import {
@@ -473,25 +478,34 @@ export const meetingManagementHandlers = [
         );
       }
 
-      const extensionByContentType = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/webp": "webp",
-      } as const;
-      const extension = extensionByContentType[body.contentType];
-      const objectKey = `posts/${userId}/${crypto.randomUUID()}.${extension}`;
-      return ok({
-        uploadUrl: `http://localhost:5173/__mock-s3/post-images/${encodeURIComponent(objectKey)}`,
-        objectKey,
-        publicUrl: `https://mock-s3.gather.local/${objectKey}`,
-        expiresInSeconds: 300,
-      });
+      return ok(
+        createMockPostImageUpload(userId, body.contentType, body.fileSize),
+      );
     },
   ),
   http.put(
-    "*/__mock-s3/post-images/:objectKey",
-    () => new HttpResponse(null, { status: 200 }),
+    "*/__mock-s3/post-images/:uploadId",
+    async ({ params, request }) =>
+      new HttpResponse(null, {
+        status: storeMockPostImage(
+          String(params.uploadId),
+          request.headers.get("Content-Type"),
+          await request.arrayBuffer(),
+        ),
+      }),
   ),
+  http.get("*/__mock-s3/post-images/:uploadId/public", ({ params }) => {
+    const image = getMockPostImage(String(params.uploadId));
+
+    return image
+      ? new HttpResponse(image.imageData, {
+          headers: {
+            "Content-Type": image.contentType,
+            "Cache-Control": "no-store",
+          },
+        })
+      : new HttpResponse(null, { status: 404 });
+  }),
 
   http.get(
     "*/api/v1/meetings/:meetingId/posts/recruits",

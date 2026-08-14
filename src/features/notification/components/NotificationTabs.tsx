@@ -35,7 +35,7 @@ export function NotificationTabs({
             aria-controls="notification-list"
             className={cn(
               "relative text-base font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
-              isActive ? "font-semibold text-text" : "text-text-gray-400",
+              isActive ? "text-text" : "text-text-gray-400",
             )}
             onClick={() => onChange(tab.value)}
           >

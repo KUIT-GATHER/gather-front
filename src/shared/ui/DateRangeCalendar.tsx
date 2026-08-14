@@ -55,7 +55,7 @@ export default function DateRangeCalendar({
         months: "rdp-months block w-full max-w-none",
         month: "rdp-month w-full",
         month_caption:
-          "rdp-month_caption h-12 items-center justify-center text-title-18 text-text",
+          "rdp-month_caption h-12 items-center justify-center text-[20px] font-semibold text-text",
         month_grid:
           "rdp-month_grid w-full table-fixed border-collapse [&_tr>th:first-child]:text-point-red [&_tr>td:first-child]:text-point-red",
         weekdays: "rdp-weekdays",

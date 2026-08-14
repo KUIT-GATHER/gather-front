@@ -45,7 +45,7 @@ export function VolunteerPostingHeader({
           />
         </button>
 
-        <h1 className="min-w-0 flex-1 truncate text-[20px] leading-4 font-semibold text-text">
+        <h1 className="min-w-0 flex-1 truncate text-[20px] leading-6 font-semibold text-text">
           {title}
         </h1>
 

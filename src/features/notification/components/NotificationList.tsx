@@ -108,7 +108,7 @@ export function NotificationList({
     <>
       <ul id="notification-list" role="tabpanel" className="-mx-5.5">
         {notifications.map((notification) => (
-          <li key={notification.id} className="border-b border-stroke/70">
+          <li key={notification.id}>
             <SwipeActionRow
               open={openNotificationId === notification.id}
               onOpenChange={(open) =>

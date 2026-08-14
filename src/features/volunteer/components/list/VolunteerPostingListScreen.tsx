@@ -40,7 +40,6 @@ export function VolunteerPostingListScreen() {
     <PageContainer size="narrow" className="min-h-dvh pb-8">
       <PageHeader
         sticky
-        className="[&>div]:h-[70px]"
         title="봉사 공고"
         onBack={() => navigate(-1)}
         rightAction={

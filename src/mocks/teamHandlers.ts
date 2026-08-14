@@ -7,6 +7,7 @@ import { addMockBadgeProgress, earnMockBadge } from "./badgeHandlers";
 import teams from "./data/teams.json";
 import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
+import { applyMockPostImages } from "./data/mockPostImages";
 import {
   hasUpcomingConfirmedMockRecruit,
   mockMeetingRecruitsByPostId,
@@ -2226,6 +2227,15 @@ export const teamHandlers = [
           };
         }
       }
+      const imageUrls = applyMockPostImages(userId, body.imageObjectKeys ?? []);
+      if (!imageUrls) {
+        return createMeetingErrorResponse(
+          "INVALID_POST_IMAGE_KEY",
+          "업로드가 완료되지 않았거나 유효하지 않은 이미지입니다.",
+          400,
+        );
+      }
+
       const user = getMockUserById(userId);
       const now = new Date().toISOString().slice(0, 19);
       const post: MockMeetingPost = {
@@ -2236,9 +2246,7 @@ export const teamHandlers = [
         content: body.content.trim(),
         authorId: userId,
         authorNickname: user?.nickname ?? "나",
-        imageUrls: (body.imageObjectKeys ?? []).map(
-          (objectKey) => `https://mock-s3.gather.local/${objectKey}`,
-        ),
+        imageUrls,
         likeCount: 0,
         commentCount: 0,
         likedUserIds: [],
@@ -2688,9 +2696,15 @@ export const teamHandlers = [
       post.title = body.title.trim();
       post.content = body.content.trim();
       if (body.imageObjectKeys !== null && body.imageObjectKeys !== undefined) {
-        post.imageUrls = body.imageObjectKeys.map(
-          (objectKey) => `https://mock-s3.gather.local/${objectKey}`,
-        );
+        const imageUrls = applyMockPostImages(userId, body.imageObjectKeys);
+        if (!imageUrls) {
+          return createMeetingErrorResponse(
+            "INVALID_POST_IMAGE_KEY",
+            "업로드가 완료되지 않았거나 유효하지 않은 이미지입니다.",
+            400,
+          );
+        }
+        post.imageUrls = imageUrls;
       }
       return HttpResponse.json({
         success: true,
