@@ -15,8 +15,8 @@ import {
 } from "@/features/volunteer/lib/volunteerPostingSearchParams";
 import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
-import arrowBackIcon from "@/features/volunteer/assets/search/arrow-back.svg";
-import searchIcon from "@/features/volunteer/assets/search/search.svg";
+import arrowBackIcon from "@/shared/assets/icons/search/arrow-back.svg";
+import searchIcon from "@/shared/assets/icons/search/search.svg";
 import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
@@ -247,7 +247,7 @@ export function VolunteerPostingSearchScreen() {
                     <button
                       key={recent}
                       type="button"
-                      className="h-11 rounded-full border border-text-gray-300 px-3 text-[15px] font-medium text-text-gray-300 transition-colors hover:border-[#5E5E5D] hover:bg-[#5E5E5D] hover:text-[#FAFAF8] active:text-[#FAFAF8] active:border-[#5E5E5D] active:bg-[#5E5E5D] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-text-gray-300 px-3 text-[15px] font-medium text-text-gray-300 transition-colors hover:border-text-gray-400 hover:bg-text-gray-400 hover:text-text2 active:border-text-gray-400 active:bg-text-gray-400 active:text-text2 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recent)}
                     >
                       # {recent}
@@ -270,7 +270,7 @@ export function VolunteerPostingSearchScreen() {
                     <button
                       key={recommendation}
                       type="button"
-                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button transition-colors hover:bg-[#F0F6F0] hover:text-[#00C77B] active:text-[#00C77B]  active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button transition-colors hover:bg-[#F0F6F0] hover:text-button active:bg-[#F0F6F0] active:text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recommendation)}
                     >
                       # {recommendation}

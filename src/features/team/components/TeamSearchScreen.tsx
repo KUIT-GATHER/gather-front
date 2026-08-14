@@ -17,8 +17,8 @@ import {
   toTeamListQueryParams,
   updateTeamListSearchParams,
 } from "@/features/team/lib/teamListSearchParams";
-import arrowBackIcon from "@/features/volunteer/assets/search/arrow-back.svg";
-import searchIcon from "@/features/volunteer/assets/search/search.svg";
+import arrowBackIcon from "@/shared/assets/icons/search/arrow-back.svg";
+import searchIcon from "@/shared/assets/icons/search/search.svg";
 import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
