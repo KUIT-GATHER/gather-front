@@ -55,7 +55,10 @@ function appendQueryParam(
   }
 }
 
-function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
+function buildPostingQuery(
+  params: VolunteerPostingListParams,
+  dateParamNames: { start: string; end: string },
+) {
   const searchParams = new URLSearchParams();
   const page = params.page ?? 0;
   const size = params.size ?? 20;
@@ -69,12 +72,28 @@ function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
 
   setQueryParam(searchParams, "regionId", params.regionId);
   setQueryParam(searchParams, "status", params.status);
-  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
-  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
+  setQueryParam(searchParams, dateParamNames.start, params.activityStartDate);
+  setQueryParam(searchParams, dateParamNames.end, params.activityEndDate);
   setQueryParam(searchParams, "keyword", params.keyword);
   setQueryParam(searchParams, "category", params.category);
 
   return searchParams.toString();
+}
+
+function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
+  return buildPostingQuery(params, {
+    start: "activityStartDate",
+    end: "activityEndDate",
+  });
+}
+
+function buildBookmarkedPostingListQuery(
+  params: VolunteerPostingListParams = {},
+) {
+  return buildPostingQuery(params, {
+    start: "noticeStartDate",
+    end: "noticeEndDate",
+  });
 }
 
 function buildPostingListEndpoint(params?: VolunteerPostingListParams) {
@@ -142,7 +161,7 @@ export function getVolunteerPostingMap(params: VolunteerPostingMapParams) {
 export function getBookmarkedVolunteerPostings(
   params: VolunteerPostingListParams = {},
 ) {
-  const query = buildPostingListQuery(params);
+  const query = buildBookmarkedPostingListQuery(params);
 
   return fetchClient<VolunteerPostingPage>(
     `${POSTING_ENDPOINT}/bookmarks?${query}`,

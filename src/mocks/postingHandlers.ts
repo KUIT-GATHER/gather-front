@@ -825,8 +825,8 @@ export const postingHandlers = [
     const size = Math.max(1, Number(url.searchParams.get("size")) || 20);
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
-    const activityStartDate = url.searchParams.get("activityStartDate");
-    const activityEndDate = url.searchParams.get("activityEndDate");
+    const noticeStartDate = url.searchParams.get("noticeStartDate");
+    const noticeEndDate = url.searchParams.get("noticeEndDate");
     const category = url.searchParams.get("category");
 
     const bookmarkedPostingIds = getBookmarkedPostingIds(userId);
@@ -854,14 +854,15 @@ export const postingHandlers = [
       );
     }
 
-    items = items.filter((posting) =>
-      isVolunteerPostingActivityPeriodOverlapping(
-        posting.actStartDate,
-        posting.actEndDate,
-        activityStartDate,
-        activityEndDate,
-      ),
-    );
+    if (noticeStartDate) {
+      items = items.filter(
+        (posting) => posting.noticeStartDate >= noticeStartDate,
+      );
+    }
+
+    if (noticeEndDate) {
+      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
+    }
 
     const sortedItems = sortPostings(items, [], false);
     const startIndex = page * size;
