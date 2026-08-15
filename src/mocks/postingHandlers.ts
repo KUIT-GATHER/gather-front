@@ -1,7 +1,11 @@
 import { HttpResponse, http } from "msw";
 
 import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
-import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
+import { isVolunteerPostingActivityPeriodOverlapping } from "@/features/volunteer/lib/volunteerPostingActivityPeriod";
+import type {
+  PostingListItem,
+  VolunteerPostingMapItem,
+} from "@/features/volunteer/types/volunteer.types";
 
 import { addMockBadgeProgress } from "./badgeHandlers";
 import postings from "./data/postings.json";
@@ -441,14 +445,53 @@ function getRegionIdsIncludingChildren(regionIds: Iterable<number>) {
   return includedRegionIds;
 }
 
-function getRegionIdsByGroup(regionGroupId: number) {
-  const level1RegionIds = regions.data
-    .filter(
-      (region) => region.level === 1 && region.regionGroupId === regionGroupId,
-    )
-    .map((region) => region.id);
+type MockMapBounds = {
+  swLat: number;
+  swLng: number;
+  neLat: number;
+  neLng: number;
+};
 
-  return getRegionIdsIncludingChildren(level1RegionIds);
+function isCoordinateInBounds(
+  latitude: number | null,
+  longitude: number | null,
+  bounds: MockMapBounds,
+) {
+  return (
+    latitude !== null &&
+    longitude !== null &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= bounds.swLat &&
+    latitude <= bounds.neLat &&
+    longitude >= bounds.swLng &&
+    longitude <= bounds.neLng
+  );
+}
+
+function toVolunteerPostingMapItem(
+  posting: (typeof postings.data)[number],
+): VolunteerPostingMapItem {
+  return {
+    id: posting.id,
+    title: posting.title,
+    place: posting.actPlace,
+    organizationName: posting.recruitOrg,
+    regionId: posting.regionId,
+    regionName: posting.regionName,
+    activityStartAt: posting.actStartDate
+      ? `${posting.actStartDate}T${posting.actStartTime ?? "00:00"}:00`
+      : null,
+    activityEndAt: posting.actEndDate
+      ? `${posting.actEndDate}T${posting.actEndTime ?? "23:59"}:00`
+      : null,
+    applyDeadlineAt: posting.noticeEndDate
+      ? `${posting.noticeEndDate}T23:59:59`
+      : null,
+    category: posting.category as VolunteerPostingMapItem["category"],
+    status: posting.status as VolunteerPostingMapItem["status"],
+    locations: posting.locations,
+  };
 }
 
 function parseSorts(url: URL): PostingSort[] | null {
@@ -554,6 +597,75 @@ function sortPostingMeetings(
 }
 
 export const postingHandlers = [
+  http.get("*/api/v1/postings/map", ({ request }) => {
+    const url = new URL(request.url);
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
+    const category = url.searchParams.get("category");
+    const swLat = getOptionalNumberParam(url, "swLat");
+    const swLng = getOptionalNumberParam(url, "swLng");
+    const neLat = getOptionalNumberParam(url, "neLat");
+    const neLng = getOptionalNumberParam(url, "neLng");
+
+    if (
+      swLat === undefined ||
+      swLng === undefined ||
+      neLat === undefined ||
+      neLng === undefined ||
+      swLat > neLat ||
+      swLng > neLng ||
+      (category &&
+        !POSTING_CATEGORIES.includes(
+          category as (typeof POSTING_CATEGORIES)[number],
+        ))
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const bounds = { swLat, swLng, neLat, neLng };
+    const includedRegionIds =
+      regionId === undefined
+        ? undefined
+        : getRegionIdsIncludingChildren([regionId]);
+    const mapItems = mockPostings
+      .filter(
+        (posting) =>
+          !includedRegionIds || includedRegionIds.has(posting.regionId),
+      )
+      .filter((posting) => !category || posting.category === category)
+      .filter((posting) =>
+        isVolunteerPostingActivityPeriodOverlapping(
+          posting.actStartDate,
+          posting.actEndDate,
+          activityStartDate,
+          activityEndDate,
+        ),
+      )
+      .filter((posting) =>
+        posting.locations.some((location) =>
+          isCoordinateInBounds(location.latitude, location.longitude, bounds),
+        ),
+      )
+      .map(toVolunteerPostingMapItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: mapItems,
+      error: null,
+    });
+  }),
+
   http.get("*/api/v1/postings", ({ request }) => {
     const url = new URL(request.url);
 
@@ -561,28 +673,13 @@ export const postingHandlers = [
     const size = Number(url.searchParams.get("size") ?? 20);
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
-    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
     const status = url.searchParams.get("status");
-    const noticeStartDate = url.searchParams.get("noticeStartDate");
-    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
     const category = url.searchParams.get("category");
     const sorts = parseSorts(url);
 
     let items = mockPostings;
-
-    if (regionId !== undefined && regionGroupId !== undefined) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
-          },
-        },
-        { status: 400 },
-      );
-    }
 
     if (!sorts) {
       return HttpResponse.json(
@@ -651,14 +748,6 @@ export const postingHandlers = [
       );
     }
 
-    if (regionGroupId !== undefined) {
-      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
-
-      items = items.filter((posting) =>
-        includedRegionIds.has(posting.regionId),
-      );
-    }
-
     if (status) {
       items = items.filter((posting) => posting.status === status);
     } else {
@@ -668,15 +757,14 @@ export const postingHandlers = [
       );
     }
 
-    if (noticeStartDate) {
-      items = items.filter(
-        (posting) => posting.noticeStartDate >= noticeStartDate,
-      );
-    }
-
-    if (noticeEndDate) {
-      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
-    }
+    items = items.filter((posting) =>
+      isVolunteerPostingActivityPeriodOverlapping(
+        posting.actStartDate,
+        posting.actEndDate,
+        activityStartDate,
+        activityEndDate,
+      ),
+    );
 
     const meetingRecruitItems = getExternalMockMeetingRecruitListItems().filter(
       (meetingRecruitItem) =>
@@ -692,20 +780,16 @@ export const postingHandlers = [
           getRegionIdsIncludingChildren([regionId]).has(
             meetingRecruitItem.regionId!,
           )) &&
-        (regionGroupId === undefined ||
-          getRegionIdsByGroup(regionGroupId).has(
-            meetingRecruitItem.regionId!,
-          )) &&
         (status
           ? meetingRecruitItem.status === status
           : meetingRecruitItem.status === "RECRUITING" ||
             meetingRecruitItem.status === "CLOSED") &&
-        (!noticeStartDate ||
-          (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") >=
-            noticeStartDate) &&
-        (!noticeEndDate ||
-          (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") <=
-            noticeEndDate),
+        isVolunteerPostingActivityPeriodOverlapping(
+          meetingRecruitItem.activityStartAt?.slice(0, 10),
+          meetingRecruitItem.activityEndAt?.slice(0, 10),
+          activityStartDate,
+          activityEndDate,
+        ),
     );
     const unifiedItems = sortUnifiedPostings(
       [...items.map(toUnifiedPostingListItem), ...meetingRecruitItems],
@@ -741,24 +825,9 @@ export const postingHandlers = [
     const size = Math.max(1, Number(url.searchParams.get("size")) || 20);
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
-    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
-    const noticeStartDate = url.searchParams.get("noticeStartDate");
-    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
     const category = url.searchParams.get("category");
-
-    if (regionId !== undefined && regionGroupId !== undefined) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
-          },
-        },
-        { status: 400 },
-      );
-    }
 
     const bookmarkedPostingIds = getBookmarkedPostingIds(userId);
     let items = mockPostings.filter((posting) =>
@@ -785,23 +854,14 @@ export const postingHandlers = [
       );
     }
 
-    if (regionGroupId !== undefined) {
-      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
-
-      items = items.filter((posting) =>
-        includedRegionIds.has(posting.regionId),
-      );
-    }
-
-    if (noticeStartDate) {
-      items = items.filter(
-        (posting) => posting.noticeStartDate >= noticeStartDate,
-      );
-    }
-
-    if (noticeEndDate) {
-      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
-    }
+    items = items.filter((posting) =>
+      isVolunteerPostingActivityPeriodOverlapping(
+        posting.actStartDate,
+        posting.actEndDate,
+        activityStartDate,
+        activityEndDate,
+      ),
+    );
 
     const sortedItems = sortPostings(items, [], false);
     const startIndex = page * size;

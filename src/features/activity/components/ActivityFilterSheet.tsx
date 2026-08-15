@@ -52,6 +52,7 @@ type ActivityFilterSheetProps = {
   onOpenChange: (open: boolean) => void;
   filter: ActivityFilter;
   onApply: (filter: ActivityFilter) => void;
+  onOpenMap?: (filter: ActivityFilter) => void;
   dateLabel?: string;
 };
 
@@ -97,6 +98,7 @@ export function ActivityFilterSheet({
   onOpenChange,
   filter,
   onApply,
+  onOpenMap,
   dateLabel = "활동 기간",
 }: ActivityFilterSheetProps) {
   const [view, setView] = useState<FilterView>("main");
@@ -191,6 +193,10 @@ export function ActivityFilterSheet({
     onOpenChange(false);
   };
 
+  const openMap = () => {
+    onOpenMap?.(toActivityFilter(draft));
+  };
+
   const title =
     view === "date" ? dateLabel : view === "region" ? "지역" : "필터";
   const footer =
@@ -283,7 +289,10 @@ export function ActivityFilterSheet({
             <div className="mt-3 flex gap-3.5">
               <button
                 type="button"
-                className="flex h-11 min-w-0 flex-1 items-center justify-center rounded-xl border border-stroke bg-white px-4 text-sm text-text underline focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                className={cn(
+                  "flex h-11 min-w-0 items-center justify-center rounded-xl border border-stroke bg-white px-4 text-sm text-text underline focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40",
+                  onOpenMap ? "flex-1" : "w-full",
+                )}
                 onClick={openRegionView}
               >
                 {selectedDraftRegion
@@ -293,13 +302,15 @@ export function ActivityFilterSheet({
                     )
                   : "지역 선택"}
               </button>
-              <IconButton
-                label="지역 선택 열기"
-                icon={<img src={mapIcon} alt="" />}
-                variant="surface"
-                className="rounded-xl"
-                onClick={openRegionView}
-              />
+              {onOpenMap ? (
+                <IconButton
+                  label="지도 열기"
+                  icon={<img src={mapIcon} alt="" />}
+                  variant="surface"
+                  className="rounded-xl"
+                  onClick={openMap}
+                />
+              ) : null}
             </div>
           </section>
 

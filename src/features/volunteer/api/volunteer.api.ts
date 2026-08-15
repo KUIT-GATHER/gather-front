@@ -10,6 +10,8 @@ import type {
   VolunteerPostingPage,
   VolunteerPostingParticipationResponse,
   VolunteerPostingParticipationApplyRequest,
+  VolunteerPostingMapParams,
+  VolunteerPostingMapItem,
   PostingListPage,
 } from "@/features/volunteer/types/volunteer.types";
 
@@ -54,10 +56,6 @@ function appendQueryParam(
 }
 
 function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
-  if (params.regionId !== undefined && params.regionGroupId !== undefined) {
-    throw new Error("regionId and regionGroupId cannot be used together.");
-  }
-
   const searchParams = new URLSearchParams();
   const page = params.page ?? 0;
   const size = params.size ?? 20;
@@ -70,10 +68,9 @@ function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
   });
 
   setQueryParam(searchParams, "regionId", params.regionId);
-  setQueryParam(searchParams, "regionGroupId", params.regionGroupId);
   setQueryParam(searchParams, "status", params.status);
-  setQueryParam(searchParams, "noticeStartDate", params.noticeStartDate);
-  setQueryParam(searchParams, "noticeEndDate", params.noticeEndDate);
+  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
+  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
   setQueryParam(searchParams, "keyword", params.keyword);
   setQueryParam(searchParams, "category", params.category);
 
@@ -88,6 +85,23 @@ function buildPostingListEndpoint(params?: VolunteerPostingListParams) {
 
 function buildPostingEndpoint(postingId: number) {
   return `${POSTING_ENDPOINT}/${postingId}`;
+}
+
+export function buildVolunteerPostingMapEndpoint(
+  params: VolunteerPostingMapParams,
+) {
+  const searchParams = new URLSearchParams();
+
+  setQueryParam(searchParams, "regionId", params.regionId);
+  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
+  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
+  setQueryParam(searchParams, "category", params.category);
+  setQueryParam(searchParams, "swLat", params.swLat);
+  setQueryParam(searchParams, "swLng", params.swLng);
+  setQueryParam(searchParams, "neLat", params.neLat);
+  setQueryParam(searchParams, "neLng", params.neLng);
+
+  return `${POSTING_ENDPOINT}/map?${searchParams.toString()}`;
 }
 
 function buildPostingMeetingsEndpoint(
@@ -114,6 +128,13 @@ function buildPostingMeetingsEndpoint(
 export function getVolunteerPostings(params?: VolunteerPostingListParams) {
   return fetchClient<PostingListPage>(
     buildPostingListEndpoint(params),
+    publicOptions,
+  );
+}
+
+export function getVolunteerPostingMap(params: VolunteerPostingMapParams) {
+  return fetchClient<VolunteerPostingMapItem[]>(
+    buildVolunteerPostingMapEndpoint(params),
     publicOptions,
   );
 }

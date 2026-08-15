@@ -1,4 +1,8 @@
-import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  queryOptions,
+} from "@tanstack/react-query";
 
 import {
   getBookmarkedVolunteerPostings,
@@ -6,6 +10,7 @@ import {
   getVolunteerPosting,
   getVolunteerPostingMeetings,
   getVolunteerPostingRecommendedKeywords,
+  getVolunteerPostingMap,
   getVolunteerPostings,
 } from "./volunteer.api";
 
@@ -13,6 +18,7 @@ import type {
   VolunteerPostingInfiniteParams,
   VolunteerPostingListParams,
   VolunteerPostingMeetingListParams,
+  VolunteerPostingMapParams,
 } from "../types/volunteer.types";
 
 type RecommendationScope = "guest" | "member";
@@ -22,14 +28,10 @@ function withPage(
   params: VolunteerPostingInfiniteParams,
   page: number,
 ): VolunteerPostingListParams {
-  const { regionId, regionGroupId, ...baseParams } = params;
+  const { regionId, ...baseParams } = params;
 
   if (regionId !== undefined) {
     return { ...baseParams, page, regionId };
-  }
-
-  if (regionGroupId !== undefined) {
-    return { ...baseParams, page, regionGroupId };
   }
 
   return { ...baseParams, page };
@@ -38,11 +40,14 @@ function withPage(
 export const volunteerPostingKeys = {
   all: ["volunteerPostings"] as const,
   lists: () => [...volunteerPostingKeys.all, "list"] as const,
+  maps: () => [...volunteerPostingKeys.all, "map"] as const,
   bookmarkedLists: () => [...volunteerPostingKeys.all, "bookmarked"] as const,
   list: (params: VolunteerPostingListParams = {}) =>
     [...volunteerPostingKeys.lists(), params] as const,
   recommended: (scope: RecommendationScope) =>
     [...volunteerPostingKeys.all, "recommended", scope] as const,
+  map: (params: VolunteerPostingMapParams | undefined) =>
+    [...volunteerPostingKeys.maps(), params ?? null] as const,
   infiniteList: (params: VolunteerPostingInfiniteParams = {}) =>
     [...volunteerPostingKeys.lists(), "infinite", params] as const,
   infiniteBookmarks: (params: VolunteerPostingInfiniteParams = {}) =>
@@ -80,6 +85,19 @@ export const volunteerPostingQueries = {
     queryOptions({
       queryKey: volunteerPostingKeys.list(params),
       queryFn: () => getVolunteerPostings(params),
+    }),
+
+  map: (params: VolunteerPostingMapParams | undefined) =>
+    queryOptions({
+      queryKey: volunteerPostingKeys.map(params),
+      queryFn: () => {
+        if (!params) {
+          throw new Error("Map bounds are required.");
+        }
+
+        return getVolunteerPostingMap(params);
+      },
+      placeholderData: keepPreviousData,
     }),
 
   recommended: (scope: RecommendationScope) =>

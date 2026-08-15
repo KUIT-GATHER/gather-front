@@ -32,15 +32,15 @@ export function formatLocalDateForDisplay(value: string) {
 }
 
 export function getDateRangeFromValues(
-  noticeStartDate?: string,
-  noticeEndDate?: string,
+  activityStartDate?: string,
+  activityEndDate?: string,
 ) {
-  if (!noticeStartDate || !noticeEndDate) {
+  if (!activityStartDate || !activityEndDate) {
     return undefined;
   }
 
-  const from = parseLocalDate(noticeStartDate);
-  const to = parseLocalDate(noticeEndDate);
+  const from = parseLocalDate(activityStartDate);
+  const to = parseLocalDate(activityEndDate);
 
   return from && to ? { from, to } : undefined;
 }
@@ -51,14 +51,14 @@ export function getDateFilterFromRange(range: DateRange | undefined) {
   }
 
   return {
-    noticeStartDate: formatLocalDateForApi(range.from),
-    noticeEndDate: formatLocalDateForApi(range.to),
+    activityStartDate: formatLocalDateForApi(range.from),
+    activityEndDate: formatLocalDateForApi(range.to),
   };
 }
 
 export function formatVolunteerPostingDateRange(
-  noticeStartDate: string,
-  noticeEndDate: string,
+  activityStartDate: string,
+  activityEndDate: string,
 ) {
-  return `${formatLocalDateForDisplay(noticeStartDate)} ~ ${formatLocalDateForDisplay(noticeEndDate)}`;
+  return `${formatLocalDateForDisplay(activityStartDate)} ~ ${formatLocalDateForDisplay(activityEndDate)}`;
 }
