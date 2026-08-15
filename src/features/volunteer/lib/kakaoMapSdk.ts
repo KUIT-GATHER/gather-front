@@ -31,6 +31,11 @@ export type KakaoAddressSearchResult = {
   y: string;
 };
 
+export type KakaoKeywordSearchResult = {
+  x: string;
+  y: string;
+};
+
 type KakaoMaps = {
   Map: new (
     container: HTMLElement,
@@ -68,6 +73,12 @@ type KakaoMaps = {
       addressSearch: (
         query: string,
         callback: (result: KakaoAddressSearchResult[], status: string) => void,
+      ) => void;
+    };
+    Places: new () => {
+      keywordSearch: (
+        query: string,
+        callback: (result: KakaoKeywordSearchResult[], status: string) => void,
       ) => void;
     };
     Status: {

@@ -16,6 +16,8 @@ import {
   type KakaoMap,
   type KakaoMarker,
   type KakaoMarkerImage,
+  type KakaoAddressSearchResult,
+  type KakaoKeywordSearchResult,
   loadKakaoMapSdk,
 } from "@/features/volunteer/lib/kakaoMapSdk";
 import {
@@ -83,20 +85,42 @@ function getInitialMapLevel(region: Region | undefined) {
   return region?.level === REGION_LEVEL.SIGUNGU ? 6 : 9;
 }
 
-function getRegionGeocodeQueries(
+function getRegionGeocodeLabel(
   region: Region | undefined,
   parentRegion: Region | undefined,
 ) {
   if (!region) {
-    return [];
+    return undefined;
   }
 
-  const label = getFullRegionSelectionLabel(region, parentRegion);
-  const fallbackLabel = `${label}${
-    region.level === REGION_LEVEL.SIGUNGU ? "청" : "시청"
-  }`;
+  return getFullRegionSelectionLabel(region, parentRegion);
+}
 
-  return [...new Set([label, fallbackLabel])];
+function getRegionKeywordFallback(
+  region: Region | undefined,
+  parentRegion: Region | undefined,
+) {
+  const label = getRegionGeocodeLabel(region, parentRegion);
+
+  return label ? `${label}청` : undefined;
+}
+
+function getFirstSearchResultPosition(
+  maps: KakaoMaps,
+  results: ReadonlyArray<KakaoAddressSearchResult | KakaoKeywordSearchResult>,
+) {
+  const firstResult = results.find((result) => {
+    const latitude = Number(result.y);
+    const longitude = Number(result.x);
+
+    return Number.isFinite(latitude) && Number.isFinite(longitude);
+  });
+
+  if (!firstResult) {
+    return undefined;
+  }
+
+  return new maps.LatLng(Number(firstResult.y), Number(firstResult.x));
 }
 
 function geocodeRegion(
@@ -104,42 +128,42 @@ function geocodeRegion(
   region: Region | undefined,
   parentRegion: Region | undefined,
 ): Promise<KakaoLatLng | undefined> {
-  const queries = getRegionGeocodeQueries(region, parentRegion);
+  const addressQuery = getRegionGeocodeLabel(region, parentRegion);
+  const keywordQuery = getRegionKeywordFallback(region, parentRegion);
 
-  if (queries.length === 0) {
+  if (!addressQuery) {
     return Promise.resolve(undefined);
   }
 
   const geocoder = new maps.services.Geocoder();
 
   return new Promise((resolve) => {
-    const searchNext = (queryIndex: number) => {
-      const query = queries[queryIndex];
+    geocoder.addressSearch(addressQuery, (results, status) => {
+      const addressPosition =
+        status === maps.services.Status.OK
+          ? getFirstSearchResultPosition(maps, results)
+          : undefined;
 
-      if (!query) {
+      if (addressPosition) {
+        resolve(addressPosition);
+        return;
+      }
+
+      if (!keywordQuery) {
         resolve(undefined);
         return;
       }
 
-      geocoder.addressSearch(query, (result, status) => {
-        const firstResult = result[0];
-        const latitude = Number(firstResult?.y);
-        const longitude = Number(firstResult?.x);
+      const places = new maps.services.Places();
 
-        if (
-          status === maps.services.Status.OK &&
-          Number.isFinite(latitude) &&
-          Number.isFinite(longitude)
-        ) {
-          resolve(new maps.LatLng(latitude, longitude));
-          return;
-        }
-
-        searchNext(queryIndex + 1);
+      places.keywordSearch(keywordQuery, (keywordResults, keywordStatus) => {
+        resolve(
+          keywordStatus === maps.services.Status.OK
+            ? getFirstSearchResultPosition(maps, keywordResults)
+            : undefined,
+        );
       });
-    };
-
-    searchNext(0);
+    });
   });
 }
 
@@ -167,6 +191,8 @@ export function VolunteerPostingMapSheet({
   const markerImagesRef = useRef<MarkerImages | undefined>(undefined);
   const [sdkState, setSdkState] = useState<SdkState>("loading");
   const [sdkAttempt, setSdkAttempt] = useState(0);
+  const [regionLocationAttempt, setRegionLocationAttempt] = useState(0);
+  const [isRegionLocationError, setIsRegionLocationError] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
   const [pendingBounds, setPendingBounds] =
     useState<VolunteerPostingMapBounds>();
@@ -189,8 +215,14 @@ export function VolunteerPostingMapSheet({
   const selectedRegionParent = selectedRegion?.parentId
     ? regionIndex.byId.get(selectedRegion.parentId)
     : undefined;
+  const hasSelectedRegionFilter = filter.regionId !== undefined;
+  const isSelectedRegionMissing =
+    hasSelectedRegionFilter && regionsQuery.isSuccess && !selectedRegion;
+  const hasRegionQueryError = hasSelectedRegionFilter && regionsQuery.isError;
+  const hasRegionLocationError =
+    hasRegionQueryError || isSelectedRegionMissing || isRegionLocationError;
   const shouldWaitForRegion =
-    filter.regionId !== undefined && regionsQuery.isPending;
+    hasSelectedRegionFilter && !regionsQuery.isSuccess && !regionsQuery.isError;
 
   useEffect(() => {
     let active = true;
@@ -220,6 +252,7 @@ export function VolunteerPostingMapSheet({
       !maps ||
       !container ||
       shouldWaitForRegion ||
+      hasRegionLocationError ||
       mapRef.current
     ) {
       return;
@@ -227,55 +260,73 @@ export function VolunteerPostingMapSheet({
 
     let disposed = false;
     let frameId: number | undefined;
-    const map = new maps.Map(container, {
-      center: new maps.LatLng(
-        DEFAULT_MAP_CENTER.latitude,
-        DEFAULT_MAP_CENTER.longitude,
-      ),
-      level: DEFAULT_MAP_LEVEL,
-    });
-    const handleIdle = () => {
-      if (!disposed) {
-        setPendingBounds(getMapBounds(map));
+    let map: KakaoMap | undefined;
+    let handleIdle: (() => void) | undefined;
+    const initializeMap = async () => {
+      const initialCenter = hasSelectedRegionFilter
+        ? await geocodeRegion(maps, selectedRegion, selectedRegionParent)
+        : new maps.LatLng(
+            DEFAULT_MAP_CENTER.latitude,
+            DEFAULT_MAP_CENTER.longitude,
+          );
+
+      if (disposed) return;
+
+      if (!initialCenter) {
+        setIsRegionLocationError(true);
+        return;
       }
+
+      const initialMap = new maps.Map(container, {
+        center: initialCenter,
+        level: hasSelectedRegionFilter
+          ? getInitialMapLevel(selectedRegion)
+          : DEFAULT_MAP_LEVEL,
+      });
+      map = initialMap;
+      handleIdle = () => {
+        if (!disposed) {
+          setPendingBounds(getMapBounds(initialMap));
+        }
+      };
+
+      mapRef.current = initialMap;
+      frameId = window.requestAnimationFrame(() => {
+        if (disposed || !handleIdle) return;
+
+        initialMap.relayout();
+        const initialBounds = getMapBounds(initialMap);
+        setPendingBounds(initialBounds);
+        setSearchedBounds(initialBounds);
+        setDisplayedBounds(initialBounds);
+        maps.event.addListener(initialMap, "idle", handleIdle);
+        setIsMapReady(true);
+      });
     };
 
-    mapRef.current = map;
-
-    void geocodeRegion(maps, selectedRegion, selectedRegionParent).then(
-      (initialCenter) => {
-        if (disposed) return;
-
-        if (initialCenter) {
-          map.setLevel(getInitialMapLevel(selectedRegion));
-          map.setCenter(initialCenter);
-        }
-
-        frameId = window.requestAnimationFrame(() => {
-          if (disposed) return;
-
-          map.relayout();
-          const initialBounds = getMapBounds(map);
-          setPendingBounds(initialBounds);
-          setSearchedBounds(initialBounds);
-          setDisplayedBounds(initialBounds);
-          maps.event.addListener(map, "idle", handleIdle);
-          setIsMapReady(true);
-        });
-      },
-    );
+    void initializeMap();
 
     return () => {
       disposed = true;
       if (frameId !== undefined) {
         window.cancelAnimationFrame(frameId);
       }
-      maps.event.removeListener(map, "idle", handleIdle);
-      if (mapRef.current === map) {
+      if (map && handleIdle) {
+        maps.event.removeListener(map, "idle", handleIdle);
+      }
+      if (map && mapRef.current === map) {
         mapRef.current = undefined;
       }
     };
-  }, [sdkState, selectedRegion, selectedRegionParent, shouldWaitForRegion]);
+  }, [
+    hasRegionLocationError,
+    hasSelectedRegionFilter,
+    regionLocationAttempt,
+    sdkState,
+    selectedRegion,
+    selectedRegionParent,
+    shouldWaitForRegion,
+  ]);
 
   const mapParams = useMemo(
     () =>
@@ -456,7 +507,8 @@ export function VolunteerPostingMapSheet({
     );
   };
 
-  const isWaitingForMap = sdkState === "ready" && !isMapReady;
+  const isWaitingForMap =
+    sdkState === "ready" && !isMapReady && !hasRegionLocationError;
   const controlsBottomClassName = selectedPosting
     ? "bottom-[calc(env(safe-area-inset-bottom)+12rem)]"
     : "bottom-[calc(env(safe-area-inset-bottom)+1rem)]";
@@ -490,6 +542,31 @@ export function VolunteerPostingMapSheet({
               onClick: () => {
                 setSdkState("loading");
                 setSdkAttempt((attempt) => attempt + 1);
+              },
+            }}
+            className="absolute inset-0 justify-center bg-bg"
+          />
+        ) : null}
+
+        {sdkState === "ready" && hasRegionLocationError ? (
+          <ErrorState
+            title={
+              hasRegionQueryError
+                ? "지역 정보를 불러오지 못했어요"
+                : "선택한 지역의 위치를 불러오지 못했어요"
+            }
+            description="잠시 후 다시 시도해 주세요."
+            primaryAction={{
+              label: "다시 시도",
+              onClick: () => {
+                setIsRegionLocationError(false);
+
+                if (hasRegionQueryError || isSelectedRegionMissing) {
+                  void regionsQuery.refetch();
+                  return;
+                }
+
+                setRegionLocationAttempt((attempt) => attempt + 1);
               },
             }}
             className="absolute inset-0 justify-center bg-bg"
