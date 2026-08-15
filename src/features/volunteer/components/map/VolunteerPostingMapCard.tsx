@@ -32,9 +32,9 @@ export function VolunteerPostingMapCard({
       />
       <div className="min-w-0 flex-1">
         <h2 className="truncate text-title-18 text-text">{posting.title}</h2>
-        {posting.place ? (
+        {posting.organizationName ? (
           <p className="mt-2 truncate text-body-15 text-text-gray-400">
-            {posting.place}
+            {posting.organizationName}
           </p>
         ) : null}
         {metadata ? (

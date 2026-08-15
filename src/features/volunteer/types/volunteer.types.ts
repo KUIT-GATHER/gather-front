@@ -206,7 +206,6 @@ export type VolunteerPostingMapParams = VolunteerPostingMapBounds & {
 export type VolunteerPostingMapItem = {
   id: number;
   title: string;
-  place: string | null;
   organizationName: string | null;
   regionId: number | null;
   regionName: string | null;

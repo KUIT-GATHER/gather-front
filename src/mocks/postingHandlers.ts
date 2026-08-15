@@ -475,7 +475,6 @@ function toVolunteerPostingMapItem(
   return {
     id: posting.id,
     title: posting.title,
-    place: posting.actPlace,
     organizationName: posting.recruitOrg,
     regionId: posting.regionId,
     regionName: posting.regionName,
