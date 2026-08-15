@@ -33,7 +33,7 @@ export function MeetingBookmarkButton({
         src={isBookmarked ? FilledHeartIcon : UnfilledHeartIcon}
         alt=""
         aria-hidden="true"
-        className="h-[18px] w-5"
+        className="h-[19px] w-[21px]"
       />
     </button>
   );

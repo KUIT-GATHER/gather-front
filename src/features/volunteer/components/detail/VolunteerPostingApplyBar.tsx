@@ -39,10 +39,10 @@ export function VolunteerPostingApplyBar({
         : "primary";
   const buttonClassName =
     participationAction === "COMPLETE"
-      ? "mx-auto h-12 max-w-[315px] text-[18px] font-semibold disabled:bg-icon disabled:text-text2"
+      ? "mx-auto flex h-12 max-w-[315px] text-[18px] font-semibold disabled:bg-icon disabled:text-text2"
       : isNeutralButton
-        ? "mx-auto h-12 max-w-[315px] text-[18px] font-semibold"
-        : "mx-auto h-12 max-w-[315px] text-[18px] font-semibold";
+        ? "mx-auto flex h-12 max-w-[315px] text-[18px] font-semibold"
+        : "mx-auto flex h-12 max-w-[315px] text-[18px] font-semibold";
 
   const buttonLabel = (() => {
     if (isApplyPending) {

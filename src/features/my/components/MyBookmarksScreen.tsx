@@ -142,6 +142,7 @@ export function MyBookmarksScreen() {
                   selectedTab === "postings" ? "봉사 공고 검색" : "모임 검색"
                 }
                 icon={<img src={searchIcon} alt="" />}
+                className="[&>span>img]:size-[27px]"
                 onClick={() =>
                   navigate(
                     selectedTab === "postings"

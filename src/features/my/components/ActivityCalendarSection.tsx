@@ -298,7 +298,7 @@ export function ActivityCalendarSection() {
                     : item.hasActivity
                       ? "border-stroke bg-button/5 text-text"
                       : "border-stroke bg-white text-text",
-                  isSelected && !item.isToday && "ring-2 ring-icon",
+                  isSelected && !item.isToday && "ring-2 ring-inset ring-icon",
                 )}
               >
                 <span className="font-medium">{item.day}</span>
