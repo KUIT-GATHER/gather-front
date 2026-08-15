@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import filterIcon from "@/assets/icons/Filter.svg";
 import searchIcon from "@/assets/icons/Search.svg";
 import { VolunteerPostingFilterSheet } from "@/features/volunteer/components/filter/VolunteerPostingFilterSheet";
+import { VolunteerPostingMapSheet } from "@/features/volunteer/components/map/VolunteerPostingMapSheet";
 import {
   volunteerPostingListSortOptions,
   isVolunteerPostingListSort,
@@ -14,6 +15,7 @@ import {
   toVolunteerPostingQueryParams,
   updateVolunteerPostingSearchParams,
 } from "@/features/volunteer/lib/volunteerPostingSearchParams";
+import type { VolunteerPostingFilter } from "@/features/volunteer/types/volunteerPostingFilter.types";
 import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
@@ -22,10 +24,13 @@ import Select from "@/shared/ui/Select";
 import { VolunteerPostingResults } from "./VolunteerPostingResults";
 import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 
+type VolunteerSheetMode = "filter" | "map" | null;
+
 export function VolunteerPostingListScreen() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sheetMode, setSheetMode] = useState<VolunteerSheetMode>(null);
+  const [mapFilter, setMapFilter] = useState<VolunteerPostingFilter>();
   const sort = getVolunteerPostingSort(searchParams);
   const filter = useMemo(
     () => getVolunteerPostingFilter(searchParams),
@@ -48,7 +53,7 @@ export function VolunteerPostingListScreen() {
               label="필터 열기"
               icon={<img src={filterIcon} alt="" />}
               className="[&>span>img]:h-[21px] [&>span>img]:w-5"
-              onClick={() => setIsFilterOpen(true)}
+              onClick={() => setSheetMode("filter")}
             />
             <IconButton
               label="봉사 공고 검색"
@@ -88,10 +93,10 @@ export function VolunteerPostingListScreen() {
         />
       </div>
 
-      {isFilterOpen ? (
+      {sheetMode === "filter" ? (
         <VolunteerPostingFilterSheet
           open
-          onOpenChange={setIsFilterOpen}
+          onOpenChange={(open) => setSheetMode(open ? "filter" : null)}
           filter={filter}
           onApply={(nextFilter) => {
             setSearchParams(
@@ -99,6 +104,22 @@ export function VolunteerPostingListScreen() {
             );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
+          onOpenMap={(draftFilter) => {
+            setMapFilter(draftFilter);
+            setSheetMode("map");
+          }}
+        />
+      ) : null}
+      {sheetMode === "map" && mapFilter ? (
+        <VolunteerPostingMapSheet
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              setSheetMode(null);
+            }
+          }}
+          filter={mapFilter}
+          onSelectPosting={(postingId) => navigate(`/volunteers/${postingId}`)}
         />
       ) : null}
     </PageContainer>

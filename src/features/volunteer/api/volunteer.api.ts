@@ -10,6 +10,8 @@ import type {
   VolunteerPostingPage,
   VolunteerPostingParticipationResponse,
   VolunteerPostingParticipationApplyRequest,
+  VolunteerPostingMapParams,
+  VolunteerPostingMapItem,
   PostingListPage,
 } from "@/features/volunteer/types/volunteer.types";
 
@@ -53,11 +55,10 @@ function appendQueryParam(
   }
 }
 
-function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
-  if (params.regionId !== undefined && params.regionGroupId !== undefined) {
-    throw new Error("regionId and regionGroupId cannot be used together.");
-  }
-
+function buildPostingQuery(
+  params: VolunteerPostingListParams,
+  dateParamNames: { start: string; end: string },
+) {
   const searchParams = new URLSearchParams();
   const page = params.page ?? 0;
   const size = params.size ?? 20;
@@ -70,14 +71,29 @@ function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
   });
 
   setQueryParam(searchParams, "regionId", params.regionId);
-  setQueryParam(searchParams, "regionGroupId", params.regionGroupId);
   setQueryParam(searchParams, "status", params.status);
-  setQueryParam(searchParams, "noticeStartDate", params.noticeStartDate);
-  setQueryParam(searchParams, "noticeEndDate", params.noticeEndDate);
+  setQueryParam(searchParams, dateParamNames.start, params.activityStartDate);
+  setQueryParam(searchParams, dateParamNames.end, params.activityEndDate);
   setQueryParam(searchParams, "keyword", params.keyword);
   setQueryParam(searchParams, "category", params.category);
 
   return searchParams.toString();
+}
+
+function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
+  return buildPostingQuery(params, {
+    start: "activityStartDate",
+    end: "activityEndDate",
+  });
+}
+
+function buildBookmarkedPostingListQuery(
+  params: VolunteerPostingListParams = {},
+) {
+  return buildPostingQuery(params, {
+    start: "noticeStartDate",
+    end: "noticeEndDate",
+  });
 }
 
 function buildPostingListEndpoint(params?: VolunteerPostingListParams) {
@@ -88,6 +104,23 @@ function buildPostingListEndpoint(params?: VolunteerPostingListParams) {
 
 function buildPostingEndpoint(postingId: number) {
   return `${POSTING_ENDPOINT}/${postingId}`;
+}
+
+export function buildVolunteerPostingMapEndpoint(
+  params: VolunteerPostingMapParams,
+) {
+  const searchParams = new URLSearchParams();
+
+  setQueryParam(searchParams, "regionId", params.regionId);
+  setQueryParam(searchParams, "activityStartDate", params.activityStartDate);
+  setQueryParam(searchParams, "activityEndDate", params.activityEndDate);
+  setQueryParam(searchParams, "category", params.category);
+  setQueryParam(searchParams, "swLat", params.swLat);
+  setQueryParam(searchParams, "swLng", params.swLng);
+  setQueryParam(searchParams, "neLat", params.neLat);
+  setQueryParam(searchParams, "neLng", params.neLng);
+
+  return `${POSTING_ENDPOINT}/map?${searchParams.toString()}`;
 }
 
 function buildPostingMeetingsEndpoint(
@@ -118,10 +151,17 @@ export function getVolunteerPostings(params?: VolunteerPostingListParams) {
   );
 }
 
+export function getVolunteerPostingMap(params: VolunteerPostingMapParams) {
+  return fetchClient<VolunteerPostingMapItem[]>(
+    buildVolunteerPostingMapEndpoint(params),
+    publicOptions,
+  );
+}
+
 export function getBookmarkedVolunteerPostings(
   params: VolunteerPostingListParams = {},
 ) {
-  const query = buildPostingListQuery(params);
+  const query = buildBookmarkedPostingListQuery(params);
 
   return fetchClient<VolunteerPostingPage>(
     `${POSTING_ENDPOINT}/bookmarks?${query}`,

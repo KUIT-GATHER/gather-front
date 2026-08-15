@@ -60,13 +60,12 @@ export function getVolunteerPostingFilter(
   searchParams: URLSearchParams,
 ): VolunteerPostingFilter {
   const regionId = parsePositiveInteger(searchParams.get("regionId"));
-  const regionGroupId = parsePositiveInteger(searchParams.get("regionGroupId"));
-  const noticeStartDate = parseDate(searchParams.get("noticeStartDate"));
-  const noticeEndDate = parseDate(searchParams.get("noticeEndDate"));
+  const activityStartDate = parseDate(searchParams.get("activityStartDate"));
+  const activityEndDate = parseDate(searchParams.get("activityEndDate"));
   const category = parseCategory(searchParams.get("category"));
   const dateFilter =
-    noticeStartDate && noticeEndDate && noticeStartDate <= noticeEndDate
-      ? { noticeStartDate, noticeEndDate }
+    activityStartDate && activityEndDate && activityStartDate <= activityEndDate
+      ? { activityStartDate, activityEndDate }
       : undefined;
   const categoryFilter = category ? { category } : {};
 
@@ -74,12 +73,6 @@ export function getVolunteerPostingFilter(
     return dateFilter
       ? { regionId, ...dateFilter, ...categoryFilter }
       : { regionId, ...categoryFilter };
-  }
-
-  if (regionGroupId !== undefined) {
-    return dateFilter
-      ? { regionGroupId, ...dateFilter, ...categoryFilter }
-      : { regionGroupId, ...categoryFilter };
   }
 
   return dateFilter
@@ -100,10 +93,10 @@ export function toVolunteerPostingQueryParams(
   const keyword = searchParams.get("keyword")?.trim();
 
   const baseParams = {
-    ...(filter.noticeStartDate && filter.noticeEndDate
+    ...(filter.activityStartDate && filter.activityEndDate
       ? {
-          noticeStartDate: filter.noticeStartDate,
-          noticeEndDate: filter.noticeEndDate,
+          activityStartDate: filter.activityStartDate,
+          activityEndDate: filter.activityEndDate,
         }
       : {}),
     ...(filter.category ? { category: filter.category } : {}),
@@ -117,10 +110,6 @@ export function toVolunteerPostingQueryParams(
 
   if (filter.regionId !== undefined) {
     return { ...baseParams, regionId: filter.regionId };
-  }
-
-  if (filter.regionGroupId !== undefined) {
-    return { ...baseParams, regionGroupId: filter.regionGroupId };
   }
 
   return baseParams;
@@ -138,17 +127,16 @@ export function updateVolunteerPostingSearchParams(
     "regionGroupId",
     "noticeStartDate",
     "noticeEndDate",
+    "activityStartDate",
+    "activityEndDate",
     "category",
   ].forEach((key) => next.delete(key));
 
   if (filter.regionId !== undefined)
     next.set("regionId", String(filter.regionId));
-  if (filter.regionGroupId !== undefined) {
-    next.set("regionGroupId", String(filter.regionGroupId));
-  }
-  if (filter.noticeStartDate && filter.noticeEndDate) {
-    next.set("noticeStartDate", filter.noticeStartDate);
-    next.set("noticeEndDate", filter.noticeEndDate);
+  if (filter.activityStartDate && filter.activityEndDate) {
+    next.set("activityStartDate", filter.activityStartDate);
+    next.set("activityEndDate", filter.activityEndDate);
   }
   if (filter.category) next.set("category", filter.category);
 

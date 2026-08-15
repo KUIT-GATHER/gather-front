@@ -167,36 +167,52 @@ export type VolunteerPostingParticipationApplyRequest = {
   participationEndDate: string;
 };
 
-type VolunteerPostingRegionFilter =
-  | {
-      regionId?: never;
-      regionGroupId?: never;
-    }
-  | {
-      regionId: number;
-      regionGroupId?: never;
-    }
-  | {
-      regionId?: never;
-      regionGroupId: number;
-    };
-
 type VolunteerPostingBaseParams = {
   page?: number;
   size?: number;
   sort?: string[];
   status?: VolunteerPostingStatus;
-  noticeStartDate?: string;
-  noticeEndDate?: string;
+  activityStartDate?: string;
+  activityEndDate?: string;
   keyword?: string;
   category?: PostingCategory;
 };
 
-export type VolunteerPostingListParams = VolunteerPostingBaseParams &
-  VolunteerPostingRegionFilter;
+export type VolunteerPostingListParams = VolunteerPostingBaseParams & {
+  regionId?: number;
+};
 
 export type VolunteerPostingInfiniteParams = Omit<
   VolunteerPostingBaseParams,
   "page"
-> &
-  VolunteerPostingRegionFilter;
+> & {
+  regionId?: number;
+};
+
+export type VolunteerPostingMapBounds = {
+  swLat: number;
+  swLng: number;
+  neLat: number;
+  neLng: number;
+};
+
+export type VolunteerPostingMapParams = VolunteerPostingMapBounds & {
+  regionId?: number;
+  activityStartDate?: string;
+  activityEndDate?: string;
+  category?: PostingCategory;
+};
+
+export type VolunteerPostingMapItem = {
+  id: number;
+  title: string;
+  organizationName: string | null;
+  regionId: number | null;
+  regionName: string | null;
+  activityStartAt: string | null;
+  activityEndAt: string | null;
+  applyDeadlineAt: string | null;
+  category: PostingCategory;
+  status: VolunteerPostingStatus;
+  locations: VolunteerPostingLocation[];
+};
