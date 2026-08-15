@@ -9,6 +9,7 @@ import type {
   VolunteerPostingMeetingPage,
   VolunteerPostingPage,
   VolunteerPostingParticipationResponse,
+  VolunteerPostingParticipationApplyRequest,
   PostingListPage,
 } from "@/features/volunteer/types/volunteer.types";
 
@@ -171,11 +172,15 @@ export function removeVolunteerPostingBookmark(postingId: number) {
   );
 }
 
-export function applyVolunteerPostingParticipation(postingId: number) {
+export function applyVolunteerPostingParticipation(
+  postingId: number,
+  request: VolunteerPostingParticipationApplyRequest,
+) {
   return fetchClient<VolunteerPostingParticipationResponse>(
     `${POSTING_ENDPOINT}/${postingId}/participations`,
     {
       method: "POST",
+      body: JSON.stringify(request),
     },
   );
 }

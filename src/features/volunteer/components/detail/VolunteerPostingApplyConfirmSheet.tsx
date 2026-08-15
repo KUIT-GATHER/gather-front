@@ -6,25 +6,26 @@ import {
   getRecruitmentDDay,
 } from "@/features/volunteer/lib/volunteerPostingFormatters";
 import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
+import Button from "@/shared/ui/Button";
 
 import { VolunteerPostingBottomSheet } from "./VolunteerPostingBottomSheet";
 
 type VolunteerPostingApplyConfirmSheetProps = {
   open: boolean;
   posting: VolunteerPosting;
-  isPending?: boolean;
   errorMessage?: string;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  onOpenExternalApplication: () => void;
+  onRegisterSchedule: () => void;
 };
 
 export function VolunteerPostingApplyConfirmSheet({
   open,
   posting,
-  isPending = false,
   errorMessage,
   onOpenChange,
-  onConfirm,
+  onOpenExternalApplication,
+  onRegisterSchedule,
 }: VolunteerPostingApplyConfirmSheetProps) {
   const imageSrc = getVolunteerPostingImage(posting.category, posting.id);
   const location = formatVolunteerLocation(posting);
@@ -38,19 +39,6 @@ export function VolunteerPostingApplyConfirmSheet({
       onOpenChange={onOpenChange}
       title="신청 확인"
       className="rounded-t-[40px] bg-bg"
-      secondaryAction={{
-        label: "취소",
-        onClick: () => onOpenChange(false),
-        disabled: isPending,
-        variant: "primaryOutline",
-        className: "border-transparent bg-point-green/25 text-text",
-      }}
-      primaryAction={{
-        label: "신청",
-        pendingLabel: "신청 중",
-        onClick: onConfirm,
-        isPending,
-      }}
     >
       <div className="rounded-xl border border-[#C5C5C5] bg-white px-[11px] py-[15px]">
         <div className="flex items-stretch gap-3">
@@ -89,11 +77,52 @@ export function VolunteerPostingApplyConfirmSheet({
         </div>
       </div>
 
-      <p className="mt-2 text-[13px] leading-[21.125px] font-normal text-text-gray-400">
-        신청 버튼 클릭 시 신청 상태로 변경 후 외부 신청 링크로 이동합니다.
-        <br />
-        신청하지 않은 봉사는 공고 혹은 마이페이지에서 신청 취소해주세요.
-      </p>
+      <div className="mt-2">
+        <p className="text-[13px] leading-[21.125px] font-normal text-text-gray-400">
+          신청 버튼 클릭 시 외부 신청 링크가 새 탭으로 열립니다.
+          <br />
+          외부 신청 완료 후 Gather에서 신청 일정을 등록해 주세요.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-5">
+          <Button
+            type="button"
+            fullWidth
+            variant="primaryOutline"
+            className="border-transparent bg-point-green/25 text-text"
+            onClick={() => onOpenChange(false)}
+          >
+            취소
+          </Button>
+          <Button
+            type="button"
+            fullWidth
+            disabled={!posting.applicationUrl}
+            onClick={onOpenExternalApplication}
+          >
+            신청
+          </Button>
+        </div>
+        {!posting.applicationUrl ? (
+          <p className="mt-2 text-body-14 text-point-red">
+            외부 신청 페이지를 열 수 없는 공고예요.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="mt-7 border-t border-stroke pt-5">
+        <p className="text-body-14 text-text-gray-400">
+          외부 신청을 완료하셨나요?
+        </p>
+        <Button
+          type="button"
+          fullWidth
+          variant="primaryOutline"
+          className="mt-3 h-12 bg-white"
+          onClick={onRegisterSchedule}
+        >
+          신청 일정 등록하기
+        </Button>
+      </div>
 
       {errorMessage ? (
         <p role="alert" className="mt-3 text-body-14 text-point-red">

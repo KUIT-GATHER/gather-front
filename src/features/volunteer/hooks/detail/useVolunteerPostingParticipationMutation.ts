@@ -8,79 +8,18 @@ import {
 } from "@/features/volunteer/api/volunteer.api";
 import { myPageKeys } from "@/features/my/api/myPage.queries";
 import { volunteerPostingKeys } from "@/features/volunteer/api/volunteer.queries";
-import type {
-  VolunteerPosting,
-  VolunteerPostingParticipationAction,
-  VolunteerPostingParticipationStatus,
-} from "@/features/volunteer/types/volunteer.types";
+import type { VolunteerPostingParticipationApplyRequest } from "@/features/volunteer/types/volunteer.types";
 
-function isActivityEnded(posting: VolunteerPosting) {
-  const endDate = posting.actEndDate ?? posting.actStartDate;
-
-  if (!endDate) {
-    return false;
-  }
-
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endDate);
-
-  if (!match) {
-    return false;
-  }
-
-  const [, year, month, day] = match;
-  const activityEndDate = new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-  );
-
-  if (
-    activityEndDate.getFullYear() !== Number(year) ||
-    activityEndDate.getMonth() !== Number(month) - 1 ||
-    activityEndDate.getDate() !== Number(day)
-  ) {
-    return false;
-  }
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  return activityEndDate.getTime() <= today.getTime();
-}
-
-function getParticipationAction(
-  participationStatus: VolunteerPostingParticipationStatus | null,
-  activityEnded: boolean,
-): VolunteerPostingParticipationAction {
-  switch (participationStatus) {
-    case "APPLIED":
-    case "CONFIRMED":
-      return activityEnded ? "COMPLETE" : "CANCEL";
-    case "COMPLETED":
-    case "REVIEWED":
-      return "NONE";
-    default:
-      return "APPLY";
-  }
-}
-
-function updateVolunteerPostingParticipationStatus(
-  posting: VolunteerPosting | undefined,
+function invalidateVolunteerParticipationData(
+  queryClient: ReturnType<typeof useQueryClient>,
   postingId: number,
-  participationStatus: VolunteerPostingParticipationStatus | null,
 ) {
-  if (!posting || posting.id !== postingId) {
-    return posting;
-  }
-
-  return {
-    ...posting,
-    participationStatus,
-    participationAction: getParticipationAction(
-      participationStatus,
-      isActivityEnded(posting),
-    ),
-  };
+  void queryClient.invalidateQueries({
+    queryKey: volunteerPostingKeys.detail(postingId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: myPageKeys.activitiesAll(),
+  });
 }
 
 export function useApplyVolunteerPostingParticipationMutation(
@@ -90,24 +29,10 @@ export function useApplyVolunteerPostingParticipationMutation(
 
   return useMutation({
     mutationKey: volunteerPostingKeys.participation(postingId),
-    mutationFn: () => applyVolunteerPostingParticipation(postingId),
-    onSuccess: (participation) => {
-      queryClient.setQueryData<VolunteerPosting>(
-        volunteerPostingKeys.detailForViewer(postingId, "member"),
-        (posting) =>
-          updateVolunteerPostingParticipationStatus(
-            posting,
-            postingId,
-            participation.status,
-          ),
-      );
-      void queryClient.invalidateQueries({
-        queryKey: volunteerPostingKeys.detail(postingId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: myPageKeys.activitiesAll(),
-      });
-    },
+    mutationFn: (request: VolunteerPostingParticipationApplyRequest) =>
+      applyVolunteerPostingParticipation(postingId, request),
+    onSuccess: () =>
+      invalidateVolunteerParticipationData(queryClient, postingId),
   });
 }
 
@@ -119,19 +44,8 @@ export function useCancelVolunteerPostingParticipationMutation(
   return useMutation({
     mutationKey: volunteerPostingKeys.participation(postingId),
     mutationFn: () => cancelVolunteerPostingParticipation(postingId),
-    onSuccess: () => {
-      queryClient.setQueryData<VolunteerPosting>(
-        volunteerPostingKeys.detailForViewer(postingId, "member"),
-        (posting) =>
-          updateVolunteerPostingParticipationStatus(posting, postingId, null),
-      );
-      void queryClient.invalidateQueries({
-        queryKey: volunteerPostingKeys.detail(postingId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: myPageKeys.activitiesAll(),
-      });
-    },
+    onSuccess: () =>
+      invalidateVolunteerParticipationData(queryClient, postingId),
   });
 }
 
@@ -144,6 +58,7 @@ export function useCompleteVolunteerPostingParticipationMutation(
     mutationKey: volunteerPostingKeys.participationComplete(postingId),
     mutationFn: () => completeVolunteerPostingParticipation(postingId),
     onSuccess: () => {
+      invalidateVolunteerParticipationData(queryClient, postingId);
       void queryClient.invalidateQueries({
         queryKey: myPageKeys.badges(),
       });

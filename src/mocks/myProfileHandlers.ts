@@ -1,16 +1,22 @@
 import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
+import {
+  applyMockAutomaticConfirmation,
+  mockMeetingRecruitsByPostId,
+  mockRecruitParticipantsByPostId,
+} from "./data/mockMeetingRecruits";
 import { getMockParticipations } from "./data/mockParticipations";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
-import { mockPostings } from "./postingHandlers";
-import { getCreatedMockMeetings } from "./teamHandlers";
+import {
+  getMockPostingParticipationAction,
+  mockPostings,
+} from "./postingHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
 import type {
   MyActivityRecord,
-  MyMeetingActivityStatus,
   MyPageActivity,
 } from "@/features/my/types/myActivity.types";
 
@@ -96,116 +102,6 @@ const mockActivityRecords: MyActivityRecord[] = [
     actPlace: "광진구 주민센터",
     timeCertifiable: false,
     recognizedMinutes: null,
-  },
-];
-
-const mockCalendarActivities: MyPageActivity[] = [
-  {
-    activityType: "VOLUNTEER",
-    participationId: 201,
-    postingId: 1,
-    meetingId: null,
-    title: "한강 쓰레기 줍기",
-    actStartDate: "2026-08-20",
-    actEndDate: null,
-    actStartTime: "11:00",
-    actEndTime: "12:00",
-    actPlace: "서울시 광진구",
-    regionName: null,
-    status: "APPLIED",
-  },
-  {
-    activityType: "VOLUNTEER",
-    participationId: 202,
-    postingId: 2,
-    meetingId: null,
-    title: "도서관 책 정리 봉사",
-    actStartDate: "2026-08-21",
-    actEndDate: "2026-08-22",
-    actStartTime: "13:00",
-    actEndTime: null,
-    actPlace: null,
-    regionName: null,
-    status: "CONFIRMED",
-  },
-  {
-    activityType: "VOLUNTEER",
-    participationId: 203,
-    postingId: 3,
-    meetingId: null,
-    title: "공원 나무 심기",
-    actStartDate: "2026-07-15",
-    actEndDate: "2026-07-15",
-    actStartTime: null,
-    actEndTime: "15:00",
-    actPlace: "서울숲",
-    regionName: null,
-    status: "COMPLETED",
-  },
-  {
-    activityType: "VOLUNTEER",
-    participationId: 204,
-    postingId: 4,
-    meetingId: null,
-    title: "지역 아동 행사 지원",
-    actStartDate: "2026-07-03",
-    actEndDate: "2026-07-03",
-    actStartTime: null,
-    actEndTime: null,
-    actPlace: "광진구 주민센터",
-    regionName: null,
-    status: "REVIEWED",
-  },
-  {
-    activityType: "MEETING",
-    participationId: null,
-    postingId: null,
-    meetingId: 31,
-    title: "한강 플로깅 모임",
-    actStartDate: "2026-08-20",
-    actEndDate: "2026-08-22",
-    actStartTime: "09:30",
-    actEndTime: "12:00",
-    actPlace: null,
-    regionName: "서울시 영등포구",
-    volunteerPostingId: 1,
-    status: null,
-    meetingStatus: "RECRUITING",
-    postingParticipationStatus: "APPLIED",
-  },
-  {
-    activityType: "MEETING",
-    participationId: null,
-    postingId: null,
-    meetingId: 32,
-    title: "동네 도서관 모임",
-    actStartDate: "2026-08-24",
-    actEndDate: null,
-    actStartTime: null,
-    actEndTime: null,
-    actPlace: null,
-    regionName: "서울시 마포구",
-    volunteerPostingId: null,
-    status: null,
-    meetingStatus: "CLOSED",
-    postingParticipationStatus: null,
-  },
-  {
-    activityType: "MEETING",
-    participationId: null,
-    postingId: null,
-    meetingId: 33,
-    title: "도심 하천 정화 모임",
-    actStartDate: "2026-07-12",
-    actEndDate: "2026-07-13",
-    actStartTime: "10:00",
-    actEndTime: "13:00",
-    actPlace: null,
-    regionName: "서울시 마포구",
-    volunteerPostingId: 3,
-    status: null,
-    meetingStatus: "COMPLETED",
-    postingParticipationStatus: "COMPLETED",
   },
 ];
 
@@ -299,65 +195,25 @@ export const myProfileHandlers = [
     const monthStart = `${yearMonth}-01`;
     const monthEnd = `${yearMonth}-${new Date(year, month, 0).getDate()}`;
     const participations = getMockParticipations(userId);
-    const calendarActivities = mockCalendarActivities
-      .filter((activity) => activity.activityType === "MEETING")
-      .map((activity) => {
-        if (
-          activity.activityType !== "MEETING" ||
-          activity.volunteerPostingId === null
-        ) {
-          return activity;
-        }
-
-        const participation = participations.find(
-          (item) => item.postingId === activity.volunteerPostingId,
-        );
-
-        return {
-          ...activity,
-          postingParticipationStatus: participation?.status ?? null,
-        };
-      });
-    const createdMeetingActivities: MyPageActivity[] = getCreatedMockMeetings(
-      userId,
-    ).flatMap((meeting) => {
-      if (
-        meeting.volunteerPostingId === null ||
-        meeting.activityStartAt === null
-      ) {
-        return [];
-      }
-
-      const participation = participations.find(
-        (item) => item.postingId === meeting.volunteerPostingId,
-      );
-      return [
-        {
-          activityType: "MEETING",
-          participationId: null,
-          postingId: null,
-          meetingId: meeting.meetingId,
-          title: meeting.name,
-          actStartDate: meeting.activityStartAt.slice(0, 10),
-          actEndDate: meeting.activityEndAt?.slice(0, 10) ?? null,
-          actStartTime: meeting.activityStartAt.slice(11, 16),
-          actEndTime: meeting.activityEndAt?.slice(11, 16) ?? null,
-          actPlace: null,
-          regionName: meeting.regionName || null,
-          volunteerPostingId: meeting.volunteerPostingId,
-          status: null,
-          meetingStatus: meeting.status as MyMeetingActivityStatus,
-          postingParticipationStatus: participation?.status ?? null,
-        },
-      ];
-    });
     const participationActivities: MyPageActivity[] = participations.flatMap(
       (participation) => {
+        if (
+          participation.status !== "APPLIED" &&
+          participation.status !== "CONFIRMED"
+        ) {
+          return [];
+        }
+
         const posting = mockPostings.find(
           (item) => item.id === participation.postingId,
         );
 
         if (!posting) return [];
+
+        const participationAction =
+          getMockPostingParticipationAction(posting.id, userId) === "CANCEL"
+            ? "CANCEL"
+            : "NONE";
 
         return [
           {
@@ -366,21 +222,63 @@ export const myProfileHandlers = [
             postingId: posting.id,
             meetingId: null,
             title: posting.title,
-            actStartDate: posting.actStartDate,
-            actEndDate: posting.actEndDate ?? null,
+            actStartDate:
+              participation.participationStartDate ?? posting.actStartDate,
+            actEndDate:
+              participation.participationEndDate ??
+              posting.actEndDate ??
+              posting.actStartDate,
             actStartTime: formatMockTime(posting.actStartTime),
             actEndTime: formatMockTime(posting.actEndTime),
             actPlace: posting.actPlace ?? null,
             regionName: null,
             status: participation.status,
+            participationAction,
           },
         ];
       },
     );
+    const meetingRecruitActivities: MyPageActivity[] = [
+      ...mockMeetingRecruitsByPostId.values(),
+    ].flatMap((recruit) => {
+      applyMockAutomaticConfirmation(recruit);
+      const participant = (
+        mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
+      ).find((item) => item.userId === userId);
+
+      if (
+        !participant ||
+        (participant.participationStatus !== "APPLIED" &&
+          participant.participationStatus !== "CONFIRMED")
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          activityType: "MEETING_RECRUIT",
+          participationId: participant.participationId,
+          meetingId: recruit.meetingId,
+          postId: recruit.postId,
+          title: recruit.title,
+          actStartDate: recruit.activityStartAt.slice(0, 10),
+          actEndDate: recruit.activityEndAt.slice(0, 10),
+          actStartTime: recruit.activityStartAt.slice(11, 16),
+          actEndTime: recruit.activityEndAt.slice(11, 16),
+          actPlace: recruit.place,
+          regionName: recruit.regionName,
+          status: participant.participationStatus,
+          participationAction:
+            participant.participationStatus === "APPLIED" &&
+            recruit.applicationOpen
+              ? "CANCEL"
+              : "NONE",
+        },
+      ];
+    });
     const activities = [
-      ...calendarActivities,
-      ...createdMeetingActivities,
       ...participationActivities,
+      ...meetingRecruitActivities,
     ].filter((activity) => {
       const effectiveEndDate = activity.actEndDate ?? activity.actStartDate;
 

@@ -23,12 +23,14 @@ export function getVolunteerPostingApplyErrorMessage(error: unknown) {
   }
 
   switch (error.code) {
+    case API_ERROR_CODE.VALIDATION_ERROR:
+      return "선택한 봉사 일정을 다시 확인해 주세요.";
     case API_ERROR_CODE.PARTICIPATION_DUPLICATE:
       return "이미 신청한 봉사예요. 하단에서 취소할 수 있어요.";
     case API_ERROR_CODE.POSTING_CLOSED:
       return "마감된 봉사 공고라 신청할 수 없어요.";
     case API_ERROR_CODE.POSTING_APPLICATION_UNAVAILABLE:
-      return "1365 신청 정보가 연동되지 않아 신청할 수 없어요.";
+      return "외부 신청 정보가 연동되지 않아 신청할 수 없어요.";
     case API_ERROR_CODE.POSTING_NOT_FOUND:
       return "봉사 공고를 찾을 수 없어요.";
     default:

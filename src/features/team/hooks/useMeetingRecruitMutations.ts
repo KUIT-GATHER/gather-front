@@ -85,6 +85,9 @@ export function useToggleMeetingRecruitParticipationMutation(
       void queryClient.invalidateQueries({
         queryKey: teamKeys.myActivity(meetingId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: myPageKeys.activitiesAll(),
+      });
     },
   });
 }

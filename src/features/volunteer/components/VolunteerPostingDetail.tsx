@@ -17,6 +17,7 @@ import LoadingState from "@/shared/ui/LoadingState";
 
 import { VolunteerPostingApplyBar } from "./detail/VolunteerPostingApplyBar";
 import { VolunteerPostingApplyConfirmSheet } from "./detail/VolunteerPostingApplyConfirmSheet";
+import { VolunteerPostingScheduleSheet } from "./detail/VolunteerPostingScheduleSheet";
 import { VolunteerPostingCompleteModal } from "./detail/VolunteerPostingCompleteModal";
 import { VolunteerPostingCompleteSuccessDialog } from "./detail/VolunteerPostingCompleteSuccessDialog";
 import { VolunteerPostingConditionCard } from "./detail/VolunteerPostingConditionCard";
@@ -215,6 +216,14 @@ export function VolunteerPostingDetail({
         posting={posting}
         {...applicationFlow.applyConfirmSheetProps}
       />
+
+      {applicationFlow.scheduleSheetProps.open ? (
+        <VolunteerPostingScheduleSheet
+          key={posting.id}
+          posting={posting}
+          {...applicationFlow.scheduleSheetProps}
+        />
+      ) : null}
 
       <VolunteerPostingCompleteModal {...completeFlow.completeModalProps} />
 

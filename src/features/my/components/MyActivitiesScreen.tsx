@@ -19,6 +19,7 @@ import {
   useMyActivityRecordsQuery,
   useMyActivitySummaryQuery,
 } from "@/features/my/hooks/useMyActivitiesQuery";
+import { formatMyActivityDateRange } from "@/features/my/lib/myActivityDate";
 import type { MyActivityRecord } from "@/features/my/types/myActivity.types";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -71,24 +72,20 @@ const ACTIVITY_BORDER: Record<PostingCategory, string> = {
   OVERSEAS: "border-[#a6ccf4]",
 };
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
-
-function formatDate(date: string | null) {
-  if (!date) return "일시 미정";
-  const parsed = new Date(`${date}T00:00:00`);
-  return `${date.replaceAll("-", ".")} (${WEEKDAYS[parsed.getDay()]})`;
-}
-
 function formatRecordMetadata({
   actStartDate,
+  actEndDate,
   actPlace,
 }: {
   actStartDate: string | null;
+  actEndDate: string | null;
   actPlace: string | null;
 }) {
-  return [formatDate(actStartDate), actPlace?.trim() || "장소 미정"].join(
-    " | ",
-  );
+  const date = actStartDate
+    ? formatMyActivityDateRange(actStartDate, actEndDate)
+    : "일시 미정";
+
+  return [date, actPlace?.trim() || "장소 미정"].join(" | ");
 }
 
 function formatMinutes(minutes: number) {
