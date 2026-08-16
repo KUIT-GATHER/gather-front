@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { shouldLaunchSmsVerificationApp } from "@/features/auth/lib/phoneVerification";
 
-describe("BasicInfoStep SMS navigation", () => {
+describe("phone verification SMS app decision", () => {
   it("MSW 개발환경에서는 SMS 앱을 실행하지 않는다", () => {
     expect(shouldLaunchSmsVerificationApp(true, true)).toBe(false);
   });

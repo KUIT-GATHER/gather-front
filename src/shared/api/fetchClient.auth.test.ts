@@ -155,4 +155,110 @@ describe("fetchClient 인증 만료 처리", () => {
 
     expect(reissueCalls).toBe(0);
   });
+
+  it("reissue가 실패하면 세션을 정리하고 원 요청을 재시도하지 않는다", async () => {
+    let protectedCalls = 0;
+    let reissueCalls = 0;
+
+    server.use(
+      http.get("*/api/v1/test/reissue-failure", () => {
+        protectedCalls += 1;
+        return expiredTokenResponse();
+      }),
+      http.post("*/api/v1/auth/reissue", () => {
+        reissueCalls += 1;
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "UNAUTHORIZED",
+              message: "Refresh Token이 유효하지 않습니다.",
+            },
+          },
+          { status: 401 },
+        );
+      }),
+    );
+
+    useAuthStore.setState({
+      accessToken: "expired-access-token",
+      isAuthenticated: true,
+    });
+
+    await expect(
+      fetchClient("/api/v1/test/reissue-failure"),
+    ).rejects.toMatchObject({ code: "EXPIRED_TOKEN" });
+
+    expect(protectedCalls).toBe(1);
+    expect(reissueCalls).toBe(1);
+    expect(useAuthStore.getState()).toMatchObject({
+      accessToken: null,
+      isAuthenticated: false,
+    });
+  });
+
+  it("refresh 후 재시도 요청이 다시 401이어도 재issue하지 않는다", async () => {
+    let protectedCalls = 0;
+    let reissueCalls = 0;
+
+    server.use(
+      http.get("*/api/v1/test/retry-failure", () => {
+        protectedCalls += 1;
+        return expiredTokenResponse();
+      }),
+      http.post("*/api/v1/auth/reissue", () => {
+        reissueCalls += 1;
+        return HttpResponse.json({
+          success: true,
+          data: { accessToken: "fresh-access-token", tokenType: "Bearer" },
+          error: null,
+        });
+      }),
+    );
+
+    useAuthStore.setState({
+      accessToken: "expired-access-token",
+      isAuthenticated: true,
+    });
+
+    await expect(
+      fetchClient("/api/v1/test/retry-failure"),
+    ).rejects.toMatchObject({ code: "EXPIRED_TOKEN" });
+
+    expect(protectedCalls).toBe(2);
+    expect(reissueCalls).toBe(1);
+  });
+
+  it.each(["UNAUTHORIZED", "INVALID_TOKEN", "REVOKED_TOKEN"])(
+    "%s 응답이면 인증 세션을 정리한다",
+    async (code) => {
+      server.use(
+        http.get("*/api/v1/test/session-clear", () =>
+          HttpResponse.json(
+            {
+              success: false,
+              data: null,
+              error: { code, message: "인증이 필요합니다." },
+            },
+            { status: 401 },
+          ),
+        ),
+      );
+
+      useAuthStore.setState({
+        accessToken: "access-token",
+        isAuthenticated: true,
+      });
+
+      await expect(
+        fetchClient("/api/v1/test/session-clear"),
+      ).rejects.toBeInstanceOf(ApiError);
+
+      expect(useAuthStore.getState()).toMatchObject({
+        accessToken: null,
+        isAuthenticated: false,
+      });
+    },
+  );
 });
