@@ -52,9 +52,11 @@ describe("TeamCreateScreen integration", () => {
   });
 
   it("자유 모임의 핵심 입력을 연결해 생성 요청을 한 번 보내고 완료 화면으로 이동한다", async () => {
+    let createCalls = 0;
     let requestBody: Record<string, unknown> | undefined;
     server.use(
       http.post("*/api/v1/meetings", async ({ request }) => {
+        createCalls += 1;
         requestBody = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json({
           success: true,
@@ -89,6 +91,7 @@ describe("TeamCreateScreen integration", () => {
     await user.click(screen.getByRole("button", { name: "적용하기" }));
     await user.click(screen.getByRole("button", { name: "모임 만들기 완료" }));
 
+    expect(createCalls).toBe(1);
     expect(requestBody).toMatchObject({
       name: "환경 모임",
       description: "함께 활동해요",

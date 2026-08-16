@@ -38,6 +38,11 @@ describe("getNotificationTargetPath", () => {
       "/my/badges",
     ],
     [
+      "MY_PAGE",
+      notification({ targetType: "MY_PAGE", type: "VOLUNTEER_SCHEDULE" }),
+      "/my",
+    ],
+    [
       "POST",
       notification({ targetType: "POST", targetId: 56, targetMeetingId: 78 }),
       "/teams/78/posts/56",

@@ -35,7 +35,7 @@ function createNotification(
 function createPage(content: Notification[], page: number): NotificationPage {
   return {
     content,
-    totalElements: content.length + 1,
+    totalElements: 3,
     totalPages: 2,
     page,
     size: 2,
@@ -78,7 +78,7 @@ describe("notification cache transforms", () => {
     expect(
       result?.pages[0]?.content.map((notification) => notification.id),
     ).toEqual([1]);
-    expect(result?.pages.map((page) => page.totalElements)).toEqual([2, 1]);
+    expect(result?.pages.map((page) => page.totalElements)).toEqual([2, 2]);
     expect(result?.pages.every((page) => page.totalPages === 1)).toBe(true);
   });
 
