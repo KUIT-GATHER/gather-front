@@ -9,8 +9,7 @@ export default defineConfig([
   globalIgnores([
     "dist",
     "coverage",
-    "playwright-report",
-    "test-results",
+    "artifacts",
     "public/mockServiceWorker.js",
   ]),
   {

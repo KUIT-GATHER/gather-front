@@ -3,8 +3,8 @@ import type { Page } from "@playwright/test";
 export async function loginWithDefaultMockUser(page: Page) {
   await page.getByRole("button", { name: "이메일로 시작하기" }).click();
 
-  await page.getByRole("textbox", { name: "이메일" }).fill("test@example.com");
-  await page.getByRole("textbox", { name: "비밀번호" }).fill("test1234");
+  await page.getByLabel("이메일", { exact: true }).fill("test@example.com");
+  await page.getByLabel("비밀번호", { exact: true }).fill("test1234");
 
   const loginResponse = page.waitForResponse(
     (response) =>

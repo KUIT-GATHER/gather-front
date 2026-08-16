@@ -9,7 +9,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [["list"], ["html", { open: "never" }]],
+  outputDir: "artifacts/playwright/results",
+  reporter: [
+    ["list"],
+    ["html", { outputFolder: "artifacts/playwright/report", open: "never" }],
+  ],
   use: {
     baseURL,
     trace: "on-first-retry",
@@ -28,7 +32,7 @@ export default defineConfig({
     command:
       "npm run dev -- --mode test --host 127.0.0.1 --port 4173 --strictPort",
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: {
       VITE_ENABLE_MSW: "true",
     },
