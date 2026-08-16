@@ -1,27 +1,21 @@
 import type {
-  MyDisplayablePageActivity,
-  MyLinkedMeetingActivity,
-  MyPageActivity,
+  MyMeetingRecruitActivity,
   MyVolunteerActivityStatus,
 } from "@/features/my/types/myActivity.types";
 
-const meetingActivityLabels: Record<MyVolunteerActivityStatus, string> = {
+const activityStatusLabels: Record<MyVolunteerActivityStatus, string> = {
   APPLIED: "신청중",
   CONFIRMED: "신청중",
   COMPLETED: "봉사 완료",
   REVIEWED: "봉사 완료",
 };
 
-export function isDisplayableMyPageActivity(
-  activity: MyPageActivity,
-): activity is MyDisplayablePageActivity {
-  return (
-    activity.activityType === "VOLUNTEER" ||
-    (activity.volunteerPostingId !== null &&
-      activity.postingParticipationStatus !== null)
-  );
+export function getMyActivityStatusLabel(status: MyVolunteerActivityStatus) {
+  return activityStatusLabels[status];
 }
 
-export function getMeetingActivityLabel(activity: MyLinkedMeetingActivity) {
-  return meetingActivityLabels[activity.postingParticipationStatus];
+export function canCancelMeetingRecruitActivity(
+  activity: MyMeetingRecruitActivity,
+) {
+  return activity.participationAction === "CANCEL";
 }

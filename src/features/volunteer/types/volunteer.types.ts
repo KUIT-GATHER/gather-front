@@ -2,6 +2,7 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 import type { MeetingStatus } from "@/features/team/types/team.types";
 
 export type VolunteerPostingStatus = "RECRUITING" | "CLOSED" | "COMPLETED";
+export type VolunteerPostingSource = "API_1365" | "VMS_CRAWL";
 
 export type VolunteerPostingLocation = {
   locationSeq: number;
@@ -49,8 +50,12 @@ export type VolunteerPosting = {
 
   createdAt: string | null;
   updatedAt: string | null;
+  source: VolunteerPostingSource;
+  applicationUrl: string | null;
   bookmarked: boolean;
   participationStatus: VolunteerPostingParticipationStatus | null;
+  participationStartDate: string | null;
+  participationEndDate: string | null;
   participationAction: VolunteerPostingParticipationAction;
 };
 
@@ -153,39 +158,61 @@ export type VolunteerPostingParticipationAction =
 export type VolunteerPostingParticipationResponse = {
   participationId: number;
   status: VolunteerPostingParticipationStatus;
-  applicationUrl: string;
+  participationStartDate: string;
+  participationEndDate: string;
 };
 
-type VolunteerPostingRegionFilter =
-  | {
-      regionId?: never;
-      regionGroupId?: never;
-    }
-  | {
-      regionId: number;
-      regionGroupId?: never;
-    }
-  | {
-      regionId?: never;
-      regionGroupId: number;
-    };
+export type VolunteerPostingParticipationApplyRequest = {
+  participationStartDate: string;
+  participationEndDate: string;
+};
 
 type VolunteerPostingBaseParams = {
   page?: number;
   size?: number;
   sort?: string[];
   status?: VolunteerPostingStatus;
-  noticeStartDate?: string;
-  noticeEndDate?: string;
+  activityStartDate?: string;
+  activityEndDate?: string;
   keyword?: string;
   category?: PostingCategory;
 };
 
-export type VolunteerPostingListParams = VolunteerPostingBaseParams &
-  VolunteerPostingRegionFilter;
+export type VolunteerPostingListParams = VolunteerPostingBaseParams & {
+  regionId?: number;
+};
 
 export type VolunteerPostingInfiniteParams = Omit<
   VolunteerPostingBaseParams,
   "page"
-> &
-  VolunteerPostingRegionFilter;
+> & {
+  regionId?: number;
+};
+
+export type VolunteerPostingMapBounds = {
+  swLat: number;
+  swLng: number;
+  neLat: number;
+  neLng: number;
+};
+
+export type VolunteerPostingMapParams = VolunteerPostingMapBounds & {
+  regionId?: number;
+  activityStartDate?: string;
+  activityEndDate?: string;
+  category?: PostingCategory;
+};
+
+export type VolunteerPostingMapItem = {
+  id: number;
+  title: string;
+  organizationName: string | null;
+  regionId: number | null;
+  regionName: string | null;
+  activityStartAt: string | null;
+  activityEndAt: string | null;
+  applyDeadlineAt: string | null;
+  category: PostingCategory;
+  status: VolunteerPostingStatus;
+  locations: VolunteerPostingLocation[];
+};

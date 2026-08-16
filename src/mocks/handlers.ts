@@ -1,5 +1,6 @@
 import { HttpResponse, http } from "msw";
 
+import { getGatherApiCatchAllPattern } from "./apiScope";
 import { postingHandlers } from "./postingHandlers";
 import { authHandlers } from "./authHandlers";
 import { notificationHandlers } from "./notificationHandlers";
@@ -18,7 +19,7 @@ export const handlers = [
   ...teamHandlers,
   ...myProfileHandlers,
   ...badgeHandlers,
-  http.all("*/api/*", ({ request }) => {
+  http.all(getGatherApiCatchAllPattern(), ({ request }) => {
     console.error(
       `[MSW] Unhandled API request: ${request.method} ${request.url}`,
     );
