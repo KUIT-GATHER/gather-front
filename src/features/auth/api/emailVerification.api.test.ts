@@ -28,7 +28,6 @@ async function createVerifiedPhone(phoneNumber: string) {
   const response = await startPhoneVerification({ phoneNumber });
 
   await confirmPhoneVerification(response.verificationId);
-  await confirmPhoneVerification(response.verificationId);
 
   return response.verificationId;
 }
