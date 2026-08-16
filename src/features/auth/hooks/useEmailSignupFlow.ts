@@ -16,6 +16,7 @@ import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { uploadProfileImage } from "@/features/profile/lib/profileImageUpload";
 import type { LegalDocumentType } from "@/features/legal";
+import type { EmailVerificationProof } from "@/features/auth/types/auth.types";
 import {
   emailSignupDefaultValues,
   signupEmailSchema,
@@ -83,7 +84,8 @@ export function useEmailSignupFlow() {
   const [phoneVerificationId, setPhoneVerificationId] = useState<string | null>(
     null,
   );
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [emailVerificationProof, setEmailVerificationProof] =
+    useState<EmailVerificationProof | null>(null);
   const watchedPhoneNumber = useWatch({
     control: methods.control,
     name: "phoneNumber",
@@ -127,7 +129,7 @@ export function useEmailSignupFlow() {
     }
 
     previousEmailRef.current = watchedEmail;
-    setVerifiedEmail(null);
+    setEmailVerificationProof(null);
     methods.setValue("emailVerificationCode", "", { shouldDirty: true });
   }, [methods, watchedEmail]);
 
@@ -135,7 +137,7 @@ export function useEmailSignupFlow() {
     methods.reset(emailSignupDefaultValues);
     setStep("basic");
     setDetailType(null);
-    setVerifiedEmail(null);
+    setEmailVerificationProof(null);
     setVerifiedPhoneNumber(null);
     setPhoneVerificationId(null);
     setSubmitError(null);
@@ -200,7 +202,11 @@ export function useEmailSignupFlow() {
       return;
     }
 
-    if (normalizeEmail(methods.getValues("email")) !== verifiedEmail) {
+    if (
+      !emailVerificationProof ||
+      normalizeEmail(methods.getValues("email")) !==
+        emailVerificationProof.email
+    ) {
       methods.setError("email", {
         message: "이메일 인증을 완료해 주세요.",
       });
@@ -224,7 +230,10 @@ export function useEmailSignupFlow() {
       return;
     }
 
-    if (normalizeEmail(values.email) !== verifiedEmail) {
+    if (
+      !emailVerificationProof ||
+      normalizeEmail(values.email) !== emailVerificationProof.email
+    ) {
       setIsCompletingSignup(false);
       moveToFieldError("account", "email", "이메일 인증을 완료해 주세요.");
       return;
@@ -232,7 +241,11 @@ export function useEmailSignupFlow() {
 
     try {
       const signupResult = await signupMutation.mutateAsync(
-        toEmailSignupRequest(values, phoneVerificationId),
+        toEmailSignupRequest(
+          values,
+          phoneVerificationId,
+          emailVerificationProof.emailVerificationId,
+        ),
       );
 
       setAccessToken(signupResult.accessToken);
@@ -253,7 +266,7 @@ export function useEmailSignupFlow() {
         error,
         methods,
         setStep,
-        setVerifiedEmail,
+        setEmailVerificationProof,
         setVerifiedPhoneNumber,
         setPhoneVerificationId,
         setSubmitError,
@@ -316,7 +329,7 @@ export function useEmailSignupFlow() {
     showExitDialog,
     verifiedPhoneNumber,
     phoneVerificationId,
-    verifiedEmail,
+    emailVerificationProof,
     profileImageFile,
     isSignupPending: signupMutation.isPending || isCompletingSignup,
     submitError,
@@ -324,7 +337,7 @@ export function useEmailSignupFlow() {
     setShowExitDialog,
     setVerifiedPhoneNumber,
     setPhoneVerificationId,
-    setVerifiedEmail,
+    setEmailVerificationProof,
     setProfileImageFile,
     clearSubmitError: () => setSubmitError(null),
     handleBack,

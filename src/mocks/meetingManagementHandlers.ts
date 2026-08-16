@@ -46,6 +46,7 @@ import {
   updateMockPendingJoinRequest,
   upsertMockMeetingRecruitPost,
 } from "@/mocks/teamHandlers";
+import { getGatherApiUrl } from "./apiScope";
 
 const ok = <T>(data: T, init?: ResponseInit) =>
   HttpResponse.json({ success: true, data, error: null }, init);
@@ -206,7 +207,7 @@ function getManagedRecruit(
 
 export const meetingManagementHandlers = [
   http.get(
-    "*/api/v1/meetings/:meetingId/images/manage",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/images/manage"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -224,7 +225,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/join-requests",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/join-requests"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -244,7 +245,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/join-requests/:joinRequestId",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/join-requests/:joinRequestId"),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -265,7 +266,9 @@ export const meetingManagementHandlers = [
 
   ...(["approve", "reject", "pending"] as const).map((action) =>
     http.patch(
-      `*/api/v1/meetings/:meetingId/join-requests/:joinRequestId/${action}`,
+      getGatherApiUrl(
+        `/api/v1/meetings/:meetingId/join-requests/:joinRequestId/${action}`,
+      ),
       ({ params, request }) => {
         const meetingId = Number(params.meetingId);
         if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -318,7 +321,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/members/:userId",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/members/:userId"),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -340,7 +343,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.delete(
-    "*/api/v1/meetings/:meetingId/members/:userId",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/members/:userId"),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       const targetUserId = Number(params.userId);
@@ -377,7 +380,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/my/reviewable-activities",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/my/reviewable-activities"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -451,7 +454,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/posts/images/presigned-url",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/images/presigned-url"),
     async ({ request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -508,7 +511,7 @@ export const meetingManagementHandlers = [
   }),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/posts/recruits",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/recruits"),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -525,7 +528,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/posts/recruits",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/recruits"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -584,7 +587,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId/recruit"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -618,7 +621,7 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId/recruit"),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       const recruit = getRecruit(Number(params.postId), meetingId);
@@ -638,7 +641,9 @@ export const meetingManagementHandlers = [
   ),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participation",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/recruit/participation",
+    ),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -698,7 +703,9 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/recruit/participants",
+    ),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -723,7 +730,9 @@ export const meetingManagementHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId",
+    ),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -749,7 +758,9 @@ export const meetingManagementHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId/reject",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId/reject",
+    ),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -791,7 +802,9 @@ export const meetingManagementHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/confirm",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/confirm",
+    ),
     ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();
@@ -836,7 +849,9 @@ export const meetingManagementHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId/attendance",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/recruit/participants/:participationId/attendance",
+    ),
     async ({ params, request }) => {
       const meetingId = Number(params.meetingId);
       if (!getMockUserId(request)) return createUnauthorizedResponse();

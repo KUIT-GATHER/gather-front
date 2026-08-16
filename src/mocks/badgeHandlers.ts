@@ -4,6 +4,7 @@ import type { BadgeType, MyBadge } from "@/features/my/types/myBadge.types";
 import { formatLocalDateTimeForApi } from "@/shared/lib/localDateTime";
 
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
+import { getGatherApiUrl } from "./apiScope";
 
 const initialBadges = [
   {
@@ -126,7 +127,7 @@ export function resetMockBadges() {
 }
 
 export const badgeHandlers = [
-  http.get("*/api/v1/mypage/badges", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/mypage/badges"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 

@@ -38,10 +38,12 @@ function toCommonSignupRequest(
 export function toEmailSignupRequest(
   values: EmailSignupFormValues,
   phoneVerificationId: string,
+  emailVerificationId: string,
 ): SignupRequest {
   return {
     ...toCommonSignupRequest(values, phoneVerificationId),
     email: normalizeEmail(values.email),
+    emailVerificationId,
     password: values.password,
     passwordConfirm: values.passwordConfirm,
   };

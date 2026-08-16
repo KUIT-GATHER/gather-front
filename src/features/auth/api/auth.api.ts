@@ -12,6 +12,7 @@ import type {
   PhoneVerificationStartResponse,
   SendEmailVerificationRequest,
   SendEmailVerificationResponse,
+  SessionRestoreResponse,
   SignupRequest,
   SignupResponse,
   TokenResponse,
@@ -122,6 +123,13 @@ export function kakaoSignup(payload: KakaoSignupRequest, signupToken: string) {
 
 export function reissue() {
   return fetchClient<TokenResponse>("/api/v1/auth/reissue", {
+    ...cookieAuthOptions,
+    method: "POST",
+  });
+}
+
+export function restoreSession() {
+  return fetchClient<SessionRestoreResponse>("/api/v1/auth/session/restore", {
     ...cookieAuthOptions,
     method: "POST",
   });

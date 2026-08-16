@@ -21,6 +21,8 @@ import { POSTING_CATEGORIES } from "@/features/category/types/postingCategory.ty
 
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 
+import { getGatherApiUrl } from "./apiScope";
+
 type SignupRequest = {
   name?: string;
   birthDate?: string;
@@ -28,6 +30,7 @@ type SignupRequest = {
   phoneNumber?: string;
   phoneVerificationId?: string;
   email?: string;
+  emailVerificationId?: string;
   password?: string;
   passwordConfirm?: string;
   nickname?: string;
@@ -44,25 +47,24 @@ type KakaoSignupRequest = Omit<
   "email" | "password" | "passwordConfirm"
 >;
 
-const verifiedEmails = new Set<string>();
-const emailVerificationRequests = new Map<
-  string,
-  {
-    code: string;
-    expiresAt: number;
-  }
->();
-const phoneVerificationRequests = new Map<
-  string,
-  {
-    phoneNumber: string;
-    messageText: string;
-    expiresAt: number;
-    confirmAttempts: number;
-    verifiedAt: number | null;
-    consumedAt: number | null;
-  }
->();
+type EmailVerification = {
+  code: string;
+  expiresAt: number;
+  verificationId: string;
+  verifiedAt: number | null;
+  consumedAt: number | null;
+};
+
+type PhoneVerification = {
+  phoneNumber: string;
+  messageText: string;
+  expiresAt: number;
+  verifiedAt: number | null;
+  consumedAt: number | null;
+};
+
+const emailVerificationRequests = new Map<string, EmailVerification>();
+const phoneVerificationRequests = new Map<string, PhoneVerification>();
 
 const validRegionIds = new Set(regions.data.map((region) => region.id));
 const validActivityRegionIds = new Set(
@@ -83,7 +85,8 @@ const MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN = "mock-kakao-expired-signup-token";
 const MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN =
   "mock-kakao-already-registered-signup-token";
 const MOCK_INVALID_KAKAO_SIGNUP_TOKEN = "mock-kakao-invalid-signup-token";
-const MOCK_OCTOMO_RECEIVER_NUMBER = "16663538";
+const MOCK_PHONE_RECEIVER_NUMBER = "00000000";
+const MOCK_PHONE_MESSAGE_TEXT = "";
 const MOCK_QR_CODE_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
 
@@ -101,20 +104,6 @@ function createMockVerificationId() {
   return `00000000-0000-4000-8000-${suffix}`;
 }
 
-function createMockVerificationCode() {
-  return `GATHER-${Math.random().toString(36).slice(2, 12).toUpperCase().padEnd(10, "0")}`;
-}
-
-function createMockVerificationMessage(verificationCode: string) {
-  return [
-    "[Gather]",
-    "전화번호 인증을 위한 문자입니다.",
-    "본 문자를 전송하시면 전화번호 인증이 자동으로 완료됩니다.",
-    "",
-    `인증코드: [${verificationCode}]`,
-  ].join("\n");
-}
-
 function createPhoneVerificationRequiredResponse() {
   return HttpResponse.json(
     {
@@ -129,9 +118,12 @@ function createPhoneVerificationRequiredResponse() {
   );
 }
 
-function consumePhoneVerification(verificationId: string, phoneNumber: string) {
+function getValidPhoneVerification(
+  verificationId: string,
+  phoneNumber: string,
+  now = Date.now(),
+) {
   const verification = phoneVerificationRequests.get(verificationId);
-  const now = Date.now();
 
   if (
     !verification ||
@@ -140,11 +132,55 @@ function consumePhoneVerification(verificationId: string, phoneNumber: string) {
     verification.consumedAt !== null ||
     verification.verifiedAt + 30 * 60 * 1000 <= now
   ) {
+    return null;
+  }
+
+  return verification;
+}
+
+function consumePhoneVerification(verificationId: string, phoneNumber: string) {
+  const verification = getValidPhoneVerification(verificationId, phoneNumber);
+
+  if (!verification) {
     return false;
   }
 
-  verification.consumedAt = now;
+  verification.consumedAt = Date.now();
   return true;
+}
+
+function getValidEmailVerification(
+  email: string,
+  emailVerificationId: string,
+  now = Date.now(),
+) {
+  const verification = emailVerificationRequests.get(email);
+
+  if (
+    !verification ||
+    verification.verificationId !== emailVerificationId ||
+    verification.verifiedAt === null ||
+    verification.consumedAt !== null ||
+    verification.verifiedAt + 30 * 60 * 1000 <= now
+  ) {
+    return null;
+  }
+
+  return verification;
+}
+
+function createEmailVerificationRequiredResponse() {
+  return HttpResponse.json(
+    {
+      success: false,
+      data: null,
+      error: {
+        code: "EMAIL_VERIFICATION_REQUIRED",
+        message: "이메일 인증이 필요합니다.",
+      },
+    },
+    { status: 400 },
+  );
 }
 
 function createRefreshTokenCookie(refreshToken: string) {
@@ -181,55 +217,55 @@ function createWithdrawalCooldownResponse() {
 }
 
 export const authHandlers = [
-  http.post("*/api/v1/auth/phone-verifications", async ({ request }) => {
-    const body = (await request.json()) as { phoneNumber?: string };
-    const phoneNumber = normalizeMockPhoneNumber(body.phoneNumber);
+  http.post(
+    getGatherApiUrl("/api/v1/auth/phone-verifications"),
+    async ({ request }) => {
+      const body = (await request.json()) as { phoneNumber?: string };
+      const phoneNumber = normalizeMockPhoneNumber(body.phoneNumber);
 
-    if (!phoneNumber || !/^010\d{8}$/.test(phoneNumber)) {
+      if (!phoneNumber || !/^010\d{8}$/.test(phoneNumber)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "요청 값이 올바르지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const verificationId = createMockVerificationId();
+      const expiresAt = Date.now() + 5 * 60 * 1000;
+
+      phoneVerificationRequests.set(verificationId, {
+        phoneNumber,
+        messageText: MOCK_PHONE_MESSAGE_TEXT,
+        expiresAt,
+        verifiedAt: null,
+        consumedAt: null,
+      });
+
       return HttpResponse.json(
         {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "요청 값이 올바르지 않습니다.",
+          success: true,
+          data: {
+            verificationId,
+            receiverNumber: MOCK_PHONE_RECEIVER_NUMBER,
+            messageText: MOCK_PHONE_MESSAGE_TEXT,
+            expiresAt: new Date(expiresAt).toISOString(),
           },
+          error: null,
         },
-        { status: 400 },
+        { status: 201 },
       );
-    }
-
-    const verificationId = createMockVerificationId();
-    const verificationCode = createMockVerificationCode();
-    const messageText = createMockVerificationMessage(verificationCode);
-    const expiresAt = Date.now() + 5 * 60 * 1000;
-
-    phoneVerificationRequests.set(verificationId, {
-      phoneNumber,
-      messageText,
-      expiresAt,
-      confirmAttempts: 0,
-      verifiedAt: null,
-      consumedAt: null,
-    });
-
-    return HttpResponse.json(
-      {
-        success: true,
-        data: {
-          verificationId,
-          receiverNumber: MOCK_OCTOMO_RECEIVER_NUMBER,
-          messageText,
-          expiresAt: new Date(expiresAt).toISOString(),
-        },
-        error: null,
-      },
-      { status: 201 },
-    );
-  }),
+    },
+  ),
 
   http.post(
-    "*/api/v1/auth/phone-verifications/:verificationId/qr-code",
+    getGatherApiUrl("/api/v1/auth/phone-verifications/:verificationId/qr-code"),
     ({ params }) => {
       const verificationId = String(params.verificationId);
       const verification = phoneVerificationRequests.get(verificationId);
@@ -276,7 +312,7 @@ export const authHandlers = [
   ),
 
   http.post(
-    "*/api/v1/auth/phone-verifications/:verificationId/confirm",
+    getGatherApiUrl("/api/v1/auth/phone-verifications/:verificationId/confirm"),
     ({ params }) => {
       const verificationId = String(params.verificationId);
       const verification = phoneVerificationRequests.get(verificationId);
@@ -341,18 +377,6 @@ export const authHandlers = [
         });
       }
 
-      verification.confirmAttempts += 1;
-
-      if (verification.confirmAttempts === 1) {
-        return HttpResponse.json({
-          success: true,
-          data: {
-            status: "PENDING",
-          },
-          error: null,
-        });
-      }
-
       verification.verifiedAt = Date.now();
 
       return HttpResponse.json({
@@ -365,58 +389,63 @@ export const authHandlers = [
     },
   ),
 
-  http.post("*/api/v1/auth/email-verifications", async ({ request }) => {
-    const body = (await request.json()) as { email?: string };
-    const email = body.email?.trim().toLowerCase();
+  http.post(
+    getGatherApiUrl("/api/v1/auth/email-verifications"),
+    async ({ request }) => {
+      const body = (await request.json()) as { email?: string };
+      const email = body.email?.trim().toLowerCase();
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "요청 값이 올바르지 않습니다.",
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "요청 값이 올바르지 않습니다.",
+            },
           },
-        },
-        { status: 400 },
-      );
-    }
+          { status: 400 },
+        );
+      }
 
-    if (mockUsers.some((user) => user.email === email)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "DUPLICATE_EMAIL",
-            message: "이미 사용 중인 이메일입니다.",
+      if (mockUsers.some((user) => user.email === email)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "DUPLICATE_EMAIL",
+              message: "이미 사용 중인 이메일입니다.",
+            },
           },
+          { status: 409 },
+        );
+      }
+
+      const expiresAt = Date.now() + 10 * 60 * 1000;
+      emailVerificationRequests.set(email, {
+        code: "123456",
+        expiresAt,
+        verificationId: createMockVerificationId(),
+        verifiedAt: null,
+        consumedAt: null,
+      });
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          email,
+          expiresAt: new Date(expiresAt).toISOString(),
+          message: "인증 코드가 발송되었습니다.",
         },
-        { status: 409 },
-      );
-    }
-
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-    verifiedEmails.delete(email);
-    emailVerificationRequests.set(email, {
-      code: "123456",
-      expiresAt,
-    });
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        email,
-        expiresAt: new Date(expiresAt).toISOString(),
-        message: "인증 코드가 발송되었습니다.",
-      },
-      error: null,
-    });
-  }),
+        error: null,
+      });
+    },
+  ),
 
   http.post(
-    "*/api/v1/auth/email-verifications/confirm",
+    getGatherApiUrl("/api/v1/auth/email-verifications/confirm"),
     async ({ request }) => {
       const body = (await request.json()) as {
         email?: string;
@@ -484,21 +513,22 @@ export const authHandlers = [
         );
       }
 
-      verifiedEmails.add(email);
+      verification.verifiedAt ??= Date.now();
 
       return HttpResponse.json({
         success: true,
         data: {
           email,
           verified: true,
-          verifiedAt: new Date().toISOString(),
+          verifiedAt: new Date(verification.verifiedAt).toISOString(),
+          emailVerificationId: verification.verificationId,
         },
         error: null,
       });
     },
   ),
 
-  http.post("*/api/v1/auth/signup", async ({ request }) => {
+  http.post(getGatherApiUrl("/api/v1/auth/signup"), async ({ request }) => {
     const body = (await request.json()) as SignupRequest;
 
     if (
@@ -631,22 +661,25 @@ export const authHandlers = [
       );
     }
 
-    if (isWithdrawalCooldownActive({ phoneNumber })) {
-      return createWithdrawalCooldownResponse();
+    const emailVerification = body.emailVerificationId
+      ? getValidEmailVerification(email, body.emailVerificationId)
+      : null;
+
+    if (!emailVerification) {
+      return createEmailVerificationRequiredResponse();
     }
 
-    if (!verifiedEmails.has(email)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "EMAIL_NOT_VERIFIED",
-            message: "이메일 인증이 완료되지 않았습니다.",
-          },
-        },
-        { status: 400 },
-      );
+    const phoneVerification = getValidPhoneVerification(
+      body.phoneVerificationId,
+      phoneNumber,
+    );
+
+    if (!phoneVerification) {
+      return createPhoneVerificationRequiredResponse();
+    }
+
+    if (isWithdrawalCooldownActive({ phoneNumber })) {
+      return createWithdrawalCooldownResponse();
     }
 
     if (
@@ -709,9 +742,9 @@ export const authHandlers = [
       );
     }
 
-    if (!consumePhoneVerification(body.phoneVerificationId, phoneNumber)) {
-      return createPhoneVerificationRequiredResponse();
-    }
+    const consumedAt = Date.now();
+    emailVerification.consumedAt = consumedAt;
+    phoneVerification.consumedAt = consumedAt;
 
     const newUser: MockUser = {
       id: getNextMockUserId(),
@@ -753,59 +786,134 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/kakao/login", async ({ request }) => {
-    const body = (await request.json()) as {
-      authorizationCode?: string;
-      redirectUri?: string;
-    };
+  http.post(
+    getGatherApiUrl("/api/v1/auth/kakao/login"),
+    async ({ request }) => {
+      const body = (await request.json()) as {
+        authorizationCode?: string;
+        redirectUri?: string;
+      };
 
-    if (!body.authorizationCode || !body.redirectUri) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "요청 값이 올바르지 않습니다.",
+      if (!body.authorizationCode || !body.redirectUri) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "요청 값이 올바르지 않습니다.",
+            },
           },
-        },
-        { status: 400 },
-      );
-    }
+          { status: 400 },
+        );
+      }
 
-    if (body.authorizationCode === "mock-kakao-suspended") {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "SUSPENDED_USER",
-            message: "이용 정지된 계정입니다.",
+      if (body.authorizationCode === "mock-kakao-suspended") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "SUSPENDED_USER",
+              message: "이용 정지된 계정입니다.",
+            },
           },
-        },
-        { status: 403 },
-      );
-    }
+          { status: 403 },
+        );
+      }
 
-    if (body.authorizationCode === "mock-kakao-withdrawn") {
-      return createWithdrawalCooldownResponse();
-    }
+      if (body.authorizationCode === "mock-kakao-withdrawn") {
+        return createWithdrawalCooldownResponse();
+      }
 
-    if (body.authorizationCode === "mock-kakao-unavailable") {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "KAKAO_API_UNAVAILABLE",
-            message: "카카오 로그인 서비스를 일시적으로 사용할 수 없습니다.",
+      if (body.authorizationCode === "mock-kakao-unavailable") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "KAKAO_API_UNAVAILABLE",
+              message: "카카오 로그인 서비스를 일시적으로 사용할 수 없습니다.",
+            },
           },
-        },
-        { status: 503 },
-      );
-    }
+          { status: 503 },
+        );
+      }
 
-    if (body.authorizationCode === "mock-kakao-new-user") {
+      if (body.authorizationCode === "mock-kakao-new-user") {
+        return HttpResponse.json({
+          success: true,
+          data: {
+            signupStatus: "ADDITIONAL_INFO_REQUIRED",
+            signupToken: MOCK_KAKAO_SIGNUP_TOKEN,
+            profile: { nickname: "카카오사용자" },
+          },
+          error: null,
+        });
+      }
+
+      if (body.authorizationCode === "mock-kakao-expired-signup") {
+        return HttpResponse.json({
+          success: true,
+          data: {
+            signupStatus: "ADDITIONAL_INFO_REQUIRED",
+            signupToken: MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN,
+            profile: { nickname: "카카오사용자" },
+          },
+          error: null,
+        });
+      }
+
+      if (body.authorizationCode === "mock-kakao-invalid-signup") {
+        return HttpResponse.json({
+          success: true,
+          data: {
+            signupStatus: "ADDITIONAL_INFO_REQUIRED",
+            signupToken: MOCK_INVALID_KAKAO_SIGNUP_TOKEN,
+            profile: { nickname: "카카오사용자" },
+          },
+          error: null,
+        });
+      }
+
+      if (body.authorizationCode === "mock-kakao-already-registered") {
+        return HttpResponse.json({
+          success: true,
+          data: {
+            signupStatus: "ADDITIONAL_INFO_REQUIRED",
+            signupToken: MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN,
+            profile: { nickname: "카카오사용자" },
+          },
+          error: null,
+        });
+      }
+
+      if (body.authorizationCode === "mock-kakao-existing-user") {
+        if (isWithdrawalCooldownActive({ userId: 1 })) {
+          return createWithdrawalCooldownResponse();
+        }
+
+        const refreshToken = createMockRefreshToken(1);
+
+        return HttpResponse.json(
+          {
+            success: true,
+            data: {
+              signupStatus: "LOGIN_COMPLETED",
+              accessToken: createMockAccessToken(1),
+              tokenType: "Bearer",
+            },
+            error: null,
+          },
+          {
+            headers: {
+              "Set-Cookie": createRefreshTokenCookie(refreshToken),
+            },
+          },
+        );
+      }
+
+      // 실제 카카오 인가 코드는 매번 달라 로컬 MSW에서는 신규 회원 흐름을 기본으로 검증한다.
       return HttpResponse.json({
         success: true,
         data: {
@@ -815,257 +923,188 @@ export const authHandlers = [
         },
         error: null,
       });
-    }
+    },
+  ),
 
-    if (body.authorizationCode === "mock-kakao-expired-signup") {
-      return HttpResponse.json({
-        success: true,
-        data: {
-          signupStatus: "ADDITIONAL_INFO_REQUIRED",
-          signupToken: MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN,
-          profile: { nickname: "카카오사용자" },
-        },
-        error: null,
-      });
-    }
+  http.post(
+    getGatherApiUrl("/api/v1/auth/kakao/signup"),
+    async ({ request }) => {
+      const signupToken = request.headers.get("X-Signup-Token");
+      const body = (await request.json()) as KakaoSignupRequest;
 
-    if (body.authorizationCode === "mock-kakao-invalid-signup") {
-      return HttpResponse.json({
-        success: true,
-        data: {
-          signupStatus: "ADDITIONAL_INFO_REQUIRED",
-          signupToken: MOCK_INVALID_KAKAO_SIGNUP_TOKEN,
-          profile: { nickname: "카카오사용자" },
-        },
-        error: null,
-      });
-    }
-
-    if (body.authorizationCode === "mock-kakao-already-registered") {
-      return HttpResponse.json({
-        success: true,
-        data: {
-          signupStatus: "ADDITIONAL_INFO_REQUIRED",
-          signupToken: MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN,
-          profile: { nickname: "카카오사용자" },
-        },
-        error: null,
-      });
-    }
-
-    if (body.authorizationCode === "mock-kakao-existing-user") {
-      if (isWithdrawalCooldownActive({ userId: 1 })) {
-        return createWithdrawalCooldownResponse();
-      }
-
-      const refreshToken = createMockRefreshToken(1);
-
-      return HttpResponse.json(
-        {
-          success: true,
-          data: {
-            signupStatus: "LOGIN_COMPLETED",
-            accessToken: createMockAccessToken(1),
-            tokenType: "Bearer",
-          },
-          error: null,
-        },
-        {
-          headers: {
-            "Set-Cookie": createRefreshTokenCookie(refreshToken),
-          },
-        },
-      );
-    }
-
-    // 실제 카카오 인가 코드는 매번 달라 로컬 MSW에서는 신규 회원 흐름을 기본으로 검증한다.
-    return HttpResponse.json({
-      success: true,
-      data: {
-        signupStatus: "ADDITIONAL_INFO_REQUIRED",
-        signupToken: MOCK_KAKAO_SIGNUP_TOKEN,
-        profile: { nickname: "카카오사용자" },
-      },
-      error: null,
-    });
-  }),
-
-  http.post("*/api/v1/auth/kakao/signup", async ({ request }) => {
-    const signupToken = request.headers.get("X-Signup-Token");
-    const body = (await request.json()) as KakaoSignupRequest;
-
-    if (signupToken === MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "SIGNUP_TOKEN_EXPIRED",
-            message: "가입 인증이 만료되었습니다.",
-          },
-        },
-        { status: 401 },
-      );
-    }
-
-    if (!signupToken || signupToken !== MOCK_KAKAO_SIGNUP_TOKEN) {
-      if (signupToken === MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN) {
+      if (signupToken === MOCK_EXPIRED_KAKAO_SIGNUP_TOKEN) {
         return HttpResponse.json(
           {
             success: false,
             data: null,
             error: {
-              code: "ALREADY_REGISTERED",
-              message: "이미 가입된 계정입니다.",
+              code: "SIGNUP_TOKEN_EXPIRED",
+              message: "가입 인증이 만료되었습니다.",
+            },
+          },
+          { status: 401 },
+        );
+      }
+
+      if (!signupToken || signupToken !== MOCK_KAKAO_SIGNUP_TOKEN) {
+        if (signupToken === MOCK_ALREADY_REGISTERED_KAKAO_SIGNUP_TOKEN) {
+          return HttpResponse.json(
+            {
+              success: false,
+              data: null,
+              error: {
+                code: "ALREADY_REGISTERED",
+                message: "이미 가입된 계정입니다.",
+              },
+            },
+            { status: 409 },
+          );
+        }
+
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "SIGNUP_TOKEN_INVALID",
+              message: "유효하지 않은 가입 인증입니다.",
+            },
+          },
+          { status: 401 },
+        );
+      }
+
+      if (
+        "email" in body ||
+        "password" in body ||
+        "passwordConfirm" in body ||
+        !body.name ||
+        !body.birthDate ||
+        !body.gender ||
+        !body.phoneNumber ||
+        !body.phoneVerificationId ||
+        !body.nickname ||
+        typeof body.activityRegionId !== "number" ||
+        !body.interestCategories ||
+        typeof body.marketingAgreed !== "boolean"
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "필수 정보를 모두 입력해 주세요.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      if (!body.serviceTermsAgreed || !body.privacyPolicyAgreed) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "REQUIRED_TERMS_NOT_AGREED",
+              message: "필수 약관 동의가 필요합니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const phoneNumber = normalizeMockPhoneNumber(body.phoneNumber);
+
+      if (!phoneNumber) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "요청 값이 올바르지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      if (isWithdrawalCooldownActive({ phoneNumber })) {
+        return createWithdrawalCooldownResponse();
+      }
+
+      if (mockUsers.some((user) => user.phoneNumber === phoneNumber)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "DUPLICATE_PHONE_NUMBER",
+              message: "이미 사용 중인 전화번호입니다.",
             },
           },
           { status: 409 },
         );
       }
 
+      if (mockUsers.some((user) => user.nickname === body.nickname)) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "DUPLICATE_NICKNAME",
+              message: "이미 사용 중인 닉네임입니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      if (!consumePhoneVerification(body.phoneVerificationId, phoneNumber)) {
+        return createPhoneVerificationRequiredResponse();
+      }
+
+      const userId = getNextMockUserId();
+      const user: MockUser = {
+        id: userId,
+        name: body.name,
+        birthDate: body.birthDate,
+        gender: body.gender,
+        phoneNumber,
+        email: `mock-kakao-${userId}@example.com`,
+        password: "",
+        nickname: body.nickname,
+        introduction: body.introduction?.trim() || null,
+        activityRegionId: body.activityRegionId,
+        interestCategories: body.interestCategories,
+      };
+      const refreshToken = createMockRefreshToken(userId);
+
+      addMockUser(user);
+
       return HttpResponse.json(
         {
-          success: false,
-          data: null,
-          error: {
-            code: "SIGNUP_TOKEN_INVALID",
-            message: "유효하지 않은 가입 인증입니다.",
+          success: true,
+          data: {
+            accessToken: createMockAccessToken(userId),
+            tokenType: "Bearer",
           },
+          error: null,
         },
-        { status: 401 },
-      );
-    }
-
-    if (
-      "email" in body ||
-      "password" in body ||
-      "passwordConfirm" in body ||
-      !body.name ||
-      !body.birthDate ||
-      !body.gender ||
-      !body.phoneNumber ||
-      !body.phoneVerificationId ||
-      !body.nickname ||
-      typeof body.activityRegionId !== "number" ||
-      !body.interestCategories ||
-      typeof body.marketingAgreed !== "boolean"
-    ) {
-      return HttpResponse.json(
         {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "필수 정보를 모두 입력해 주세요.",
+          status: 201,
+          headers: {
+            "Set-Cookie": createRefreshTokenCookie(refreshToken),
           },
         },
-        { status: 400 },
       );
-    }
+    },
+  ),
 
-    if (!body.serviceTermsAgreed || !body.privacyPolicyAgreed) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "REQUIRED_TERMS_NOT_AGREED",
-            message: "필수 약관 동의가 필요합니다.",
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    const phoneNumber = normalizeMockPhoneNumber(body.phoneNumber);
-
-    if (!phoneNumber) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "요청 값이 올바르지 않습니다.",
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    if (isWithdrawalCooldownActive({ phoneNumber })) {
-      return createWithdrawalCooldownResponse();
-    }
-
-    if (mockUsers.some((user) => user.phoneNumber === phoneNumber)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "DUPLICATE_PHONE_NUMBER",
-            message: "이미 사용 중인 전화번호입니다.",
-          },
-        },
-        { status: 409 },
-      );
-    }
-
-    if (mockUsers.some((user) => user.nickname === body.nickname)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "DUPLICATE_NICKNAME",
-            message: "이미 사용 중인 닉네임입니다.",
-          },
-        },
-        { status: 409 },
-      );
-    }
-
-    if (!consumePhoneVerification(body.phoneVerificationId, phoneNumber)) {
-      return createPhoneVerificationRequiredResponse();
-    }
-
-    const userId = getNextMockUserId();
-    const user: MockUser = {
-      id: userId,
-      name: body.name,
-      birthDate: body.birthDate,
-      gender: body.gender,
-      phoneNumber,
-      email: `mock-kakao-${userId}@example.com`,
-      password: "",
-      nickname: body.nickname,
-      introduction: body.introduction?.trim() || null,
-      activityRegionId: body.activityRegionId,
-      interestCategories: body.interestCategories,
-    };
-    const refreshToken = createMockRefreshToken(userId);
-
-    addMockUser(user);
-
-    return HttpResponse.json(
-      {
-        success: true,
-        data: {
-          accessToken: createMockAccessToken(userId),
-          tokenType: "Bearer",
-        },
-        error: null,
-      },
-      {
-        status: 201,
-        headers: {
-          "Set-Cookie": createRefreshTokenCookie(refreshToken),
-        },
-      },
-    );
-  }),
-
-  http.post("*/api/v1/auth/login", async ({ request }) => {
+  http.post(getGatherApiUrl("/api/v1/auth/login"), async ({ request }) => {
     const body = (await request.json()) as {
       email?: string;
       password?: string;
@@ -1126,7 +1165,7 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/reissue", ({ cookies }) => {
+  http.post(getGatherApiUrl("/api/v1/auth/reissue"), ({ cookies }) => {
     const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
 
     if (!refreshToken) {
@@ -1178,7 +1217,36 @@ export const authHandlers = [
     );
   }),
 
-  http.post("*/api/v1/auth/logout", ({ cookies }) => {
+  http.post(getGatherApiUrl("/api/v1/auth/session/restore"), ({ cookies }) => {
+    const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
+    const userId = refreshToken
+      ? getMockUserIdFromRefreshToken(refreshToken)
+      : null;
+
+    if (userId === null || !getMockUserById(userId)) {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          authenticated: false,
+          accessToken: null,
+          tokenType: null,
+        },
+        error: null,
+      });
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        authenticated: true,
+        accessToken: createMockAccessToken(userId),
+        tokenType: "Bearer",
+      },
+      error: null,
+    });
+  }),
+
+  http.post(getGatherApiUrl("/api/v1/auth/logout"), ({ cookies }) => {
     const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
     const userId = refreshToken
       ? getMockUserIdFromRefreshToken(refreshToken)
@@ -1212,7 +1280,7 @@ export const authHandlers = [
     );
   }),
 
-  http.delete("*/api/v1/users/me", ({ request }) => {
+  http.delete(getGatherApiUrl("/api/v1/users/me"), ({ request }) => {
     const userId = getMockUserId(request);
 
     if (userId === null) {

@@ -4,6 +4,7 @@ import { RouterProvider } from "react-router";
 
 import { AppProviders } from "@/app/providers";
 import { router } from "@/app/router";
+import { handleUnhandledRequest } from "@/mocks/apiScope";
 import { env } from "@/shared/config/env";
 
 import "./index.css";
@@ -16,7 +17,7 @@ async function enableMocking() {
   const { worker } = await import("@/mocks/browser");
 
   return worker.start({
-    onUnhandledRequest: "bypass",
+    onUnhandledRequest: handleUnhandledRequest,
   });
 }
 

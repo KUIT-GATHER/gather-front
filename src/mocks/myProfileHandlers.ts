@@ -19,6 +19,7 @@ import type {
   MyActivityRecord,
   MyPageActivity,
 } from "@/features/my/types/myActivity.types";
+import { getGatherApiUrl } from "./apiScope";
 
 const PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -158,7 +159,7 @@ function formatMockTime(time: string | null) {
 }
 
 export const myProfileHandlers = [
-  http.get("*/api/v1/mypage/home", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/mypage/home"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -178,7 +179,7 @@ export const myProfileHandlers = [
       error: null,
     });
   }),
-  http.get("*/api/v1/mypage/activities", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/mypage/activities"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -293,63 +294,71 @@ export const myProfileHandlers = [
       error: null,
     });
   }),
-  http.get("*/api/v1/mypage/activities/summary", ({ request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+  http.get(
+    getGatherApiUrl("/api/v1/mypage/activities/summary"),
+    ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        totalCompletedCount: mockActivityRecords.length,
-        totalRecognizedMinutes: mockActivityRecords.reduce(
-          (sum, activity) => sum + (activity.recognizedMinutes ?? 0),
-          0,
-        ),
-        timeCertifiableCompletedCount: mockActivityRecords.filter(
-          (activity) => activity.timeCertifiable,
-        ).length,
-        categoryBlocks: [
-          "ENVIRONMENT",
-          "EDUCATION",
-          "WELFARE",
-          "CULTURE",
-          "COMMUNITY",
-          "OVERSEAS",
-        ].map((category) => ({
-          category,
-          count: mockActivityRecords.filter(
-            (activity) => activity.category === category,
+      return HttpResponse.json({
+        success: true,
+        data: {
+          totalCompletedCount: mockActivityRecords.length,
+          totalRecognizedMinutes: mockActivityRecords.reduce(
+            (sum, activity) => sum + (activity.recognizedMinutes ?? 0),
+            0,
+          ),
+          timeCertifiableCompletedCount: mockActivityRecords.filter(
+            (activity) => activity.timeCertifiable,
           ).length,
-        })),
-      },
-      error: null,
-    });
-  }),
-  http.get("*/api/v1/mypage/activities/records", ({ request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+          categoryBlocks: [
+            "ENVIRONMENT",
+            "EDUCATION",
+            "WELFARE",
+            "CULTURE",
+            "COMMUNITY",
+            "OVERSEAS",
+          ].map((category) => ({
+            category,
+            count: mockActivityRecords.filter(
+              (activity) => activity.category === category,
+            ).length,
+          })),
+        },
+        error: null,
+      });
+    },
+  ),
+  http.get(
+    getGatherApiUrl("/api/v1/mypage/activities/records"),
+    ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    const params = new URL(request.url).searchParams;
-    const category = params.get("category");
-    const page = Math.max(0, Number(params.get("page")) || 0);
-    const size = Math.max(1, Number(params.get("size")) || 20);
-    const filtered = category
-      ? mockActivityRecords.filter((activity) => activity.category === category)
-      : mockActivityRecords;
+      const params = new URL(request.url).searchParams;
+      const category = params.get("category");
+      const page = Math.max(0, Number(params.get("page")) || 0);
+      const size = Math.max(1, Number(params.get("size")) || 20);
+      const filtered = category
+        ? mockActivityRecords.filter(
+            (activity) => activity.category === category,
+          )
+        : mockActivityRecords;
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        content: filtered.slice(page * size, (page + 1) * size),
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
-        page,
-        size,
-      },
-      error: null,
-    });
-  }),
-  http.get("*/api/v1/users/me", ({ request }) => {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          content: filtered.slice(page * size, (page + 1) * size),
+          totalElements: filtered.length,
+          totalPages: Math.ceil(filtered.length / size),
+          page,
+          size,
+        },
+        error: null,
+      });
+    },
+  ),
+  http.get(getGatherApiUrl("/api/v1/users/me"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -360,7 +369,7 @@ export const myProfileHandlers = [
     });
   }),
 
-  http.patch("*/api/v1/users/me", async ({ request }) => {
+  http.patch(getGatherApiUrl("/api/v1/users/me"), async ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -399,7 +408,7 @@ export const myProfileHandlers = [
     });
   }),
 
-  http.get("*/api/v1/users/me/profile-image", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/users/me/profile-image"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -412,7 +421,7 @@ export const myProfileHandlers = [
   }),
 
   http.post(
-    "*/api/v1/users/me/profile-image/presigned-url",
+    getGatherApiUrl("/api/v1/users/me/profile-image/presigned-url"),
     async ({ request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -507,29 +516,32 @@ export const myProfileHandlers = [
       },
     });
   }),
-  http.patch("*/api/v1/users/me/profile-image", async ({ request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+  http.patch(
+    getGatherApiUrl("/api/v1/users/me/profile-image"),
+    async ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    const body = (await request.json()) as { objectKey?: string };
-    const upload = [...pendingUploads.values()].find(
-      (item) => item.objectKey === body.objectKey && item.ownerId === userId,
-    );
-    if (!upload || !upload.uploaded) {
-      return errorResponse(
-        "PROFILE_IMAGE_OBJECT_NOT_FOUND",
-        "업로드된 프로필 이미지 객체를 찾을 수 없습니다.",
-        404,
+      const body = (await request.json()) as { objectKey?: string };
+      const upload = [...pendingUploads.values()].find(
+        (item) => item.objectKey === body.objectKey && item.ownerId === userId,
       );
-    }
+      if (!upload || !upload.uploaded) {
+        return errorResponse(
+          "PROFILE_IMAGE_OBJECT_NOT_FOUND",
+          "업로드된 프로필 이미지 객체를 찾을 수 없습니다.",
+          404,
+        );
+      }
 
-    upload.applied = true;
-    profileImageUrls.set(userId, upload.publicUrl);
+      upload.applied = true;
+      profileImageUrls.set(userId, upload.publicUrl);
 
-    return HttpResponse.json({
-      success: true,
-      data: { profileImageUrl: upload.publicUrl },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: { profileImageUrl: upload.publicUrl },
+        error: null,
+      });
+    },
+  ),
 ];
