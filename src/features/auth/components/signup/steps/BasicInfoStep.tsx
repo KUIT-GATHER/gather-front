@@ -12,6 +12,7 @@ import {
   getSignupFieldDescribedBy,
   getSignupFieldErrorId,
 } from "@/features/auth/lib/signupFieldA11y";
+import { shouldLaunchSmsVerificationApp } from "@/features/auth/lib/phoneVerification";
 import {
   formatBirthDateInput,
   formatPhoneNumber,
@@ -26,6 +27,7 @@ import {
 } from "@/features/auth/schemas/signupCommon.schema";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
+import { env } from "@/shared/config/env";
 import { cn } from "@/shared/lib/cn";
 import Button from "@/shared/ui/Button";
 import FormField from "@/shared/ui/FormField";
@@ -177,6 +179,10 @@ export function BasicInfoStep({
     phoneNumber === verifiedPhoneNumber &&
     Boolean(phoneVerificationId);
   const usesSmsVerification = shouldUseSmsVerification();
+  const shouldLaunchSmsApp = shouldLaunchSmsVerificationApp(
+    usesSmsVerification,
+    env.IS_DEV && env.ENABLE_MSW,
+  );
   const canReopenQr =
     !usesSmsVerification &&
     isVerificationActive &&
@@ -410,11 +416,14 @@ export function BasicInfoStep({
           clearErrors("phoneNumber");
           startConfirmPolling(session, data.expiresAt);
 
-          if (shouldUseSmsVerification()) {
-            window.location.href = createSmsHref(
-              data.receiverNumber,
-              data.messageText,
-            );
+          if (usesSmsVerification) {
+            if (shouldLaunchSmsApp) {
+              window.location.href = createSmsHref(
+                data.receiverNumber,
+                data.messageText,
+              );
+            }
+
             return;
           }
 
