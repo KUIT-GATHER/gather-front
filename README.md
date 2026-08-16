@@ -48,9 +48,20 @@ npm run dev
 npm run dev          # 개발 서버 실행
 npm run build        # 타입 검사 및 프로덕션 빌드
 npm run lint         # ESLint 검사
+npm run test:run     # Vitest 테스트 실행
+npm run test:coverage # Vitest 커버리지 생성
 npm run format       # Prettier로 파일 포맷
 npm run format:check # Prettier 형식 검사
 npm run preview      # 빌드 결과 미리보기
+```
+
+브라우저 E2E 테스트를 실행하려면 최초 1회 Chromium을 설치합니다.
+
+```bash
+npx playwright install chromium
+npm run test:e2e         # headless Chromium
+npm run test:e2e:ui      # Playwright UI Mode
+npm run test:e2e:headed  # 브라우저를 표시하며 실행
 ```
 
 ## 구조 한 줄 요약
