@@ -4,11 +4,12 @@ import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { handleUnhandledRequest } from "@/mocks/apiScope";
 import { server } from "@/mocks/server";
 
 beforeAll(() => {
   server.listen({
-    onUnhandledRequest: "error",
+    onUnhandledRequest: handleUnhandledRequest,
   });
 });
 

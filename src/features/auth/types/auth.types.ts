@@ -36,10 +36,16 @@ export type ConfirmEmailVerificationRequest = {
   code: string;
 };
 
+export type EmailVerificationProof = {
+  email: string;
+  emailVerificationId: string;
+};
+
 export type ConfirmEmailVerificationResponse = {
   email: string;
   verified: boolean;
   verifiedAt: string;
+  emailVerificationId: string;
 };
 
 export type EmailSignupRequest = {
@@ -56,6 +62,7 @@ export type EmailSignupRequest = {
   privacyPolicyAgreed: boolean;
   marketingAgreed: boolean;
   email: string;
+  emailVerificationId: string;
   password: string;
   passwordConfirm: string;
 };
