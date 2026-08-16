@@ -18,7 +18,7 @@ export function SignupFlow() {
     showExitDialog,
     verifiedPhoneNumber,
     phoneVerificationId,
-    verifiedEmail,
+    emailVerificationProof,
     profileImageFile,
     isSignupPending,
     submitError,
@@ -26,7 +26,7 @@ export function SignupFlow() {
     setShowExitDialog,
     setVerifiedPhoneNumber,
     setPhoneVerificationId,
-    setVerifiedEmail,
+    setEmailVerificationProof,
     setProfileImageFile,
     clearSubmitError,
     handleBack,
@@ -53,8 +53,8 @@ export function SignupFlow() {
 
           {step === "account" ? (
             <AccountInfoStep
-              verifiedEmail={verifiedEmail}
-              onVerifiedEmailChange={setVerifiedEmail}
+              emailVerificationProof={emailVerificationProof}
+              onEmailVerificationProofChange={setEmailVerificationProof}
             />
           ) : null}
 

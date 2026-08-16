@@ -14,6 +14,7 @@ import {
   signupEmailFieldSchema,
   type EmailSignupFormValues,
 } from "@/features/auth/schemas/emailSignup.schema";
+import type { EmailVerificationProof } from "@/features/auth/types/auth.types";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import { cn } from "@/shared/lib/cn";
@@ -28,13 +29,15 @@ import {
 } from "../SignupFormParts";
 
 type AccountInfoStepProps = {
-  verifiedEmail: string | null;
-  onVerifiedEmailChange: (value: string | null) => void;
+  emailVerificationProof: EmailVerificationProof | null;
+  onEmailVerificationProofChange: (
+    value: EmailVerificationProof | null,
+  ) => void;
 };
 
 export function AccountInfoStep({
-  verifiedEmail,
-  onVerifiedEmailChange,
+  emailVerificationProof,
+  onEmailVerificationProofChange,
 }: AccountInfoStepProps) {
   const {
     control,
@@ -57,7 +60,10 @@ export function AccountInfoStep({
   });
   const email = normalizeEmail(watchedEmail);
   const isEmailValid = signupEmailFieldSchema.safeParse(email).success;
-  const isEmailVerified = email.length > 0 && email === verifiedEmail;
+  const isEmailVerified =
+    email.length > 0 &&
+    emailVerificationProof !== null &&
+    email === emailVerificationProof.email;
 
   const handleSend = () => {
     clearErrors(["email", "emailVerificationCode"]);
@@ -68,7 +74,7 @@ export function AccountInfoStep({
       return;
     }
 
-    onVerifiedEmailChange(null);
+    onEmailVerificationProofChange(null);
     setValue("emailVerificationCode", "", { shouldDirty: true });
 
     sendMutation.mutate(
@@ -113,7 +119,10 @@ export function AccountInfoStep({
       {
         onSuccess: (data) => {
           if (data.verified) {
-            onVerifiedEmailChange(normalizeEmail(data.email));
+            onEmailVerificationProofChange({
+              email: normalizeEmail(data.email),
+              emailVerificationId: data.emailVerificationId,
+            });
           }
         },
         onError: (error) => {

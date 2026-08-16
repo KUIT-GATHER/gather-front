@@ -28,6 +28,7 @@ type SignupRequest = {
   phoneNumber?: string;
   phoneVerificationId?: string;
   email?: string;
+  emailVerificationId?: string;
   password?: string;
   passwordConfirm?: string;
   nickname?: string;
@@ -44,25 +45,25 @@ type KakaoSignupRequest = Omit<
   "email" | "password" | "passwordConfirm"
 >;
 
-const verifiedEmails = new Set<string>();
-const emailVerificationRequests = new Map<
-  string,
-  {
-    code: string;
-    expiresAt: number;
-  }
->();
-const phoneVerificationRequests = new Map<
-  string,
-  {
-    phoneNumber: string;
-    messageText: string;
-    expiresAt: number;
-    confirmAttempts: number;
-    verifiedAt: number | null;
-    consumedAt: number | null;
-  }
->();
+type EmailVerification = {
+  code: string;
+  expiresAt: number;
+  verificationId: string;
+  verifiedAt: number | null;
+  consumedAt: number | null;
+};
+
+type PhoneVerification = {
+  phoneNumber: string;
+  messageText: string;
+  expiresAt: number;
+  confirmAttempts: number;
+  verifiedAt: number | null;
+  consumedAt: number | null;
+};
+
+const emailVerificationRequests = new Map<string, EmailVerification>();
+const phoneVerificationRequests = new Map<string, PhoneVerification>();
 
 const validRegionIds = new Set(regions.data.map((region) => region.id));
 const validActivityRegionIds = new Set(
@@ -129,9 +130,12 @@ function createPhoneVerificationRequiredResponse() {
   );
 }
 
-function consumePhoneVerification(verificationId: string, phoneNumber: string) {
+function getValidPhoneVerification(
+  verificationId: string,
+  phoneNumber: string,
+  now = Date.now(),
+) {
   const verification = phoneVerificationRequests.get(verificationId);
-  const now = Date.now();
 
   if (
     !verification ||
@@ -140,11 +144,55 @@ function consumePhoneVerification(verificationId: string, phoneNumber: string) {
     verification.consumedAt !== null ||
     verification.verifiedAt + 30 * 60 * 1000 <= now
   ) {
+    return null;
+  }
+
+  return verification;
+}
+
+function consumePhoneVerification(verificationId: string, phoneNumber: string) {
+  const verification = getValidPhoneVerification(verificationId, phoneNumber);
+
+  if (!verification) {
     return false;
   }
 
-  verification.consumedAt = now;
+  verification.consumedAt = Date.now();
   return true;
+}
+
+function getValidEmailVerification(
+  email: string,
+  emailVerificationId: string,
+  now = Date.now(),
+) {
+  const verification = emailVerificationRequests.get(email);
+
+  if (
+    !verification ||
+    verification.verificationId !== emailVerificationId ||
+    verification.verifiedAt === null ||
+    verification.consumedAt !== null ||
+    verification.verifiedAt + 30 * 60 * 1000 <= now
+  ) {
+    return null;
+  }
+
+  return verification;
+}
+
+function createEmailVerificationRequiredResponse() {
+  return HttpResponse.json(
+    {
+      success: false,
+      data: null,
+      error: {
+        code: "EMAIL_VERIFICATION_REQUIRED",
+        message: "이메일 인증이 필요합니다.",
+      },
+    },
+    { status: 400 },
+  );
 }
 
 function createRefreshTokenCookie(refreshToken: string) {
@@ -398,10 +446,12 @@ export const authHandlers = [
     }
 
     const expiresAt = Date.now() + 10 * 60 * 1000;
-    verifiedEmails.delete(email);
     emailVerificationRequests.set(email, {
       code: "123456",
       expiresAt,
+      verificationId: createMockVerificationId(),
+      verifiedAt: null,
+      consumedAt: null,
     });
 
     return HttpResponse.json({
@@ -484,14 +534,15 @@ export const authHandlers = [
         );
       }
 
-      verifiedEmails.add(email);
+      verification.verifiedAt ??= Date.now();
 
       return HttpResponse.json({
         success: true,
         data: {
           email,
           verified: true,
-          verifiedAt: new Date().toISOString(),
+          verifiedAt: new Date(verification.verifiedAt).toISOString(),
+          emailVerificationId: verification.verificationId,
         },
         error: null,
       });
@@ -631,22 +682,25 @@ export const authHandlers = [
       );
     }
 
-    if (isWithdrawalCooldownActive({ phoneNumber })) {
-      return createWithdrawalCooldownResponse();
+    const emailVerification = body.emailVerificationId
+      ? getValidEmailVerification(email, body.emailVerificationId)
+      : null;
+
+    if (!emailVerification) {
+      return createEmailVerificationRequiredResponse();
     }
 
-    if (!verifiedEmails.has(email)) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "EMAIL_NOT_VERIFIED",
-            message: "이메일 인증이 완료되지 않았습니다.",
-          },
-        },
-        { status: 400 },
-      );
+    const phoneVerification = getValidPhoneVerification(
+      body.phoneVerificationId,
+      phoneNumber,
+    );
+
+    if (!phoneVerification) {
+      return createPhoneVerificationRequiredResponse();
+    }
+
+    if (isWithdrawalCooldownActive({ phoneNumber })) {
+      return createWithdrawalCooldownResponse();
     }
 
     if (
@@ -709,9 +763,9 @@ export const authHandlers = [
       );
     }
 
-    if (!consumePhoneVerification(body.phoneVerificationId, phoneNumber)) {
-      return createPhoneVerificationRequiredResponse();
-    }
+    const consumedAt = Date.now();
+    emailVerification.consumedAt = consumedAt;
+    phoneVerification.consumedAt = consumedAt;
 
     const newUser: MockUser = {
       id: getNextMockUserId(),
