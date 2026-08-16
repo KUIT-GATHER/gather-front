@@ -94,6 +94,18 @@ export type TokenResponse = {
   tokenType: "Bearer";
 };
 
+export type SessionRestoreResponse =
+  | {
+      authenticated: true;
+      accessToken: string;
+      tokenType: "Bearer";
+    }
+  | {
+      authenticated: false;
+      accessToken: null;
+      tokenType: null;
+    };
+
 export type WithdrawAccountResponse = {
   status: "COMPLETED" | "ACCEPTED";
   occurredAt: string;

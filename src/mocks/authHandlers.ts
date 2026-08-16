@@ -1178,6 +1178,35 @@ export const authHandlers = [
     );
   }),
 
+  http.post("*/api/v1/auth/session/restore", ({ cookies }) => {
+    const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
+    const userId = refreshToken
+      ? getMockUserIdFromRefreshToken(refreshToken)
+      : null;
+
+    if (userId === null || !getMockUserById(userId)) {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          authenticated: false,
+          accessToken: null,
+          tokenType: null,
+        },
+        error: null,
+      });
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        authenticated: true,
+        accessToken: createMockAccessToken(userId),
+        tokenType: "Bearer",
+      },
+      error: null,
+    });
+  }),
+
   http.post("*/api/v1/auth/logout", ({ cookies }) => {
     const refreshToken = cookies[REFRESH_TOKEN_COOKIE_NAME];
     const userId = refreshToken
