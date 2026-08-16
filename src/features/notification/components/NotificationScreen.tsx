@@ -132,10 +132,12 @@ export function NotificationScreen() {
           <PageHeader
             title="알림"
             onBack={() => navigate(-1)}
+            className="[&_h1]:ml-2.5"
             rightAction={
               <IconButton
                 label="알림 설정 열기"
                 icon={<Settings />}
+                className="-mr-3"
                 onClick={() => setIsSettingsOpen(true)}
               />
             }
@@ -147,10 +149,10 @@ export function NotificationScreen() {
         <NotificationTabs category={category} onChange={changeCategory} />
 
         {notifications.length > 0 ? (
-          <div className="-mx-5.5 flex h-12 items-center justify-end px-5.5">
+          <div className="-mx-5.5 flex h-11 items-center justify-end px-5.5">
             <button
               type="button"
-              className="min-h-11 px-3 text-body-14 text-text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:text-text-gray-100"
+              className="min-h-11 text-xs leading-5 font-semibold text-text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:text-text-gray-100"
               disabled={
                 unreadInCurrentCategory === 0 ||
                 readAllMutation.isPending ||

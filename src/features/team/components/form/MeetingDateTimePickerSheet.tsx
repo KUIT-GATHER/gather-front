@@ -1,5 +1,4 @@
-﻿import calendarIcon from "@/features/team/assets/date-time-picker/calendar.svg";
-import closeIcon from "@/shared/assets/icons/close.svg";
+import calendarIcon from "@/features/team/assets/date-time-picker/calendar.svg";
 import refreshIcon from "@/features/team/assets/date-time-picker/refresh.svg";
 import { SingleDateCalendar } from "@/features/team/components/SingleDateCalendar";
 import { TimeWheelPicker } from "@/features/team/components/TimeWheelPicker";
@@ -38,11 +37,6 @@ export function MeetingDateTimePickerSheet({
       className="h-[881px] max-h-none origin-bottom scale-[min(1,calc(100dvh/881px))] rounded-t-[40px] bg-bg"
       contentClassName="overflow-hidden px-5.5 pt-3.5 pb-0"
       footerClassName="pt-[7px] pb-[37px]"
-      closeIcon={
-        <span className="flex size-11 items-center justify-center">
-          <img src={closeIcon} alt="" className="size-11" />
-        </span>
-      }
       leadingAction={
         <button
           type="button"

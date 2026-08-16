@@ -1,8 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 
-import { clearAuthSession } from "@/features/auth/lib/clearAuthSession";
 import { KAKAO_CALLBACK_PATH } from "@/features/auth/lib/kakaoOAuth";
-import { refreshSessionOnce } from "@/features/auth/lib/refreshSession";
+import { restoreSessionOnce } from "@/features/auth/lib/restoreSession";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 
 type AuthProviderProps = {
@@ -10,6 +9,8 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const setAuthInitialized = useAuthStore((state) => state.setAuthInitialized);
 
   useEffect(() => {
@@ -22,10 +23,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     async function restoreAuth() {
       try {
-        await refreshSessionOnce();
+        const session = await restoreSessionOnce();
+
+        if (!ignore) {
+          if (session.authenticated) {
+            setAccessToken(session.accessToken);
+          } else {
+            clearAuth();
+          }
+        }
       } catch {
         if (!ignore) {
-          clearAuthSession();
+          clearAuth();
         }
       } finally {
         if (!ignore) {
@@ -39,7 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       ignore = true;
     };
-  }, [setAuthInitialized]);
+  }, [clearAuth, setAccessToken, setAuthInitialized]);
 
   return children;
 }

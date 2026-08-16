@@ -9,6 +9,7 @@ import {
   createUnauthorizedResponse,
   getMockUserId,
 } from "@/mocks/lib/mockAuth";
+import { getGatherApiUrl } from "./apiScope";
 
 type MockNotification = Notification & {
   userId: number;
@@ -38,7 +39,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: false,
-    createdAt: "2026-07-30T11:00:00",
+    createdAt: "2026-07-30T02:00:00Z",
     deleted: false,
   },
   {
@@ -53,7 +54,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: false,
-    createdAt: "2026-07-29T11:30:00",
+    createdAt: "2026-07-29T02:30:00Z",
     deleted: false,
   },
   {
@@ -68,7 +69,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: true,
-    createdAt: "2026-07-28T09:30:00",
+    createdAt: "2026-07-28T00:30:00Z",
     deleted: false,
   },
   {
@@ -82,7 +83,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: false,
-    createdAt: "2026-07-27T10:00:00",
+    createdAt: "2026-07-27T01:00:00Z",
     deleted: false,
   },
   {
@@ -98,7 +99,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-30T10:30:00",
+    createdAt: "2026-07-30T01:30:00Z",
     deleted: false,
   },
   {
@@ -112,7 +113,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: null,
     thumbnailUrl: null,
     read: true,
-    createdAt: "2026-07-29T09:20:00",
+    createdAt: "2026-07-29T00:20:00Z",
     deleted: false,
   },
   {
@@ -127,7 +128,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-28T08:30:00",
+    createdAt: "2026-07-27T23:30:00Z",
     deleted: false,
   },
   {
@@ -141,7 +142,7 @@ const initialNotifications: MockNotification[] = [
     targetMeetingId: 1,
     thumbnailUrl: null,
     read: true,
-    createdAt: "2026-07-27T09:30:00",
+    createdAt: "2026-07-27T00:30:00Z",
     deleted: false,
   },
   {
@@ -156,7 +157,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1531481540919-6a67ca4ec1a3?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-26T13:00:00",
+    createdAt: "2026-07-26T04:00:00Z",
     deleted: false,
   },
   {
@@ -171,7 +172,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=200&q=80",
     read: true,
-    createdAt: "2026-07-25T18:10:00",
+    createdAt: "2026-07-25T09:10:00Z",
     deleted: false,
   },
   {
@@ -187,7 +188,7 @@ const initialNotifications: MockNotification[] = [
     thumbnailUrl:
       "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=200&q=80",
     read: false,
-    createdAt: "2026-07-24T15:00:00",
+    createdAt: "2026-07-24T06:00:00Z",
     deleted: false,
   },
 ];
@@ -205,7 +206,7 @@ const generatedActivityNotifications = Array.from(
     targetMeetingId: null,
     thumbnailUrl: null,
     read: index % 3 === 0,
-    createdAt: `2026-07-${String(24 - index).padStart(2, "0")}T09:00:00`,
+    createdAt: `2026-07-${String(24 - index).padStart(2, "0")}T00:00:00Z`,
     deleted: false,
   }),
 );
@@ -295,7 +296,7 @@ function isNotificationSettings(value: unknown): value is NotificationSettings {
 }
 
 export const notificationHandlers = [
-  http.get("*/api/v1/notifications", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/notifications"), ({ request }) => {
     const userId = getMockUserId(request);
 
     if (userId === null) {
@@ -345,36 +346,39 @@ export const notificationHandlers = [
     });
   }),
 
-  http.patch("*/api/v1/notifications/read-all", ({ request }) => {
-    const userId = getMockUserId(request);
+  http.patch(
+    getGatherApiUrl("/api/v1/notifications/read-all"),
+    ({ request }) => {
+      const userId = getMockUserId(request);
 
-    if (userId === null) {
-      return createUnauthorizedResponse();
-    }
+      if (userId === null) {
+        return createUnauthorizedResponse();
+      }
 
-    const category = new URL(request.url).searchParams.get("category");
+      const category = new URL(request.url).searchParams.get("category");
 
-    if (!isNotificationCategory(category)) {
-      return createErrorResponse(
-        "VALIDATION_ERROR",
-        "요청 값이 올바르지 않습니다.",
-        400,
+      if (!isNotificationCategory(category)) {
+        return createErrorResponse(
+          "VALIDATION_ERROR",
+          "요청 값이 올바르지 않습니다.",
+          400,
+        );
+      }
+
+      notifications = notifications.map((notification) =>
+        notification.userId === userId &&
+        notification.category === category &&
+        !notification.deleted
+          ? { ...notification, read: true }
+          : notification,
       );
-    }
 
-    notifications = notifications.map((notification) =>
-      notification.userId === userId &&
-      notification.category === category &&
-      !notification.deleted
-        ? { ...notification, read: true }
-        : notification,
-    );
-
-    return HttpResponse.json({ success: true, data: null, error: null });
-  }),
+      return HttpResponse.json({ success: true, data: null, error: null });
+    },
+  ),
 
   http.patch(
-    "*/api/v1/notifications/:notificationId/read",
+    getGatherApiUrl("/api/v1/notifications/:notificationId/read"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -406,7 +410,7 @@ export const notificationHandlers = [
   ),
 
   http.delete(
-    "*/api/v1/notifications/:notificationId",
+    getGatherApiUrl("/api/v1/notifications/:notificationId"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -433,7 +437,7 @@ export const notificationHandlers = [
     },
   ),
 
-  http.get("*/api/v1/notifications/settings", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/notifications/settings"), ({ request }) => {
     if (getMockUserId(request) === null) {
       return createUnauthorizedResponse();
     }
@@ -445,66 +449,72 @@ export const notificationHandlers = [
     });
   }),
 
-  http.put("*/api/v1/notifications/settings", async ({ request }) => {
-    if (getMockUserId(request) === null) {
-      return createUnauthorizedResponse();
-    }
+  http.put(
+    getGatherApiUrl("/api/v1/notifications/settings"),
+    async ({ request }) => {
+      if (getMockUserId(request) === null) {
+        return createUnauthorizedResponse();
+      }
 
-    const settings = await request.json();
+      const settings = await request.json();
 
-    if (!isNotificationSettings(settings)) {
-      return createErrorResponse(
-        "VALIDATION_ERROR",
-        "알림 설정의 모든 항목을 boolean으로 전달해 주세요.",
-        400,
-      );
-    }
+      if (!isNotificationSettings(settings)) {
+        return createErrorResponse(
+          "VALIDATION_ERROR",
+          "알림 설정의 모든 항목을 boolean으로 전달해 주세요.",
+          400,
+        );
+      }
 
-    notificationSettings = {
-      volunteerScheduleEnabled: settings.volunteerScheduleEnabled,
-      bookmarkedPostingDeadlineEnabled:
-        settings.bookmarkedPostingDeadlineEnabled,
-      badgeEnabled: settings.badgeEnabled,
-      activityPostCommentEnabled: settings.activityPostCommentEnabled,
-      meetingJoinResultEnabled: settings.meetingJoinResultEnabled,
-      bookmarkedMeetingDeadlineEnabled:
-        settings.bookmarkedMeetingDeadlineEnabled,
-      meetingPostCommentEnabled: settings.meetingPostCommentEnabled,
-    };
+      notificationSettings = {
+        volunteerScheduleEnabled: settings.volunteerScheduleEnabled,
+        bookmarkedPostingDeadlineEnabled:
+          settings.bookmarkedPostingDeadlineEnabled,
+        badgeEnabled: settings.badgeEnabled,
+        activityPostCommentEnabled: settings.activityPostCommentEnabled,
+        meetingJoinResultEnabled: settings.meetingJoinResultEnabled,
+        bookmarkedMeetingDeadlineEnabled:
+          settings.bookmarkedMeetingDeadlineEnabled,
+        meetingPostCommentEnabled: settings.meetingPostCommentEnabled,
+      };
 
-    return HttpResponse.json({
-      success: true,
-      data: notificationSettings,
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: notificationSettings,
+        error: null,
+      });
+    },
+  ),
 
-  http.get("*/api/v1/notifications/unread-count", ({ request }) => {
-    const userId = getMockUserId(request);
+  http.get(
+    getGatherApiUrl("/api/v1/notifications/unread-count"),
+    ({ request }) => {
+      const userId = getMockUserId(request);
 
-    if (userId === null) {
-      return createUnauthorizedResponse();
-    }
+      if (userId === null) {
+        return createUnauthorizedResponse();
+      }
 
-    const activity = notifications.filter(
-      (notification) =>
-        notification.userId === userId &&
-        notification.category === "ACTIVITY" &&
-        !notification.read &&
-        !notification.deleted,
-    ).length;
-    const meeting = notifications.filter(
-      (notification) =>
-        notification.userId === userId &&
-        notification.category === "MEETING" &&
-        !notification.read &&
-        !notification.deleted,
-    ).length;
+      const activity = notifications.filter(
+        (notification) =>
+          notification.userId === userId &&
+          notification.category === "ACTIVITY" &&
+          !notification.read &&
+          !notification.deleted,
+      ).length;
+      const meeting = notifications.filter(
+        (notification) =>
+          notification.userId === userId &&
+          notification.category === "MEETING" &&
+          !notification.read &&
+          !notification.deleted,
+      ).length;
 
-    return HttpResponse.json({
-      success: true,
-      data: { activity, meeting, total: activity + meeting },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: { activity, meeting, total: activity + meeting },
+        error: null,
+      });
+    },
+  ),
 ];

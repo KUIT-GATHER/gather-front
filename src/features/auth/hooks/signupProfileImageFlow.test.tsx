@@ -9,6 +9,7 @@ import { useEmailSignupFlow } from "@/features/auth/hooks/useEmailSignupFlow";
 import { useKakaoSignupFlow } from "@/features/auth/hooks/useKakaoSignupFlow";
 import type { EmailSignupFormValues } from "@/features/auth/schemas/emailSignup.schema";
 import type { KakaoSignupFormValues } from "@/features/auth/schemas/kakaoSignup.schema";
+import type { EmailSignupRequest } from "@/features/auth/types/auth.types";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useKakaoSignupStore } from "@/features/auth/store/kakaoSignup.store";
 import { server } from "@/mocks/server";
@@ -16,6 +17,7 @@ import { createTestQueryClient } from "@/test/createTestQueryClient";
 
 const uploadProfileImageMock = vi.hoisted(() => vi.fn());
 const TEST_PHONE_VERIFICATION_ID = "5c5d5db1-4187-43d0-8580-672307994878";
+const TEST_EMAIL_VERIFICATION_ID = "7d6e5f4a-3b2c-1d0e-9f8a-76543210abcd";
 
 vi.mock("@/features/profile/lib/profileImageUpload", async (importOriginal) => {
   const actual =
@@ -111,7 +113,10 @@ async function moveEmailFlowToTerms(result: {
   await waitFor(() => expect(result.current.step).toBe("account"));
   act(() => {
     result.current.methods.setValue("emailVerificationCode", "123456");
-    result.current.setVerifiedEmail(emailSignupValues.email);
+    result.current.setEmailVerificationProof({
+      email: emailSignupValues.email,
+      emailVerificationId: TEST_EMAIL_VERIFICATION_ID,
+    });
   });
   await submitStep(result.current.handleFormSubmit);
   await waitFor(() => expect(result.current.step).toBe("profile"));
@@ -145,10 +150,12 @@ describe("signup profile image orchestration", () => {
   it("이미지 없이 이메일 가입 후 토큰을 저장하고 홈으로 이동한다", async () => {
     let signupRequestCount = 0;
     let signupCredentials: RequestCredentials | undefined;
+    let signupRequest: EmailSignupRequest | null = null;
     server.use(
-      http.post("*/api/v1/auth/signup", ({ request }) => {
+      http.post("*/api/v1/auth/signup", async ({ request }) => {
         signupRequestCount += 1;
         signupCredentials = request.credentials;
+        signupRequest = (await request.json()) as EmailSignupRequest;
         return HttpResponse.json(
           {
             success: true,
@@ -180,6 +187,11 @@ describe("signup profile image orchestration", () => {
     );
     expect(signupRequestCount).toBe(1);
     expect(signupCredentials).toBe("include");
+    expect(signupRequest).toEqual(
+      expect.objectContaining({
+        emailVerificationId: TEST_EMAIL_VERIFICATION_ID,
+      }),
+    );
     expect(uploadProfileImageMock).not.toHaveBeenCalled();
     expect(useAuthStore.getState()).toMatchObject({
       accessToken: "email-signup-access-token",
@@ -283,6 +295,108 @@ describe("signup profile image orchestration", () => {
       accessToken: "email-upload-failed-token",
       isAuthenticated: true,
     });
+  });
+
+  it("이메일이 변경되면 기존 email verification proof를 제거한다", async () => {
+    const { result } = renderHook(() => useEmailSignupFlow(), {
+      wrapper: createWrapper("/signup"),
+    });
+
+    act(() => {
+      result.current.methods.setValue("email", "before@example.com");
+      result.current.setEmailVerificationProof({
+        email: "before@example.com",
+        emailVerificationId: TEST_EMAIL_VERIFICATION_ID,
+      });
+    });
+
+    act(() => {
+      result.current.methods.setValue("email", "after@example.com");
+    });
+
+    await waitFor(() => {
+      expect(result.current.emailVerificationProof).toBeNull();
+      expect(result.current.methods.getValues("emailVerificationCode")).toBe(
+        "",
+      );
+    });
+  });
+
+  it("EMAIL_VERIFICATION_REQUIRED 수신 시 proof와 코드를 지우고 account 단계로 돌아간다", async () => {
+    server.use(
+      http.post("*/api/v1/auth/signup", () =>
+        HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "EMAIL_VERIFICATION_REQUIRED",
+              message: "이메일 인증이 필요합니다.",
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useEmailSignupFlow(), {
+      wrapper: createWrapper("/signup"),
+    });
+
+    await moveEmailFlowToTerms(result);
+    await submitStep(result.current.handleFormSubmit);
+    await waitFor(() => expect(result.current.step).toBe("terms"));
+    await submitStep(result.current.handleFormSubmit);
+
+    await waitFor(() => {
+      expect(result.current.step).toBe("account");
+      expect(result.current.emailVerificationProof).toBeNull();
+      expect(result.current.methods.getValues("emailVerificationCode")).toBe(
+        "",
+      );
+      expect(result.current.methods.getFieldState("email").error?.message).toBe(
+        "이메일 인증을 다시 완료해 주세요.",
+      );
+    });
+  });
+
+  it("최종 submit 시 현재 이메일과 proof가 다르면 signup API를 호출하지 않는다", async () => {
+    let signupRequestCount = 0;
+    server.use(
+      http.post("*/api/v1/auth/signup", () => {
+        signupRequestCount += 1;
+        return HttpResponse.json({
+          success: true,
+          data: {
+            userId: 104,
+            email: "after@example.com",
+            name: emailSignupValues.name,
+            nickname: emailSignupValues.nickname,
+            accessToken: "unexpected-token",
+            tokenType: "Bearer",
+          },
+          error: null,
+        });
+      }),
+    );
+
+    const { result } = renderHook(() => useEmailSignupFlow(), {
+      wrapper: createWrapper("/signup"),
+    });
+
+    await moveEmailFlowToTerms(result);
+    act(() => {
+      result.current.methods.setValue("email", "after@example.com");
+    });
+    await waitFor(() =>
+      expect(result.current.emailVerificationProof).toBeNull(),
+    );
+    await submitStep(result.current.handleFormSubmit);
+    await waitFor(() => expect(result.current.step).toBe("terms"));
+    await submitStep(result.current.handleFormSubmit);
+
+    await waitFor(() => expect(result.current.step).toBe("account"));
+    expect(signupRequestCount).toBe(0);
   });
 
   it("이메일 가입을 취소하면 선택한 이미지를 초기화한다", async () => {

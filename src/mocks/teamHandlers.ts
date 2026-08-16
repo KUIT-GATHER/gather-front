@@ -7,6 +7,7 @@ import { addMockBadgeProgress, earnMockBadge } from "./badgeHandlers";
 import teams from "./data/teams.json";
 import regions from "./data/regions.json";
 import { getMockUserById } from "./data/mockUsers";
+import { applyMockPostImages } from "./data/mockPostImages";
 import {
   hasUpcomingConfirmedMockRecruit,
   mockMeetingRecruitsByPostId,
@@ -47,6 +48,7 @@ import {
   MAX_MEETING_IMAGE_SIZE_BYTES,
   isMeetingImageMimeType,
 } from "@/features/team/lib/meetingImageValidation";
+import { getGatherApiUrl } from "./apiScope";
 import type {
   MeetingImagePresignedUrlRequest,
   MeetingImageUpdateRequest,
@@ -1197,7 +1199,7 @@ function getPendingUploadCount(meetingId: number) {
 }
 
 export const teamHandlers = [
-  http.get("*/api/v1/meetings/bookmarks", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/meetings/bookmarks"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) {
       return createUnauthorizedResponse();
@@ -1268,7 +1270,7 @@ export const teamHandlers = [
     });
   }),
 
-  http.get("*/api/v1/meetings/my", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/meetings/my"), ({ request }) => {
     const userId = getMockUserId(request);
 
     if (!userId) {
@@ -1285,7 +1287,7 @@ export const teamHandlers = [
     return HttpResponse.json({ success: true, data, error: null });
   }),
 
-  http.get("*/api/v1/meetings/recommended", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/meetings/recommended"), ({ request }) => {
     return HttpResponse.json({
       success: true,
       data: getRecommendedMockMeetings(getMockUserId(request)),
@@ -1293,7 +1295,7 @@ export const teamHandlers = [
     });
   }),
 
-  http.get("*/api/v1/meetings/keywords/recommended", () => {
+  http.get(getGatherApiUrl("/api/v1/meetings/keywords/recommended"), () => {
     return HttpResponse.json({
       success: true,
       data: ["플로깅", "독서 봉사", "도시락 배달"],
@@ -1301,7 +1303,7 @@ export const teamHandlers = [
     });
   }),
 
-  http.get("*/api/v1/meetings", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/meetings"), ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
@@ -1416,7 +1418,7 @@ export const teamHandlers = [
     });
   }),
 
-  http.post("*/api/v1/meetings", async ({ request }) => {
+  http.post(getGatherApiUrl("/api/v1/meetings"), async ({ request }) => {
     const userId = getMockUserId(request);
 
     if (!userId) {
@@ -1501,7 +1503,7 @@ export const teamHandlers = [
   }),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/images/presigned-url",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/images/presigned-url"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -1637,7 +1639,7 @@ export const teamHandlers = [
   }),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/images",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/images"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -1733,144 +1735,153 @@ export const teamHandlers = [
     },
   ),
 
-  http.get("*/api/v1/meetings/:meetingId/images", ({ params }) => {
-    const meetingId = Number(params.meetingId);
+  http.get(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/images"),
+    ({ params }) => {
+      const meetingId = Number(params.meetingId);
 
-    if (!findMeeting(meetingId)) {
-      return createMeetingNotFoundResponse();
-    }
+      if (!findMeeting(meetingId)) {
+        return createMeetingNotFoundResponse();
+      }
 
-    return HttpResponse.json({
-      success: true,
-      data: { imageUrls: getMockMeetingImageUrls(meetingId) },
-      error: null,
-    });
-  }),
-
-  http.get("*/api/v1/meetings/:meetingId/home", ({ params, request }) => {
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
-
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-
-    const userId = getMockUserId(request);
-    const viewerRole = userId ? getMembershipRole(userId, meetingId) : null;
-    const members = getMeetingMembers(team);
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        meetingId: team.meetingId,
-        name: team.name,
-        description: team.description,
-        deadline: team.deadline,
-        regionName: team.regionName,
-        currentMemberCount: members.length,
-        maxMember: team.maxMember,
-        timeRecognized: team.timeRecognized ?? false,
-        status: team.status,
-        basedOnPosting: team.volunteerPostingId !== null,
-        linkedPostingId: team.volunteerPostingId,
-        linkedPostingTitle: null,
-        participationCondition: team.participationCondition,
-        members,
-        upcomingActivity:
-          team.volunteerPostingId === 1
-            ? {
-                postingId: 1,
-                title: "한강공원 플로깅 봉사",
-                activityDate: "2026-07-20",
-                startTime: "10:00",
-                endTime: "13:00",
-                place: "여의도 한강공원",
-                remainingCount: 12,
-                status: "RECRUITING",
-              }
-            : null,
-        member: viewerRole !== null,
-        host: viewerRole === "HOST",
-        pendingJoinRequested: userId
-          ? pendingJoinRequestByUserAndMeeting.has(
-              getPendingJoinRequestKey(userId, meetingId),
-            )
-          : false,
-        myPendingJoinRequestId: userId
-          ? (pendingJoinRequestByUserAndMeeting.get(
-              getPendingJoinRequestKey(userId, meetingId),
-            )?.joinRequestId ?? null)
-          : null,
-      },
-      error: null,
-    });
-  }),
-
-  http.get("*/api/v1/meetings/:meetingId/my/posts", ({ params, request }) => {
-    const userId = getMockUserId(request);
-
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
-
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
-    const url = new URL(request.url);
-    const page = getPageParam(url);
-    const size = getMeetingPostSizeParam(url);
-    const sorts = parseMeetingPostSorts(url);
-
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-
-    if (getMembershipRole(userId, meetingId) === null) {
-      return createMeetingErrorResponse(
-        "MEETING_MEMBER_REQUIRED",
-        "모임 가입자만 이용할 수 있습니다.",
-        403,
-      );
-    }
-
-    if (!sorts) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid post sort.",
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    const posts = sortMeetingPosts(
-      meetingPosts.filter(
-        (post) => post.meetingId === meetingId && post.authorId === userId,
-      ),
-      sorts,
-    );
-    const content = posts
-      .slice(page * size, (page + 1) * size)
-      .map((post) => toMeetingPostSummary(post, userId));
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        content,
-        totalElements: posts.length,
-        totalPages: Math.ceil(posts.length / size),
-        page,
-        size,
-      },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: { imageUrls: getMockMeetingImageUrls(meetingId) },
+        error: null,
+      });
+    },
+  ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/my/commented-posts",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/home"),
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const userId = getMockUserId(request);
+      const viewerRole = userId ? getMembershipRole(userId, meetingId) : null;
+      const members = getMeetingMembers(team);
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          meetingId: team.meetingId,
+          name: team.name,
+          description: team.description,
+          deadline: team.deadline,
+          regionName: team.regionName,
+          currentMemberCount: members.length,
+          maxMember: team.maxMember,
+          timeRecognized: team.timeRecognized ?? false,
+          status: team.status,
+          basedOnPosting: team.volunteerPostingId !== null,
+          linkedPostingId: team.volunteerPostingId,
+          linkedPostingTitle: null,
+          participationCondition: team.participationCondition,
+          members,
+          upcomingActivity:
+            team.volunteerPostingId === 1
+              ? {
+                  postingId: 1,
+                  title: "한강공원 플로깅 봉사",
+                  activityDate: "2026-07-20",
+                  startTime: "10:00",
+                  endTime: "13:00",
+                  place: "여의도 한강공원",
+                  remainingCount: 12,
+                  status: "RECRUITING",
+                }
+              : null,
+          member: viewerRole !== null,
+          host: viewerRole === "HOST",
+          pendingJoinRequested: userId
+            ? pendingJoinRequestByUserAndMeeting.has(
+                getPendingJoinRequestKey(userId, meetingId),
+              )
+            : false,
+          myPendingJoinRequestId: userId
+            ? (pendingJoinRequestByUserAndMeeting.get(
+                getPendingJoinRequestKey(userId, meetingId),
+              )?.joinRequestId ?? null)
+            : null,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.get(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/my/posts"),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+      const url = new URL(request.url);
+      const page = getPageParam(url);
+      const size = getMeetingPostSizeParam(url);
+      const sorts = parseMeetingPostSorts(url);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      if (getMembershipRole(userId, meetingId) === null) {
+        return createMeetingErrorResponse(
+          "MEETING_MEMBER_REQUIRED",
+          "모임 가입자만 이용할 수 있습니다.",
+          403,
+        );
+      }
+
+      if (!sorts) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid post sort.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const posts = sortMeetingPosts(
+        meetingPosts.filter(
+          (post) => post.meetingId === meetingId && post.authorId === userId,
+        ),
+        sorts,
+      );
+      const content = posts
+        .slice(page * size, (page + 1) * size)
+        .map((post) => toMeetingPostSummary(post, userId));
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          content,
+          totalElements: posts.length,
+          totalPages: Math.ceil(posts.length / size),
+          page,
+          size,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.get(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/my/commented-posts"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -1945,7 +1956,7 @@ export const teamHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/my/activity-summary",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/my/activity-summary"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -1995,7 +2006,7 @@ export const teamHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/my/applied-recruits",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/my/applied-recruits"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2061,88 +2072,92 @@ export const teamHandlers = [
     },
   ),
 
-  http.get("*/api/v1/meetings/:meetingId/posts", ({ params, request }) => {
-    const userId = getMockUserId(request);
+  http.get(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts"),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
 
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
 
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
-    const url = new URL(request.url);
-    const postTypes = parseMeetingPostTypes(url);
-    const page = getPageParam(url);
-    const size = getMeetingPostSizeParam(url);
-    const sorts = parseMeetingPostSorts(url);
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+      const url = new URL(request.url);
+      const postTypes = parseMeetingPostTypes(url);
+      const page = getPageParam(url);
+      const size = getMeetingPostSizeParam(url);
+      const sorts = parseMeetingPostSorts(url);
 
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
 
-    if (!postTypes) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid post types.",
+      if (!postTypes) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid post types.",
+            },
           },
-        },
-        { status: 400 },
-      );
-    }
+          { status: 400 },
+        );
+      }
 
-    if (!sorts) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid post sort.",
+      if (!sorts) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid post sort.",
+            },
           },
-        },
-        { status: 400 },
+          { status: 400 },
+        );
+      }
+
+      const isJoined = getMembershipRole(userId, meetingId) !== null;
+      const requestedPostTypes = new Set(postTypes);
+      const posts = sortMeetingPosts(
+        meetingPosts
+          .filter((post) => post.meetingId === meetingId)
+          .filter(
+            (post) =>
+              isJoined || post.type === "NOTICE" || post.type === "REVIEW",
+          )
+          .filter(
+            (post) =>
+              requestedPostTypes.size === 0 ||
+              requestedPostTypes.has(post.type),
+          ),
+        sorts,
       );
-    }
+      const startIndex = page * size;
+      const content = posts
+        .slice(startIndex, startIndex + size)
+        .map((post) => toMeetingPostSummary(post, userId));
 
-    const isJoined = getMembershipRole(userId, meetingId) !== null;
-    const requestedPostTypes = new Set(postTypes);
-    const posts = sortMeetingPosts(
-      meetingPosts
-        .filter((post) => post.meetingId === meetingId)
-        .filter(
-          (post) =>
-            isJoined || post.type === "NOTICE" || post.type === "REVIEW",
-        )
-        .filter(
-          (post) =>
-            requestedPostTypes.size === 0 || requestedPostTypes.has(post.type),
-        ),
-      sorts,
-    );
-    const startIndex = page * size;
-    const content = posts
-      .slice(startIndex, startIndex + size)
-      .map((post) => toMeetingPostSummary(post, userId));
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        content,
-        totalElements: posts.length,
-        totalPages: Math.ceil(posts.length / size),
-        page,
-        size,
-      },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: {
+          content,
+          totalElements: posts.length,
+          totalPages: Math.ceil(posts.length / size),
+          page,
+          size,
+        },
+        error: null,
+      });
+    },
+  ),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/posts",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) {
@@ -2226,6 +2241,15 @@ export const teamHandlers = [
           };
         }
       }
+      const imageUrls = applyMockPostImages(userId, body.imageObjectKeys ?? []);
+      if (!imageUrls) {
+        return createMeetingErrorResponse(
+          "INVALID_POST_IMAGE_KEY",
+          "업로드가 완료되지 않았거나 유효하지 않은 이미지입니다.",
+          400,
+        );
+      }
+
       const user = getMockUserById(userId);
       const now = new Date().toISOString().slice(0, 19);
       const post: MockMeetingPost = {
@@ -2236,9 +2260,7 @@ export const teamHandlers = [
         content: body.content.trim(),
         authorId: userId,
         authorNickname: user?.nickname ?? "나",
-        imageUrls: (body.imageObjectKeys ?? []).map(
-          (objectKey) => `https://mock-s3.gather.local/${objectKey}`,
-        ),
+        imageUrls,
         likeCount: 0,
         commentCount: 0,
         likedUserIds: [],
@@ -2264,7 +2286,7 @@ export const teamHandlers = [
   ),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/posts/:postId/likes",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId/likes"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2314,7 +2336,7 @@ export const teamHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/posts/:postId/comments",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId/comments"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2389,7 +2411,7 @@ export const teamHandlers = [
   ),
 
   http.post(
-    "*/api/v1/meetings/:meetingId/posts/:postId/comments",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId/comments"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2466,7 +2488,9 @@ export const teamHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/posts/:postId/comments/:commentId",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/comments/:commentId",
+    ),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2542,7 +2566,9 @@ export const teamHandlers = [
   ),
 
   http.delete(
-    "*/api/v1/meetings/:meetingId/posts/:postId/comments/:commentId",
+    getGatherApiUrl(
+      "/api/v1/meetings/:meetingId/posts/:postId/comments/:commentId",
+    ),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2602,7 +2628,7 @@ export const teamHandlers = [
   ),
 
   http.get(
-    "*/api/v1/meetings/:meetingId/posts/:postId",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2646,7 +2672,7 @@ export const teamHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/meetings/:meetingId/posts/:postId",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) {
@@ -2688,9 +2714,15 @@ export const teamHandlers = [
       post.title = body.title.trim();
       post.content = body.content.trim();
       if (body.imageObjectKeys !== null && body.imageObjectKeys !== undefined) {
-        post.imageUrls = body.imageObjectKeys.map(
-          (objectKey) => `https://mock-s3.gather.local/${objectKey}`,
-        );
+        const imageUrls = applyMockPostImages(userId, body.imageObjectKeys);
+        if (!imageUrls) {
+          return createMeetingErrorResponse(
+            "INVALID_POST_IMAGE_KEY",
+            "업로드가 완료되지 않았거나 유효하지 않은 이미지입니다.",
+            400,
+          );
+        }
+        post.imageUrls = imageUrls;
       }
       return HttpResponse.json({
         success: true,
@@ -2701,7 +2733,7 @@ export const teamHandlers = [
   ),
 
   http.delete(
-    "*/api/v1/meetings/:meetingId/posts/:postId",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/posts/:postId"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -2765,214 +2797,229 @@ export const teamHandlers = [
     },
   ),
 
-  http.post("*/api/v1/meetings/:meetingId/join", ({ params, request }) => {
-    const userId = getMockUserId(request);
+  http.post(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/join"),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
 
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
 
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
 
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
 
-    if (team.status !== "RECRUITING") {
-      return createMeetingErrorResponse(
-        "MEETING_CLOSED",
-        "모집이 마감된 모임입니다.",
-        409,
-      );
-    }
+      if (team.status !== "RECRUITING") {
+        return createMeetingErrorResponse(
+          "MEETING_CLOSED",
+          "모집이 마감된 모임입니다.",
+          409,
+        );
+      }
 
-    if (getMeetingMembers(team).length >= team.maxMember) {
-      return createMeetingErrorResponse(
-        "MEETING_FULL",
-        "모임 정원이 가득 찼습니다.",
-        409,
-      );
-    }
+      if (getMeetingMembers(team).length >= team.maxMember) {
+        return createMeetingErrorResponse(
+          "MEETING_FULL",
+          "모임 정원이 가득 찼습니다.",
+          409,
+        );
+      }
 
-    if (getMembershipRole(userId, meetingId)) {
-      return createMeetingErrorResponse(
-        "MEETING_ALREADY_JOINED",
-        "이미 가입한 모임입니다.",
-        409,
-      );
-    }
+      if (getMembershipRole(userId, meetingId)) {
+        return createMeetingErrorResponse(
+          "MEETING_ALREADY_JOINED",
+          "이미 가입한 모임입니다.",
+          409,
+        );
+      }
 
-    const requestKey = getPendingJoinRequestKey(userId, meetingId);
-    if (pendingJoinRequestByUserAndMeeting.has(requestKey)) {
-      return createMeetingErrorResponse(
-        "MEETING_JOIN_REQUEST_ALREADY_PENDING",
-        "이미 가입 신청을 보냈습니다.",
-        409,
-      );
-    }
-    const joinRequest: MockPendingJoinRequest = {
-      joinRequestId: nextJoinRequestId++,
-      meetingId,
-      userId,
-      nickname: getMockUserById(userId)?.nickname ?? `사용자 ${userId}`,
-      status: "PENDING",
-      requestedAt: new Date().toISOString().slice(0, 19),
-    };
-    pendingJoinRequestByUserAndMeeting.set(requestKey, joinRequest);
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        joinRequestId: joinRequest.joinRequestId,
+      const requestKey = getPendingJoinRequestKey(userId, meetingId);
+      if (pendingJoinRequestByUserAndMeeting.has(requestKey)) {
+        return createMeetingErrorResponse(
+          "MEETING_JOIN_REQUEST_ALREADY_PENDING",
+          "이미 가입 신청을 보냈습니다.",
+          409,
+        );
+      }
+      const joinRequest: MockPendingJoinRequest = {
+        joinRequestId: nextJoinRequestId++,
         meetingId,
+        userId,
+        nickname: getMockUserById(userId)?.nickname ?? `사용자 ${userId}`,
         status: "PENDING",
-      },
-      error: null,
-    });
-  }),
+        requestedAt: new Date().toISOString().slice(0, 19),
+      };
+      pendingJoinRequestByUserAndMeeting.set(requestKey, joinRequest);
 
-  http.delete("*/api/v1/meetings/:meetingId/join", ({ params, request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
-    const requestKey = getPendingJoinRequestKey(
-      userId,
-      Number(params.meetingId),
-    );
-    if (!pendingJoinRequestByUserAndMeeting.delete(requestKey)) {
-      return createMeetingErrorResponse(
-        "MEETING_JOIN_REQUEST_NOT_FOUND",
-        "취소할 가입 신청이 없습니다.",
-        404,
-      );
-    }
-    return HttpResponse.json({ success: true, data: null, error: null });
-  }),
-
-  http.patch("*/api/v1/meetings/:meetingId", async ({ params, request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-    if (team.hostId !== userId) {
-      return createMeetingErrorResponse(
-        "MEETING_HOST_REQUIRED",
-        "팀장만 모임 정보를 수정할 수 있습니다.",
-        403,
-      );
-    }
-    const body = (await request.json()) as MeetingUpdateRequest;
-    if (
-      body.maxMember > 30 ||
-      body.maxMember < getMeetingMembers(team).length ||
-      !isLocalDateTimeApiValue(body.deadline)
-    ) {
-      return createMeetingErrorResponse(
-        "VALIDATION_ERROR",
-        "모임 수정 요청이 올바르지 않습니다.",
-        400,
-      );
-    }
-    team.name = body.name;
-    team.description = body.description;
-    team.maxMember = body.maxMember;
-    team.deadline = body.deadline;
-    team.participationCondition = body.participationCondition;
-    if (team.volunteerPostingId === null) {
-      if (body.regionId !== null) team.regionId = body.regionId;
-      if (body.categories !== null) team.categories = body.categories;
-      team.timeRecognized = false;
-    } else {
-      team.timeRecognized = body.timeRecognized;
-    }
-    return HttpResponse.json({
-      success: true,
-      data: {
-        ...toMeetingListItem(team),
-        hostId: team.hostId,
-        volunteerPostingId: team.volunteerPostingId,
-        participationCondition: team.participationCondition,
-        memo: team.memo,
-        activityEndAt: team.activityEndAt,
-        bookmarked: false,
-        timeRecognized: team.timeRecognized ?? false,
-      },
-      error: null,
-    });
-  }),
-
-  http.delete("*/api/v1/meetings/:meetingId", ({ params, request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-    if (team.hostId !== userId) {
-      return createMeetingErrorResponse(
-        "MEETING_HOST_REQUIRED",
-        "팀장만 모임을 해산할 수 있습니다.",
-        403,
-      );
-    }
-    if (hasUpcomingConfirmedMockRecruit(meetingId)) {
-      return createMeetingErrorResponse(
-        "MEETING_DISBAND_CONFIRMED_ACTIVITY_EXISTS",
-        "확정된 진행 예정 활동이 있어 모임을 해산할 수 없습니다.",
-        409,
-      );
-    }
-    deletedMeetingIds.add(meetingId);
-    return HttpResponse.json({ success: true, data: null, error: null });
-  }),
-
-  http.post("*/api/v1/meetings/:meetingId/bookmark", ({ params, request }) => {
-    const userId = getMockUserId(request);
-
-    if (!userId) {
-      return createUnauthorizedResponse();
-    }
-
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
-
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
-
-    const bookmarkedMeetingIds =
-      bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
-
-    if (bookmarkedMeetingIds.has(meetingId)) {
-      return createMeetingErrorResponse(
-        "MEETING_BOOKMARK_DUPLICATE",
-        "이미 북마크한 모임입니다.",
-        409,
-      );
-    }
-
-    bookmarkedMeetingIds.add(meetingId);
-    bookmarkedMeetingIdsByUserId.set(userId, bookmarkedMeetingIds);
-
-    return HttpResponse.json({
-      success: true,
-      data: { meetingId, bookmarked: true },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: {
+          joinRequestId: joinRequest.joinRequestId,
+          meetingId,
+          status: "PENDING",
+        },
+        error: null,
+      });
+    },
+  ),
 
   http.delete(
-    "*/api/v1/meetings/:meetingId/bookmark",
+    getGatherApiUrl("/api/v1/meetings/:meetingId/join"),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+      const requestKey = getPendingJoinRequestKey(
+        userId,
+        Number(params.meetingId),
+      );
+      if (!pendingJoinRequestByUserAndMeeting.delete(requestKey)) {
+        return createMeetingErrorResponse(
+          "MEETING_JOIN_REQUEST_NOT_FOUND",
+          "취소할 가입 신청이 없습니다.",
+          404,
+        );
+      }
+      return HttpResponse.json({ success: true, data: null, error: null });
+    },
+  ),
+
+  http.patch(
+    getGatherApiUrl("/api/v1/meetings/:meetingId"),
+    async ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+      if (team.hostId !== userId) {
+        return createMeetingErrorResponse(
+          "MEETING_HOST_REQUIRED",
+          "팀장만 모임 정보를 수정할 수 있습니다.",
+          403,
+        );
+      }
+      const body = (await request.json()) as MeetingUpdateRequest;
+      if (
+        body.maxMember > 30 ||
+        body.maxMember < getMeetingMembers(team).length ||
+        !isLocalDateTimeApiValue(body.deadline)
+      ) {
+        return createMeetingErrorResponse(
+          "VALIDATION_ERROR",
+          "모임 수정 요청이 올바르지 않습니다.",
+          400,
+        );
+      }
+      team.name = body.name;
+      team.description = body.description;
+      team.maxMember = body.maxMember;
+      team.deadline = body.deadline;
+      team.participationCondition = body.participationCondition;
+      if (team.volunteerPostingId === null) {
+        if (body.regionId !== null) team.regionId = body.regionId;
+        if (body.categories !== null) team.categories = body.categories;
+        team.timeRecognized = false;
+      } else {
+        team.timeRecognized = body.timeRecognized;
+      }
+      return HttpResponse.json({
+        success: true,
+        data: {
+          ...toMeetingListItem(team),
+          hostId: team.hostId,
+          volunteerPostingId: team.volunteerPostingId,
+          participationCondition: team.participationCondition,
+          memo: team.memo,
+          activityEndAt: team.activityEndAt,
+          bookmarked: false,
+          timeRecognized: team.timeRecognized ?? false,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.delete(
+    getGatherApiUrl("/api/v1/meetings/:meetingId"),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+      if (team.hostId !== userId) {
+        return createMeetingErrorResponse(
+          "MEETING_HOST_REQUIRED",
+          "팀장만 모임을 해산할 수 있습니다.",
+          403,
+        );
+      }
+      if (hasUpcomingConfirmedMockRecruit(meetingId)) {
+        return createMeetingErrorResponse(
+          "MEETING_DISBAND_CONFIRMED_ACTIVITY_EXISTS",
+          "확정된 진행 예정 활동이 있어 모임을 해산할 수 없습니다.",
+          409,
+        );
+      }
+      deletedMeetingIds.add(meetingId);
+      return HttpResponse.json({ success: true, data: null, error: null });
+    },
+  ),
+
+  http.post(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/bookmark"),
+    ({ params, request }) => {
+      const userId = getMockUserId(request);
+
+      if (!userId) {
+        return createUnauthorizedResponse();
+      }
+
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
+
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
+
+      const bookmarkedMeetingIds =
+        bookmarkedMeetingIdsByUserId.get(userId) ?? new Set<number>();
+
+      if (bookmarkedMeetingIds.has(meetingId)) {
+        return createMeetingErrorResponse(
+          "MEETING_BOOKMARK_DUPLICATE",
+          "이미 북마크한 모임입니다.",
+          409,
+        );
+      }
+
+      bookmarkedMeetingIds.add(meetingId);
+      bookmarkedMeetingIdsByUserId.set(userId, bookmarkedMeetingIds);
+
+      return HttpResponse.json({
+        success: true,
+        data: { meetingId, bookmarked: true },
+        error: null,
+      });
+    },
+  ),
+
+  http.delete(
+    getGatherApiUrl("/api/v1/meetings/:meetingId/bookmark"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
 
@@ -3013,32 +3060,35 @@ export const teamHandlers = [
     },
   ),
 
-  http.get("*/api/v1/meetings/:meetingId", ({ params, request }) => {
-    const meetingId = Number(params.meetingId);
-    const team = findMeeting(meetingId);
+  http.get(
+    getGatherApiUrl("/api/v1/meetings/:meetingId"),
+    ({ params, request }) => {
+      const meetingId = Number(params.meetingId);
+      const team = findMeeting(meetingId);
 
-    if (!team) {
-      return createMeetingNotFoundResponse();
-    }
+      if (!team) {
+        return createMeetingNotFoundResponse();
+      }
 
-    const userId = getMockUserId(request);
-    const bookmarked = userId
-      ? (bookmarkedMeetingIdsByUserId.get(userId)?.has(meetingId) ?? false)
-      : false;
+      const userId = getMockUserId(request);
+      const bookmarked = userId
+        ? (bookmarkedMeetingIdsByUserId.get(userId)?.has(meetingId) ?? false)
+        : false;
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        ...toMeetingListItem(team),
-        hostId: team.hostId,
-        volunteerPostingId: team.volunteerPostingId,
-        participationCondition: team.participationCondition,
-        memo: team.memo,
-        activityEndAt: team.activityEndAt,
-        bookmarked,
-        timeRecognized: team.timeRecognized ?? false,
-      },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: {
+          ...toMeetingListItem(team),
+          hostId: team.hostId,
+          volunteerPostingId: team.volunteerPostingId,
+          participationCondition: team.participationCondition,
+          memo: team.memo,
+          activityEndAt: team.activityEndAt,
+          bookmarked,
+          timeRecognized: team.timeRecognized ?? false,
+        },
+        error: null,
+      });
+    },
+  ),
 ];

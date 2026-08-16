@@ -36,10 +36,16 @@ export type ConfirmEmailVerificationRequest = {
   code: string;
 };
 
+export type EmailVerificationProof = {
+  email: string;
+  emailVerificationId: string;
+};
+
 export type ConfirmEmailVerificationResponse = {
   email: string;
   verified: boolean;
   verifiedAt: string;
+  emailVerificationId: string;
 };
 
 export type EmailSignupRequest = {
@@ -56,6 +62,7 @@ export type EmailSignupRequest = {
   privacyPolicyAgreed: boolean;
   marketingAgreed: boolean;
   email: string;
+  emailVerificationId: string;
   password: string;
   passwordConfirm: string;
 };
@@ -93,6 +100,18 @@ export type TokenResponse = {
   accessToken: string;
   tokenType: "Bearer";
 };
+
+export type SessionRestoreResponse =
+  | {
+      authenticated: true;
+      accessToken: string;
+      tokenType: "Bearer";
+    }
+  | {
+      authenticated: false;
+      accessToken: null;
+      tokenType: null;
+    };
 
 export type WithdrawAccountResponse = {
   status: "COMPLETED" | "ACCEPTED";

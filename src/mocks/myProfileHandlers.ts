@@ -1,18 +1,25 @@
 import { HttpResponse, http } from "msw";
 
 import regions from "./data/regions.json";
+import {
+  applyMockAutomaticConfirmation,
+  mockMeetingRecruitsByPostId,
+  mockRecruitParticipantsByPostId,
+} from "./data/mockMeetingRecruits";
 import { getMockParticipations } from "./data/mockParticipations";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
-import { mockPostings } from "./postingHandlers";
-import { getCreatedMockMeetings } from "./teamHandlers";
+import {
+  getMockPostingParticipationAction,
+  mockPostings,
+} from "./postingHandlers";
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
 import type {
   MyActivityRecord,
-  MyMeetingActivityStatus,
   MyPageActivity,
 } from "@/features/my/types/myActivity.types";
+import { getGatherApiUrl } from "./apiScope";
 
 const PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -99,116 +106,6 @@ const mockActivityRecords: MyActivityRecord[] = [
   },
 ];
 
-const mockCalendarActivities: MyPageActivity[] = [
-  {
-    activityType: "VOLUNTEER",
-    participationId: 201,
-    postingId: 1,
-    meetingId: null,
-    title: "한강 쓰레기 줍기",
-    actStartDate: "2026-08-20",
-    actEndDate: null,
-    actStartTime: "11:00",
-    actEndTime: "12:00",
-    actPlace: "서울시 광진구",
-    regionName: null,
-    status: "APPLIED",
-  },
-  {
-    activityType: "VOLUNTEER",
-    participationId: 202,
-    postingId: 2,
-    meetingId: null,
-    title: "도서관 책 정리 봉사",
-    actStartDate: "2026-08-21",
-    actEndDate: "2026-08-22",
-    actStartTime: "13:00",
-    actEndTime: null,
-    actPlace: null,
-    regionName: null,
-    status: "CONFIRMED",
-  },
-  {
-    activityType: "VOLUNTEER",
-    participationId: 203,
-    postingId: 3,
-    meetingId: null,
-    title: "공원 나무 심기",
-    actStartDate: "2026-07-15",
-    actEndDate: "2026-07-15",
-    actStartTime: null,
-    actEndTime: "15:00",
-    actPlace: "서울숲",
-    regionName: null,
-    status: "COMPLETED",
-  },
-  {
-    activityType: "VOLUNTEER",
-    participationId: 204,
-    postingId: 4,
-    meetingId: null,
-    title: "지역 아동 행사 지원",
-    actStartDate: "2026-07-03",
-    actEndDate: "2026-07-03",
-    actStartTime: null,
-    actEndTime: null,
-    actPlace: "광진구 주민센터",
-    regionName: null,
-    status: "REVIEWED",
-  },
-  {
-    activityType: "MEETING",
-    participationId: null,
-    postingId: null,
-    meetingId: 31,
-    title: "한강 플로깅 모임",
-    actStartDate: "2026-08-20",
-    actEndDate: "2026-08-22",
-    actStartTime: "09:30",
-    actEndTime: "12:00",
-    actPlace: null,
-    regionName: "서울시 영등포구",
-    volunteerPostingId: 1,
-    status: null,
-    meetingStatus: "RECRUITING",
-    postingParticipationStatus: "APPLIED",
-  },
-  {
-    activityType: "MEETING",
-    participationId: null,
-    postingId: null,
-    meetingId: 32,
-    title: "동네 도서관 모임",
-    actStartDate: "2026-08-24",
-    actEndDate: null,
-    actStartTime: null,
-    actEndTime: null,
-    actPlace: null,
-    regionName: "서울시 마포구",
-    volunteerPostingId: null,
-    status: null,
-    meetingStatus: "CLOSED",
-    postingParticipationStatus: null,
-  },
-  {
-    activityType: "MEETING",
-    participationId: null,
-    postingId: null,
-    meetingId: 33,
-    title: "도심 하천 정화 모임",
-    actStartDate: "2026-07-12",
-    actEndDate: "2026-07-13",
-    actStartTime: "10:00",
-    actEndTime: "13:00",
-    actPlace: null,
-    regionName: "서울시 마포구",
-    volunteerPostingId: 3,
-    status: null,
-    meetingStatus: "COMPLETED",
-    postingParticipationStatus: "COMPLETED",
-  },
-];
-
 function getProfile(userId: number) {
   const existing = profiles.get(userId);
   if (existing) return existing;
@@ -262,7 +159,7 @@ function formatMockTime(time: string | null) {
 }
 
 export const myProfileHandlers = [
-  http.get("*/api/v1/mypage/home", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/mypage/home"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -282,7 +179,7 @@ export const myProfileHandlers = [
       error: null,
     });
   }),
-  http.get("*/api/v1/mypage/activities", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/mypage/activities"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -299,65 +196,25 @@ export const myProfileHandlers = [
     const monthStart = `${yearMonth}-01`;
     const monthEnd = `${yearMonth}-${new Date(year, month, 0).getDate()}`;
     const participations = getMockParticipations(userId);
-    const calendarActivities = mockCalendarActivities
-      .filter((activity) => activity.activityType === "MEETING")
-      .map((activity) => {
-        if (
-          activity.activityType !== "MEETING" ||
-          activity.volunteerPostingId === null
-        ) {
-          return activity;
-        }
-
-        const participation = participations.find(
-          (item) => item.postingId === activity.volunteerPostingId,
-        );
-
-        return {
-          ...activity,
-          postingParticipationStatus: participation?.status ?? null,
-        };
-      });
-    const createdMeetingActivities: MyPageActivity[] = getCreatedMockMeetings(
-      userId,
-    ).flatMap((meeting) => {
-      if (
-        meeting.volunteerPostingId === null ||
-        meeting.activityStartAt === null
-      ) {
-        return [];
-      }
-
-      const participation = participations.find(
-        (item) => item.postingId === meeting.volunteerPostingId,
-      );
-      return [
-        {
-          activityType: "MEETING",
-          participationId: null,
-          postingId: null,
-          meetingId: meeting.meetingId,
-          title: meeting.name,
-          actStartDate: meeting.activityStartAt.slice(0, 10),
-          actEndDate: meeting.activityEndAt?.slice(0, 10) ?? null,
-          actStartTime: meeting.activityStartAt.slice(11, 16),
-          actEndTime: meeting.activityEndAt?.slice(11, 16) ?? null,
-          actPlace: null,
-          regionName: meeting.regionName || null,
-          volunteerPostingId: meeting.volunteerPostingId,
-          status: null,
-          meetingStatus: meeting.status as MyMeetingActivityStatus,
-          postingParticipationStatus: participation?.status ?? null,
-        },
-      ];
-    });
     const participationActivities: MyPageActivity[] = participations.flatMap(
       (participation) => {
+        if (
+          participation.status !== "APPLIED" &&
+          participation.status !== "CONFIRMED"
+        ) {
+          return [];
+        }
+
         const posting = mockPostings.find(
           (item) => item.id === participation.postingId,
         );
 
         if (!posting) return [];
+
+        const participationAction =
+          getMockPostingParticipationAction(posting.id, userId) === "CANCEL"
+            ? "CANCEL"
+            : "NONE";
 
         return [
           {
@@ -366,21 +223,63 @@ export const myProfileHandlers = [
             postingId: posting.id,
             meetingId: null,
             title: posting.title,
-            actStartDate: posting.actStartDate,
-            actEndDate: posting.actEndDate ?? null,
+            actStartDate:
+              participation.participationStartDate ?? posting.actStartDate,
+            actEndDate:
+              participation.participationEndDate ??
+              posting.actEndDate ??
+              posting.actStartDate,
             actStartTime: formatMockTime(posting.actStartTime),
             actEndTime: formatMockTime(posting.actEndTime),
             actPlace: posting.actPlace ?? null,
             regionName: null,
             status: participation.status,
+            participationAction,
           },
         ];
       },
     );
+    const meetingRecruitActivities: MyPageActivity[] = [
+      ...mockMeetingRecruitsByPostId.values(),
+    ].flatMap((recruit) => {
+      applyMockAutomaticConfirmation(recruit);
+      const participant = (
+        mockRecruitParticipantsByPostId.get(recruit.postId) ?? []
+      ).find((item) => item.userId === userId);
+
+      if (
+        !participant ||
+        (participant.participationStatus !== "APPLIED" &&
+          participant.participationStatus !== "CONFIRMED")
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          activityType: "MEETING_RECRUIT",
+          participationId: participant.participationId,
+          meetingId: recruit.meetingId,
+          postId: recruit.postId,
+          title: recruit.title,
+          actStartDate: recruit.activityStartAt.slice(0, 10),
+          actEndDate: recruit.activityEndAt.slice(0, 10),
+          actStartTime: recruit.activityStartAt.slice(11, 16),
+          actEndTime: recruit.activityEndAt.slice(11, 16),
+          actPlace: recruit.place,
+          regionName: recruit.regionName,
+          status: participant.participationStatus,
+          participationAction:
+            participant.participationStatus === "APPLIED" &&
+            recruit.applicationOpen
+              ? "CANCEL"
+              : "NONE",
+        },
+      ];
+    });
     const activities = [
-      ...calendarActivities,
-      ...createdMeetingActivities,
       ...participationActivities,
+      ...meetingRecruitActivities,
     ].filter((activity) => {
       const effectiveEndDate = activity.actEndDate ?? activity.actStartDate;
 
@@ -395,63 +294,71 @@ export const myProfileHandlers = [
       error: null,
     });
   }),
-  http.get("*/api/v1/mypage/activities/summary", ({ request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+  http.get(
+    getGatherApiUrl("/api/v1/mypage/activities/summary"),
+    ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        totalCompletedCount: mockActivityRecords.length,
-        totalRecognizedMinutes: mockActivityRecords.reduce(
-          (sum, activity) => sum + (activity.recognizedMinutes ?? 0),
-          0,
-        ),
-        timeCertifiableCompletedCount: mockActivityRecords.filter(
-          (activity) => activity.timeCertifiable,
-        ).length,
-        categoryBlocks: [
-          "ENVIRONMENT",
-          "EDUCATION",
-          "WELFARE",
-          "CULTURE",
-          "COMMUNITY",
-          "OVERSEAS",
-        ].map((category) => ({
-          category,
-          count: mockActivityRecords.filter(
-            (activity) => activity.category === category,
+      return HttpResponse.json({
+        success: true,
+        data: {
+          totalCompletedCount: mockActivityRecords.length,
+          totalRecognizedMinutes: mockActivityRecords.reduce(
+            (sum, activity) => sum + (activity.recognizedMinutes ?? 0),
+            0,
+          ),
+          timeCertifiableCompletedCount: mockActivityRecords.filter(
+            (activity) => activity.timeCertifiable,
           ).length,
-        })),
-      },
-      error: null,
-    });
-  }),
-  http.get("*/api/v1/mypage/activities/records", ({ request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+          categoryBlocks: [
+            "ENVIRONMENT",
+            "EDUCATION",
+            "WELFARE",
+            "CULTURE",
+            "COMMUNITY",
+            "OVERSEAS",
+          ].map((category) => ({
+            category,
+            count: mockActivityRecords.filter(
+              (activity) => activity.category === category,
+            ).length,
+          })),
+        },
+        error: null,
+      });
+    },
+  ),
+  http.get(
+    getGatherApiUrl("/api/v1/mypage/activities/records"),
+    ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    const params = new URL(request.url).searchParams;
-    const category = params.get("category");
-    const page = Math.max(0, Number(params.get("page")) || 0);
-    const size = Math.max(1, Number(params.get("size")) || 20);
-    const filtered = category
-      ? mockActivityRecords.filter((activity) => activity.category === category)
-      : mockActivityRecords;
+      const params = new URL(request.url).searchParams;
+      const category = params.get("category");
+      const page = Math.max(0, Number(params.get("page")) || 0);
+      const size = Math.max(1, Number(params.get("size")) || 20);
+      const filtered = category
+        ? mockActivityRecords.filter(
+            (activity) => activity.category === category,
+          )
+        : mockActivityRecords;
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        content: filtered.slice(page * size, (page + 1) * size),
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
-        page,
-        size,
-      },
-      error: null,
-    });
-  }),
-  http.get("*/api/v1/users/me", ({ request }) => {
+      return HttpResponse.json({
+        success: true,
+        data: {
+          content: filtered.slice(page * size, (page + 1) * size),
+          totalElements: filtered.length,
+          totalPages: Math.ceil(filtered.length / size),
+          page,
+          size,
+        },
+        error: null,
+      });
+    },
+  ),
+  http.get(getGatherApiUrl("/api/v1/users/me"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -462,7 +369,7 @@ export const myProfileHandlers = [
     });
   }),
 
-  http.patch("*/api/v1/users/me", async ({ request }) => {
+  http.patch(getGatherApiUrl("/api/v1/users/me"), async ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -501,7 +408,7 @@ export const myProfileHandlers = [
     });
   }),
 
-  http.get("*/api/v1/users/me/profile-image", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/users/me/profile-image"), ({ request }) => {
     const userId = getMockUserId(request);
     if (!userId) return createUnauthorizedResponse();
 
@@ -514,7 +421,7 @@ export const myProfileHandlers = [
   }),
 
   http.post(
-    "*/api/v1/users/me/profile-image/presigned-url",
+    getGatherApiUrl("/api/v1/users/me/profile-image/presigned-url"),
     async ({ request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -609,29 +516,32 @@ export const myProfileHandlers = [
       },
     });
   }),
-  http.patch("*/api/v1/users/me/profile-image", async ({ request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+  http.patch(
+    getGatherApiUrl("/api/v1/users/me/profile-image"),
+    async ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
 
-    const body = (await request.json()) as { objectKey?: string };
-    const upload = [...pendingUploads.values()].find(
-      (item) => item.objectKey === body.objectKey && item.ownerId === userId,
-    );
-    if (!upload || !upload.uploaded) {
-      return errorResponse(
-        "PROFILE_IMAGE_OBJECT_NOT_FOUND",
-        "업로드된 프로필 이미지 객체를 찾을 수 없습니다.",
-        404,
+      const body = (await request.json()) as { objectKey?: string };
+      const upload = [...pendingUploads.values()].find(
+        (item) => item.objectKey === body.objectKey && item.ownerId === userId,
       );
-    }
+      if (!upload || !upload.uploaded) {
+        return errorResponse(
+          "PROFILE_IMAGE_OBJECT_NOT_FOUND",
+          "업로드된 프로필 이미지 객체를 찾을 수 없습니다.",
+          404,
+        );
+      }
 
-    upload.applied = true;
-    profileImageUrls.set(userId, upload.publicUrl);
+      upload.applied = true;
+      profileImageUrls.set(userId, upload.publicUrl);
 
-    return HttpResponse.json({
-      success: true,
-      data: { profileImageUrl: upload.publicUrl },
-      error: null,
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        data: { profileImageUrl: upload.publicUrl },
+        error: null,
+      });
+    },
+  ),
 ];

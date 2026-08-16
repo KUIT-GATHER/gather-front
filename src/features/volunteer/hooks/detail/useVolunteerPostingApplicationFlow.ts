@@ -8,7 +8,11 @@ import {
   getVolunteerPostingApplyErrorMessage,
   getVolunteerPostingCancelErrorMessage,
 } from "@/features/volunteer/lib/volunteerPostingParticipationErrors";
-import type { VolunteerPosting } from "@/features/volunteer/types/volunteer.types";
+import { getVolunteerPostingSelectablePeriod } from "@/features/volunteer/lib/volunteerPostingSchedule";
+import type {
+  VolunteerPosting,
+  VolunteerPostingParticipationApplyRequest,
+} from "@/features/volunteer/types/volunteer.types";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 
@@ -28,6 +32,7 @@ export function useVolunteerPostingApplicationFlow({
   refetchPosting,
 }: UseVolunteerPostingApplicationFlowParams) {
   const [isApplySheetOpen, setIsApplySheetOpen] = useState(false);
+  const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
   const [applyErrorMessage, setApplyErrorMessage] = useState<string>();
   const [cancelErrorMessage, setCancelErrorMessage] = useState<string>();
   const applyMutation =
@@ -61,13 +66,40 @@ export function useVolunteerPostingApplicationFlow({
     setIsApplySheetOpen(true);
   };
 
-  const handleApplyConfirm = () => {
+  const handleOpenExternalApplication = () => {
     setApplyErrorMessage(undefined);
 
-    applyMutation.mutate(undefined, {
-      onSuccess: (participation) => {
+    if (!posting?.applicationUrl) {
+      setApplyErrorMessage("외부 신청 페이지를 열 수 없는 공고예요.");
+      return;
+    }
+
+    window.open(posting.applicationUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleRegisterSchedule = () => {
+    setApplyErrorMessage(undefined);
+
+    if (!posting || !getVolunteerPostingSelectablePeriod(posting)) {
+      setApplyErrorMessage(
+        "선택할 수 있는 봉사 일정이 없어요. 공고 기간을 확인해 주세요.",
+      );
+      return;
+    }
+
+    setIsApplySheetOpen(false);
+    setIsScheduleSheetOpen(true);
+  };
+
+  const handleScheduleConfirm = (
+    request: VolunteerPostingParticipationApplyRequest,
+  ) => {
+    setApplyErrorMessage(undefined);
+
+    applyMutation.mutate(request, {
+      onSuccess: () => {
         setIsApplySheetOpen(false);
-        window.location.assign(participation.applicationUrl);
+        setIsScheduleSheetOpen(false);
       },
       onError: (error) => {
         if (
@@ -116,6 +148,18 @@ export function useVolunteerPostingApplicationFlow({
     }
   };
 
+  const handleScheduleSheetOpenChange = (open: boolean) => {
+    if (applyMutation.isPending) {
+      return;
+    }
+
+    setIsScheduleSheetOpen(open);
+
+    if (!open) {
+      setApplyErrorMessage(undefined);
+    }
+  };
+
   return {
     clearErrors,
     cancelErrorMessage,
@@ -125,10 +169,17 @@ export function useVolunteerPostingApplicationFlow({
     handleCancelClick,
     applyConfirmSheetProps: {
       open: isApplySheetOpen,
-      isPending: applyMutation.isPending,
       errorMessage: applyErrorMessage,
       onOpenChange: handleApplySheetOpenChange,
-      onConfirm: handleApplyConfirm,
+      onOpenExternalApplication: handleOpenExternalApplication,
+      onRegisterSchedule: handleRegisterSchedule,
+    },
+    scheduleSheetProps: {
+      open: isScheduleSheetOpen,
+      isPending: applyMutation.isPending,
+      errorMessage: applyErrorMessage,
+      onOpenChange: handleScheduleSheetOpenChange,
+      onConfirm: handleScheduleConfirm,
     },
   };
 }
