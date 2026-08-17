@@ -10,6 +10,7 @@ Gather 서비스의 프론트엔드 프로젝트입니다. React 기반 화면�
 - Tailwind CSS
 - React Hook Form, Zod
 - MSW
+- Storybook (공용 UI 문서화와 독립 상태 확인)
 
 정확한 패키지와 버전은 [package.json](./package.json)을 기준으로 합니다.
 
@@ -52,8 +53,12 @@ npm run test:run     # Vitest 테스트 실행
 npm run test:coverage # Vitest 커버리지 생성
 npm run format       # Prettier로 파일 포맷
 npm run format:check # Prettier 형식 검사
+npm run storybook    # Storybook 개발 서버
+npm run build-storybook # Storybook 정적 빌드
 npm run preview      # 빌드 결과 미리보기
 ```
+
+Vitest와 React Testing Library는 컴포넌트 동작과 단위·통합 테스트를 담당하고, MSW는 API 경계를 재현합니다. Storybook은 공용 UI와 재사용 feature UI의 주요 시각 상태·접근성을 독립적으로 확인하며, 실제 route/auth/navigation 흐름은 Playwright가 담당합니다. Storybook은 안전한 dummy 환경 변수와 MSW를 사용하므로 실서버나 개인 Kakao API 키가 필요하지 않습니다.
 
 브라우저 E2E 테스트를 실행하려면 최초 1회 Chromium을 설치합니다.
 
@@ -79,5 +84,7 @@ npm run test:e2e:headed  # 브라우저를 표시하며 실행
 ```bash
 npm run format:check
 npm run lint
+npm run test:run
 npm run build
+npm run build-storybook
 ```

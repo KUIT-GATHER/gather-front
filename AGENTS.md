@@ -29,6 +29,13 @@ npm run build
 
 검사가 실패하면 실패 원인과 이번 변경의 관련 여부를 구분해 보고합니다.
 
+## 테스트 계층
+
+- Vitest/React Testing Library는 pure logic, validation, hook behavior, callback contract와 빠른 jsdom 컴포넌트 테스트를 담당합니다.
+- Storybook Browser Test는 기존 Story의 Chromium render smoke, portal/dialog/dropdown/calendar처럼 브라우저 특성이 중요한 동작, 선별한 interaction과 accessibility를 담당합니다.
+- Playwright E2E는 routing, authentication, page navigation과 전체 사용자 여정을 담당합니다.
+- RTL에 이미 동일한 action과 assertion이 있으면 Storybook `play`로 중복 작성하지 않습니다.
+
 ## 코드 배치
 
 - `src/app`에는 router, layout, 전역 Provider를 둡니다.

@@ -58,8 +58,12 @@ docs: 아키텍처 문서 정리
 ```bash
 npm run format:check
 npm run lint
+npm run test:run
 npm run build
+npm run build-storybook
 ```
+
+라우트·인증·navigation처럼 실제 브라우저 흐름에 영향을 주는 변경은 추가로 `npm run test:e2e`를 실행합니다.
 
 ## 최소 완료 기준
 

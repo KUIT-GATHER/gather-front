@@ -90,3 +90,7 @@ Feature별 검증 schema는 해당 feature의 `schemas` 폴더에 두고, 컴포
 MSW handler와 mock 데이터는 `src/mocks`에서 관리합니다.
 
 UI는 mock 데이터를 직접 import하지 않으며, 실제 API와 동일한 요청 흐름을 통해 mock 응답을 사용합니다.
+
+## 9. Storybook / UI 개발
+
+Story는 실제 컴포넌트 옆의 `*.stories.tsx`에 colocate합니다. `shared/ui`의 재사용 가능한 상태와 variant를 우선 문서화하고, feature에서는 도메인에 속한 presentational UI의 주요 상태를 기록합니다. Story에 필요한 Provider만 최소 범위로 추가하며, API 상태는 실서버가 아니라 Story별 MSW handler로 재현합니다. Storybook은 독립 UI 개발·문서화·접근성 확인을 담당하고, 실제 route·인증·navigation 흐름은 Playwright E2E가 담당합니다.

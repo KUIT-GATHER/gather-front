@@ -35,6 +35,30 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build Storybook
+        run: npm run build-storybook
+
+  storybook-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Storybook browser tests
+        run: npm run test:storybook
+
   e2e:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
