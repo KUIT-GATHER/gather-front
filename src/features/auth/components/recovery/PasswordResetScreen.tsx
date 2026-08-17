@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router";
 
@@ -87,7 +87,10 @@ export function PasswordResetScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as PasswordResetLocationState | null;
-  const passwordResetToken = locationState?.passwordResetToken;
+  const [passwordResetToken] = useState<string | undefined>(
+    () => locationState?.passwordResetToken,
+  );
+  const hasScrubbedLocationStateRef = useRef(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isPasswordConfirmVisible, setIsPasswordConfirmVisible] =
     useState(false);
@@ -106,8 +109,16 @@ export function PasswordResetScreen() {
         replace: true,
         state: { tab: "PASSWORD" },
       });
+      return;
     }
-  }, [navigate, passwordResetToken]);
+
+    if (hasScrubbedLocationStateRef.current) {
+      return;
+    }
+
+    hasScrubbedLocationStateRef.current = true;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, navigate, passwordResetToken]);
 
   if (!passwordResetToken) {
     return null;

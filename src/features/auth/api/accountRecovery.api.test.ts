@@ -39,6 +39,34 @@ describe("account recovery API contract", () => {
     });
   });
 
+  it("KAKAO 계정의 아이디 찾기는 email 없이 정상 결과를 반환한다", async () => {
+    const startResponse = await startPhoneVerification({
+      phoneNumber: "01090909090",
+      purpose: "FIND_ACCOUNT",
+    });
+    await confirmPhoneVerification(startResponse.verificationId);
+
+    await expect(
+      findAccountByPhoneVerification({
+        phoneVerificationId: startResponse.verificationId,
+      }),
+    ).resolves.toEqual({ loginType: "KAKAO", email: null });
+  });
+
+  it("KAKAO 계정은 비밀번호 재설정 permission을 발급하지 않는다", async () => {
+    const startResponse = await startPhoneVerification({
+      phoneNumber: "01090909090",
+      purpose: "RESET_PASSWORD",
+    });
+    await confirmPhoneVerification(startResponse.verificationId);
+
+    await expect(
+      issuePasswordResetToken({
+        phoneVerificationId: startResponse.verificationId,
+      }),
+    ).rejects.toMatchObject({ code: "PASSWORD_RESET_NOT_AVAILABLE" });
+  });
+
   it("비밀번호 재설정 permission API는 phoneVerificationId만 전달하는 계약을 유지한다", async () => {
     const startResponse = await startPhoneVerification({
       phoneNumber: "01012345678",

@@ -368,27 +368,32 @@ export const authHandlers = [
         );
       }
 
-      if (
-        isWithdrawalCooldownActive({ phoneNumber: verification.phoneNumber })
-      ) {
-        return createWithdrawalCooldownResponse();
-      }
+      if (verification.purpose === "SIGNUP") {
+        if (
+          isWithdrawalCooldownActive({
+            phoneNumber: verification.phoneNumber,
+          })
+        ) {
+          return createWithdrawalCooldownResponse();
+        }
 
-      if (
-        verification.purpose === "SIGNUP" &&
-        mockUsers.some((user) => user.phoneNumber === verification.phoneNumber)
-      ) {
-        return HttpResponse.json(
-          {
-            success: false,
-            data: null,
-            error: {
-              code: "DUPLICATE_PHONE_NUMBER",
-              message: "이미 사용 중인 전화번호입니다.",
+        if (
+          mockUsers.some(
+            (user) => user.phoneNumber === verification.phoneNumber,
+          )
+        ) {
+          return HttpResponse.json(
+            {
+              success: false,
+              data: null,
+              error: {
+                code: "DUPLICATE_PHONE_NUMBER",
+                message: "이미 사용 중인 전화번호입니다.",
+              },
             },
-          },
-          { status: 409 },
-        );
+            { status: 409 },
+          );
+        }
       }
 
       if (verification.verifiedAt !== null) {
@@ -494,9 +499,10 @@ export const authHandlers = [
 
       return HttpResponse.json({
         success: true,
-        data: user.password
-          ? { loginType: "EMAIL", email: user.email }
-          : { loginType: "KAKAO", email: null },
+        data:
+          user.loginType === "EMAIL"
+            ? { loginType: "EMAIL", email: user.email }
+            : { loginType: "KAKAO", email: null },
         error: null,
       });
     },
@@ -581,7 +587,7 @@ export const authHandlers = [
         );
       }
 
-      if (!user.password) {
+      if (user.loginType === "KAKAO") {
         return HttpResponse.json(
           {
             success: false,
@@ -1067,6 +1073,7 @@ export const authHandlers = [
       phoneNumber,
       email,
       password: body.password,
+      loginType: "EMAIL",
       nickname: body.nickname,
       introduction: body.introduction?.trim() || null,
       activityRegionId: body.activityRegionId,
@@ -1389,6 +1396,7 @@ export const authHandlers = [
         phoneNumber,
         email: `mock-kakao-${userId}@example.com`,
         password: "",
+        loginType: "KAKAO",
         nickname: body.nickname,
         introduction: body.introduction?.trim() || null,
         activityRegionId: body.activityRegionId,
