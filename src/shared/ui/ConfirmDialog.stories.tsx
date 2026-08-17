@@ -1,6 +1,6 @@
 import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -59,7 +59,28 @@ const meta = preview.meta({
   render: (args) => <ControlledConfirmDialog {...args} />,
 });
 
-export const Default = meta.story();
+export const Default = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const portal = within(document.body);
+    const dialog = portal.getByRole("alertdialog", {
+      name: "이 활동을 취소할까요?",
+    });
+
+    await expect(dialog).toBeVisible();
+    await userEvent.click(portal.getByRole("button", { name: "취소" }));
+    await expect(portal.queryByRole("alertdialog")).not.toBeInTheDocument();
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "다이얼로그 다시 열기" }),
+    );
+    await expect(
+      portal.getByRole("alertdialog", { name: "이 활동을 취소할까요?" }),
+    ).toBeVisible();
+    await userEvent.click(portal.getByRole("button", { name: "확인" }));
+    await expect(portal.queryByRole("alertdialog")).not.toBeInTheDocument();
+  },
+});
 
 export const Destructive = meta.story({
   args: {

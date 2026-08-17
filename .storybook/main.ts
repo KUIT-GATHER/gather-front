@@ -7,6 +7,7 @@ export default defineMain({
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
     "msw-storybook-addon",
+    "@storybook/addon-vitest",
   ],
   framework: "@storybook/react-vite",
   env: (config) => ({

@@ -2,7 +2,7 @@ import preview from "../../../../.storybook/preview";
 import { useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { getGatherApiUrl } from "@/mocks/apiScope";
@@ -17,6 +17,7 @@ type NotificationSettingsSheetStoryProps = ComponentProps<
 
 const settingsEndpoint = getGatherApiUrl("/api/v1/notifications/settings");
 const storyAccessToken = "mock-access-token-1-1234567890";
+const updateSettingsRequest = fn();
 
 const defaultSettings: NotificationSettings = {
   volunteerScheduleEnabled: true,
@@ -58,6 +59,7 @@ const settingsSuccessHandlers = [
   ),
   http.put(settingsEndpoint, async ({ request }) => {
     const settings = (await request.json()) as NotificationSettings;
+    updateSettingsRequest(settings);
 
     return HttpResponse.json(createSettingsResponse(settings));
   }),
@@ -158,6 +160,22 @@ export const ActivityLoaded = meta.story({
     msw.use(...settingsSuccessHandlers);
 
     return cleanupAuth;
+  },
+  play: async () => {
+    const portal = within(document.body);
+    const toggle = await portal.findByRole("switch", {
+      name: "봉사 일정 알림",
+    });
+
+    await expect(toggle).toBeChecked();
+    await userEvent.click(toggle);
+    await waitFor(() => {
+      expect(updateSettingsRequest).toHaveBeenCalledWith({
+        ...defaultSettings,
+        volunteerScheduleEnabled: false,
+      });
+    });
+    await expect(toggle).not.toBeChecked();
   },
 });
 

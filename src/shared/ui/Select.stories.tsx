@@ -1,6 +1,6 @@
 import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import Select from "./Select";
 
@@ -54,7 +54,19 @@ const meta = preview.meta({
   render: (args) => <InteractiveSelect {...args} />,
 });
 
-export const Default = meta.story();
+export const Default = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("combobox", { name: "정렬" });
+
+    await userEvent.click(trigger);
+
+    const portal = within(document.body);
+    await userEvent.click(portal.getByRole("option", { name: "인기순 🔥" }));
+
+    await expect(trigger).toHaveTextContent("인기순 🔥");
+  },
+});
 
 export const Selected = meta.story({
   args: {

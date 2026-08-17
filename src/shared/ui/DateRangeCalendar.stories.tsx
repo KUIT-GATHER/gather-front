@@ -1,6 +1,6 @@
 import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import DateRangeCalendar from "./DateRangeCalendar";
 
@@ -60,7 +60,22 @@ const meta = preview.meta({
   render: (args) => <InteractiveCalendar {...args} />,
 });
 
-export const Empty = meta.story();
+export const Empty = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const selectedDate = addDays(monthStart, 14);
+    const dateLabel = new RegExp(
+      `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`,
+    );
+    const dateButton = canvas.getByRole("button", { name: dateLabel });
+
+    await userEvent.click(dateButton);
+
+    await expect(
+      canvas.getByRole("gridcell", { name: String(selectedDate.getDate()) }),
+    ).toHaveAttribute("aria-selected", "true");
+  },
+});
 
 export const SelectedRange = meta.story({
   args: {

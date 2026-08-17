@@ -30,6 +30,11 @@ export default definePreview({
     viewport: {
       options: gatherViewports,
     },
+
+    a11y: {
+      // Existing design-token contrast issues are surfaced without blocking smoke tests.
+      test: "todo",
+    },
   },
 
   addons: [

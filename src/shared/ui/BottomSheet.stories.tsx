@@ -1,6 +1,6 @@
 import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import Button from "./Button";
 import BottomSheet from "./BottomSheet";
@@ -56,7 +56,24 @@ const meta = preview.meta({
   render: (args) => <ControlledBottomSheet {...args} />,
 });
 
-export const DefaultOpen = meta.story();
+export const DefaultOpen = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const portal = within(document.body);
+    const dialog = portal.getByRole("dialog", { name: "알림 설정" });
+
+    await expect(dialog).toBeVisible();
+    await userEvent.click(portal.getByRole("button", { name: "닫기" }));
+    await expect(portal.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "시트 다시 열기" }),
+    );
+    await expect(
+      portal.getByRole("dialog", { name: "알림 설정" }),
+    ).toBeVisible();
+  },
+});
 
 export const WithDescription = meta.story({
   args: {
