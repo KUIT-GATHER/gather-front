@@ -57,6 +57,7 @@ type EmailVerification = {
 
 type PhoneVerification = {
   phoneNumber: string;
+  purpose: "SIGNUP" | "FIND_ACCOUNT" | "RESET_PASSWORD";
   messageText: string;
   expiresAt: number;
   verifiedAt: number | null;
@@ -65,6 +66,10 @@ type PhoneVerification = {
 
 const emailVerificationRequests = new Map<string, EmailVerification>();
 const phoneVerificationRequests = new Map<string, PhoneVerification>();
+const passwordResetTokens = new Map<
+  string,
+  { userId: number; expiresAt: number; consumedAt: number | null }
+>();
 
 const validRegionIds = new Set(regions.data.map((region) => region.id));
 const validActivityRegionIds = new Set(
@@ -120,17 +125,23 @@ function createPhoneVerificationRequiredResponse() {
 
 function getValidPhoneVerification(
   verificationId: string,
-  phoneNumber: string,
+  options: {
+    phoneNumber?: string;
+    purpose?: PhoneVerification["purpose"];
+  } = {},
   now = Date.now(),
 ) {
   const verification = phoneVerificationRequests.get(verificationId);
 
   if (
     !verification ||
-    verification.phoneNumber !== phoneNumber ||
+    (options.phoneNumber !== undefined &&
+      verification.phoneNumber !== options.phoneNumber) ||
+    (options.purpose !== undefined &&
+      verification.purpose !== options.purpose) ||
     verification.verifiedAt === null ||
     verification.consumedAt !== null ||
-    verification.verifiedAt + 30 * 60 * 1000 <= now
+    verification.expiresAt <= now
   ) {
     return null;
   }
@@ -139,7 +150,10 @@ function getValidPhoneVerification(
 }
 
 function consumePhoneVerification(verificationId: string, phoneNumber: string) {
-  const verification = getValidPhoneVerification(verificationId, phoneNumber);
+  const verification = getValidPhoneVerification(verificationId, {
+    phoneNumber,
+    purpose: "SIGNUP",
+  });
 
   if (!verification) {
     return false;
@@ -220,10 +234,18 @@ export const authHandlers = [
   http.post(
     getGatherApiUrl("/api/v1/auth/phone-verifications"),
     async ({ request }) => {
-      const body = (await request.json()) as { phoneNumber?: string };
+      const body = (await request.json()) as {
+        phoneNumber?: string;
+        purpose?: PhoneVerification["purpose"];
+      };
       const phoneNumber = normalizeMockPhoneNumber(body.phoneNumber);
 
-      if (!phoneNumber || !/^010\d{8}$/.test(phoneNumber)) {
+      if (
+        !phoneNumber ||
+        !/^010\d{8}$/.test(phoneNumber) ||
+        !body.purpose ||
+        !["SIGNUP", "FIND_ACCOUNT", "RESET_PASSWORD"].includes(body.purpose)
+      ) {
         return HttpResponse.json(
           {
             success: false,
@@ -242,6 +264,7 @@ export const authHandlers = [
 
       phoneVerificationRequests.set(verificationId, {
         phoneNumber,
+        purpose: body.purpose,
         messageText: MOCK_PHONE_MESSAGE_TEXT,
         expiresAt,
         verifiedAt: null,
@@ -352,6 +375,7 @@ export const authHandlers = [
       }
 
       if (
+        verification.purpose === "SIGNUP" &&
         mockUsers.some((user) => user.phoneNumber === verification.phoneNumber)
       ) {
         return HttpResponse.json(
@@ -384,6 +408,295 @@ export const authHandlers = [
         data: {
           status: "VERIFIED",
         },
+        error: null,
+      });
+    },
+  ),
+
+  http.post(
+    getGatherApiUrl("/api/v1/auth/account-recoveries/email"),
+    async ({ request }) => {
+      const body = (await request.json()) as {
+        phoneVerificationId?: string;
+      };
+      const verificationId = body.phoneVerificationId;
+
+      if (!verificationId) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "휴대폰 인증이 필요합니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const storedVerification = phoneVerificationRequests.get(verificationId);
+
+      if (storedVerification?.purpose !== "FIND_ACCOUNT") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: storedVerification
+                ? "PHONE_VERIFICATION_PURPOSE_MISMATCH"
+                : "PHONE_VERIFICATION_NOT_FOUND",
+              message: storedVerification
+                ? "아이디 찾기용 휴대폰 인증이 아닙니다."
+                : "휴대폰 인증 요청을 찾을 수 없습니다.",
+            },
+          },
+          { status: storedVerification ? 400 : 404 },
+        );
+      }
+
+      const verification = getValidPhoneVerification(verificationId, {
+        purpose: "FIND_ACCOUNT",
+      });
+
+      if (!verification) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PHONE_VERIFICATION_EXPIRED",
+              message: "휴대폰 인증이 만료되었거나 이미 사용되었습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const user = mockUsers.find(
+        (candidate) => candidate.phoneNumber === verification.phoneNumber,
+      );
+      verification.consumedAt = Date.now();
+
+      if (!user) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "ACCOUNT_NOT_FOUND",
+              message: "가입된 계정을 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      return HttpResponse.json({
+        success: true,
+        data: user.password
+          ? { loginType: "EMAIL", email: user.email }
+          : { loginType: "KAKAO", email: null },
+        error: null,
+      });
+    },
+  ),
+
+  http.post(
+    getGatherApiUrl("/api/v1/auth/account-recoveries/password"),
+    async ({ request }) => {
+      const body = (await request.json()) as {
+        phoneVerificationId?: string;
+      };
+      const verificationId = body.phoneVerificationId;
+
+      if (!verificationId) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "휴대폰 인증이 필요합니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const storedVerification = phoneVerificationRequests.get(verificationId);
+
+      if (storedVerification?.purpose !== "RESET_PASSWORD") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: storedVerification
+                ? "PHONE_VERIFICATION_PURPOSE_MISMATCH"
+                : "PHONE_VERIFICATION_NOT_FOUND",
+              message: storedVerification
+                ? "비밀번호 재설정용 휴대폰 인증이 아닙니다."
+                : "휴대폰 인증 요청을 찾을 수 없습니다.",
+            },
+          },
+          { status: storedVerification ? 400 : 404 },
+        );
+      }
+
+      const verification = getValidPhoneVerification(verificationId, {
+        purpose: "RESET_PASSWORD",
+      });
+
+      if (!verification) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PHONE_VERIFICATION_EXPIRED",
+              message: "휴대폰 인증이 만료되었거나 이미 사용되었습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const user = mockUsers.find(
+        (candidate) => candidate.phoneNumber === verification.phoneNumber,
+      );
+      verification.consumedAt = Date.now();
+
+      if (!user) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "ACCOUNT_NOT_FOUND",
+              message: "가입된 계정을 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      if (!user.password) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PASSWORD_RESET_NOT_AVAILABLE",
+              message:
+                "카카오로 가입한 계정은 비밀번호를 재설정할 수 없습니다.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      const passwordResetToken = createMockVerificationId();
+      passwordResetTokens.set(passwordResetToken, {
+        userId: user.id,
+        expiresAt: Date.now() + 10 * 60 * 1000,
+        consumedAt: null,
+      });
+
+      return HttpResponse.json({
+        success: true,
+        data: { passwordResetToken },
+        error: null,
+      });
+    },
+  ),
+
+  http.post(
+    getGatherApiUrl("/api/v1/auth/account-recoveries/password/reset"),
+    async ({ request }) => {
+      const body = (await request.json()) as {
+        passwordResetToken?: string;
+        password?: string;
+        passwordConfirm?: string;
+      };
+
+      if (
+        !body.passwordResetToken ||
+        !body.password ||
+        !body.passwordConfirm ||
+        body.password.length < 6 ||
+        body.password.length > 12 ||
+        /\s/.test(body.password)
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "비밀번호는 6~12자의 공백 없는 문자열이어야 합니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      if (body.password !== body.passwordConfirm) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "PASSWORD_MISMATCH",
+              message: "비밀번호가 일치하지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const resetToken = passwordResetTokens.get(body.passwordResetToken);
+
+      if (
+        !resetToken ||
+        resetToken.consumedAt !== null ||
+        resetToken.expiresAt <= Date.now()
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "비밀번호 재설정 인증이 만료되었거나 유효하지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const user = getMockUserById(resetToken.userId);
+
+      if (!user || user.userStatus === "WITHDRAWN") {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "비밀번호 재설정 인증이 유효하지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      user.password = body.password;
+      resetToken.consumedAt = Date.now();
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
         error: null,
       });
     },
@@ -671,7 +984,7 @@ export const authHandlers = [
 
     const phoneVerification = getValidPhoneVerification(
       body.phoneVerificationId,
-      phoneNumber,
+      { phoneNumber, purpose: "SIGNUP" },
     );
 
     if (!phoneVerification) {
