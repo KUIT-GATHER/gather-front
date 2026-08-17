@@ -28,3 +28,5 @@ artifacts/
 
 .env
 .env.local
+
+storybook-static/

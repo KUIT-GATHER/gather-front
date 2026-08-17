@@ -34,6 +34,7 @@ export default defineConfig({
         "src/assets/**",
         "src/**/*.d.ts",
         "src/main.tsx",
+        "src/**/*.stories.{ts,tsx}",
       ],
     },
   },
