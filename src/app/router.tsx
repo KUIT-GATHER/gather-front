@@ -14,6 +14,8 @@ import { KakaoLoginCallbackPage } from "@/pages/auth/KakaoLoginCallbackPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import { KakaoSignupPage } from "@/pages/auth/KakaoSignupPage";
 import { TermsPage } from "@/pages/auth/TermsPage";
+import { AccountRecoveryPage } from "@/pages/auth/AccountRecoveryPage";
+import { PasswordResetPage } from "@/pages/auth/PasswordResetPage";
 
 import { HomePage } from "@/pages/home/HomePage";
 
@@ -85,6 +87,11 @@ export const router = createBrowserRouter([
               { path: "/onboarding", element: <OnboardingPage /> },
               { path: "/login", element: <LoginPage /> },
               { path: "/login/email", element: <EmailLoginPage /> },
+              { path: "/account-recovery", element: <AccountRecoveryPage /> },
+              {
+                path: "/account-recovery/password",
+                element: <PasswordResetPage />,
+              },
               { path: "/signup", element: <SignupPage /> },
             ],
           },

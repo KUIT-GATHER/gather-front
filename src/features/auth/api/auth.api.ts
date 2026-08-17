@@ -3,9 +3,14 @@ import { fetchClient } from "@/shared/api/fetchClient";
 import type {
   ConfirmEmailVerificationRequest,
   ConfirmEmailVerificationResponse,
+  AccountRecoveryEmailRequest,
+  AccountRecoveryEmailResponse,
   KakaoLoginRequest,
   KakaoLoginResponse,
   KakaoSignupRequest,
+  PasswordResetPermissionRequest,
+  PasswordResetPermissionResponse,
+  PasswordResetRequest,
   PhoneVerificationConfirmResponse,
   PhoneVerificationQrCodeResponse,
   PhoneVerificationStartRequest,
@@ -60,6 +65,40 @@ export function confirmPhoneVerification(verificationId: string) {
       method: "POST",
     },
   );
+}
+
+export function findAccountByPhoneVerification(
+  payload: AccountRecoveryEmailRequest,
+) {
+  return fetchClient<AccountRecoveryEmailResponse>(
+    "/api/v1/auth/account-recoveries/email",
+    {
+      ...publicOptions,
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function issuePasswordResetToken(
+  payload: PasswordResetPermissionRequest,
+) {
+  return fetchClient<PasswordResetPermissionResponse>(
+    "/api/v1/auth/account-recoveries/password",
+    {
+      ...publicOptions,
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function resetPassword(payload: PasswordResetRequest) {
+  return fetchClient<null>("/api/v1/auth/account-recoveries/password/reset", {
+    ...publicOptions,
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function sendEmailVerification(payload: SendEmailVerificationRequest) {
