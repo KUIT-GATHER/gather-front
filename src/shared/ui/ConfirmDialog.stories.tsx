@@ -60,7 +60,7 @@ const meta = preview.meta({
 });
 
 export const Default = meta.story({
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     const portal = within(document.body);
     const dialog = portal.getByRole("alertdialog", {
@@ -70,6 +70,7 @@ export const Default = meta.story({
     await expect(dialog).toBeVisible();
     await userEvent.click(portal.getByRole("button", { name: "취소" }));
     await expect(portal.queryByRole("alertdialog")).not.toBeInTheDocument();
+    await expect(args.onCancel).toHaveBeenCalledTimes(1);
 
     await userEvent.click(
       canvas.getByRole("button", { name: "다이얼로그 다시 열기" }),
@@ -79,6 +80,8 @@ export const Default = meta.story({
     ).toBeVisible();
     await userEvent.click(portal.getByRole("button", { name: "확인" }));
     await expect(portal.queryByRole("alertdialog")).not.toBeInTheDocument();
+    await expect(args.onConfirm).toHaveBeenCalledTimes(1);
+    await expect(args.onCancel).toHaveBeenCalledTimes(1);
   },
 });
 

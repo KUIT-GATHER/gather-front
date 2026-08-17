@@ -156,6 +156,7 @@ export const ActivityLoaded = meta.story({
     initialView: "activity",
   },
   beforeEach({ msw }) {
+    updateSettingsRequest.mockClear();
     const cleanupAuth = setupStoryAuth();
     msw.use(...settingsSuccessHandlers);
 
