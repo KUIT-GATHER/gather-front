@@ -1,6 +1,6 @@
-import type { StorybookConfig } from "@storybook/react-vite";
+import { defineMain } from "@storybook/react-vite/node";
 
-const config: StorybookConfig = {
+export default defineMain({
   stories: ["../src/**/*.stories.@(ts|tsx)"],
   staticDirs: ["../public"],
   addons: [
@@ -16,6 +16,4 @@ const config: StorybookConfig = {
     VITE_KAKAO_REST_API_KEY: "storybook-dummy",
     VITE_KAKAO_MAP_JAVASCRIPT_KEY: "storybook-dummy",
   }),
-};
-
-export default config;
+});

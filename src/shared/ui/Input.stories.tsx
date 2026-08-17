@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import preview from "../../../.storybook/preview";
 
 import Input from "./Input";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/Input",
   component: Input,
   parameters: {
@@ -17,27 +17,24 @@ const meta = {
     onBlur: { control: false },
     onFocus: { control: false },
   },
-} satisfies Meta<typeof Input>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const Filled: Story = {
+export const Filled = meta.story({
   args: {
     defaultValue: "hello@gather.example",
   },
-};
+});
 
-export const Disabled: Story = {
+export const Disabled = meta.story({
   args: {
     defaultValue: "수정할 수 없는 값",
     disabled: true,
   },
-};
+});
 
-export const Invalid: Story = {
+export const Invalid = meta.story({
   args: {
     defaultValue: "잘못된 이메일",
     invalid: true,
@@ -51,4 +48,4 @@ export const Invalid: Story = {
       </p>
     </div>
   ),
-};
+});

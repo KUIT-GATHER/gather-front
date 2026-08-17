@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import preview from "../../../.storybook/preview";
 
 import LoadingState from "./LoadingState";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/LoadingState",
   component: LoadingState,
   parameters: {
@@ -15,15 +15,12 @@ const meta = {
   argTypes: {
     children: { control: false },
   },
-} satisfies Meta<typeof LoadingState>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const CustomLabel: Story = {
+export const CustomLabel = meta.story({
   args: {
     label: "알림 설정을 불러오는 중",
   },
-};
+});

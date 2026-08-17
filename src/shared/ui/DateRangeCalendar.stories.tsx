@@ -1,7 +1,6 @@
+import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import DateRangeCalendar from "./DateRangeCalendar";
 
@@ -40,7 +39,7 @@ function InteractiveCalendar(args: DateRangeCalendarStoryProps) {
   );
 }
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/DateRangeCalendar",
   component: DateRangeCalendar,
   parameters: {
@@ -59,24 +58,21 @@ const meta = {
     onSelect: { control: false },
   },
   render: (args) => <InteractiveCalendar {...args} />,
-} satisfies Meta<typeof DateRangeCalendar>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Empty = meta.story();
 
-export const Empty: Story = {};
-
-export const SelectedRange: Story = {
+export const SelectedRange = meta.story({
   args: {
     selected: selectedRange,
   },
-};
+});
 
-export const WithSelectablePeriod: Story = {
+export const WithSelectablePeriod = meta.story({
   args: {
     selected: selectedRange,
     startMonth: addDays(monthStart, -60),
     endMonth: addDays(monthStart, 60),
     disabled: [{ before: addDays(monthStart, 2) }],
   },
-};
+});

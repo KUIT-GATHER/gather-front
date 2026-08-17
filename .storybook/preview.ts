@@ -1,6 +1,8 @@
-import type { Preview } from "@storybook/react-vite";
+import addonA11y from "@storybook/addon-a11y";
+import addonDocs from "@storybook/addon-docs";
+import { definePreview } from "@storybook/react-vite";
+import addonMsw from "msw-storybook-addon";
 import { setupWorker } from "msw/browser";
-import { mswLoader } from "msw-storybook-addon/csf3";
 import { MINIMAL_VIEWPORTS } from "storybook/viewport";
 
 import { handleUnhandledRequest } from "../src/mocks/apiScope";
@@ -21,15 +23,19 @@ const gatherViewports = {
   },
 };
 
-const preview: Preview = {
+export default definePreview({
   tags: ["autodocs"],
+
   parameters: {
     viewport: {
       options: gatherViewports,
     },
   },
-  loaders: [
-    mswLoader(async () => {
+
+  addons: [
+    addonDocs(),
+    addonA11y(),
+    addonMsw(async () => {
       const worker = setupWorker();
 
       await worker.start({ onUnhandledRequest: handleUnhandledRequest });
@@ -37,6 +43,4 @@ const preview: Preview = {
       return worker;
     }),
   ],
-};
-
-export default preview;
+});

@@ -1,11 +1,10 @@
+import preview from "../../../.storybook/preview";
 import { Inbox, Search } from "lucide-react";
 import { fn } from "storybook/test";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
 import { EmptyState } from "./EmptyState";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/EmptyState",
   component: EmptyState,
   parameters: {
@@ -19,25 +18,22 @@ const meta = {
     icon: { control: false },
     onAction: { control: false },
   },
-} satisfies Meta<typeof EmptyState>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const WithAction: Story = {
+export const WithAction = meta.story({
   args: {
     icon: <Search aria-hidden="true" />,
     actionLabel: "공고 찾아보기",
     onAction: fn(),
   },
-};
+});
 
-export const WithIcon: Story = {
+export const WithIcon = meta.story({
   args: {
     title: "활동 기록이 없어요",
     description: "봉사 활동에 참여하면 기록이 쌓여요.",
     icon: <Inbox aria-hidden="true" />,
   },
-};
+});

@@ -1,10 +1,9 @@
+import preview from "../../../.storybook/preview";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import Switch from "./Switch";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/Switch",
   component: Switch,
   parameters: {
@@ -17,26 +16,23 @@ const meta = {
   argTypes: {
     onCheckedChange: { control: false },
   },
-} satisfies Meta<typeof Switch>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Off: Story = {
+export const Off = meta.story({
   args: {
     defaultChecked: false,
   },
-};
+});
 
-export const On: Story = {
+export const On = meta.story({
   args: {
     defaultChecked: true,
   },
-};
+});
 
-export const Disabled: Story = {
+export const Disabled = meta.story({
   args: {
     defaultChecked: true,
     disabled: true,
   },
-};
+});

@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import preview from "../../../.storybook/preview";
 
 import Spinner from "./Spinner";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/Spinner",
   component: Spinner,
   parameters: {
@@ -11,21 +11,18 @@ const meta = {
   argTypes: {
     label: { control: "text" },
   },
-} satisfies Meta<typeof Spinner>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const Small: Story = {
+export const Small = meta.story({
   args: {
     size: "small",
   },
-};
+});
 
-export const AccessibleLabel: Story = {
+export const AccessibleLabel = meta.story({
   args: {
     label: "알림 설정을 저장하는 중",
   },
-};
+});

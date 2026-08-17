@@ -1,6 +1,5 @@
+import preview from "../../../../.storybook/preview";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import type { Notification } from "@/features/notification/types/notification.types";
 
@@ -24,7 +23,7 @@ const baseNotification: Notification = {
   createdAt: minutesAgo(5),
 };
 
-const meta = {
+const meta = preview.meta({
   title: "Features/Notification/NotificationItem",
   component: NotificationItem,
   parameters: {
@@ -41,14 +40,11 @@ const meta = {
     notification: { control: false },
     onClick: { control: false },
   },
-} satisfies Meta<typeof NotificationItem>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Unread = meta.story();
 
-export const Unread: Story = {};
-
-export const Read: Story = {
+export const Read = meta.story({
   args: {
     notification: {
       ...baseNotification,
@@ -58,9 +54,9 @@ export const Read: Story = {
       createdAt: minutesAgo(60),
     },
   },
-};
+});
 
-export const BadgeEarned: Story = {
+export const BadgeEarned = meta.story({
   args: {
     notification: {
       ...baseNotification,
@@ -72,9 +68,9 @@ export const BadgeEarned: Story = {
       createdAt: minutesAgo(30),
     },
   },
-};
+});
 
-export const LongMessage: Story = {
+export const LongMessage = meta.story({
   args: {
     notification: {
       ...baseNotification,
@@ -84,10 +80,10 @@ export const LongMessage: Story = {
       createdAt: minutesAgo(120),
     },
   },
-};
+});
 
-export const Disabled: Story = {
+export const Disabled = meta.story({
   args: {
     disabled: true,
   },
-};
+});

@@ -1,6 +1,5 @@
+import preview from "../../../../.storybook/preview";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import type { VolunteerPostingListItem } from "@/features/volunteer/types/volunteer.types";
 
@@ -33,7 +32,7 @@ const basePosting: VolunteerPostingListItem = {
   noticeEndDate: getDateAfterToday(7),
 };
 
-const meta = {
+const meta = preview.meta({
   title: "Features/Volunteer/VolunteerPostingCard",
   component: VolunteerPostingCard,
   parameters: {
@@ -50,20 +49,17 @@ const meta = {
     posting: { control: false },
     onClick: { control: false },
   },
-} satisfies Meta<typeof VolunteerPostingCard>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const List = meta.story();
 
-export const List: Story = {};
-
-export const Compact: Story = {
+export const Compact = meta.story({
   args: {
     variant: "compact",
   },
-};
+});
 
-export const LongTitle: Story = {
+export const LongTitle = meta.story({
   args: {
     posting: {
       ...basePosting,
@@ -71,9 +67,9 @@ export const LongTitle: Story = {
         "처음 참여해도 부담 없이 함께할 수 있는 우리 동네 어린이 도서관 책읽기 봉사",
     },
   },
-};
+});
 
-export const MissingOptionalData: Story = {
+export const MissingOptionalData = meta.story({
   args: {
     posting: {
       ...basePosting,
@@ -87,9 +83,9 @@ export const MissingOptionalData: Story = {
       noticeEndDate: null,
     },
   },
-};
+});
 
-export const UrgentRecruitment: Story = {
+export const UrgentRecruitment = meta.story({
   args: {
     posting: {
       ...basePosting,
@@ -99,4 +95,4 @@ export const UrgentRecruitment: Story = {
       noticeEndDate: getDateAfterToday(1),
     },
   },
-};
+});

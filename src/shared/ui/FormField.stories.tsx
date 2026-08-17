@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import preview from "../../../.storybook/preview";
 
 import FormField from "./FormField";
 import Input from "./Input";
 import Textarea from "./Textarea";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/FormField",
   component: FormField,
   parameters: {
@@ -19,20 +19,17 @@ const meta = {
     label: { control: false },
     description: { control: false },
   },
-} satisfies Meta<typeof FormField>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   render: () => (
     <FormField label="활동 제목" htmlFor="activity-title">
       <Input id="activity-title" placeholder="활동 제목을 입력해 주세요" />
     </FormField>
   ),
-};
+});
 
-export const RequiredWithDescription: Story = {
+export const RequiredWithDescription = meta.story({
   render: () => (
     <FormField
       label="활동 소개"
@@ -48,9 +45,9 @@ export const RequiredWithDescription: Story = {
       />
     </FormField>
   ),
-};
+});
 
-export const Error: Story = {
+export const Error = meta.story({
   render: () => (
     <FormField
       label="이메일"
@@ -67,9 +64,9 @@ export const Error: Story = {
       />
     </FormField>
   ),
-};
+});
 
-export const WithCharacterCount: Story = {
+export const WithCharacterCount = meta.story({
   render: () => (
     <FormField
       label="활동 제목"
@@ -85,4 +82,4 @@ export const WithCharacterCount: Story = {
       />
     </FormField>
   ),
-};
+});

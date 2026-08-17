@@ -1,9 +1,8 @@
+import preview from "../../../../.storybook/preview";
 import { useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { getGatherApiUrl } from "@/mocks/apiScope";
@@ -114,7 +113,7 @@ function ControlledSettingsSheet(args: NotificationSettingsSheetStoryProps) {
   );
 }
 
-const meta = {
+const meta = preview.meta({
   title: "Features/Notification/NotificationSettingsSheet",
   component: NotificationSettingsSheet,
   parameters: {
@@ -139,21 +138,18 @@ const meta = {
     onBack: { control: false },
   },
   render: (args) => <ControlledSettingsSheet {...args} />,
-} satisfies Meta<typeof NotificationSettingsSheet>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Menu: Story = {
+export const Menu = meta.story({
   beforeEach({ msw }) {
     const cleanupAuth = setupStoryAuth();
     msw.use(...settingsSuccessHandlers);
 
     return cleanupAuth;
   },
-};
+});
 
-export const ActivityLoaded: Story = {
+export const ActivityLoaded = meta.story({
   args: {
     initialView: "activity",
   },
@@ -163,9 +159,9 @@ export const ActivityLoaded: Story = {
 
     return cleanupAuth;
   },
-};
+});
 
-export const MeetingLoaded: Story = {
+export const MeetingLoaded = meta.story({
   args: {
     initialView: "meeting",
   },
@@ -175,9 +171,9 @@ export const MeetingLoaded: Story = {
 
     return cleanupAuth;
   },
-};
+});
 
-export const LoadError: Story = {
+export const LoadError = meta.story({
   args: {
     initialView: "activity",
   },
@@ -187,4 +183,4 @@ export const LoadError: Story = {
 
     return cleanupAuth;
   },
-};
+});

@@ -1,7 +1,6 @@
+import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -37,7 +36,7 @@ function ControlledConfirmDialog(args: ConfirmDialogStoryProps) {
   );
 }
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/ConfirmDialog",
   component: ConfirmDialog,
   parameters: {
@@ -58,35 +57,32 @@ const meta = {
     onConfirm: { control: false },
   },
   render: (args) => <ControlledConfirmDialog {...args} />,
-} satisfies Meta<typeof ConfirmDialog>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const Destructive: Story = {
+export const Destructive = meta.story({
   args: {
     title: "모임을 탈퇴할까요?",
     description: "탈퇴하면 모임 활동과 관련된 권한을 잃게 됩니다.",
     confirmText: "탈퇴하기",
     confirmVariant: "danger",
   },
-};
+});
 
-export const WithoutCancel: Story = {
+export const WithoutCancel = meta.story({
   args: {
     title: "저장이 완료되었어요",
     description: "확인 버튼을 눌러 목록으로 돌아갑니다.",
     confirmText: "확인",
     showCancel: false,
   },
-};
+});
 
-export const Pending: Story = {
+export const Pending = meta.story({
   args: {
     title: "신청을 처리하고 있어요",
     description: "잠시만 기다려 주세요.",
     isPending: true,
   },
-};
+});

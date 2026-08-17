@@ -1,7 +1,6 @@
+import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import Select from "./Select";
 
@@ -36,7 +35,7 @@ function InteractiveSelect(args: SelectStoryProps) {
   );
 }
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/Select",
   component: Select,
   parameters: {
@@ -53,27 +52,24 @@ const meta = {
     onChange: { control: false },
   },
   render: (args) => <InteractiveSelect {...args} />,
-} satisfies Meta<typeof Select>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const Selected: Story = {
+export const Selected = meta.story({
   args: {
     value: "latest",
   },
-};
+});
 
-export const Disabled: Story = {
+export const Disabled = meta.story({
   args: {
     value: "latest",
     disabled: true,
   },
-};
+});
 
-export const LongOption: Story = {
+export const LongOption = meta.story({
   args: {
     options: [
       {
@@ -87,11 +83,11 @@ export const LongOption: Story = {
     ],
     value: "all",
   },
-};
+});
 
-export const ManyOptions: Story = {
+export const ManyOptions = meta.story({
   args: {
     options: longOptions,
     value: "option-1",
   },
-};
+});

@@ -1,7 +1,6 @@
+import preview from "../../../.storybook/preview";
 import { ArrowRight, Check, Plus } from "lucide-react";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import Button from "./Button";
 
@@ -16,7 +15,7 @@ const buttonVariants = [
 
 const buttonSizes = ["large", "medium", "pill", "next"] as const;
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/Button",
   component: Button,
   parameters: {
@@ -34,29 +33,26 @@ const meta = {
     rightIcon: { control: false },
     onClick: { control: false },
   },
-} satisfies Meta<typeof Button>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const Disabled: Story = {
+export const Disabled = meta.story({
   args: {
     children: "비활성화",
     disabled: true,
   },
-};
+});
 
-export const WithIcons: Story = {
+export const WithIcons = meta.story({
   args: {
     children: "다음 단계",
     leftIcon: <Plus aria-hidden="true" />,
     rightIcon: <ArrowRight aria-hidden="true" />,
   },
-};
+});
 
-export const AllVariants: Story = {
+export const AllVariants = meta.story({
   render: (args) => (
     <div className="flex flex-wrap items-center justify-center gap-3">
       {buttonVariants.map((variant) => (
@@ -66,9 +62,9 @@ export const AllVariants: Story = {
       ))}
     </div>
   ),
-};
+});
 
-export const AllSizes: Story = {
+export const AllSizes = meta.story({
   render: (args) => (
     <div className="flex flex-wrap items-center justify-center gap-3">
       {buttonSizes.map((size) => (
@@ -78,9 +74,9 @@ export const AllSizes: Story = {
       ))}
     </div>
   ),
-};
+});
 
-export const FullWidth: Story = {
+export const FullWidth = meta.story({
   render: (args) => (
     <div className="w-[360px]">
       <Button {...args} fullWidth>
@@ -88,11 +84,11 @@ export const FullWidth: Story = {
       </Button>
     </div>
   ),
-};
+});
 
-export const WithConfirmationIcon: Story = {
+export const WithConfirmationIcon = meta.story({
   args: {
     children: "저장 완료",
     leftIcon: <Check aria-hidden="true" />,
   },
-};
+});

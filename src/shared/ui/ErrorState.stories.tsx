@@ -1,11 +1,10 @@
+import preview from "../../../.storybook/preview";
 import { CircleAlert, RefreshCw } from "lucide-react";
 import { fn } from "storybook/test";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
 import { ErrorState } from "./ErrorState";
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/ErrorState",
   component: ErrorState,
   parameters: {
@@ -20,14 +19,11 @@ const meta = {
     primaryAction: { control: false },
     secondaryAction: { control: false },
   },
-} satisfies Meta<typeof ErrorState>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default = meta.story();
 
-export const Default: Story = {};
-
-export const RetryAction: Story = {
+export const RetryAction = meta.story({
   args: {
     icon: <CircleAlert aria-hidden="true" />,
     primaryAction: {
@@ -35,9 +31,9 @@ export const RetryAction: Story = {
       onClick: fn(),
     },
   },
-};
+});
 
-export const WithSecondaryAction: Story = {
+export const WithSecondaryAction = meta.story({
   args: {
     title: "공고를 찾을 수 없어요",
     description: "주소가 바뀌었거나 삭제된 공고일 수 있어요.",
@@ -50,9 +46,9 @@ export const WithSecondaryAction: Story = {
       onClick: fn(),
     },
   },
-};
+});
 
-export const RetryWithIcon: Story = {
+export const RetryWithIcon = meta.story({
   args: {
     title: "알림 설정을 불러오지 못했어요",
     primaryAction: {
@@ -61,4 +57,4 @@ export const RetryWithIcon: Story = {
     },
     icon: <RefreshCw aria-hidden="true" />,
   },
-};
+});

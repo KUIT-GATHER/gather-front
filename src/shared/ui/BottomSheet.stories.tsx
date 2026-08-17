@@ -1,7 +1,6 @@
+import preview from "../../../.storybook/preview";
 import { useState, type ComponentProps } from "react";
 import { fn } from "storybook/test";
-
-import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import Button from "./Button";
 import BottomSheet from "./BottomSheet";
@@ -28,7 +27,7 @@ function ControlledBottomSheet(args: BottomSheetStoryProps) {
   );
 }
 
-const meta = {
+const meta = preview.meta({
   title: "Shared/UI/BottomSheet",
   component: BottomSheet,
   parameters: {
@@ -55,14 +54,11 @@ const meta = {
     onOpenChange: { control: false },
   },
   render: (args) => <ControlledBottomSheet {...args} />,
-} satisfies Meta<typeof BottomSheet>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const DefaultOpen = meta.story();
 
-export const DefaultOpen: Story = {};
-
-export const WithDescription: Story = {
+export const WithDescription = meta.story({
   args: {
     title: "봉사 일정 선택",
     description: "참여 가능한 날짜를 확인해 주세요.",
@@ -73,9 +69,9 @@ export const WithDescription: Story = {
       </div>
     ),
   },
-};
+});
 
-export const WithFooter: Story = {
+export const WithFooter = meta.story({
   args: {
     title: "신청 전 확인",
     children: (
@@ -86,18 +82,18 @@ export const WithFooter: Story = {
     ),
     footer: <Button fullWidth>신청하기</Button>,
   },
-};
+});
 
-export const WithBackAction: Story = {
+export const WithBackAction = meta.story({
   args: {
     title: "봉사 활동",
     onBack: fn(),
     backLabel: "알림 설정으로 돌아가기",
     children: <p className="text-body-14 text-text-gray-300">상세 설정 화면</p>,
   },
-};
+});
 
-export const LongScrollableContent: Story = {
+export const LongScrollableContent = meta.story({
   args: {
     title: "긴 안내 내용",
     description: "스크롤 가능한 콘텐츠 영역을 확인하는 상태입니다.",
@@ -113,4 +109,4 @@ export const LongScrollableContent: Story = {
     ),
     footer: <Button fullWidth>확인했어요</Button>,
   },
-};
+});
