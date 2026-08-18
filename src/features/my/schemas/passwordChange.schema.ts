@@ -5,13 +5,11 @@ import {
   passwordSchema,
 } from "@/shared/schemas/password.schema";
 
-export {
-  passwordConfirmSchema,
-  passwordSchema,
-} from "@/shared/schemas/password.schema";
-
-export const passwordResetSchema = z
+export const passwordChangeSchema = z
   .object({
+    currentPassword: z
+      .string()
+      .min(1, { error: "현재 비밀번호를 입력해 주세요." }),
     password: passwordSchema,
     passwordConfirm: passwordConfirmSchema,
   })
@@ -20,4 +18,4 @@ export const passwordResetSchema = z
     message: "비밀번호가 일치하지 않습니다.",
   });
 
-export type PasswordResetFormValues = z.infer<typeof passwordResetSchema>;
+export type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>;
