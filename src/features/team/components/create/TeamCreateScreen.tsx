@@ -612,6 +612,7 @@ export function TeamCreateScreen() {
           labelClassName="mb-2 font-medium"
           htmlFor="meeting-deadline"
           error={errors.deadline}
+          required
         >
           <MeetingDateTimeField
             id="meeting-deadline"
