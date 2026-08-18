@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 
-import { clearAuthSession } from "@/features/auth/lib/clearAuthSession";
 import { useChangeMyPasswordMutation } from "@/features/my/hooks/useChangeMyPasswordMutation";
 import { useMyProfileQuery } from "@/features/my/hooks/useMyProfileQuery";
 import {
@@ -32,7 +31,14 @@ function getMutationErrorMessage(error: unknown) {
 export function PasswordChangeScreen() {
   const navigate = useNavigate();
   const profileQuery = useMyProfileQuery();
-  const changePasswordMutation = useChangeMyPasswordMutation();
+  const changePasswordMutation = useChangeMyPasswordMutation({
+    onSuccess: () => {
+      navigate("/login/email", {
+        replace: true,
+        state: { from: "/home" },
+      });
+    },
+  });
   const [rootError, setRootError] = useState<string | null>(null);
   const methods = useForm<PasswordChangeFormValues>({
     resolver: zodResolver(passwordChangeSchema),
@@ -53,14 +59,6 @@ export function PasswordChangeScreen() {
   const handleSubmit = methods.handleSubmit((values) => {
     setRootError(null);
     changePasswordMutation.mutate(values, {
-      onSuccess: () => {
-        methods.reset();
-        clearAuthSession();
-        navigate("/login/email", {
-          replace: true,
-          state: { from: "/home" },
-        });
-      },
       onError: (error) => {
         if (
           error instanceof ApiError &&
