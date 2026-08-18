@@ -345,6 +345,15 @@ export function TeamListScreen() {
     setSearchParams(next);
     setIsFilterOpen(false);
   };
+  const openSearch = () => {
+    const nextSearchParams = updateTeamListSearchParams(
+      new URLSearchParams(),
+      getTeamListFilter(searchParams),
+      { sort: getTeamListSort(searchParams) },
+    );
+
+    navigate(`/teams/search?${nextSearchParams.toString()}`);
+  };
 
   return (
     <PageContainer size="narrow" className="min-h-dvh pb-28">
@@ -364,7 +373,7 @@ export function TeamListScreen() {
                 label="모임 검색"
                 icon={<img src={searchIcon} alt="" />}
                 className="[&>span>img]:size-[27px]"
-                onClick={() => navigate("/teams/search")}
+                onClick={openSearch}
               />
             </div>
           ) : undefined

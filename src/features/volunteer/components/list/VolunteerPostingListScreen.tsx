@@ -40,6 +40,15 @@ export function VolunteerPostingListScreen() {
     () => toVolunteerPostingQueryParams(searchParams, sort),
     [searchParams, sort],
   );
+  const openSearch = () => {
+    const nextSearchParams = updateVolunteerPostingSearchParams(
+      new URLSearchParams(),
+      filter,
+      { sort },
+    );
+
+    navigate(`/volunteers/search?${nextSearchParams.toString()}`);
+  };
 
   return (
     <PageContainer size="narrow" className="min-h-dvh pb-8">
@@ -59,7 +68,7 @@ export function VolunteerPostingListScreen() {
               label="봉사 공고 검색"
               icon={<img src={searchIcon} alt="" />}
               className="[&>span>img]:size-[27px]"
-              onClick={() => navigate("/volunteers/search")}
+              onClick={openSearch}
             />
           </div>
         }
