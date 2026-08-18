@@ -26,6 +26,24 @@ export type KakaoMarker = {
   setZIndex: (zIndex: number) => void;
 };
 
+export type KakaoMarkerClusterer = {
+  addMarkers: (markers: KakaoMarker[], nodraw?: boolean) => void;
+  clear: () => void;
+  redraw: () => void;
+};
+
+export type KakaoMarkerClustererOptions = {
+  map: KakaoMap;
+  markers?: KakaoMarker[];
+  gridSize?: number;
+  averageCenter?: boolean;
+  minLevel?: number;
+  minClusterSize?: number;
+  styles?: Array<Record<string, string>>;
+  texts?: string[] | ((size: number) => string);
+  disableClickZoom?: boolean;
+};
+
 export type KakaoAddressSearchResult = {
   x: string;
   y: string;
@@ -36,7 +54,7 @@ export type KakaoKeywordSearchResult = {
   y: string;
 };
 
-type KakaoMaps = {
+export type KakaoMaps = {
   Map: new (
     container: HTMLElement,
     options: { center: KakaoLatLng; level: number },
@@ -53,6 +71,9 @@ type KakaoMaps = {
     size: object,
     options: { offset: object },
   ) => KakaoMarkerImage;
+  MarkerClusterer: new (
+    options: KakaoMarkerClustererOptions,
+  ) => KakaoMarkerClusterer;
   Size: new (width: number, height: number) => object;
   Point: new (x: number, y: number) => object;
   event: {
@@ -124,7 +145,7 @@ export function loadKakaoMapSdk(): Promise<KakaoMaps> {
     const script = document.createElement("script");
     script.id = KAKAO_MAP_SCRIPT_ID;
     script.async = true;
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey=${encodeURIComponent(
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services,clusterer&appkey=${encodeURIComponent(
       env.KAKAO_MAP_JAVASCRIPT_KEY,
     )}`;
 

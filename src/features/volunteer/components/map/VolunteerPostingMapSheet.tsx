@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 
-import mapPin from "@/assets/icons/mapPin.svg";
 import { createRegionIndex } from "@/features/region/lib/createRegionIndex";
 import { getFullRegionSelectionLabel } from "@/features/region/lib/regionLabel";
 import {
@@ -14,22 +13,22 @@ import { useVolunteerPostingMapQuery } from "@/features/volunteer/hooks/useVolun
 import {
   type KakaoLatLng,
   type KakaoMap,
-  type KakaoMarker,
-  type KakaoMarkerImage,
   type KakaoAddressSearchResult,
   type KakaoKeywordSearchResult,
+  type KakaoMaps,
   loadKakaoMapSdk,
 } from "@/features/volunteer/lib/kakaoMapSdk";
+import {
+  type VolunteerPostingMapMarkerItem,
+  useVolunteerPostingMapMarkers,
+} from "@/features/volunteer/hooks/useVolunteerPostingMapMarkers";
 import {
   getRepresentativeVolunteerPostingLocation,
   isSameVolunteerPostingMapBounds,
   normalizeVolunteerPostingMapBounds,
 } from "@/features/volunteer/lib/volunteerPostingMap";
 import type { VolunteerPostingFilter } from "@/features/volunteer/types/volunteerPostingFilter.types";
-import type {
-  VolunteerPostingMapBounds,
-  VolunteerPostingMapItem,
-} from "@/features/volunteer/types/volunteer.types";
+import type { VolunteerPostingMapBounds } from "@/features/volunteer/types/volunteer.types";
 import { cn } from "@/shared/lib/cn";
 import BottomSheet from "@/shared/ui/BottomSheet";
 import Button from "@/shared/ui/Button";
@@ -45,21 +44,7 @@ const DEFAULT_MAP_CENTER = {
 };
 const DEFAULT_MAP_LEVEL = 8;
 
-type KakaoMaps = Awaited<ReturnType<typeof loadKakaoMapSdk>>;
 type SdkState = "loading" | "ready" | "error";
-type MarkerImages = {
-  normal: KakaoMarkerImage;
-  selected: KakaoMarkerImage;
-};
-type MarkerEntry = {
-  marker: KakaoMarker;
-  postingId: number;
-};
-type MapMarkerItem = {
-  posting: VolunteerPostingMapItem;
-  latitude: number;
-  longitude: number;
-};
 
 type VolunteerPostingMapSheetProps = {
   open: boolean;
@@ -167,17 +152,6 @@ function geocodeRegion(
   });
 }
 
-function createMarkerImages(maps: KakaoMaps): MarkerImages {
-  return {
-    normal: new maps.MarkerImage(mapPin, new maps.Size(19, 25), {
-      offset: new maps.Point(9.5, 25),
-    }),
-    selected: new maps.MarkerImage(mapPin, new maps.Size(37, 49), {
-      offset: new maps.Point(18.5, 49),
-    }),
-  };
-}
-
 export function VolunteerPostingMapSheet({
   open,
   onOpenChange,
@@ -187,8 +161,8 @@ export function VolunteerPostingMapSheet({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | undefined>(undefined);
   const mapsRef = useRef<KakaoMaps | undefined>(undefined);
-  const markerEntriesRef = useRef<Map<number, MarkerEntry>>(new Map());
-  const markerImagesRef = useRef<MarkerImages | undefined>(undefined);
+  const [mapsInstance, setMapsInstance] = useState<KakaoMaps>();
+  const [mapInstance, setMapInstance] = useState<KakaoMap>();
   const [sdkState, setSdkState] = useState<SdkState>("loading");
   const [sdkAttempt, setSdkAttempt] = useState(0);
   const [regionLocationAttempt, setRegionLocationAttempt] = useState(0);
@@ -231,6 +205,7 @@ export function VolunteerPostingMapSheet({
       .then((maps) => {
         if (!active) return;
         mapsRef.current = maps;
+        setMapsInstance(maps);
         setSdkState("ready");
       })
       .catch(() => {
@@ -262,6 +237,8 @@ export function VolunteerPostingMapSheet({
     let frameId: number | undefined;
     let map: KakaoMap | undefined;
     let handleIdle: (() => void) | undefined;
+    let handleDragStart: (() => void) | undefined;
+    let handleZoomStart: (() => void) | undefined;
     const initializeMap = async () => {
       const initialCenter = hasSelectedRegionFilter
         ? await geocodeRegion(maps, selectedRegion, selectedRegionParent)
@@ -289,10 +266,23 @@ export function VolunteerPostingMapSheet({
           setPendingBounds(getMapBounds(initialMap));
         }
       };
+      handleDragStart = () => {
+        if (!disposed) {
+          setSelectedPostingId(null);
+        }
+      };
+      handleZoomStart = () => {
+        if (!disposed) {
+          setSelectedPostingId(null);
+        }
+      };
 
       mapRef.current = initialMap;
+      setMapInstance(initialMap);
       frameId = window.requestAnimationFrame(() => {
-        if (disposed || !handleIdle) return;
+        if (disposed || !handleIdle || !handleDragStart || !handleZoomStart) {
+          return;
+        }
 
         initialMap.relayout();
         const initialBounds = getMapBounds(initialMap);
@@ -300,6 +290,8 @@ export function VolunteerPostingMapSheet({
         setSearchedBounds(initialBounds);
         setDisplayedBounds(initialBounds);
         maps.event.addListener(initialMap, "idle", handleIdle);
+        maps.event.addListener(initialMap, "dragstart", handleDragStart);
+        maps.event.addListener(initialMap, "zoom_start", handleZoomStart);
         setIsMapReady(true);
       });
     };
@@ -314,8 +306,15 @@ export function VolunteerPostingMapSheet({
       if (map && handleIdle) {
         maps.event.removeListener(map, "idle", handleIdle);
       }
+      if (map && handleDragStart) {
+        maps.event.removeListener(map, "dragstart", handleDragStart);
+      }
+      if (map && handleZoomStart) {
+        maps.event.removeListener(map, "zoom_start", handleZoomStart);
+      }
       if (map && mapRef.current === map) {
         mapRef.current = undefined;
+        setMapInstance(undefined);
       }
     };
   }, [
@@ -365,7 +364,7 @@ export function VolunteerPostingMapSheet({
     return () => window.clearTimeout(timeoutId);
   }, [mapQuery.data, mapQuery.isPlaceholderData, searchedBounds]);
 
-  const markerItems = useMemo<MapMarkerItem[]>(() => {
+  const markerItems = useMemo<VolunteerPostingMapMarkerItem[]>(() => {
     if (!mapQuery.data || !displayedBounds) {
       return [];
     }
@@ -394,63 +393,14 @@ export function VolunteerPostingMapSheet({
     });
   }, [displayedBounds, mapQuery.data]);
 
-  useEffect(() => {
-    const maps = mapsRef.current;
-    const map = mapRef.current;
-
-    if (!isMapReady || !maps || !map) {
-      return;
-    }
-
-    const markerImages = createMarkerImages(maps);
-    const markerEntries = markerEntriesRef.current;
-    const markerListeners: Array<{
-      marker: KakaoMarker;
-      handler: () => void;
-    }> = [];
-
-    markerImagesRef.current = markerImages;
-    markerEntries.forEach(({ marker }) => marker.setMap(null));
-    markerEntries.clear();
-
-    markerItems.forEach(({ posting, latitude, longitude }) => {
-      const marker = new maps.Marker({
-        map,
-        position: new maps.LatLng(latitude, longitude),
-        image: markerImages.normal,
-        zIndex: 1,
-      });
-      const handleMarkerClick = () => setSelectedPostingId(posting.id);
-
-      maps.event.addListener(marker, "click", handleMarkerClick);
-      markerListeners.push({ marker, handler: handleMarkerClick });
-      markerEntries.set(posting.id, {
-        marker,
-        postingId: posting.id,
-      });
-    });
-
-    return () => {
-      markerListeners.forEach(({ marker, handler }) => {
-        maps.event.removeListener(marker, "click", handler);
-        marker.setMap(null);
-      });
-      markerEntries.clear();
-    };
-  }, [isMapReady, markerItems]);
-
-  useEffect(() => {
-    const markerImages = markerImagesRef.current;
-
-    if (!markerImages) return;
-
-    markerEntriesRef.current.forEach(({ marker, postingId }) => {
-      const isSelected = postingId === selectedPostingId;
-
-      marker.setImage(isSelected ? markerImages.selected : markerImages.normal);
-      marker.setZIndex(isSelected ? 2 : 1);
-    });
-  }, [markerItems, selectedPostingId]);
+  useVolunteerPostingMapMarkers({
+    maps: mapsInstance,
+    map: mapInstance,
+    isMapReady,
+    markerItems,
+    selectedPostingId,
+    onSelectPosting: setSelectedPostingId,
+  });
 
   useEffect(() => {
     if (
@@ -494,6 +444,7 @@ export function VolunteerPostingMapSheet({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        setSelectedPostingId(null);
         map.panTo(
           new maps.LatLng(position.coords.latitude, position.coords.longitude),
         );
