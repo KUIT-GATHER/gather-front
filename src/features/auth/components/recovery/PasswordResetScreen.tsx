@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router";
@@ -12,76 +11,13 @@ import {
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import Button from "@/shared/ui/Button";
-import FormField from "@/shared/ui/FormField";
-import Input from "@/shared/ui/Input";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
+import PasswordField from "@/shared/ui/PasswordField";
 
 export type PasswordResetLocationState = {
   passwordResetToken?: string;
 };
-
-function PasswordField({
-  id,
-  label,
-  placeholder,
-  value,
-  onChange,
-  onBlur,
-  name,
-  inputRef,
-  error,
-  visible,
-  onVisibleChange,
-}: {
-  id: string;
-  label: string;
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
-  onBlur: () => void;
-  name: string;
-  inputRef: (element: HTMLInputElement | null) => void;
-  error?: string;
-  visible: boolean;
-  onVisibleChange: (visible: boolean) => void;
-}) {
-  return (
-    <FormField
-      htmlFor={id}
-      label={label}
-      required
-      error={error}
-      errorId={`${id}-error`}
-      labelClassName="mb-3 text-[15px] font-semibold leading-5"
-    >
-      <div className="relative">
-        <Input
-          id={id}
-          ref={inputRef}
-          name={name}
-          type={visible ? "text" : "password"}
-          autoComplete="new-password"
-          placeholder={placeholder}
-          aria-describedby={error ? `${id}-error` : undefined}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          className="pr-12"
-          invalid={Boolean(error)}
-        />
-        <button
-          type="button"
-          aria-label={visible ? `${label} 숨기기` : `${label} 보기`}
-          className="absolute top-1/2 right-4 flex size-6 -translate-y-1/2 items-center justify-center text-text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
-          onClick={() => onVisibleChange(!visible)}
-        >
-          {visible ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-        </button>
-      </div>
-    </FormField>
-  );
-}
 
 export function PasswordResetScreen() {
   const navigate = useNavigate();
@@ -91,9 +27,6 @@ export function PasswordResetScreen() {
     () => locationState?.passwordResetToken,
   );
   const hasScrubbedLocationStateRef = useRef(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isPasswordConfirmVisible, setIsPasswordConfirmVisible] =
-    useState(false);
   const [rootError, setRootError] = useState<string | null>(null);
   const [canRetryVerification, setCanRetryVerification] = useState(false);
   const resetPasswordMutation = useResetPasswordMutation();
@@ -189,6 +122,7 @@ export function PasswordResetScreen() {
             <PasswordField
               id="password-reset-password"
               label="비밀번호"
+              required
               placeholder="6자 이상 입력해 주세요"
               value={field.value}
               onChange={field.onChange}
@@ -196,8 +130,7 @@ export function PasswordResetScreen() {
               name={field.name}
               inputRef={field.ref}
               error={methods.formState.errors.password?.message}
-              visible={isPasswordVisible}
-              onVisibleChange={setIsPasswordVisible}
+              autoComplete="new-password"
             />
           )}
         />
@@ -208,6 +141,7 @@ export function PasswordResetScreen() {
             <PasswordField
               id="password-reset-confirm"
               label="비밀번호 확인"
+              required
               placeholder="비밀번호를 다시 입력해 주세요"
               value={field.value}
               onChange={field.onChange}
@@ -215,8 +149,7 @@ export function PasswordResetScreen() {
               name={field.name}
               inputRef={field.ref}
               error={methods.formState.errors.passwordConfirm?.message}
-              visible={isPasswordConfirmVisible}
-              onVisibleChange={setIsPasswordConfirmVisible}
+              autoComplete="new-password"
             />
           )}
         />

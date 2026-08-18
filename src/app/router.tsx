@@ -52,6 +52,7 @@ import { MyActivitiesPage } from "@/pages/my/MyActivitiesPage";
 import { MyBadgesPage } from "@/pages/my/MyBadgesPage";
 import { MyBookmarksPage } from "@/pages/my/MyBookmarksPage";
 import { ProfileEditPage } from "@/pages/my/ProfileEditPage";
+import { PasswordChangePage } from "@/pages/my/PasswordChangePage";
 
 import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
@@ -215,6 +216,10 @@ export const router = createBrowserRouter([
               {
                 path: "/my/profile/edit",
                 element: <ProfileEditPage />,
+              },
+              {
+                path: "/my/profile/password",
+                element: <PasswordChangePage />,
               },
               {
                 path: "/my/activities",

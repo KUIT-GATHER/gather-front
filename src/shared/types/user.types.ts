@@ -1,3 +1,5 @@
+export type LoginType = "EMAIL" | "KAKAO";
+
 export type UserStatus = "ACTIVE" | "WITHDRAWN";
 
 export function resolveUserStatus(userStatus?: UserStatus): UserStatus {

@@ -244,6 +244,32 @@ export function ProfileEditScreen() {
             />
           </FormField>
 
+          {profileQuery.data?.loginType === "EMAIL" ? (
+            <section>
+              <h2 className="text-[15px] font-semibold leading-5 text-text">
+                비밀번호
+              </h2>
+              <div className="relative mt-3">
+                <Input
+                  readOnly
+                  tabIndex={-1}
+                  value="*********"
+                  aria-label="비밀번호가 설정되어 있습니다"
+                  className="pr-20 text-text-gray-400"
+                />
+                <Button
+                  type="button"
+                  variant="primaryOutline"
+                  size="medium"
+                  className="absolute top-1/2 right-1 h-10 -translate-y-1/2 border-0 bg-transparent px-3 text-base font-normal text-zinc-600 hover:bg-transparent hover:brightness-100"
+                  onClick={() => navigate("/my/profile/password")}
+                >
+                  변경
+                </Button>
+              </div>
+            </section>
+          ) : null}
+
           <fieldset>
             <legend className="mb-3 text-[15px] font-semibold leading-5 text-text">
               생년월일 / 성별
