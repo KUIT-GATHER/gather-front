@@ -1,5 +1,4 @@
 import { ActivityListCard } from "@/features/activity/components/ActivityListCard";
-import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
 import {
   formatVolunteerDate,
   formatVolunteerHomeDate,
@@ -9,6 +8,8 @@ import type {
   PostingListItem,
   VolunteerPostingListItem,
 } from "@/features/volunteer/types/volunteer.types";
+
+import { VolunteerPostingCover } from "./VolunteerPostingCover";
 
 type VolunteerPostingCardProps = {
   posting: VolunteerPostingListItem | PostingListItem;
@@ -23,9 +24,7 @@ export function VolunteerPostingCard({
 }: VolunteerPostingCardProps) {
   const isUnifiedItem = "sourceType" in posting;
   const categories = isUnifiedItem ? posting.categories : [posting.category];
-  const imageSrc =
-    (isUnifiedItem ? posting.thumbnailUrl : null) ??
-    getVolunteerPostingImage(categories[0], posting.id);
+  const thumbnailUrl = isUnifiedItem ? posting.thumbnailUrl : null;
   const location = posting.regionName;
   const activityStartDate = isUnifiedItem
     ? (posting.activityStartAt?.slice(0, 10) ?? null)
@@ -51,10 +50,11 @@ export function VolunteerPostingCard({
         onClick={onClick}
         className="w-34 shrink-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
       >
-        <img
-          src={imageSrc}
-          alt=""
-          className="aspect-square w-34 rounded-xl border border-stroke object-cover"
+        <VolunteerPostingCover
+          imageUrl={thumbnailUrl}
+          category={categories[0]}
+          postingId={posting.id}
+          className="aspect-square w-34 rounded-xl border border-stroke"
         />
         <h3 className="mt-2 truncate text-body-15-semibold text-text">
           {posting.title}
@@ -70,7 +70,14 @@ export function VolunteerPostingCard({
 
   return (
     <ActivityListCard
-      imageSrc={imageSrc}
+      image={
+        <VolunteerPostingCover
+          imageUrl={thumbnailUrl}
+          category={categories[0]}
+          postingId={posting.id}
+          className="h-[106px] w-[91px] shrink-0 rounded-[10px]"
+        />
+      }
       title={posting.title}
       description={
         isUnifiedItem ? posting.organizationName : posting.recruitOrg

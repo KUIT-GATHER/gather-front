@@ -41,6 +41,17 @@ function createHeaders(options: FetchClientOptions) {
   return headers;
 }
 
+function shouldClearAuthSession(error: unknown, options: FetchClientOptions) {
+  return (
+    error instanceof ApiError &&
+    error.status === 401 &&
+    !options.skipAuth &&
+    (error.code === API_ERROR_CODE.UNAUTHORIZED ||
+      error.code === API_ERROR_CODE.INVALID_TOKEN ||
+      error.code === API_ERROR_CODE.REVOKED_TOKEN)
+  );
+}
+
 async function parseApiResponse<T>(response: Response) {
   const apiResponse = (await response.json()) as ApiResponse<T>;
 
@@ -92,18 +103,18 @@ export async function fetchClient<T>(
         throw error;
       }
 
-      return await request<T>(endpoint, options);
+      try {
+        return await request<T>(endpoint, options);
+      } catch (retryError) {
+        if (shouldClearAuthSession(retryError, options)) {
+          clearAuthSession();
+        }
+
+        throw retryError;
+      }
     }
 
-    const shouldClearAuth =
-      error instanceof ApiError &&
-      error.status === 401 &&
-      !options.skipAuth &&
-      (error.code === API_ERROR_CODE.UNAUTHORIZED ||
-        error.code === API_ERROR_CODE.INVALID_TOKEN ||
-        error.code === API_ERROR_CODE.REVOKED_TOKEN);
-
-    if (shouldClearAuth) {
+    if (shouldClearAuthSession(error, options)) {
       clearAuthSession();
     }
 

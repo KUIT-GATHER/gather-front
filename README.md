@@ -16,7 +16,17 @@ Gather 서비스의 프론트엔드 프로젝트입니다. React 기반 화면�
 
 ## 실행 요구사항
 
-이 저장소에는 `.nvmrc` 또는 `package.json`의 `engines`가 없어 로컬 Node.js 버전을 고정하지 않습니다. CI는 Node.js 24을 사용하므로 로컬 환경 구성 시 참고합니다.
+### Node.js
+
+이 프로젝트는 Node.js 24를 기준으로 개발합니다.
+
+루트의 `.nvmrc`를 통해 로컬 개발 환경의 Node.js major 버전을 맞춥니다. nvm을 사용하는 경우 프로젝트 루트에서 다음 명령어를 실행하세요.
+
+```bash
+nvm use
+```
+
+GitHub Actions CI에서도 Node.js 24를 사용합니다.
 
 패키지 관리는 npm을 사용합니다.
 
