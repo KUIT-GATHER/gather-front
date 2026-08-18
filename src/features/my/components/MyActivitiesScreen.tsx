@@ -301,8 +301,8 @@ export function MyActivitiesScreen() {
         ) : null}
 
         <section className="mt-9" aria-label="완료한 활동 목록">
-          <div className="-mx-5.5 overflow-x-auto px-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-max gap-2">
+          <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max gap-2 pr-5.5">
               <button
                 type="button"
                 onClick={() => setSelectedCategory(null)}

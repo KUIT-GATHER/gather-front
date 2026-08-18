@@ -596,6 +596,7 @@ export function TeamCreateScreen() {
           error={errors.categories}
         >
           <CategoryChipGroup
+            className="mx-0 w-full min-w-0 px-0"
             value={resolvedCategories}
             maxSelected={3}
             disabled={isFormLocked}
