@@ -153,7 +153,7 @@ export function TeamSearchScreen() {
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-8">
+    <PageContainer size="narrow" className="flex min-h-dvh flex-col pb-8">
       {keywordFromUrl ? (
         <>
           <header className="-ml-4 flex h-[70px] items-center gap-[7px] pt-[env(safe-area-inset-top)]">
@@ -179,7 +179,7 @@ export function TeamSearchScreen() {
               variant="header"
             />
           </header>
-          <section className="mt-0.5">
+          <section className="mt-0.5 flex flex-1 flex-col">
             <div className="flex h-11 items-center justify-between">
               <h2 className="text-body-14 text-text">검색결과</h2>
               <Select
@@ -201,7 +201,7 @@ export function TeamSearchScreen() {
                 }}
               />
             </div>
-            <div className="-mt-px">
+            <div className="-mt-px flex flex-1 flex-col">
               <TeamSearchResults
                 params={queryParams}
                 onSelect={(meetingId) => navigate(`/teams/${meetingId}`)}

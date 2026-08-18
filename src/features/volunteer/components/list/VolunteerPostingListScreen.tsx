@@ -51,7 +51,7 @@ export function VolunteerPostingListScreen() {
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-8">
+    <PageContainer size="narrow" className="flex min-h-dvh flex-col pb-8">
       <PageHeader
         sticky
         title="봉사 공고"
@@ -94,7 +94,7 @@ export function VolunteerPostingListScreen() {
           options={volunteerPostingListSortOptions}
         />
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-1 flex-col">
         <VolunteerPostingResults
           params={queryParams}
           emptyTitle="조건에 맞는 봉사 공고가 없어요"

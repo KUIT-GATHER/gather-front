@@ -82,22 +82,26 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
 
   if (meetingsQuery.isLoading) {
     return (
-      <LoadingState label="우리 모임을 불러오는 중" className="min-h-55" />
+      <div className="flex min-h-55 flex-1 flex-col justify-center">
+        <LoadingState label="우리 모임을 불러오는 중" />
+      </div>
     );
   }
 
   if (meetingsQuery.isError) {
     return (
-      <ErrorState
-        title="우리 모임을 불러오지 못했어요"
-        description="잠시 후 다시 확인해 주세요."
-        primaryAction={{
-          label: "다시 시도",
-          onClick: () => {
-            void meetingsQuery.refetch();
-          },
-        }}
-      />
+      <div className="flex min-h-55 flex-1 flex-col justify-center">
+        <ErrorState
+          title="우리 모임을 불러오지 못했어요"
+          description="잠시 후 다시 확인해 주세요."
+          primaryAction={{
+            label: "다시 시도",
+            onClick: () => {
+              void meetingsQuery.refetch();
+            },
+          }}
+        />
+      </div>
     );
   }
 
@@ -111,11 +115,12 @@ function MyMeetingList({ enabled }: { enabled: boolean }) {
 
   if (meetings.length === 0) {
     return (
-      <EmptyState
-        className="mt-4"
-        title="아직 참여한 모임이 없어요"
-        description="마음에 드는 모임을 찾아 참여해 보세요."
-      />
+      <div className="flex min-h-55 flex-1 flex-col justify-center">
+        <EmptyState
+          title="아직 참여한 모임이 없어요"
+          description="마음에 드는 모임을 찾아 참여해 보세요."
+        />
+      </div>
     );
   }
 
@@ -192,7 +197,7 @@ function MeetingDiscoverList({
   }, [meetingsQuery]);
 
   return (
-    <>
+    <div className="flex flex-1 flex-col">
       <div className="flex h-[60px] items-center justify-between">
         <h1 className="text-title-18">같이 갈 사람 찾는 중 🙌</h1>
         <Select
@@ -215,29 +220,35 @@ function MeetingDiscoverList({
       </div>
 
       {meetingsQuery.isLoading ? (
-        <LoadingState label="모임을 불러오는 중" className="min-h-55" />
+        <div className="flex min-h-55 flex-1 flex-col justify-center">
+          <LoadingState label="모임을 불러오는 중" />
+        </div>
       ) : null}
 
       {meetingsQuery.isError ? (
-        <ErrorState
-          title="모임을 불러오지 못했어요"
-          description="잠시 후 다시 확인해 주세요."
-          primaryAction={{
-            label: "다시 시도",
-            onClick: () => {
-              void meetingsQuery.refetch();
-            },
-          }}
-        />
+        <div className="flex min-h-55 flex-1 flex-col justify-center">
+          <ErrorState
+            title="모임을 불러오지 못했어요"
+            description="잠시 후 다시 확인해 주세요."
+            primaryAction={{
+              label: "다시 시도",
+              onClick: () => {
+                void meetingsQuery.refetch();
+              },
+            }}
+          />
+        </div>
       ) : null}
 
       {!meetingsQuery.isLoading &&
       !meetingsQuery.isError &&
       meetings.length === 0 ? (
-        <EmptyState
-          title="조건에 맞는 모임이 없어요"
-          description="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
-        />
+        <div className="flex min-h-55 flex-1 flex-col justify-center">
+          <EmptyState
+            title="조건에 맞는 모임이 없어요"
+            description="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
+          />
+        </div>
       ) : null}
 
       {meetings.length > 0 ? (
@@ -304,7 +315,7 @@ function MeetingDiscoverList({
           }}
         />
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -361,7 +372,7 @@ export function TeamListScreen() {
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-28">
+    <PageContainer size="narrow" className="flex min-h-dvh flex-col pb-28">
       <PageHeader
         title="모임"
         className="[&_h1]:ml-2"
@@ -387,18 +398,20 @@ export function TeamListScreen() {
 
       <TeamListTabs activeTab={activeTab} onChange={changeTab} />
 
-      {activeTab === "my" ? (
-        <MyMeetingList enabled={authInitialized && isAuthenticated} />
-      ) : null}
-      {activeTab === "find" ? (
-        <MeetingDiscoverList
-          searchParams={searchParams}
-          setSearchParams={setSearchParams}
-          isAuthenticated={isAuthenticated}
-          isFilterOpen={isFilterOpen}
-          setIsFilterOpen={setIsFilterOpen}
-        />
-      ) : null}
+      <div className="flex flex-1 flex-col">
+        {activeTab === "my" ? (
+          <MyMeetingList enabled={authInitialized && isAuthenticated} />
+        ) : null}
+        {activeTab === "find" ? (
+          <MeetingDiscoverList
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+            isAuthenticated={isAuthenticated}
+            isFilterOpen={isFilterOpen}
+            setIsFilterOpen={setIsFilterOpen}
+          />
+        ) : null}
+      </div>
     </PageContainer>
   );
 }

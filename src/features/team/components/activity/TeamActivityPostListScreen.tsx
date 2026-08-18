@@ -69,38 +69,47 @@ function TeamActivityPostListContent({
   }, [fetchNextPage, hasNextPage, isFetchNextPageError, isFetchingNextPage]);
 
   if (isInitialLoading) {
-    return <LoadingState label={loadingMessage} className="min-h-65 px-5.5" />;
+    return (
+      <div className="flex min-h-65 flex-1 flex-col justify-center px-5.5">
+        <LoadingState label={loadingMessage} />
+      </div>
+    );
   }
 
   if (isInitialError) {
     return (
-      <ErrorState
-        title={errorTitle}
-        description={errorDescription}
-        className="min-h-65 justify-center px-5.5"
-        primaryAction={{
-          label: "다시 시도",
-          onClick: refetch,
-        }}
-      />
+      <div className="flex min-h-65 flex-1 flex-col justify-center px-5.5">
+        <ErrorState
+          title={errorTitle}
+          description={errorDescription}
+          primaryAction={{
+            label: "다시 시도",
+            onClick: refetch,
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="flex min-h-65 flex-1 flex-col justify-center px-5.5">
+        <p className="text-center text-[18px] leading-5 font-medium text-text-gray-400">
+          {emptyMessage}
+        </p>
+      </div>
     );
   }
 
   return (
     <section className="px-5.5 py-5">
-      {posts.length > 0 ? (
-        <ul className="flex flex-col gap-3">
-          {posts.map((post) => (
-            <li key={post.postId}>
-              <SharedMeetingBoardPostCard meetingId={meetingId} post={post} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="flex min-h-75 items-center justify-center text-center text-[18px] leading-5 font-medium text-text-gray-400">
-          {emptyMessage}
-        </p>
-      )}
+      <ul className="flex flex-col gap-3">
+        {posts.map((post) => (
+          <li key={post.postId}>
+            <SharedMeetingBoardPostCard meetingId={meetingId} post={post} />
+          </li>
+        ))}
+      </ul>
 
       <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
 

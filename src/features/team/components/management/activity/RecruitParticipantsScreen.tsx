@@ -114,7 +114,7 @@ export function RecruitParticipantsScreen() {
   };
 
   return (
-    <main className="min-h-dvh bg-white px-5.5 font-sans">
+    <main className="flex min-h-dvh flex-col bg-white px-5.5 font-sans">
       <PageHeader
         title={activityTitle ?? "봉사 신청자 관리"}
         onBack={() => navigate(-1)}
@@ -126,18 +126,21 @@ export function RecruitParticipantsScreen() {
         sticky
         className="bg-white"
       />
-      <section className="pb-28 pt-6">
+      <section className="flex flex-1 flex-col pb-28 pt-6">
         {participantsQuery.isLoading ? (
-          <LoadingState className="min-h-60" label="신청자를 불러오는 중" />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <LoadingState label="신청자를 불러오는 중" />
+          </div>
         ) : participantsQuery.isError || !data ? (
-          <ErrorState
-            className="min-h-60"
-            title="신청자를 불러오지 못했어요"
-            primaryAction={{
-              label: "다시 시도",
-              onClick: () => void participantsQuery.refetch(),
-            }}
-          />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <ErrorState
+              title="신청자를 불러오지 못했어요"
+              primaryAction={{
+                label: "다시 시도",
+                onClick: () => void participantsQuery.refetch(),
+              }}
+            />
+          </div>
         ) : (
           <>
             {uiState?.showConfirm ? (

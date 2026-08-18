@@ -17,7 +17,7 @@ export function MeetingActivityManagementScreen() {
   if (!isHost) return <Navigate to={`/teams/${home.meetingId}`} replace />;
 
   return (
-    <main className="min-h-dvh bg-bg px-5.5">
+    <main className="flex min-h-dvh flex-col bg-bg px-5.5">
       <PageHeader
         title="활동 관리"
         onBack={() => navigate(-1)}
@@ -28,24 +28,29 @@ export function MeetingActivityManagementScreen() {
         }
         sticky
       />
-      <section className="pb-28 pt-6">
+      <section className="flex flex-1 flex-col pb-28 pt-6">
         {query.isLoading ? (
-          <LoadingState className="min-h-60" label="활동을 불러오는 중" />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <LoadingState label="활동을 불러오는 중" />
+          </div>
         ) : query.isError ? (
-          <ErrorState
-            className="min-h-60"
-            title="활동을 불러오지 못했어요"
-            primaryAction={{
-              label: "다시 시도",
-              onClick: () => void query.refetch(),
-            }}
-          />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <ErrorState
+              title="활동을 불러오지 못했어요"
+              primaryAction={{
+                label: "다시 시도",
+                onClick: () => void query.refetch(),
+              }}
+            />
+          </div>
         ) : query.data?.length === 0 ? (
-          <EmptyState
-            className="min-h-60"
-            title="등록된 봉사활동이 없어요"
-            description="모임에서 진행할 봉사활동을 등록해 주세요."
-          />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <EmptyState
+              className="min-h-60"
+              title="등록된 봉사활동이 없어요"
+              description="모임에서 진행할 봉사활동을 등록해 주세요."
+            />
+          </div>
         ) : (
           <ul className="flex flex-col gap-3">
             {query.data?.map((activity) => (
