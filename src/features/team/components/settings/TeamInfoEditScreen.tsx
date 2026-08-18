@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { ImagePlus, MapPin } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
+import locationIcon from "@/shared/assets/icons/info/location.svg";
 import { CategoryChipGroup } from "@/features/category/components/CategoryChipGroup";
 import { RegionSelectionSheet } from "@/features/region/components/RegionSelectionSheet";
 import { useRegionsQuery } from "@/features/region/hooks/useRegionsQuery";
@@ -31,6 +32,7 @@ import type {
   MeetingDetail,
   MeetingHome,
 } from "@/features/team/types/team.types";
+import { useVolunteerPostingDetail } from "@/features/volunteer/hooks/detail/useVolunteerPostingDetail";
 import Button from "@/shared/ui/Button";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import FormField from "@/shared/ui/FormField";
@@ -49,7 +51,10 @@ export function TeamInfoEditScreen({
   detail: MeetingDetail;
 }) {
   const navigate = useNavigate();
-  const basedOnPosting = detail.volunteerPostingId !== null;
+  const linkedPostingId =
+    home.linkedPostingId ?? detail.volunteerPostingId ?? undefined;
+  const basedOnPosting = linkedPostingId !== undefined;
+  const linkedPostingQuery = useVolunteerPostingDetail(linkedPostingId);
   const regionsQuery = useRegionsQuery();
   const manageImagesQuery = useQuery(teamQueries.manageImages(home.meetingId));
   const updateMutation = useUpdateMeetingMutation(home.meetingId);
@@ -241,28 +246,42 @@ export function TeamInfoEditScreen({
         onBack={() => setLeaveDialogOpen(true)}
         sticky
       />
-      <form className="flex flex-col gap-6 pb-28" noValidate onSubmit={submit}>
-        {basedOnPosting ? (
-          <FormField label="연관 공고">
-            <Input value={home.linkedPostingTitle ?? ""} disabled />
-          </FormField>
-        ) : null}
 
-        {!basedOnPosting ? (
-          <div className="rounded-xl border border-button bg-[#f8fbf8] px-3 py-2.5 text-[13px] leading-5 text-text-gray-400">
-            <p>자유 모임은 여러 봉사활동을 함께하는 커뮤니티입니다.</p>
-            <p>
-              활동별 날짜와 장소는{" "}
-              <strong className="font-semibold text-text-green-600">
-                모임 생성 후 봉사 모집 글
-              </strong>
-              에서 등록할 수 있습니다.
-            </p>
-          </div>
+      {!basedOnPosting ? (
+        <div className="rounded-xl border border-button bg-[#f8fbf8] px-3 py-2.5 text-[13px] leading-5 text-text-gray-400">
+          <p>자유 모임은 여러 봉사활동을 함께하는 커뮤니티입니다.</p>
+          <p>
+            활동별 날짜와 장소는{" "}
+            <strong className="font-semibold text-text-green-600">
+              모임 생성 후 봉사 모집 글
+            </strong>
+            에서 등록할 수 있습니다.
+          </p>
+        </div>
+      ) : null}
+
+      <form
+        className="mt-5 flex flex-col gap-6 pb-28"
+        noValidate
+        onSubmit={submit}
+      >
+        {basedOnPosting ? (
+          <FormField label="연관 공고" labelClassName="mb-2 font-medium">
+            <div className="flex h-12 items-center rounded-xl border border-stroke bg-white px-4 text-[15px] text-text">
+              {linkedPostingQuery.isLoading
+                ? "공고 정보를 불러오는 중이에요."
+                : linkedPostingQuery.isError
+                  ? "공고 정보를 불러오지 못했어요."
+                  : linkedPostingQuery.data?.title ||
+                    home.linkedPostingTitle ||
+                    "연관 공고"}
+            </div>
+          </FormField>
         ) : null}
 
         <FormField
           label="모임 이름"
+          labelClassName="mb-2 font-medium"
           required
           htmlFor="meeting-name"
           count={(values.name ?? "").length}
@@ -273,6 +292,8 @@ export function TeamInfoEditScreen({
             id="meeting-name"
             maxLength={15}
             invalid={Boolean(errors.name)}
+            placeholder="모임 이름을 입력해 주세요."
+            className="text-text"
             {...nameRegister}
             onChange={(event) => {
               event.target.value = event.target.value.slice(0, 15);
@@ -282,6 +303,7 @@ export function TeamInfoEditScreen({
         </FormField>
         <FormField
           label="모임 소개"
+          labelClassName="mb-2 font-medium"
           required
           htmlFor="meeting-description"
           count={(values.description ?? "").length}
@@ -291,7 +313,8 @@ export function TeamInfoEditScreen({
           <Textarea
             id="meeting-description"
             maxLength={200}
-            className="h-36"
+            placeholder="모임을 소개해주세요."
+            className="h-36 text-text"
             invalid={Boolean(errors.description)}
             {...descriptionRegister}
             onChange={(event) => {
@@ -300,15 +323,17 @@ export function TeamInfoEditScreen({
             }}
           />
         </FormField>
-        <section>
+        <section aria-labelledby="meeting-image-label">
           <button
             type="button"
             disabled={images.length >= MAX_MEETING_COVER_IMAGE_COUNT}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-point-green text-button disabled:opacity-40"
+            className="flex w-full items-center gap-3 rounded-xl border border-dashed border-point-green bg-[#f8fbf8] px-4 py-3 text-left text-base font-semibold text-text-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => fileInputRef.current?.click()}
           >
-            <ImagePlus className="size-5" />
-            사진 첨부 (선택, 최대 {MAX_MEETING_COVER_IMAGE_COUNT}장)
+            <ImagePlus aria-hidden="true" className="size-6" />
+            <span id="meeting-image-label">
+              사진 첨부 (선택, 최대 {MAX_MEETING_COVER_IMAGE_COUNT}장)
+            </span>
           </button>
           <input
             ref={fileInputRef}
@@ -324,36 +349,62 @@ export function TeamInfoEditScreen({
           ) : null}
           <MeetingImageEditorCarousel images={images} onRemove={removeImage} />
         </section>
-        <FormField label="활동 지역" required error={errors.regionId?.message}>
+        <FormField
+          label="활동 지역"
+          labelClassName="mb-2 font-medium"
+          required
+          error={errors.regionId?.message}
+        >
           <button
             type="button"
             disabled={basedOnPosting}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white disabled:opacity-100"
             onClick={() => setRegionOpen(true)}
           >
-            <MapPin className="size-4 text-icon" />
+            <img
+              src={locationIcon}
+              alt=""
+              aria-hidden="true"
+              className="h-4 w-3"
+            />
             {selectedRegion
               ? getFullRegionSelectionLabel(selectedRegion, selectedParent)
               : home.regionName}
           </button>
         </FormField>
         <FormField
-          label="최대 인원 (30명)"
+          label={
+            <>
+              최대 인원 <span className="text-[15px]">(30명)</span>
+            </>
+          }
+          labelClassName="mb-2 font-medium"
           htmlFor="meeting-max"
           error={errors.maxMember?.message}
         >
-          <Input
-            id="meeting-max"
-            type="number"
-            min={home.currentMemberCount}
-            max={30}
-            className="w-20"
-            {...register("maxMember", { valueAsNumber: true })}
-          />
+          <div className="relative w-18">
+            <Input
+              id="meeting-max"
+              type="number"
+              min={home.currentMemberCount}
+              max={30}
+              placeholder="30"
+              className="w-18 pr-7 text-text placeholder:text-text-gray-100 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              {...register("maxMember", { valueAsNumber: true })}
+            />
+            <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-[15px] text-text">
+              명
+            </span>
+          </div>
         </FormField>
         {basedOnPosting ? (
-          <div className="flex h-14 items-center justify-between rounded-xl border border-stroke bg-white px-4">
-            <label htmlFor="meeting-time-recognized">봉사 시간 인정 여부</label>
+          <div className="flex h-[50px] items-center justify-between rounded-xl border border-stroke bg-white px-4">
+            <label
+              htmlFor="meeting-time-recognized"
+              className="text-base font-medium text-text"
+            >
+              봉사 시간 인정 여부
+            </label>
             <Controller
               name="timeRecognized"
               control={control}
@@ -367,12 +418,18 @@ export function TeamInfoEditScreen({
             />
           </div>
         ) : null}
-        <FormField label="카테고리" required error={errors.categories?.message}>
+        <FormField
+          label="카테고리"
+          labelClassName="mb-2 font-medium"
+          required
+          error={errors.categories?.message}
+        >
           <Controller
             name="categories"
             control={control}
             render={({ field }) => (
               <CategoryChipGroup
+                className="mx-0 w-full min-w-0 px-0"
                 value={field.value}
                 options={basedOnPosting ? field.value : undefined}
                 maxSelected={3}
@@ -385,6 +442,8 @@ export function TeamInfoEditScreen({
         </FormField>
         <FormField
           label="신청 마감일"
+          labelClassName="mb-2 font-medium"
+          required
           htmlFor="meeting-deadline"
           error={errors.deadline?.message}
         >
@@ -396,6 +455,7 @@ export function TeamInfoEditScreen({
                 id="meeting-deadline"
                 title="신청 마감일"
                 value={field.value}
+                valueClassName="text-text"
                 invalid={Boolean(errors.deadline)}
                 onChange={field.onChange}
               />
@@ -404,6 +464,7 @@ export function TeamInfoEditScreen({
         </FormField>
         <FormField
           label="활동 안내 및 참여 조건"
+          labelClassName="mb-2 font-medium"
           htmlFor="meeting-condition"
           count={(values.participationCondition ?? "").length}
           maxLength={150}
@@ -411,7 +472,10 @@ export function TeamInfoEditScreen({
           <Textarea
             id="meeting-condition"
             maxLength={150}
-            className="h-28"
+            placeholder={
+              "예 : 만 19세 이상\n매주 토요일 11:00~12:30 진행\n건대입구역 2번출구 앞에서 만나요"
+            }
+            className="h-[83px] overflow-hidden text-[15px] leading-[19px] text-text"
             {...participationConditionRegister}
             onChange={(event) => {
               event.target.value = event.target.value.slice(0, 150);
