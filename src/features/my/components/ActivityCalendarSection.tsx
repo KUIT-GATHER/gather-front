@@ -13,7 +13,10 @@ import {
   canCancelMeetingRecruitActivity,
   getMyActivityStatusLabel,
 } from "@/features/my/lib/myActivity";
-import { formatMyActivityDateRange } from "@/features/my/lib/myActivityDate";
+import {
+  formatMyActivityDateRange,
+  formatMyActivityTimeRange,
+} from "@/features/my/lib/myActivityDate";
 import type {
   MyMeetingRecruitActivity,
   MyPageActivity,
@@ -43,11 +46,6 @@ function isActivityOnDate(activity: MyPageActivity, dateKey: string) {
   );
 }
 
-function formatActivityTime(startTime: string | null, endTime: string | null) {
-  if (startTime && endTime) return `${startTime}–${endTime}`;
-  return startTime ?? endTime ?? null;
-}
-
 function getActivityLocation(activity: MyPageActivity) {
   const location = activity.actPlace ?? activity.regionName;
 
@@ -59,8 +57,11 @@ function formatActivityMetadata(activity: MyPageActivity) {
     activity.actStartDate,
     activity.actEndDate,
   );
-  const time = formatActivityTime(activity.actStartTime, activity.actEndTime);
-  const schedule = time ? `${date} ${time}` : date;
+  const time = formatMyActivityTimeRange(
+    activity.actStartTime,
+    activity.actEndTime,
+  );
+  const schedule = time ? `${date} · ${time}` : date;
 
   return [schedule, getActivityLocation(activity)].filter(Boolean).join(" | ");
 }
