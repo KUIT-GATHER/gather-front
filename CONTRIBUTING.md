@@ -1,72 +1,121 @@
 # Gather Frontend 협업 규칙
 
-## 브랜치와 작업 흐름
+## 브랜치
 
-- `develop`은 기본 개발 브랜치입니다.
-- `main`은 배포 대상 브랜치입니다.
-- 일반 작업은 최신 `develop`에서 작업 브랜치를 만들고, `develop`을 대상으로 PR을 엽니다.
+- `develop`: 기본 개발 브랜치
+- `main`: 배포 브랜치
 
-작업 브랜치는 아래 prefix만 사용합니다.
+일반 작업은 최신 `develop`에서 작업 브랜치를 생성하고 `develop`을 대상으로 PR을 엽니다.
 
-```txt
+작업 브랜치는 아래 형식을 사용합니다.
+
+```text
 feat/*
 fix/*
 refactor/*
 chore/*
 docs/*
+test/*
 ```
-
-기본 흐름은 다음과 같습니다.
-
-```txt
-develop 최신화
-→ 작업 브랜치 생성
-→ 작업 및 커밋
-→ develop 대상 PR
-→ 리뷰 및 검사
-→ merge
-```
-
-`develop`과 `main`에 직접 push하지 않습니다.
-
-## 커밋과 PR 제목
-
-커밋 메시지와 PR 제목은 같은 형식을 사용합니다.
-
-```txt
-type: 작업 내용
-```
-
-`type`은 작업 성격에 맞게 `feat`, `fix`, `refactor`, `chore`, `docs` 등을 사용합니다. 작업 내용은 한글로 간결하게 작성합니다.
 
 예시:
 
-```txt
-feat: 이메일 로그인 화면 구현
-fix: 팀 생성 validation 오류 수정
-docs: 아키텍처 문서 정리
+```text
+feat/email-login
+fix/team-filter-scroll
+refactor/auth-session
+docs/testing-guide
 ```
 
-## PR 규칙
+`develop`과 `main`에는 직접 push하지 않습니다.
 
-- PR 본문에는 작업 내용, 주요 변경 사항, 확인 방법, 관련 이슈를 작성합니다.
-- 화면 변경은 필요한 경우에만 스크린샷 또는 녹화로 설명합니다.
-- 리뷰와 필수 검사가 완료된 뒤 merge합니다. merge 방식과 branch protection의 세부 기준은 저장소 설정을 따릅니다.
+## 작업 흐름
 
-## PR 전 검사
+```text
+develop 최신화
+→ 작업 브랜치 생성
+→ 구현
+→ 로컬 검증
+→ 커밋
+→ develop 대상 PR
+→ 리뷰 및 CI
+→ merge
+```
+
+## 커밋 메시지
+
+커밋 메시지는 다음 형식을 사용합니다.
+
+```text
+type: 작업 내용
+```
+
+주요 type:
+
+```text
+feat
+fix
+refactor
+test
+docs
+chore
+```
+
+예시:
+
+```text
+feat: 이메일 로그인 화면 구현
+fix: 모임 필터 스크롤 위치 수정
+refactor: 인증 세션 복원 로직 정리
+test: 로그인 세션 테스트 보강
+docs: 테스트 전략 문서 추가
+```
+
+하나의 커밋에는 가능한 한 하나의 논리적 변경을 담습니다.
+
+기능 변경, 구조 리팩터링, 도구 설정 변경은 필요한 경우 별도 커밋으로 분리합니다.
+
+## Pull Request
+
+PR 제목도 커밋과 동일한 형식을 사용합니다.
+
+```text
+type: 작업 내용
+```
+
+PR 본문에는 다음 내용을 중심으로 작성합니다.
+
+- 무엇을 변경했는지
+- 구현 또는 수정에서 중요한 부분
+- 확인이 필요한 사항
+- 관련 이슈
+
+UI 변경이 리뷰에 영향을 주는 경우 스크린샷이나 영상을 첨부합니다.
+
+작은 변경에 불필요하게 긴 설명을 작성할 필요는 없습니다.
+
+## PR 전 검증
+
+기본 검증은 다음 명령으로 실행합니다.
 
 ```bash
-npm run format:check
-npm run lint
-npm run test:run
-npm run build
-npm run build-storybook
+npm run verify
 ```
 
-라우트·인증·navigation처럼 실제 브라우저 흐름에 영향을 주는 변경은 추가로 `npm run test:e2e`를 실행합니다.
+라우팅, 인증, navigation, 주요 사용자 흐름을 변경했다면 필요에 따라 다음 테스트도 실행합니다.
 
-## 최소 완료 기준
+```bash
+npm run test:storybook
+npm run test:e2e
+```
 
-- 변경 범위와 기존 동작에 미치는 영향을 직접 확인합니다.
-- 관련된 로딩·오류·빈 상태와 접근성 동작을 필요한 범위에서 확인합니다.
-- 위 검사를 실행하고, 실패한 경우 원인과 영향 범위를 PR에 공유합니다.
+## 완료 기준
+
+PR을 열기 전에 다음을 확인합니다.
+
+- 변경한 기능이 의도대로 동작하는지 확인합니다.
+- 관련된 loading, error, empty 상태를 필요한 범위에서 확인합니다.
+- 기존 공용 UI를 변경했다면 주요 사용처에 영향이 없는지 확인합니다.
+- 필요한 테스트를 실행합니다.
+- `npm run verify`를 통과합니다.
+- 실패한 검사가 있다면 원인과 영향 범위를 PR에 작성합니다.
