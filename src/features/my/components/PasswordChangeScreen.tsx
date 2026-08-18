@@ -56,7 +56,10 @@ export function PasswordChangeScreen() {
       onSuccess: () => {
         methods.reset();
         clearAuthSession();
-        navigate("/login/email", { replace: true });
+        navigate("/login/email", {
+          replace: true,
+          state: { from: "/home" },
+        });
       },
       onError: (error) => {
         if (

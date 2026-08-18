@@ -1,15 +1,8 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 
+import { getSafePostLoginReturnPath } from "@/features/auth/lib/loginRedirect";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import LoadingState from "@/shared/ui/LoadingState";
-
-function getSafeReturnPath(value: unknown) {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-    ? value
-    : null;
-}
 
 export function RequireGuest() {
   const location = useLocation();
@@ -26,7 +19,7 @@ export function RequireGuest() {
   }
 
   if (isAuthenticated) {
-    const from = getSafeReturnPath(
+    const from = getSafePostLoginReturnPath(
       (location.state as { from?: unknown } | null)?.from,
     );
 

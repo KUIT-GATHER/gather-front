@@ -1,18 +1,11 @@
 import { env } from "@/shared/config/env";
+import { getSafePostLoginReturnPath } from "@/features/auth/lib/loginRedirect";
 
 const OAUTH_STATE_STORAGE_KEY = "gather:kakao-oauth-state";
 const OAUTH_RETURN_PATH_STORAGE_KEY = "gather:kakao-oauth-return-path";
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 
 export const KAKAO_CALLBACK_PATH = "/login/kakao/callback";
-
-function isSafeInternalPath(value: string | null | undefined): value is string {
-  return (
-    typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-  );
-}
 
 export function createKakaoOAuthState() {
   const bytes = new Uint8Array(32);
@@ -46,7 +39,7 @@ export function consumeKakaoLoginReturnPath() {
   const returnPath = sessionStorage.getItem(OAUTH_RETURN_PATH_STORAGE_KEY);
   sessionStorage.removeItem(OAUTH_RETURN_PATH_STORAGE_KEY);
 
-  return isSafeInternalPath(returnPath) ? returnPath : null;
+  return getSafePostLoginReturnPath(returnPath);
 }
 
 export function startKakaoLogin(returnPath?: string) {
@@ -55,8 +48,10 @@ export function startKakaoLogin(returnPath?: string) {
 
   saveKakaoOAuthState(state);
 
-  if (isSafeInternalPath(returnPath)) {
-    sessionStorage.setItem(OAUTH_RETURN_PATH_STORAGE_KEY, returnPath);
+  const safeReturnPath = getSafePostLoginReturnPath(returnPath);
+
+  if (safeReturnPath) {
+    sessionStorage.setItem(OAUTH_RETURN_PATH_STORAGE_KEY, safeReturnPath);
   } else {
     sessionStorage.removeItem(OAUTH_RETURN_PATH_STORAGE_KEY);
   }
