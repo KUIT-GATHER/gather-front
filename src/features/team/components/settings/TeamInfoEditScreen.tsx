@@ -256,9 +256,8 @@ export function TeamInfoEditScreen({
               <strong className="font-semibold text-text-green-600">
                 모임 생성 후 봉사 모집 글
               </strong>
-              에서
+              에서 등록할 수 있습니다.
             </p>
-            <p> 등록할 수 있습니다.</p>
           </div>
         ) : null}
 
