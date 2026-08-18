@@ -9,6 +9,7 @@ import {
 import { useRecentVolunteerSearches } from "@/features/volunteer/hooks/useRecentVolunteerSearches";
 import { useVolunteerPostingRecommendedKeywordsQuery } from "@/features/volunteer/hooks/useVolunteerPostingRecommendedKeywordsQuery";
 import {
+  getVolunteerPostingFilter,
   getVolunteerPostingSort,
   toVolunteerPostingQueryParams,
   updateVolunteerPostingSearchParams,
@@ -142,8 +143,8 @@ export function VolunteerPostingSearchScreen() {
     addRecentSearch(normalized);
     setSearchParams(
       updateVolunteerPostingSearchParams(
-        new URLSearchParams(),
-        {},
+        searchParams,
+        getVolunteerPostingFilter(searchParams),
         { keyword: normalized, sort: "latest" },
       ),
     );
@@ -169,7 +170,11 @@ export function VolunteerPostingSearchScreen() {
               key={keywordFromUrl}
               initialKeyword={keywordFromUrl}
               onSubmit={submitSearch}
-              onActivate={() => setSearchParams(new URLSearchParams())}
+              onActivate={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete("keyword");
+                setSearchParams(next);
+              }}
               variant="header"
             />
           </header>
@@ -184,10 +189,11 @@ export function VolunteerPostingSearchScreen() {
                   if (!isVolunteerPostingListSort(value)) return;
                   setSearchParams(
                     updateVolunteerPostingSearchParams(
-                      new URLSearchParams(),
-                      {},
+                      searchParams,
+                      getVolunteerPostingFilter(searchParams),
                       { keyword: keywordFromUrl, sort: value },
                     ),
+                    { replace: true },
                   );
                   window.scrollTo({ top: 0, behavior: "auto" });
                 }}

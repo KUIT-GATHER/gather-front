@@ -98,7 +98,7 @@ export function NotificationScreen() {
     const nextSearchParams = new URLSearchParams(searchParams);
 
     nextSearchParams.set("category", nextCategory);
-    setSearchParams(nextSearchParams);
+    setSearchParams(nextSearchParams, { replace: true });
     setOpenNotificationId(null);
   };
 

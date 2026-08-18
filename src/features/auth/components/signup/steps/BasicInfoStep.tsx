@@ -62,12 +62,21 @@ export function BasicInfoStep({ phoneVerification }: BasicInfoStepProps) {
     phoneVerification.isVerificationActionPending ||
     (phoneVerification.isVerificationInProgress &&
       !phoneVerification.canReopenQr);
-  const showPhoneVerificationGuide =
+  const showInitialPhoneVerificationGuide =
     isPhoneNumberValid &&
     !isPhoneVerified &&
     !phoneVerification.isVerificationInProgress &&
     !phoneVerification.isVerificationActionPending &&
     !errors.phoneNumber;
+  const showQrClosedGuide =
+    isPhoneNumberValid &&
+    !isPhoneVerified &&
+    phoneVerification.canReopenQr &&
+    !phoneVerification.isQrDialogOpen &&
+    !phoneVerification.isVerificationActionPending &&
+    !errors.phoneNumber;
+  const hasPhoneVerificationGuide =
+    showInitialPhoneVerificationGuide || showQrClosedGuide;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -185,7 +194,12 @@ export function BasicInfoStep({ phoneVerification }: BasicInfoStepProps) {
           errorId={getSignupFieldErrorId("phoneNumber")}
           descriptionId={PHONE_VERIFICATION_GUIDE_ID}
           description={
-            showPhoneVerificationGuide ? (
+            showQrClosedGuide ? (
+              <span className="text-button">
+                기본 카메라로 QR 인식 후 뒤 화면에 나오는 인증코드를 문자로
+                발송해주세요
+              </span>
+            ) : showInitialPhoneVerificationGuide ? (
               <span className="text-button">
                 인증하기를 누른 뒤 안내에 따라 문자 메시지를 전송해 주세요.
                 <br />
@@ -216,7 +230,7 @@ export function BasicInfoStep({ phoneVerification }: BasicInfoStepProps) {
                       "phoneNumber",
                       Boolean(errors.phoneNumber),
                     ) ??
-                    (showPhoneVerificationGuide
+                    (hasPhoneVerificationGuide
                       ? PHONE_VERIFICATION_GUIDE_ID
                       : undefined)
                   }

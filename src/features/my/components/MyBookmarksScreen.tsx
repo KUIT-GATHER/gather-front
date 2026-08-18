@@ -163,7 +163,9 @@ export function MyBookmarksScreen() {
               key={tab.value}
               type="button"
               aria-current={selected ? "page" : undefined}
-              onClick={() => setSearchParams({ tab: tab.value })}
+              onClick={() =>
+                setSearchParams({ tab: tab.value }, { replace: true })
+              }
               className={[
                 "h-12 border-b text-base",
                 selected
@@ -239,6 +241,7 @@ export function MyBookmarksScreen() {
           onApply={(nextFilter) =>
             setSearchParams(
               updateVolunteerPostingSearchParams(searchParams, nextFilter),
+              { replace: true },
             )
           }
         />
@@ -252,6 +255,7 @@ export function MyBookmarksScreen() {
           onApply={(nextFilter) =>
             setSearchParams(
               updateTeamListSearchParams(searchParams, nextFilter),
+              { replace: true },
             )
           }
         />

@@ -21,6 +21,7 @@ export function TeammateTabs({ meetingId }: TeammateTabsProps) {
       {tabs.map((tab) => (
         <NavLink
           key={tab.suffix}
+          replace
           to={`/teams/${meetingId}${tab.suffix}`}
           end={tab.suffix === ""}
           className={({ isActive }) =>

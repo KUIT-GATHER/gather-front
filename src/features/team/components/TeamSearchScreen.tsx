@@ -142,10 +142,13 @@ export function TeamSearchScreen() {
 
   const submitSearch = (keyword: string) => {
     addRecentSearch(keyword);
-    const next = new URLSearchParams();
-    next.set("keyword", keyword);
-    next.set("sort", "latest");
-    setSearchParams(next);
+    setSearchParams(
+      updateTeamListSearchParams(
+        searchParams,
+        getTeamListFilter(searchParams),
+        { keyword, sort: "latest" },
+      ),
+    );
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
@@ -168,7 +171,11 @@ export function TeamSearchScreen() {
               key={keywordFromUrl}
               initialKeyword={keywordFromUrl}
               onSubmit={submitSearch}
-              onActivate={() => setSearchParams(new URLSearchParams())}
+              onActivate={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete("keyword");
+                setSearchParams(next);
+              }}
               variant="header"
             />
           </header>
@@ -188,6 +195,7 @@ export function TeamSearchScreen() {
                       getTeamListFilter(searchParams),
                       { sort: value },
                     ),
+                    { replace: true },
                   );
                   window.scrollTo({ top: 0, behavior: "auto" });
                 }}
