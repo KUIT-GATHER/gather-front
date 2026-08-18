@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 
+import { RootHydrateFallback } from "@/app/RootHydrateFallback";
 import { RootLayout } from "@/app/layouts/RootLayout";
 import { AuthLayout } from "@/app/layouts/AuthLayout";
 import { MainTabLayout } from "@/app/layouts/MainTabLayout";
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     ErrorBoundary: RootRouteErrorBoundary,
+    HydrateFallback: RootHydrateFallback,
 
     children: [
       {
