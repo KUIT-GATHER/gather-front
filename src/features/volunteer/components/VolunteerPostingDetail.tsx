@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useNavigate } from "react-router";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
@@ -27,6 +28,28 @@ import { VolunteerPostingTeamSection } from "./detail/VolunteerPostingTeamSectio
 type VolunteerPostingDetailProps = {
   postingId: number;
 };
+
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+
+  if (!copied) {
+    throw new Error("Clipboard copy failed");
+  }
+}
 
 export function VolunteerPostingDetail({
   postingId,
@@ -167,11 +190,23 @@ export function VolunteerPostingDetail({
     );
   }
 
+  const handleShare = async () => {
+    try {
+      await copyTextToClipboard(window.location.href);
+      toast("링크를 복사했어요", { id: "clipboard-toast" });
+    } catch {
+      toast("복사에 실패했어요. 다시 시도해 주세요", {
+        id: "clipboard-toast",
+      });
+    }
+  };
+
   return (
     <article className="pb-[calc(env(safe-area-inset-bottom)+7.25rem)]">
       <VolunteerPostingHeader
         title={formatVolunteerPostingHeaderTitle(posting.title)}
         onBack={() => navigate(-1)}
+        onShare={handleShare}
         isBookmarked={posting.bookmarked}
         isBookmarkPending={isBookmarkPending}
         onBookmarkToggle={handleBookmarkToggle}
