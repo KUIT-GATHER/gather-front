@@ -78,16 +78,13 @@ function KakaoSignupFlowContent({
     detailType,
     showExitDialog,
     showDuplicatePhoneDialog,
-    verifiedPhoneNumber,
-    phoneVerificationId,
+    phoneVerification,
     profileImageFile,
     isSignupPending,
     submitError,
     setDetailType,
     setShowExitDialog,
     setShowDuplicatePhoneDialog,
-    setVerifiedPhoneNumber,
-    setPhoneVerificationId,
     setProfileImageFile,
     clearSubmitError,
     handleBack,
@@ -112,13 +109,7 @@ function KakaoSignupFlowContent({
         <form noValidate onSubmit={handleFormSubmit}>
           <SignupShell step={step} flow="kakao" onBack={handleBack}>
             {step === "basic" ? (
-              <BasicInfoStep
-                verifiedPhoneNumber={verifiedPhoneNumber}
-                phoneVerificationId={phoneVerificationId}
-                onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
-                onPhoneVerificationIdChange={setPhoneVerificationId}
-                onDuplicatePhoneNumber={() => setShowDuplicatePhoneDialog(true)}
-              />
+              <BasicInfoStep phoneVerification={phoneVerification} />
             ) : null}
 
             {step === "profile" ? (

@@ -60,6 +60,7 @@ export function EmailLoginScreen() {
             navigate(redirectTo, { replace: true });
           }}
           onSignupClick={() => navigate("/signup")}
+          onRecoveryClick={() => navigate("/account-recovery")}
         />
       </div>
     </PageContainer>

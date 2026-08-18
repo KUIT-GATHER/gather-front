@@ -14,8 +14,7 @@ type ApplySignupErrorParams = {
   setEmailVerificationProof: Dispatch<
     SetStateAction<EmailVerificationProof | null>
   >;
-  setVerifiedPhoneNumber: Dispatch<SetStateAction<string | null>>;
-  setPhoneVerificationId: Dispatch<SetStateAction<string | null>>;
+  resetPhoneVerification: () => void;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
 };
 
@@ -24,8 +23,7 @@ export function applySignupError({
   methods,
   setStep,
   setEmailVerificationProof,
-  setVerifiedPhoneNumber,
-  setPhoneVerificationId,
+  resetPhoneVerification,
   setSubmitError,
 }: ApplySignupErrorParams) {
   const moveToFieldError = (
@@ -54,8 +52,7 @@ export function applySignupError({
     }
 
     case API_ERROR_CODE.DUPLICATE_PHONE_NUMBER: {
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+      resetPhoneVerification();
       moveToFieldError("basic", "phoneNumber", "이미 가입된 전화번호입니다.");
 
       return;
@@ -63,8 +60,7 @@ export function applySignupError({
 
     case API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED:
     case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN: {
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+      resetPhoneVerification();
       moveToFieldError(
         "basic",
         "phoneNumber",
@@ -76,9 +72,9 @@ export function applySignupError({
 
     case API_ERROR_CODE.PHONE_VERIFICATION_REQUIRED:
     case API_ERROR_CODE.PHONE_VERIFICATION_EXPIRED:
-    case API_ERROR_CODE.PHONE_VERIFICATION_NOT_FOUND: {
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+    case API_ERROR_CODE.PHONE_VERIFICATION_NOT_FOUND:
+    case API_ERROR_CODE.PHONE_VERIFICATION_PURPOSE_MISMATCH: {
+      resetPhoneVerification();
       moveToFieldError(
         "basic",
         "phoneNumber",
