@@ -2,7 +2,13 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 
 export type PhoneVerificationStartRequest = {
   phoneNumber: string;
+  purpose: PhoneVerificationPurpose;
 };
+
+export type PhoneVerificationPurpose =
+  | "SIGNUP"
+  | "FIND_ACCOUNT"
+  | "RESET_PASSWORD";
 
 export type PhoneVerificationStartResponse = {
   verificationId: string;
@@ -19,6 +25,34 @@ export type PhoneVerificationStatus = "PENDING" | "VERIFIED";
 
 export type PhoneVerificationConfirmResponse = {
   status: PhoneVerificationStatus;
+};
+
+export type AccountRecoveryEmailRequest = {
+  phoneVerificationId: string;
+};
+
+export type AccountRecoveryEmailResponse =
+  | {
+      loginType: "EMAIL";
+      email: string;
+    }
+  | {
+      loginType: "KAKAO";
+      email: null;
+    };
+
+export type PasswordResetPermissionRequest = {
+  phoneVerificationId: string;
+};
+
+export type PasswordResetPermissionResponse = {
+  passwordResetToken: string;
+};
+
+export type PasswordResetRequest = {
+  passwordResetToken: string;
+  password: string;
+  passwordConfirm: string;
 };
 
 export type SendEmailVerificationRequest = {

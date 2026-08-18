@@ -7,6 +7,7 @@ import {
   mockRecruitParticipantsByPostId,
 } from "./data/mockMeetingRecruits";
 import { getMockParticipations } from "./data/mockParticipations";
+import { getMockUserById } from "./data/mockUsers";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 import {
   getMockPostingParticipationAction,
@@ -15,10 +16,12 @@ import {
 
 import { profileEditSchema } from "@/features/my/schemas/profileEdit.schema";
 import type { ProfileEditFormValues } from "@/features/my/schemas/profileEdit.schema";
+import { passwordChangeSchema } from "@/features/my/schemas/passwordChange.schema";
 import type {
   MyActivityRecord,
   MyPageActivity,
 } from "@/features/my/types/myActivity.types";
+import type { LoginType } from "@/shared/types/user.types";
 import { getGatherApiUrl } from "./apiScope";
 
 const PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -30,6 +33,7 @@ const regionById = new Map(regions.data.map((region) => [region.id, region]));
 type MockProfile = Omit<ProfileEditFormValues, "activityRegionId"> & {
   id: number;
   activityRegionId: number | null;
+  loginType: LoginType;
 };
 
 type PendingProfileImageUpload = {
@@ -112,6 +116,7 @@ function getProfile(userId: number) {
 
   const profile: MockProfile = {
     id: userId,
+    loginType: getMockUserById(userId)?.loginType ?? "EMAIL",
     name: "동진",
     nickname: userId === 1 ? "가더" : `Gather_${userId}`,
     introduction: "함께 봉사하는 걸 좋아해요.",
@@ -132,6 +137,7 @@ function toProfileResponse(profile: MockProfile) {
     introduction: profile.introduction,
     birthDate: profile.birthDate,
     gender: profile.gender,
+    loginType: profile.loginType,
     activityRegion:
       profile.activityRegionId === null
         ? null
@@ -398,7 +404,11 @@ export const myProfileHandlers = [
       );
     }
 
-    const updated: MockProfile = { id: userId, ...result.data };
+    const updated: MockProfile = {
+      id: userId,
+      loginType: getProfile(userId).loginType,
+      ...result.data,
+    };
     profiles.set(userId, updated);
 
     return HttpResponse.json({
@@ -407,6 +417,50 @@ export const myProfileHandlers = [
       error: null,
     });
   }),
+
+  http.patch(
+    getGatherApiUrl("/api/v1/users/me/password"),
+    async ({ request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const result = passwordChangeSchema.safeParse(await request.json());
+      if (!result.success) {
+        return errorResponse(
+          "VALIDATION_ERROR",
+          "요청 값이 올바르지 않습니다.",
+          400,
+        );
+      }
+
+      const user = getMockUserById(userId);
+      if (!user) return createUnauthorizedResponse();
+
+      if (user.loginType === "KAKAO") {
+        return errorResponse(
+          "PASSWORD_CHANGE_NOT_AVAILABLE",
+          "카카오 계정은 비밀번호를 변경할 수 없습니다.",
+          409,
+        );
+      }
+
+      if (user.password !== result.data.currentPassword) {
+        return errorResponse(
+          "CURRENT_PASSWORD_MISMATCH",
+          "현재 비밀번호가 일치하지 않습니다.",
+          400,
+        );
+      }
+
+      user.password = result.data.password;
+
+      return HttpResponse.json({
+        success: true,
+        data: null,
+        error: null,
+      });
+    },
+  ),
 
   http.get(getGatherApiUrl("/api/v1/users/me/profile-image"), ({ request }) => {
     const userId = getMockUserId(request);

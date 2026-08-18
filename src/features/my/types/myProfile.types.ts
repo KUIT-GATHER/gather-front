@@ -1,5 +1,6 @@
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import type { Region } from "@/features/region/types/region.types";
+import type { LoginType } from "@/shared/types/user.types";
 
 export type MyPageHome = {
   nickname: string;
@@ -16,6 +17,7 @@ export type MyProfile = {
   introduction: string | null;
   birthDate: string;
   gender: "MALE" | "FEMALE";
+  loginType: LoginType;
   activityRegion: Region | null;
   interestCategories: PostingCategory[];
 };

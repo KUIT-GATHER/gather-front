@@ -85,6 +85,23 @@ describe("RequireGuest", () => {
     expect(router.state.location.pathname).toBe("/teams/1/posts");
   });
 
+  it("민감한 인증 경로는 로그인 후 홈으로 이동한다", async () => {
+    useAuthStore.setState({
+      accessToken: "test-access-token",
+      isAuthenticated: true,
+      authInitialized: true,
+    });
+
+    const router = renderRequireGuest({
+      pathname: "/login",
+      state: { from: "/my/profile/password" },
+    });
+
+    await screen.findByText("홈 화면");
+
+    expect(router.state.location.pathname).toBe("/home");
+  });
+
   it("외부 형태의 from 경로는 무시하고 홈으로 이동한다", async () => {
     useAuthStore.setState({
       accessToken: "test-access-token",

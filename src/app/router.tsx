@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 
+import { RootHydrateFallback } from "@/app/RootHydrateFallback";
 import { RootLayout } from "@/app/layouts/RootLayout";
 import { AuthLayout } from "@/app/layouts/AuthLayout";
 import { MainTabLayout } from "@/app/layouts/MainTabLayout";
@@ -18,40 +19,10 @@ import { TermsPage } from "@/pages/auth/TermsPage";
 import { HomePage } from "@/pages/home/HomePage";
 
 import { VolunteerListPage } from "@/pages/volunteers/VolunteerListPage";
-import { VolunteerSearchPage } from "@/pages/volunteers/VolunteerSearchPage";
-import { VolunteerDetailPage } from "@/pages/volunteers/VolunteerDetailPage";
-import { MeetingRecruitDetailPage } from "@/pages/volunteers/MeetingRecruitDetailPage";
 
 import { TeamPage } from "@/pages/teams/TeamPage";
-import { TeamSearchPage } from "@/pages/teams/TeamSearchPage";
-import { TeamCreatePage } from "@/pages/teams/TeamCreatePage";
-import { TeamCreateCompletePage } from "@/pages/teams/TeamCreateCompletePage";
-import { TeamDetailPage } from "@/pages/teams/TeamDetailPage";
-import { TeamDetailActivityPage } from "@/pages/teams/TeamDetailActivityPage";
-import { TeamDetailActivityCommentsPage } from "@/pages/teams/TeamDetailActivityCommentsPage";
-import { TeamDetailActivityPostsPage } from "@/pages/teams/TeamDetailActivityPostsPage";
-import { TeamDetailActivityRecruitsPage } from "@/pages/teams/TeamDetailActivityRecruitsPage";
-import { TeamDetailHomePage } from "@/pages/teams/TeamDetailHomePage";
-import { TeamPostDetailPage } from "@/pages/teams/TeamPostDetailPage";
-import { TeamDetailPostListPage } from "@/pages/teams/TeamDetailPostListPage";
-import { TeamSettingsPage } from "@/pages/teams/TeamSettingsPage";
-import { TeamInfoEditPage } from "@/pages/teams/TeamInfoEditPage";
-import { TeamMemberManagementPage } from "@/pages/teams/TeamMemberManagementPage";
-import { TeamJoinRequestManagementPage } from "@/pages/teams/TeamJoinRequestManagementPage";
-import { TeamActivityManagementPage } from "@/pages/teams/TeamActivityManagementPage";
-import { TeamActivityApplicantsPage } from "@/pages/teams/TeamActivityApplicantsPage";
-import { TeamPostTypeSelectPage } from "@/pages/teams/TeamPostTypeSelectPage";
-import { TeamPostEditorPage } from "@/pages/teams/TeamPostEditorPage";
-import { TeamRecruitEditorPage } from "@/pages/teams/TeamRecruitEditorPage";
 
-import { NotificationPage } from "@/pages/notifications/NotificationPage";
 import { MyPage } from "@/pages/my/MyPage";
-import { MyActivitiesPage } from "@/pages/my/MyActivitiesPage";
-import { MyBadgesPage } from "@/pages/my/MyBadgesPage";
-import { MyBookmarksPage } from "@/pages/my/MyBookmarksPage";
-import { ProfileEditPage } from "@/pages/my/ProfileEditPage";
-
-import { ComponentTestPage } from "@/pages/dev/ComponentTestPage";
 
 import { NotFoundPage } from "@/pages/errors/NotFoundPage";
 import { RootRouteErrorBoundary } from "@/pages/errors/RootRouteErrorBoundary";
@@ -59,16 +30,23 @@ import { RootRouteErrorBoundary } from "@/pages/errors/RootRouteErrorBoundary";
 import { RequireAuth } from "@/features/auth/guards/RequireAuth";
 import { RequireGuest } from "@/features/auth/guards/RequireGuest";
 
-import { env } from "@/shared/config/env";
-
-const devRoutes = env.IS_DEV
-  ? [{ path: "/dev/components", element: <ComponentTestPage /> }]
+const devRoutes = import.meta.env.DEV
+  ? [
+      {
+        path: "/dev/components",
+        lazy: {
+          Component: async () =>
+            (await import("@/pages/dev/ComponentTestPage")).ComponentTestPage,
+        },
+      },
+    ]
   : [];
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     ErrorBoundary: RootRouteErrorBoundary,
+    HydrateFallback: RootHydrateFallback,
 
     children: [
       {
@@ -85,6 +63,22 @@ export const router = createBrowserRouter([
               { path: "/onboarding", element: <OnboardingPage /> },
               { path: "/login", element: <LoginPage /> },
               { path: "/login/email", element: <EmailLoginPage /> },
+              {
+                path: "/account-recovery",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/auth/AccountRecoveryPage"))
+                      .AccountRecoveryPage,
+                },
+              },
+              {
+                path: "/account-recovery/password",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/auth/PasswordResetPage"))
+                      .PasswordResetPage,
+                },
+              },
               { path: "/signup", element: <SignupPage /> },
             ],
           },
@@ -115,75 +109,195 @@ export const router = createBrowserRouter([
         children: [
           // 공개
           { path: "/volunteers", element: <VolunteerListPage /> },
-          { path: "/volunteers/search", element: <VolunteerSearchPage /> },
+          {
+            path: "/volunteers/search",
+            lazy: {
+              Component: async () =>
+                (await import("@/pages/volunteers/VolunteerSearchPage"))
+                  .VolunteerSearchPage,
+            },
+          },
           {
             path: "/volunteers/meeting-recruits/:meetingId/:postId",
-            element: <MeetingRecruitDetailPage />,
+            lazy: {
+              Component: async () =>
+                (await import("@/pages/volunteers/MeetingRecruitDetailPage"))
+                  .MeetingRecruitDetailPage,
+            },
           },
           {
             path: "/volunteers/:volunteerId",
-            element: <VolunteerDetailPage />,
+            lazy: {
+              Component: async () =>
+                (await import("@/pages/volunteers/VolunteerDetailPage"))
+                  .VolunteerDetailPage,
+            },
           },
-          { path: "/teams/search", element: <TeamSearchPage /> },
+          {
+            path: "/teams/search",
+            lazy: {
+              Component: async () =>
+                (await import("@/pages/teams/TeamSearchPage")).TeamSearchPage,
+            },
+          },
           {
             path: "/teams/:teamId",
-            element: <TeamDetailPage />,
+            lazy: {
+              Component: async () =>
+                (await import("@/pages/teams/TeamDetailPage")).TeamDetailPage,
+            },
             children: [
-              { index: true, element: <TeamDetailHomePage /> },
-              { path: "posts", element: <TeamDetailPostListPage /> },
+              {
+                index: true,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamDetailHomePage"))
+                      .TeamDetailHomePage,
+                },
+              },
+              {
+                path: "posts",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamDetailPostListPage"))
+                      .TeamDetailPostListPage,
+                },
+              },
               {
                 element: <RequireAuth />,
                 children: [
-                  { path: "posts/new", element: <TeamPostTypeSelectPage /> },
+                  {
+                    path: "posts/new",
+                    lazy: {
+                      Component: async () =>
+                        (await import("@/pages/teams/TeamPostTypeSelectPage"))
+                          .TeamPostTypeSelectPage,
+                    },
+                  },
                   {
                     path: "posts/new/:postType",
-                    element: <TeamPostEditorPage />,
+                    lazy: {
+                      Component: async () =>
+                        (await import("@/pages/teams/TeamPostEditorPage"))
+                          .TeamPostEditorPage,
+                    },
                   },
                   {
                     path: "posts/:postId/edit",
-                    element: <TeamPostEditorPage />,
+                    lazy: {
+                      Component: async () =>
+                        (await import("@/pages/teams/TeamPostEditorPage"))
+                          .TeamPostEditorPage,
+                    },
                   },
                   {
                     path: "posts/recruits/new",
-                    element: <TeamRecruitEditorPage />,
+                    lazy: {
+                      Component: async () =>
+                        (await import("@/pages/teams/TeamRecruitEditorPage"))
+                          .TeamRecruitEditorPage,
+                    },
                   },
                   {
                     path: "posts/:postId/recruit/edit",
-                    element: <TeamRecruitEditorPage />,
+                    lazy: {
+                      Component: async () =>
+                        (await import("@/pages/teams/TeamRecruitEditorPage"))
+                          .TeamRecruitEditorPage,
+                    },
                   },
                 ],
               },
-              { path: "posts/:postId", element: <TeamPostDetailPage /> },
-              { path: "activity", element: <TeamDetailActivityPage /> },
+              {
+                path: "posts/:postId",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamPostDetailPage"))
+                      .TeamPostDetailPage,
+                },
+              },
+              {
+                path: "activity",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamDetailActivityPage"))
+                      .TeamDetailActivityPage,
+                },
+              },
               {
                 path: "activity/recruits",
-                element: <TeamDetailActivityRecruitsPage />,
+                lazy: {
+                  Component: async () =>
+                    (
+                      await import("@/pages/teams/TeamDetailActivityRecruitsPage")
+                    ).TeamDetailActivityRecruitsPage,
+                },
               },
               {
                 path: "activity/posts",
-                element: <TeamDetailActivityPostsPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamDetailActivityPostsPage"))
+                      .TeamDetailActivityPostsPage,
+                },
               },
               {
                 path: "activity/comments",
-                element: <TeamDetailActivityCommentsPage />,
+                lazy: {
+                  Component: async () =>
+                    (
+                      await import("@/pages/teams/TeamDetailActivityCommentsPage")
+                    ).TeamDetailActivityCommentsPage,
+                },
               },
-              { path: "settings", element: <TeamSettingsPage /> },
-              { path: "settings/info", element: <TeamInfoEditPage /> },
+              {
+                path: "settings",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamSettingsPage"))
+                      .TeamSettingsPage,
+                },
+              },
+              {
+                path: "settings/info",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamInfoEditPage"))
+                      .TeamInfoEditPage,
+                },
+              },
               {
                 path: "settings/members",
-                element: <TeamMemberManagementPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamMemberManagementPage"))
+                      .TeamMemberManagementPage,
+                },
               },
               {
                 path: "settings/applications",
-                element: <TeamJoinRequestManagementPage />,
+                lazy: {
+                  Component: async () =>
+                    (
+                      await import("@/pages/teams/TeamJoinRequestManagementPage")
+                    ).TeamJoinRequestManagementPage,
+                },
               },
               {
                 path: "settings/activities",
-                element: <TeamActivityManagementPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamActivityManagementPage"))
+                      .TeamActivityManagementPage,
+                },
               },
               {
                 path: "settings/activities/:postId/applicants",
-                element: <TeamActivityApplicantsPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamActivityApplicantsPage"))
+                      .TeamActivityApplicantsPage,
+                },
               },
             ],
           },
@@ -194,32 +308,74 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: "/volunteers/:volunteerId/teams/new",
-                element: <TeamCreatePage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamCreatePage"))
+                      .TeamCreatePage,
+                },
               },
-              { path: "/teams/new", element: <TeamCreatePage /> },
+              {
+                path: "/teams/new",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamCreatePage"))
+                      .TeamCreatePage,
+                },
+              },
               {
                 path: "/teams/new/complete",
-                element: <TeamCreateCompletePage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/teams/TeamCreateCompletePage"))
+                      .TeamCreateCompletePage,
+                },
               },
               {
                 path: "/notifications",
-                element: <NotificationPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/notifications/NotificationPage"))
+                      .NotificationPage,
+                },
               },
               {
                 path: "/my/profile/edit",
-                element: <ProfileEditPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/my/ProfileEditPage"))
+                      .ProfileEditPage,
+                },
+              },
+              {
+                path: "/my/profile/password",
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/my/PasswordChangePage"))
+                      .PasswordChangePage,
+                },
               },
               {
                 path: "/my/activities",
-                element: <MyActivitiesPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/my/MyActivitiesPage"))
+                      .MyActivitiesPage,
+                },
               },
               {
                 path: "/my/badges",
-                element: <MyBadgesPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/my/MyBadgesPage")).MyBadgesPage,
+                },
               },
               {
                 path: "/my/bookmarks",
-                element: <MyBookmarksPage />,
+                lazy: {
+                  Component: async () =>
+                    (await import("@/pages/my/MyBookmarksPage"))
+                      .MyBookmarksPage,
+                },
               },
             ],
           },

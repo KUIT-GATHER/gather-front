@@ -63,7 +63,7 @@ export function TeamJoinRequestManagementScreen() {
     restoreMutation.isPending;
 
   return (
-    <main className="min-h-dvh bg-bg px-5.5">
+    <main className="flex min-h-dvh flex-col bg-bg px-5.5">
       <PageHeader
         title="가입 신청 관리"
         onBack={() => navigate(-1)}
@@ -98,23 +98,28 @@ export function TeamJoinRequestManagementScreen() {
           </button>
         ))}
       </nav>
-      <section className="pb-28 pt-4">
+      <section className="flex flex-1 flex-col pb-28 pt-4">
         {requestsQuery.isLoading ? (
-          <LoadingState className="min-h-60" label="가입 신청을 불러오는 중" />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <LoadingState label="가입 신청을 불러오는 중" />
+          </div>
         ) : requestsQuery.isError ? (
-          <ErrorState
-            className="min-h-60"
-            title="가입 신청을 불러오지 못했어요"
-            primaryAction={{
-              label: "다시 시도",
-              onClick: () => void requestsQuery.refetch(),
-            }}
-          />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <ErrorState
+              title="가입 신청을 불러오지 못했어요"
+              primaryAction={{
+                label: "다시 시도",
+                onClick: () => void requestsQuery.refetch(),
+              }}
+            />
+          </div>
         ) : filtered.length === 0 ? (
-          <EmptyState
-            className="min-h-60"
-            title="해당하는 가입 신청이 없어요"
-          />
+          <div className="flex min-h-60 flex-1 flex-col justify-center">
+            <EmptyState
+              className="min-h-60"
+              title="해당하는 가입 신청이 없어요"
+            />
+          </div>
         ) : (
           <ul className="flex flex-col gap-3">
             {filtered.map((request) => {

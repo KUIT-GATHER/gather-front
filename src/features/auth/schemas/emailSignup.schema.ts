@@ -4,6 +4,10 @@ import {
   signupCommonDefaultValues,
   signupCommonSchema,
 } from "@/features/auth/schemas/signupCommon.schema";
+import {
+  passwordConfirmSchema,
+  passwordSchema,
+} from "@/features/auth/schemas/password.schema";
 
 export const signupEmailSchema = z
   .object({
@@ -17,18 +21,8 @@ export const signupEmailSchema = z
     emailVerificationCode: z
       .string()
       .regex(/^\d{6}$/, { error: "인증번호 6자리를 입력해 주세요." }),
-    password: z
-      .string()
-      .min(6, { error: "비밀번호는 6자 이상이어야 합니다." })
-      .max(12, { error: "비밀번호는 12자 이하이어야 합니다." })
-      .regex(/^\S+$/, { error: "비밀번호에는 공백을 사용할 수 없습니다." }),
-    passwordConfirm: z
-      .string()
-      .min(6, { error: "비밀번호 확인은 6자 이상이어야 합니다." })
-      .max(12, { error: "비밀번호 확인은 12자 이하이어야 합니다." })
-      .regex(/^\S+$/, {
-        error: "비밀번호 확인에는 공백을 사용할 수 없습니다.",
-      }),
+    password: passwordSchema,
+    passwordConfirm: passwordConfirmSchema,
   })
   .refine((value) => value.password === value.passwordConfirm, {
     path: ["passwordConfirm"],

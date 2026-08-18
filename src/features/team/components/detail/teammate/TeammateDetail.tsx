@@ -79,7 +79,7 @@ export function TeammateDetail({
 
   const handleBack = () => {
     if (isActivitySubPage) {
-      navigate(activityBasePath);
+      navigate(activityBasePath, { replace: true });
       return;
     }
 
