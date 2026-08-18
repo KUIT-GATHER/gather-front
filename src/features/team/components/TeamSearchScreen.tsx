@@ -195,6 +195,7 @@ export function TeamSearchScreen() {
                       getTeamListFilter(searchParams),
                       { sort: value },
                     ),
+                    { replace: true },
                   );
                   window.scrollTo({ top: 0, behavior: "auto" });
                 }}

@@ -87,6 +87,7 @@ export function VolunteerPostingListScreen() {
               updateVolunteerPostingSearchParams(searchParams, filter, {
                 sort: value,
               }),
+              { replace: true },
             );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
@@ -110,6 +111,7 @@ export function VolunteerPostingListScreen() {
           onApply={(nextFilter) => {
             setSearchParams(
               updateVolunteerPostingSearchParams(searchParams, nextFilter),
+              { replace: true },
             );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}

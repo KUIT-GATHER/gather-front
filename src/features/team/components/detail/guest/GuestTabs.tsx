@@ -20,6 +20,7 @@ export function GuestTabs({ meetingId }: GuestTabsProps) {
       {tabs.map((tab) => (
         <NavLink
           key={tab.suffix}
+          replace
           to={`/teams/${meetingId}${tab.suffix}`}
           end={tab.suffix === ""}
           className={({ isActive }) =>

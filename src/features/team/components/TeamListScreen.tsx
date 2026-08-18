@@ -146,7 +146,10 @@ function MeetingDiscoverList({
   setIsFilterOpen,
 }: {
   searchParams: URLSearchParams;
-  setSearchParams: (nextInit: URLSearchParams) => void;
+  setSearchParams: (
+    nextInit: URLSearchParams,
+    options?: { replace?: boolean },
+  ) => void;
   isAuthenticated: boolean;
   isFilterOpen: boolean;
   setIsFilterOpen: (open: boolean) => void;
@@ -204,6 +207,7 @@ function MeetingDiscoverList({
               updateTeamListSearchParams(searchParams, filter, {
                 sort: value,
               }),
+              { replace: true },
             );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
@@ -294,6 +298,7 @@ function MeetingDiscoverList({
           onApply={(nextFilter) => {
             setSearchParams(
               updateTeamListSearchParams(searchParams, nextFilter),
+              { replace: true },
             );
             window.scrollTo({ top: 0, behavior: "auto" });
           }}
@@ -342,7 +347,7 @@ export function TeamListScreen() {
 
     const next = new URLSearchParams(searchParams);
     next.set("tab", tab);
-    setSearchParams(next);
+    setSearchParams(next, { replace: true });
     setIsFilterOpen(false);
   };
   const openSearch = () => {

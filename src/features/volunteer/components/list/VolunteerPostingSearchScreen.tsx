@@ -193,6 +193,7 @@ export function VolunteerPostingSearchScreen() {
                       getVolunteerPostingFilter(searchParams),
                       { keyword: keywordFromUrl, sort: value },
                     ),
+                    { replace: true },
                   );
                   window.scrollTo({ top: 0, behavior: "auto" });
                 }}
