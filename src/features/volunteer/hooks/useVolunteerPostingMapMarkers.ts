@@ -60,6 +60,7 @@ export function useVolunteerPostingMapMarkers({
   markerItems,
   selectedPostingId,
   onSelectPosting,
+  onClusterClick,
 }: {
   maps: KakaoMaps | undefined;
   map: KakaoMap | undefined;
@@ -67,6 +68,7 @@ export function useVolunteerPostingMapMarkers({
   markerItems: readonly VolunteerPostingMapMarkerItem[];
   selectedPostingId: number | null;
   onSelectPosting: (postingId: number) => void;
+  onClusterClick: () => void;
 }) {
   const markerEntriesRef = useRef<Map<number, MarkerEntry>>(new Map());
   const markerImagesRef = useRef<MarkerImages | undefined>(undefined);
@@ -102,8 +104,12 @@ export function useVolunteerPostingMapMarkers({
     clustererRef.current = clusterer;
     markerImagesRef.current = createMarkerImages(maps);
     const markerEntries = markerEntriesRef.current;
+    const handleClusterClick = () => onClusterClick();
+
+    maps.event.addListener(clusterer, "clusterclick", handleClusterClick);
 
     return () => {
+      maps.event.removeListener(clusterer, "clusterclick", handleClusterClick);
       clusterer.clear();
       clearMarkerEntries(maps, markerEntries);
 
@@ -112,7 +118,7 @@ export function useVolunteerPostingMapMarkers({
         markerImagesRef.current = undefined;
       }
     };
-  }, [isMapReady, map, maps]);
+  }, [isMapReady, map, maps, onClusterClick]);
 
   useEffect(() => {
     if (!isMapReady || !maps || !map) {

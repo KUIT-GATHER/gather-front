@@ -78,12 +78,12 @@ export type KakaoMaps = {
   Point: new (x: number, y: number) => object;
   event: {
     addListener: (
-      target: KakaoMap | KakaoMarker,
+      target: KakaoMap | KakaoMarker | KakaoMarkerClusterer,
       event: string,
       handler: () => void,
     ) => void;
     removeListener: (
-      target: KakaoMap | KakaoMarker,
+      target: KakaoMap | KakaoMarker | KakaoMarkerClusterer,
       event: string,
       handler: () => void,
     ) => void;

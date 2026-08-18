@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 
@@ -177,6 +177,7 @@ export function VolunteerPostingMapSheet({
   const [selectedPostingId, setSelectedPostingId] = useState<number | null>(
     null,
   );
+  const shouldSearchAfterClusterClickRef = useRef(false);
   const regionsQuery = useRegionsQuery(filter.regionId !== undefined);
   const regionIndex = useMemo(
     () => createRegionIndex(regionsQuery.data ?? []),
@@ -262,12 +263,22 @@ export function VolunteerPostingMapSheet({
       });
       map = initialMap;
       handleIdle = () => {
-        if (!disposed) {
-          setPendingBounds(getMapBounds(initialMap));
+        if (disposed) {
+          return;
+        }
+
+        const nextBounds = getMapBounds(initialMap);
+
+        setPendingBounds(nextBounds);
+
+        if (shouldSearchAfterClusterClickRef.current) {
+          shouldSearchAfterClusterClickRef.current = false;
+          setSearchedBounds(nextBounds);
         }
       };
       handleDragStart = () => {
         if (!disposed) {
+          shouldSearchAfterClusterClickRef.current = false;
           setSelectedPostingId(null);
         }
       };
@@ -300,6 +311,7 @@ export function VolunteerPostingMapSheet({
 
     return () => {
       disposed = true;
+      shouldSearchAfterClusterClickRef.current = false;
       if (frameId !== undefined) {
         window.cancelAnimationFrame(frameId);
       }
@@ -326,6 +338,10 @@ export function VolunteerPostingMapSheet({
     selectedRegionParent,
     shouldWaitForRegion,
   ]);
+
+  const handleClusterClick = useCallback(() => {
+    shouldSearchAfterClusterClickRef.current = true;
+  }, []);
 
   const mapParams = useMemo(
     () =>
@@ -400,6 +416,7 @@ export function VolunteerPostingMapSheet({
     markerItems,
     selectedPostingId,
     onSelectPosting: setSelectedPostingId,
+    onClusterClick: handleClusterClick,
   });
 
   useEffect(() => {
@@ -418,6 +435,8 @@ export function VolunteerPostingMapSheet({
   )?.posting;
 
   const handleSearchThisArea = () => {
+    shouldSearchAfterClusterClickRef.current = false;
+
     if (!pendingBounds || mapQuery.isFetching) {
       return;
     }
@@ -444,6 +463,7 @@ export function VolunteerPostingMapSheet({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        shouldSearchAfterClusterClickRef.current = false;
         setSelectedPostingId(null);
         map.panTo(
           new maps.LatLng(position.coords.latitude, position.coords.longitude),
