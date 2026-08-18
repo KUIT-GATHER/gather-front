@@ -1,5 +1,6 @@
 import { InfoIcon, type InfoIconName } from "@/shared/ui/InfoIcon";
 import { cn } from "@/shared/lib/cn";
+import type { ReactNode } from "react";
 
 export type VolunteerOpportunityInfoIcon = InfoIconName;
 
@@ -7,7 +8,7 @@ export type VolunteerOpportunityInfoRow = {
   id: string;
   icon: VolunteerOpportunityInfoIcon;
   label: string;
-  value: string;
+  value: ReactNode;
 };
 
 type VolunteerOpportunityInfoCardProps = {

@@ -6,6 +6,7 @@ import type {
   VolunteerPosting,
   VolunteerPostingSource,
 } from "@/features/volunteer/types/volunteer.types";
+import type { ReactNode } from "react";
 
 import { VolunteerOpportunityInfoCard } from "./VolunteerOpportunityInfoCard";
 
@@ -35,6 +36,22 @@ function isInfoRow<T>(row: T | null): row is T {
   return row !== null;
 }
 
+function renderActivityTime(value: string): ReactNode {
+  const match = /^(.*)\(([^()]+)\)$/.exec(value);
+
+  if (!match) {
+    return value;
+  }
+
+  const [, timeRange, duration] = match;
+
+  return (
+    <>
+      {timeRange}(<span className="font-semibold text-button">{duration}</span>)
+    </>
+  );
+}
+
 export function VolunteerPostingInfoCard({
   posting,
   className,
@@ -54,14 +71,6 @@ export function VolunteerPostingInfoCard({
     posting.noticeEndDate,
   );
   const rows = [
-    location
-      ? {
-          id: "location",
-          icon: "location" as const,
-          label: "장소",
-          value: location,
-        }
-      : null,
     activityPeriod
       ? {
           id: "date",
@@ -75,7 +84,15 @@ export function VolunteerPostingInfoCard({
           id: "time",
           icon: "time" as const,
           label: "시간",
-          value: activityTime,
+          value: renderActivityTime(activityTime),
+        }
+      : null,
+    location
+      ? {
+          id: "location",
+          icon: "location" as const,
+          label: "장소",
+          value: location,
         }
       : null,
     participantCount

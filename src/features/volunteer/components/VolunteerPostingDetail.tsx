@@ -20,10 +20,8 @@ import { VolunteerPostingApplyConfirmSheet } from "./detail/VolunteerPostingAppl
 import { VolunteerPostingScheduleSheet } from "./detail/VolunteerPostingScheduleSheet";
 import { VolunteerPostingCompleteModal } from "./detail/VolunteerPostingCompleteModal";
 import { VolunteerPostingCompleteSuccessDialog } from "./detail/VolunteerPostingCompleteSuccessDialog";
-import { VolunteerPostingConditionCard } from "./detail/VolunteerPostingConditionCard";
 import { VolunteerPostingHeader } from "./detail/VolunteerPostingHeader";
 import { VolunteerPostingHero } from "./detail/VolunteerPostingHero";
-import { VolunteerPostingInfoCard } from "./detail/VolunteerPostingInfoCard";
 import { VolunteerPostingTeamSection } from "./detail/VolunteerPostingTeamSection";
 
 type VolunteerPostingDetailProps = {
@@ -183,8 +181,6 @@ export function VolunteerPostingDetail({
 
       <div className="pt-1">
         <VolunteerPostingHero posting={posting} />
-        <VolunteerPostingInfoCard posting={posting} className="mt-4" />
-        <VolunteerPostingConditionCard posting={posting} className="mt-6" />
         <VolunteerPostingTeamSection
           postingId={posting.id}
           showCreateTeamButton={
