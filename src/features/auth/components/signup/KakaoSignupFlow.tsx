@@ -3,6 +3,7 @@ import { FormProvider } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router";
 
 import { useKakaoSignupFlow } from "@/features/auth/hooks/useKakaoSignupFlow";
+import { getSafePostLoginReturnPath } from "@/features/auth/lib/loginRedirect";
 import { useKakaoSignupStore } from "@/features/auth/store/kakaoSignup.store";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -12,14 +13,6 @@ import { SignupTermsDetail } from "./SignupTermsDetail";
 import { BasicInfoStep } from "./steps/BasicInfoStep";
 import { ProfileStep } from "./steps/ProfileStep";
 import { TermsStep } from "./steps/TermsStep";
-
-function getReturnPath(value: unknown) {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-    ? value
-    : null;
-}
 
 export function KakaoSignupFlow() {
   const navigate = useNavigate();
@@ -94,7 +87,7 @@ function KakaoSignupFlowContent({
   } = useKakaoSignupFlow({
     signupToken,
     initialNickname,
-    returnPath: getReturnPath(
+    returnPath: getSafePostLoginReturnPath(
       (location.state as { from?: unknown } | null)?.from,
     ),
   });
