@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Dialog } from "radix-ui";
 import { ChevronLeft } from "lucide-react";
 

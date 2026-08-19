@@ -9,14 +9,21 @@ import { env } from "@/shared/config/env";
 import "./index.css";
 
 async function enableMocking() {
-  if (!env.IS_DEV || !env.ENABLE_MSW) {
+  if (!import.meta.env.DEV) {
     return;
   }
 
-  const { worker } = await import("@/mocks/browser");
+  if (!env.ENABLE_MSW) {
+    return;
+  }
+
+  const [{ worker }, { handleUnhandledRequest }] = await Promise.all([
+    import("@/mocks/browser"),
+    import("@/mocks/apiScope"),
+  ]);
 
   return worker.start({
-    onUnhandledRequest: "bypass",
+    onUnhandledRequest: handleUnhandledRequest,
   });
 }
 

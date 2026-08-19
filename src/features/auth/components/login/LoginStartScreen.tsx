@@ -5,25 +5,30 @@ import EmailIcon from "@/assets/icons/Email.svg";
 import KakaoIcon from "@/assets/icons/Kakao.svg";
 import { AuthLogo } from "@/features/auth/components/login/AuthLogo";
 import { startKakaoLogin } from "@/features/auth/lib/kakaoOAuth";
+import { getSafePostLoginReturnPath } from "@/features/auth/lib/loginRedirect";
 import Button from "@/shared/ui/Button";
 import PageContainer from "@/shared/ui/PageContainer";
+
+type LoginStartLocationState = {
+  from?: unknown;
+  kakaoSignupNotice?: unknown;
+};
 
 export function LoginStartScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isKakaoLoginStarting, setIsKakaoLoginStarting] = useState(false);
   const [kakaoLoginError, setKakaoLoginError] = useState<string | null>(null);
+  const state = location.state as LoginStartLocationState | null;
   const loginNotice =
-    typeof (location.state as { kakaoSignupNotice?: unknown } | null)
-      ?.kakaoSignupNotice === "string"
-      ? (location.state as { kakaoSignupNotice: string }).kakaoSignupNotice
+    typeof state?.kakaoSignupNotice === "string"
+      ? state.kakaoSignupNotice
       : null;
-  const returnPath =
-    typeof (location.state as { from?: unknown } | null)?.from === "string" &&
-    (location.state as { from: string }).from.startsWith("/") &&
-    !(location.state as { from: string }).from.startsWith("//")
-      ? (location.state as { from: string }).from
-      : undefined;
+  const returnPath = getSafePostLoginReturnPath(state?.from);
+  const loginState = {
+    ...(returnPath ? { from: returnPath } : {}),
+    ...(loginNotice !== null ? { kakaoSignupNotice: loginNotice } : {}),
+  };
 
   return (
     <PageContainer
@@ -46,7 +51,7 @@ export function LoginStartScreen() {
               setIsKakaoLoginStarting(true);
 
               try {
-                startKakaoLogin(returnPath);
+                startKakaoLogin(returnPath ?? undefined);
               } catch {
                 setIsKakaoLoginStarting(false);
                 setKakaoLoginError(
@@ -65,7 +70,7 @@ export function LoginStartScreen() {
             leftIcon={<img src={EmailIcon} alt="" aria-hidden="true" />}
             onClick={() => {
               navigate("/login/email", {
-                state: location.state,
+                state: loginState,
               });
             }}
           >

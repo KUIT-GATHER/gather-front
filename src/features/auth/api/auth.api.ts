@@ -3,15 +3,21 @@ import { fetchClient } from "@/shared/api/fetchClient";
 import type {
   ConfirmEmailVerificationRequest,
   ConfirmEmailVerificationResponse,
+  AccountRecoveryEmailRequest,
+  AccountRecoveryEmailResponse,
   KakaoLoginRequest,
   KakaoLoginResponse,
   KakaoSignupRequest,
+  PasswordResetPermissionRequest,
+  PasswordResetPermissionResponse,
+  PasswordResetRequest,
   PhoneVerificationConfirmResponse,
   PhoneVerificationQrCodeResponse,
   PhoneVerificationStartRequest,
   PhoneVerificationStartResponse,
   SendEmailVerificationRequest,
   SendEmailVerificationResponse,
+  SessionRestoreResponse,
   SignupRequest,
   SignupResponse,
   TokenResponse,
@@ -59,6 +65,40 @@ export function confirmPhoneVerification(verificationId: string) {
       method: "POST",
     },
   );
+}
+
+export function findAccountByPhoneVerification(
+  payload: AccountRecoveryEmailRequest,
+) {
+  return fetchClient<AccountRecoveryEmailResponse>(
+    "/api/v1/auth/account-recoveries/email",
+    {
+      ...publicOptions,
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function issuePasswordResetToken(
+  payload: PasswordResetPermissionRequest,
+) {
+  return fetchClient<PasswordResetPermissionResponse>(
+    "/api/v1/auth/account-recoveries/password",
+    {
+      ...publicOptions,
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function resetPassword(payload: PasswordResetRequest) {
+  return fetchClient<null>("/api/v1/auth/account-recoveries/password/reset", {
+    ...publicOptions,
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function sendEmailVerification(payload: SendEmailVerificationRequest) {
@@ -122,6 +162,13 @@ export function kakaoSignup(payload: KakaoSignupRequest, signupToken: string) {
 
 export function reissue() {
   return fetchClient<TokenResponse>("/api/v1/auth/reissue", {
+    ...cookieAuthOptions,
+    method: "POST",
+  });
+}
+
+export function restoreSession() {
+  return fetchClient<SessionRestoreResponse>("/api/v1/auth/session/restore", {
     ...cookieAuthOptions,
     method: "POST",
   });

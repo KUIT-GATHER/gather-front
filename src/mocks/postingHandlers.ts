@@ -1,7 +1,11 @@
 import { HttpResponse, http } from "msw";
 
 import { isValidRecognizedMinutes } from "@/features/volunteer/lib/recognizedMinutes";
-import type { PostingListItem } from "@/features/volunteer/types/volunteer.types";
+import { isVolunteerPostingActivityPeriodOverlapping } from "@/features/volunteer/lib/volunteerPostingActivityPeriod";
+import type {
+  PostingListItem,
+  VolunteerPostingMapItem,
+} from "@/features/volunteer/types/volunteer.types";
 
 import { addMockBadgeProgress } from "./badgeHandlers";
 import postings from "./data/postings.json";
@@ -17,6 +21,7 @@ import { getExternalMockMeetingRecruitListItems } from "./data/mockMeetingRecrui
 import regions from "./data/regions.json";
 import { createUnauthorizedResponse, getMockUserId } from "./lib/mockAuth";
 import { getMockMeetings, type MockMeeting } from "./teamHandlers";
+import { getGatherApiUrl } from "./apiScope";
 
 const POSTING_STATUSES = new Set(["RECRUITING", "CLOSED", "COMPLETED"]);
 const RECOMMENDATION_COUNT = 5;
@@ -71,11 +76,23 @@ function formatMockDate(offsetDays: number) {
 }
 
 const baseMockPostings = postings.data.map((posting) => {
+  const externalApplication =
+    posting.id % 2 === 0
+      ? {
+          source: "VMS_CRAWL" as const,
+          applicationUrl: `https://www.vms.or.kr/partspace/recruitView.do?seq=${posting.id}`,
+        }
+      : {
+          source: "API_1365" as const,
+          applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${posting.id}`,
+        };
+
   if (posting.id === 1) {
     return {
       ...posting,
-      actStartDate: formatMockDate(7),
-      actEndDate: formatMockDate(7),
+      ...externalApplication,
+      actStartDate: formatMockDate(1),
+      actEndDate: formatMockDate(30),
       noticeStartDate: formatMockDate(-14),
       noticeEndDate: formatMockDate(0),
     };
@@ -84,14 +101,15 @@ const baseMockPostings = postings.data.map((posting) => {
   if (posting.id === 2) {
     return {
       ...posting,
+      ...externalApplication,
       actStartDate: formatMockDate(2),
-      actEndDate: formatMockDate(2),
+      actEndDate: formatMockDate(10),
       noticeStartDate: formatMockDate(-14),
       noticeEndDate: formatMockDate(-1),
     };
   }
 
-  return posting;
+  return { ...posting, ...externalApplication };
 });
 
 const recruitmentDeadlineOffsets = [1, 3, 7, 8, 10, 14, 21, 30, 45, 60, 90];
@@ -103,6 +121,11 @@ const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
 
   return {
     ...postings.data[0],
+    source: id % 2 === 0 ? ("VMS_CRAWL" as const) : ("API_1365" as const),
+    applicationUrl:
+      id % 2 === 0
+        ? `https://www.vms.or.kr/partspace/recruitView.do?seq=${id}`
+        : `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${id}`,
     id,
     title:
       id === 27
@@ -161,10 +184,13 @@ function parseMockLocalDate(value: string | null | undefined) {
     : undefined;
 }
 
-function isMockPostingActivityEnded(postingId: number) {
+function isMockPostingActivityEnded(postingId: number, userId: number) {
   const posting = mockPostings.find((item) => item.id === postingId);
+  const participation = findMockParticipation(userId, postingId);
   const endDate = parseMockLocalDate(
-    posting?.actEndDate ?? posting?.actStartDate,
+    participation?.participationEndDate ??
+      posting?.actEndDate ??
+      posting?.actStartDate,
   );
 
   if (!endDate) {
@@ -360,21 +386,30 @@ function getRecommendedMockPostings(userId: number | null) {
     .map(toVolunteerPostingListItem);
 }
 
-function getMockPostingParticipationAction(
+export function getMockPostingParticipationAction(
   postingId: number,
   userId: number | null,
 ) {
-  const participation =
-    userId === null ? null : findMockParticipation(userId, postingId);
+  if (userId === null) {
+    return "APPLY";
+  }
+
+  const participation = findMockParticipation(userId, postingId);
 
   if (!participation) {
     return "APPLY";
   }
 
+  if (participation.participationAction) {
+    return participation.participationAction;
+  }
+
   switch (participation.status) {
     case "APPLIED":
     case "CONFIRMED":
-      return isMockPostingActivityEnded(postingId) ? "COMPLETE" : "CANCEL";
+      return isMockPostingActivityEnded(postingId, userId)
+        ? "COMPLETE"
+        : "CANCEL";
     case "COMPLETED":
     case "REVIEWED":
       return "NONE";
@@ -411,14 +446,52 @@ function getRegionIdsIncludingChildren(regionIds: Iterable<number>) {
   return includedRegionIds;
 }
 
-function getRegionIdsByGroup(regionGroupId: number) {
-  const level1RegionIds = regions.data
-    .filter(
-      (region) => region.level === 1 && region.regionGroupId === regionGroupId,
-    )
-    .map((region) => region.id);
+type MockMapBounds = {
+  swLat: number;
+  swLng: number;
+  neLat: number;
+  neLng: number;
+};
 
-  return getRegionIdsIncludingChildren(level1RegionIds);
+function isCoordinateInBounds(
+  latitude: number | null,
+  longitude: number | null,
+  bounds: MockMapBounds,
+) {
+  return (
+    latitude !== null &&
+    longitude !== null &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= bounds.swLat &&
+    latitude <= bounds.neLat &&
+    longitude >= bounds.swLng &&
+    longitude <= bounds.neLng
+  );
+}
+
+function toVolunteerPostingMapItem(
+  posting: (typeof postings.data)[number],
+): VolunteerPostingMapItem {
+  return {
+    id: posting.id,
+    title: posting.title,
+    organizationName: posting.recruitOrg,
+    regionId: posting.regionId,
+    regionName: posting.regionName,
+    activityStartAt: posting.actStartDate
+      ? `${posting.actStartDate}T${posting.actStartTime ?? "00:00"}:00`
+      : null,
+    activityEndAt: posting.actEndDate
+      ? `${posting.actEndDate}T${posting.actEndTime ?? "23:59"}:00`
+      : null,
+    applyDeadlineAt: posting.noticeEndDate
+      ? `${posting.noticeEndDate}T23:59:59`
+      : null,
+    category: posting.category as VolunteerPostingMapItem["category"],
+    status: posting.status as VolunteerPostingMapItem["status"],
+    locations: posting.locations,
+  };
 }
 
 function parseSorts(url: URL): PostingSort[] | null {
@@ -524,35 +597,89 @@ function sortPostingMeetings(
 }
 
 export const postingHandlers = [
-  http.get("*/api/v1/postings", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/postings/map"), ({ request }) => {
     const url = new URL(request.url);
-
-    const page = Number(url.searchParams.get("page") ?? 0);
-    const size = Number(url.searchParams.get("size") ?? 20);
-    const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
-    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
-    const status = url.searchParams.get("status");
-    const noticeStartDate = url.searchParams.get("noticeStartDate");
-    const noticeEndDate = url.searchParams.get("noticeEndDate");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
     const category = url.searchParams.get("category");
-    const sorts = parseSorts(url);
+    const swLat = getOptionalNumberParam(url, "swLat");
+    const swLng = getOptionalNumberParam(url, "swLng");
+    const neLat = getOptionalNumberParam(url, "neLat");
+    const neLng = getOptionalNumberParam(url, "neLng");
 
-    let items = mockPostings;
-
-    if (regionId !== undefined && regionGroupId !== undefined) {
+    if (
+      swLat === undefined ||
+      swLng === undefined ||
+      neLat === undefined ||
+      neLng === undefined ||
+      swLat > neLat ||
+      swLng > neLng ||
+      (category &&
+        !POSTING_CATEGORIES.includes(
+          category as (typeof POSTING_CATEGORIES)[number],
+        ))
+    ) {
       return HttpResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: "VALIDATION_ERROR",
-            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
+            message: "요청 값이 올바르지 않습니다.",
           },
         },
         { status: 400 },
       );
     }
+
+    const bounds = { swLat, swLng, neLat, neLng };
+    const includedRegionIds =
+      regionId === undefined
+        ? undefined
+        : getRegionIdsIncludingChildren([regionId]);
+    const mapItems = mockPostings
+      .filter(
+        (posting) =>
+          !includedRegionIds || includedRegionIds.has(posting.regionId),
+      )
+      .filter((posting) => !category || posting.category === category)
+      .filter((posting) =>
+        isVolunteerPostingActivityPeriodOverlapping(
+          posting.actStartDate,
+          posting.actEndDate,
+          activityStartDate,
+          activityEndDate,
+        ),
+      )
+      .filter((posting) =>
+        posting.locations.some((location) =>
+          isCoordinateInBounds(location.latitude, location.longitude, bounds),
+        ),
+      )
+      .map(toVolunteerPostingMapItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: mapItems,
+      error: null,
+    });
+  }),
+
+  http.get(getGatherApiUrl("/api/v1/postings"), ({ request }) => {
+    const url = new URL(request.url);
+
+    const page = Number(url.searchParams.get("page") ?? 0);
+    const size = Number(url.searchParams.get("size") ?? 20);
+    const keyword = url.searchParams.get("keyword")?.trim();
+    const regionId = getOptionalNumberParam(url, "regionId");
+    const status = url.searchParams.get("status");
+    const activityStartDate = url.searchParams.get("activityStartDate");
+    const activityEndDate = url.searchParams.get("activityEndDate");
+    const category = url.searchParams.get("category");
+    const sorts = parseSorts(url);
+
+    let items = mockPostings;
 
     if (!sorts) {
       return HttpResponse.json(
@@ -621,14 +748,6 @@ export const postingHandlers = [
       );
     }
 
-    if (regionGroupId !== undefined) {
-      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
-
-      items = items.filter((posting) =>
-        includedRegionIds.has(posting.regionId),
-      );
-    }
-
     if (status) {
       items = items.filter((posting) => posting.status === status);
     } else {
@@ -638,15 +757,14 @@ export const postingHandlers = [
       );
     }
 
-    if (noticeStartDate) {
-      items = items.filter(
-        (posting) => posting.noticeStartDate >= noticeStartDate,
-      );
-    }
-
-    if (noticeEndDate) {
-      items = items.filter((posting) => posting.noticeEndDate <= noticeEndDate);
-    }
+    items = items.filter((posting) =>
+      isVolunteerPostingActivityPeriodOverlapping(
+        posting.actStartDate,
+        posting.actEndDate,
+        activityStartDate,
+        activityEndDate,
+      ),
+    );
 
     const meetingRecruitItems = getExternalMockMeetingRecruitListItems().filter(
       (meetingRecruitItem) =>
@@ -662,20 +780,16 @@ export const postingHandlers = [
           getRegionIdsIncludingChildren([regionId]).has(
             meetingRecruitItem.regionId!,
           )) &&
-        (regionGroupId === undefined ||
-          getRegionIdsByGroup(regionGroupId).has(
-            meetingRecruitItem.regionId!,
-          )) &&
         (status
           ? meetingRecruitItem.status === status
           : meetingRecruitItem.status === "RECRUITING" ||
             meetingRecruitItem.status === "CLOSED") &&
-        (!noticeStartDate ||
-          (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") >=
-            noticeStartDate) &&
-        (!noticeEndDate ||
-          (meetingRecruitItem.applyDeadlineAt?.slice(0, 10) ?? "") <=
-            noticeEndDate),
+        isVolunteerPostingActivityPeriodOverlapping(
+          meetingRecruitItem.activityStartAt?.slice(0, 10),
+          meetingRecruitItem.activityEndAt?.slice(0, 10),
+          activityStartDate,
+          activityEndDate,
+        ),
     );
     const unifiedItems = sortUnifiedPostings(
       [...items.map(toUnifiedPostingListItem), ...meetingRecruitItems],
@@ -698,7 +812,7 @@ export const postingHandlers = [
     });
   }),
 
-  http.get("*/api/v1/postings/bookmarks", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/postings/bookmarks"), ({ request }) => {
     const userId = getMockUserId(request);
 
     if (!userId) {
@@ -711,24 +825,9 @@ export const postingHandlers = [
     const size = Math.max(1, Number(url.searchParams.get("size")) || 20);
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
-    const regionGroupId = getOptionalNumberParam(url, "regionGroupId");
     const noticeStartDate = url.searchParams.get("noticeStartDate");
     const noticeEndDate = url.searchParams.get("noticeEndDate");
     const category = url.searchParams.get("category");
-
-    if (regionId !== undefined && regionGroupId !== undefined) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "regionId와 regionGroupId는 동시에 사용할 수 없습니다.",
-          },
-        },
-        { status: 400 },
-      );
-    }
 
     const bookmarkedPostingIds = getBookmarkedPostingIds(userId);
     let items = mockPostings.filter((posting) =>
@@ -749,14 +848,6 @@ export const postingHandlers = [
 
     if (regionId !== undefined) {
       const includedRegionIds = getRegionIdsIncludingChildren([regionId]);
-
-      items = items.filter((posting) =>
-        includedRegionIds.has(posting.regionId),
-      );
-    }
-
-    if (regionGroupId !== undefined) {
-      const includedRegionIds = getRegionIdsByGroup(regionGroupId);
 
       items = items.filter((posting) =>
         includedRegionIds.has(posting.regionId),
@@ -791,7 +882,7 @@ export const postingHandlers = [
       error: null,
     });
   }),
-  http.get("*/api/v1/postings/recommended", ({ request }) => {
+  http.get(getGatherApiUrl("/api/v1/postings/recommended"), ({ request }) => {
     return HttpResponse.json({
       success: true,
       data: getRecommendedMockPostings(getMockUserId(request)),
@@ -799,7 +890,7 @@ export const postingHandlers = [
     });
   }),
 
-  http.get("*/api/v1/postings/keywords/recommended", () => {
+  http.get(getGatherApiUrl("/api/v1/postings/keywords/recommended"), () => {
     return HttpResponse.json({
       success: true,
       data: ["유기견", "환경", "아동", "멘토링"],
@@ -807,151 +898,168 @@ export const postingHandlers = [
     });
   }),
 
-  http.get("*/api/v1/postings/:postingId/meetings", ({ params, request }) => {
-    const postingId = Number(params.postingId);
-    const posting = mockPostings.find((item) => item.id === postingId);
-    const url = new URL(request.url);
-    const page = Number(url.searchParams.get("page") ?? 0);
-    const size = Number(url.searchParams.get("size") ?? 10);
-    const sorts = parsePostingMeetingSorts(url);
+  http.get(
+    getGatherApiUrl("/api/v1/postings/:postingId/meetings"),
+    ({ params, request }) => {
+      const postingId = Number(params.postingId);
+      const posting = mockPostings.find((item) => item.id === postingId);
+      const url = new URL(request.url);
+      const page = Number(url.searchParams.get("page") ?? 0);
+      const size = Number(url.searchParams.get("size") ?? 10);
+      const sorts = parsePostingMeetingSorts(url);
 
-    if (!posting) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "POSTING_NOT_FOUND",
-            message: "Posting not found.",
+      if (!posting) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_NOT_FOUND",
+              message: "Posting not found.",
+            },
           },
-        },
-        { status: 404 },
-      );
-    }
+          { status: 404 },
+        );
+      }
 
-    if (!sorts) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid sort parameter.",
+      if (!sorts) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid sort parameter.",
+            },
           },
-        },
-        { status: 400 },
-      );
-    }
+          { status: 400 },
+        );
+      }
 
-    const items = sortPostingMeetings(
-      getMockMeetings().filter((team) => team.volunteerPostingId === postingId),
-      sorts,
-    );
-    const startIndex = page * size;
-    const content = items
-      .slice(startIndex, startIndex + size)
-      .map(
-        ({
-          meetingId,
-          name,
-          categories,
-          currentMemberCount,
-          maxMember,
-          regionId,
-          regionName,
-          status,
-        }) => ({
-          meetingId,
-          name,
-          categories,
-          currentMemberCount,
-          maxMember,
-          regionId,
-          regionName,
-          status,
-          member: false,
-          host: false,
-        }),
-      );
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        content,
-        totalElements: items.length,
-        totalPages: Math.ceil(items.length / size),
-        page,
-        size,
-      },
-      error: null,
-    });
-  }),
-
-  http.get("*/api/v1/postings/:postingId", ({ params, request }) => {
-    const postingId = Number(params.postingId);
-    const posting = mockPostings.find((item) => item.id === postingId);
-    const userId = getMockUserId(request);
-    const participation =
-      userId === null ? null : findMockParticipation(userId, postingId);
-
-    if (!posting) {
-      return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: "POSTING_NOT_FOUND",
-            message: "봉사 공고를 찾을 수 없습니다.",
-          },
-        },
-        { status: 404 },
-      );
-    }
-
-    return HttpResponse.json({
-      success: true,
-      data: {
-        ...posting,
-        bookmarked:
-          userId === null
-            ? false
-            : getBookmarkedPostingIds(userId).has(postingId),
-        participationStatus: participation?.status ?? null,
-        participationAction: getMockPostingParticipationAction(
-          postingId,
-          userId,
+      const items = sortPostingMeetings(
+        getMockMeetings().filter(
+          (team) => team.volunteerPostingId === postingId,
         ),
-      },
-      error: null,
-    });
-  }),
+        sorts,
+      );
+      const startIndex = page * size;
+      const content = items
+        .slice(startIndex, startIndex + size)
+        .map(
+          ({
+            meetingId,
+            name,
+            categories,
+            currentMemberCount,
+            maxMember,
+            regionId,
+            regionName,
+            status,
+          }) => ({
+            meetingId,
+            name,
+            categories,
+            currentMemberCount,
+            maxMember,
+            regionId,
+            regionName,
+            status,
+            member: false,
+            host: false,
+          }),
+        );
 
-  http.post("*/api/v1/postings/:postingId/bookmark", ({ params, request }) => {
-    const userId = getMockUserId(request);
-    if (!userId) return createUnauthorizedResponse();
+      return HttpResponse.json({
+        success: true,
+        data: {
+          content,
+          totalElements: items.length,
+          totalPages: Math.ceil(items.length / size),
+          page,
+          size,
+        },
+        error: null,
+      });
+    },
+  ),
 
-    const postingId = Number(params.postingId);
-    getBookmarkedPostingIds(userId).add(postingId);
-    addMockBadgeProgress(userId, "BOOKMARK_5");
+  http.get(
+    getGatherApiUrl("/api/v1/postings/:postingId"),
+    ({ params, request }) => {
+      const postingId = Number(params.postingId);
+      const posting = mockPostings.find((item) => item.id === postingId);
+      const userId = getMockUserId(request);
+      const participation =
+        userId === null ? null : findMockParticipation(userId, postingId);
 
-    return HttpResponse.json({
-      success: true,
-      data: {
-        postingId,
-        bookmarked: true,
-      },
-      error: null,
-    });
-  }),
+      if (!posting) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "POSTING_NOT_FOUND",
+              message: "봉사 공고를 찾을 수 없습니다.",
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          ...posting,
+          bookmarked:
+            userId === null
+              ? false
+              : getBookmarkedPostingIds(userId).has(postingId),
+          participationStatus: participation?.status ?? null,
+          participationStartDate: participation?.participationStartDate ?? null,
+          participationEndDate: participation?.participationEndDate ?? null,
+          participationAction: getMockPostingParticipationAction(
+            postingId,
+            userId,
+          ),
+        },
+        error: null,
+      });
+    },
+  ),
 
   http.post(
-    "*/api/v1/postings/:postingId/participations",
+    getGatherApiUrl("/api/v1/postings/:postingId/bookmark"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
 
       const postingId = Number(params.postingId);
+      getBookmarkedPostingIds(userId).add(postingId);
+      addMockBadgeProgress(userId, "BOOKMARK_5");
+
+      return HttpResponse.json({
+        success: true,
+        data: {
+          postingId,
+          bookmarked: true,
+        },
+        error: null,
+      });
+    },
+  ),
+
+  http.post(
+    getGatherApiUrl("/api/v1/postings/:postingId/participations"),
+    async ({ params, request }) => {
+      const userId = getMockUserId(request);
+      if (!userId) return createUnauthorizedResponse();
+
+      const postingId = Number(params.postingId);
       const posting = mockPostings.find((item) => item.id === postingId);
+      const body = (await request.json().catch(() => null)) as {
+        participationStartDate?: unknown;
+        participationEndDate?: unknown;
+      } | null;
 
       if (!posting) {
         return HttpResponse.json(
@@ -995,14 +1103,60 @@ export const postingHandlers = [
         );
       }
 
-      const { participationId } = addMockParticipation(userId, postingId);
+      const participationStartDate =
+        typeof body?.participationStartDate === "string"
+          ? body.participationStartDate
+          : undefined;
+      const participationEndDate =
+        typeof body?.participationEndDate === "string"
+          ? body.participationEndDate
+          : undefined;
+      const startDate = parseMockLocalDate(participationStartDate);
+      const endDate = parseMockLocalDate(participationEndDate);
+      const postingStartDate = parseMockLocalDate(posting.actStartDate);
+      const postingEndDate = parseMockLocalDate(posting.actEndDate);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (
+        !participationStartDate ||
+        !participationEndDate ||
+        !startDate ||
+        !endDate ||
+        !postingStartDate ||
+        !postingEndDate ||
+        startDate > endDate ||
+        startDate < today ||
+        startDate < postingStartDate ||
+        endDate > postingEndDate
+      ) {
+        return HttpResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "선택한 봉사 일정이 신청 가능 기간에 포함되지 않습니다.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const { participationId } = addMockParticipation(
+        userId,
+        postingId,
+        participationStartDate,
+        participationEndDate,
+      );
 
       return HttpResponse.json({
         success: true,
         data: {
           participationId,
           status: "APPLIED",
-          applicationUrl: `https://1365.go.kr/vols/P9210/partcptn/timeCptn.do?type=show&progrmRegistNo=${postingId}`,
+          participationStartDate,
+          participationEndDate,
         },
         error: null,
       });
@@ -1010,7 +1164,7 @@ export const postingHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/postings/:postingId/participations/complete",
+    getGatherApiUrl("/api/v1/postings/:postingId/participations/complete"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -1064,7 +1218,7 @@ export const postingHandlers = [
         );
       }
 
-      if (!isMockPostingActivityEnded(postingId)) {
+      if (!isMockPostingActivityEnded(postingId, userId)) {
         return HttpResponse.json(
           {
             success: false,
@@ -1091,7 +1245,7 @@ export const postingHandlers = [
   ),
 
   http.patch(
-    "*/api/v1/postings/:postingId/participations/hours",
+    getGatherApiUrl("/api/v1/postings/:postingId/participations/hours"),
     async ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -1176,7 +1330,7 @@ export const postingHandlers = [
   ),
 
   http.delete(
-    "*/api/v1/postings/:postingId/participations",
+    getGatherApiUrl("/api/v1/postings/:postingId/participations"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();
@@ -1227,7 +1381,7 @@ export const postingHandlers = [
   ),
 
   http.delete(
-    "*/api/v1/postings/:postingId/bookmark",
+    getGatherApiUrl("/api/v1/postings/:postingId/bookmark"),
     ({ params, request }) => {
       const userId = getMockUserId(request);
       if (!userId) return createUnauthorizedResponse();

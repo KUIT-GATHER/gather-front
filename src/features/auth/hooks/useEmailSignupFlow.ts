@@ -10,12 +10,14 @@ import {
   type EmailSignupStepField,
 } from "@/features/auth/constants/signupFlow.constants";
 import { useSignupMutation } from "@/features/auth/hooks/useSignupMutation";
+import { usePhoneVerificationFlow } from "@/features/auth/hooks/usePhoneVerificationFlow";
 import { applySignupError } from "@/features/auth/lib/applySignupError";
 import { toEmailSignupRequest } from "@/features/auth/lib/signup.mapper";
 import { normalizeEmail } from "@/features/auth/lib/signupFormatters";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { uploadProfileImage } from "@/features/profile/lib/profileImageUpload";
 import type { LegalDocumentType } from "@/features/legal";
+import type { EmailVerificationProof } from "@/features/auth/types/auth.types";
 import {
   emailSignupDefaultValues,
   signupEmailSchema,
@@ -77,19 +79,13 @@ export function useEmailSignupFlow() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [isCompletingSignup, setIsCompletingSignup] = useState(false);
-  const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(
-    null,
-  );
-  const [phoneVerificationId, setPhoneVerificationId] = useState<string | null>(
-    null,
-  );
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [emailVerificationProof, setEmailVerificationProof] =
+    useState<EmailVerificationProof | null>(null);
   const watchedPhoneNumber = useWatch({
     control: methods.control,
     name: "phoneNumber",
   });
   const watchedEmail = useWatch({ control: methods.control, name: "email" });
-  const previousPhoneNumberRef = useRef(watchedPhoneNumber);
   const previousEmailRef = useRef(watchedEmail);
   const [pendingFocusField, setPendingFocusField] =
     useState<EmailSignupStepField | null>(null);
@@ -111,15 +107,12 @@ export function useEmailSignupFlow() {
     return () => window.clearTimeout(timeoutId);
   }, [methods, pendingFocusField, step]);
 
-  useEffect(() => {
-    if (previousPhoneNumberRef.current === watchedPhoneNumber) {
-      return;
-    }
-
-    previousPhoneNumberRef.current = watchedPhoneNumber;
-    setVerifiedPhoneNumber(null);
-    setPhoneVerificationId(null);
-  }, [watchedPhoneNumber]);
+  const phoneVerification = usePhoneVerificationFlow({
+    phoneNumber: watchedPhoneNumber,
+    purpose: "SIGNUP",
+    onError: (message) => methods.setError("phoneNumber", { message }),
+    onClearError: () => methods.clearErrors("phoneNumber"),
+  });
 
   useEffect(() => {
     if (previousEmailRef.current === watchedEmail) {
@@ -127,7 +120,7 @@ export function useEmailSignupFlow() {
     }
 
     previousEmailRef.current = watchedEmail;
-    setVerifiedEmail(null);
+    setEmailVerificationProof(null);
     methods.setValue("emailVerificationCode", "", { shouldDirty: true });
   }, [methods, watchedEmail]);
 
@@ -135,9 +128,8 @@ export function useEmailSignupFlow() {
     methods.reset(emailSignupDefaultValues);
     setStep("basic");
     setDetailType(null);
-    setVerifiedEmail(null);
-    setVerifiedPhoneNumber(null);
-    setPhoneVerificationId(null);
+    setEmailVerificationProof(null);
+    phoneVerification.reset();
     setSubmitError(null);
     setPendingFocusField(null);
     setProfileImageFile(null);
@@ -182,8 +174,9 @@ export function useEmailSignupFlow() {
     }
 
     if (
-      methods.getValues("phoneNumber") !== verifiedPhoneNumber ||
-      !phoneVerificationId
+      methods.getValues("phoneNumber") !==
+        phoneVerification.verifiedPhoneNumber ||
+      !phoneVerification.phoneVerificationId
     ) {
       methods.setError("phoneNumber", {
         message: "휴대폰 인증을 완료해 주세요.",
@@ -200,7 +193,11 @@ export function useEmailSignupFlow() {
       return;
     }
 
-    if (normalizeEmail(methods.getValues("email")) !== verifiedEmail) {
+    if (
+      !emailVerificationProof ||
+      normalizeEmail(methods.getValues("email")) !==
+        emailVerificationProof.email
+    ) {
       methods.setError("email", {
         message: "이메일 인증을 완료해 주세요.",
       });
@@ -218,13 +215,19 @@ export function useEmailSignupFlow() {
   };
 
   const onValidSubmit = async (values: EmailSignupFormValues) => {
-    if (values.phoneNumber !== verifiedPhoneNumber || !phoneVerificationId) {
+    if (
+      values.phoneNumber !== phoneVerification.verifiedPhoneNumber ||
+      !phoneVerification.phoneVerificationId
+    ) {
       setIsCompletingSignup(false);
       moveToFieldError("basic", "phoneNumber", "휴대폰 인증을 완료해 주세요.");
       return;
     }
 
-    if (normalizeEmail(values.email) !== verifiedEmail) {
+    if (
+      !emailVerificationProof ||
+      normalizeEmail(values.email) !== emailVerificationProof.email
+    ) {
       setIsCompletingSignup(false);
       moveToFieldError("account", "email", "이메일 인증을 완료해 주세요.");
       return;
@@ -232,7 +235,11 @@ export function useEmailSignupFlow() {
 
     try {
       const signupResult = await signupMutation.mutateAsync(
-        toEmailSignupRequest(values, phoneVerificationId),
+        toEmailSignupRequest(
+          values,
+          phoneVerification.phoneVerificationId,
+          emailVerificationProof.emailVerificationId,
+        ),
       );
 
       setAccessToken(signupResult.accessToken);
@@ -253,9 +260,8 @@ export function useEmailSignupFlow() {
         error,
         methods,
         setStep,
-        setVerifiedEmail,
-        setVerifiedPhoneNumber,
-        setPhoneVerificationId,
+        setEmailVerificationProof,
+        resetPhoneVerification: phoneVerification.reset,
         setSubmitError,
       });
     } finally {
@@ -314,17 +320,16 @@ export function useEmailSignupFlow() {
     step,
     detailType,
     showExitDialog,
-    verifiedPhoneNumber,
-    phoneVerificationId,
-    verifiedEmail,
+    phoneVerification,
+    setVerifiedPhoneNumber: phoneVerification.setVerifiedPhoneNumber,
+    setPhoneVerificationId: phoneVerification.setPhoneVerificationId,
+    emailVerificationProof,
     profileImageFile,
     isSignupPending: signupMutation.isPending || isCompletingSignup,
     submitError,
     setDetailType,
     setShowExitDialog,
-    setVerifiedPhoneNumber,
-    setPhoneVerificationId,
-    setVerifiedEmail,
+    setEmailVerificationProof,
     setProfileImageFile,
     clearSubmitError: () => setSubmitError(null),
     handleBack,

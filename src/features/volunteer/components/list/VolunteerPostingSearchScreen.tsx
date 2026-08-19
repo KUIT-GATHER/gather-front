@@ -9,14 +9,15 @@ import {
 import { useRecentVolunteerSearches } from "@/features/volunteer/hooks/useRecentVolunteerSearches";
 import { useVolunteerPostingRecommendedKeywordsQuery } from "@/features/volunteer/hooks/useVolunteerPostingRecommendedKeywordsQuery";
 import {
+  getVolunteerPostingFilter,
   getVolunteerPostingSort,
   toVolunteerPostingQueryParams,
   updateVolunteerPostingSearchParams,
 } from "@/features/volunteer/lib/volunteerPostingSearchParams";
 import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
-import arrowBackIcon from "@/features/volunteer/assets/search/arrow-back.svg";
-import searchIcon from "@/features/volunteer/assets/search/search.svg";
+import arrowBackIcon from "@/shared/assets/icons/search/arrow-back.svg";
+import searchIcon from "@/shared/assets/icons/search/search.svg";
 import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
@@ -142,8 +143,8 @@ export function VolunteerPostingSearchScreen() {
     addRecentSearch(normalized);
     setSearchParams(
       updateVolunteerPostingSearchParams(
-        new URLSearchParams(),
-        {},
+        searchParams,
+        getVolunteerPostingFilter(searchParams),
         { keyword: normalized, sort: "latest" },
       ),
     );
@@ -151,7 +152,7 @@ export function VolunteerPostingSearchScreen() {
   };
 
   return (
-    <PageContainer size="narrow" className="min-h-dvh pb-8">
+    <PageContainer size="narrow" className="flex min-h-dvh flex-col pb-8">
       {keywordFromUrl ? (
         <>
           <header className="-ml-4 flex h-[70px] items-center gap-[7px] pt-[env(safe-area-inset-top)]">
@@ -169,11 +170,15 @@ export function VolunteerPostingSearchScreen() {
               key={keywordFromUrl}
               initialKeyword={keywordFromUrl}
               onSubmit={submitSearch}
-              onActivate={() => setSearchParams(new URLSearchParams())}
+              onActivate={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete("keyword");
+                setSearchParams(next);
+              }}
               variant="header"
             />
           </header>
-          <section className="mt-0.5">
+          <section className="mt-0.5 flex flex-1 flex-col">
             <div className="flex h-11 items-center justify-between">
               <h2 className="text-body-14 text-text">검색결과</h2>
               <Select
@@ -184,16 +189,17 @@ export function VolunteerPostingSearchScreen() {
                   if (!isVolunteerPostingListSort(value)) return;
                   setSearchParams(
                     updateVolunteerPostingSearchParams(
-                      new URLSearchParams(),
-                      {},
+                      searchParams,
+                      getVolunteerPostingFilter(searchParams),
                       { keyword: keywordFromUrl, sort: value },
                     ),
+                    { replace: true },
                   );
                   window.scrollTo({ top: 0, behavior: "auto" });
                 }}
               />
             </div>
-            <div className="-mt-px">
+            <div className="-mt-px flex flex-1 flex-col">
               <VolunteerPostingResults
                 params={queryParams}
                 emptyTitle="검색 결과가 없어요"
@@ -247,7 +253,7 @@ export function VolunteerPostingSearchScreen() {
                     <button
                       key={recent}
                       type="button"
-                      className="h-11 rounded-full border border-text-gray-300 px-3 text-[15px] font-medium text-text-gray-300 transition-colors hover:border-[#5E5E5D] hover:bg-[#5E5E5D] hover:text-[#FAFAF8] active:text-[#FAFAF8] active:border-[#5E5E5D] active:bg-[#5E5E5D] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-text-gray-300 px-3 text-[15px] font-medium text-text-gray-300 transition-colors hover:border-text-gray-400 hover:bg-text-gray-400 hover:text-text2 active:border-text-gray-400 active:bg-text-gray-400 active:text-text2 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recent)}
                     >
                       # {recent}
@@ -270,7 +276,7 @@ export function VolunteerPostingSearchScreen() {
                     <button
                       key={recommendation}
                       type="button"
-                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button transition-colors hover:bg-[#F0F6F0] hover:text-[#00C77B] active:text-[#00C77B]  active:bg-[#F0F6F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+                      className="h-11 rounded-full border border-button px-3 text-[15px] font-medium text-button transition-colors hover:bg-[#F0F6F0] hover:text-button active:bg-[#F0F6F0] active:text-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
                       onClick={() => submitSearch(recommendation)}
                     >
                       # {recommendation}

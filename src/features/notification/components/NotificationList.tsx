@@ -77,29 +77,34 @@ export function NotificationList({
   const isInitialError = isError && notifications.length === 0;
 
   if (isInitialLoading) {
-    return <LoadingState label="알림을 불러오는 중" className="min-h-55" />;
+    return (
+      <div className="flex min-h-55 flex-1 flex-col justify-center">
+        <LoadingState label="알림을 불러오는 중" />
+      </div>
+    );
   }
 
   if (isInitialError) {
     return (
-      <ErrorState
-        title="알림을 불러오지 못했어요"
-        description="잠시 후 다시 확인해 주세요."
-        primaryAction={{
-          label: "다시 시도",
-          onClick: () => {
-            void refetch();
-          },
-        }}
-        className="pt-16"
-      />
+      <div className="flex min-h-55 flex-1 flex-col justify-center">
+        <ErrorState
+          title="알림을 불러오지 못했어요"
+          description="잠시 후 다시 확인해 주세요."
+          primaryAction={{
+            label: "다시 시도",
+            onClick: () => {
+              void refetch();
+            },
+          }}
+        />
+      </div>
     );
   }
 
   if (isSuccess && notifications.length === 0) {
     return (
-      <div className="flex min-h-[calc(100dvh-12rem)] items-center justify-center">
-        <p className="text-body-14 text-text-gray-100">알림 없음</p>
+      <div className="flex min-h-55 flex-1 flex-col justify-center">
+        <p className="text-center text-body-14 text-text-gray-100">알림 없음</p>
       </div>
     );
   }

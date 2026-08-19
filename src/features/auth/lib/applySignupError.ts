@@ -3,6 +3,7 @@ import type { UseFormReturn } from "react-hook-form";
 
 import type { EmailSignupStep } from "@/features/auth/constants/signupFlow.constants";
 import type { EmailSignupFormValues } from "@/features/auth/schemas/emailSignup.schema";
+import type { EmailVerificationProof } from "@/features/auth/types/auth.types";
 import { ApiError } from "@/shared/api/apiError";
 import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 
@@ -10,9 +11,10 @@ type ApplySignupErrorParams = {
   error: unknown;
   methods: UseFormReturn<EmailSignupFormValues>;
   setStep: Dispatch<SetStateAction<EmailSignupStep>>;
-  setVerifiedEmail: Dispatch<SetStateAction<string | null>>;
-  setVerifiedPhoneNumber: Dispatch<SetStateAction<string | null>>;
-  setPhoneVerificationId: Dispatch<SetStateAction<string | null>>;
+  setEmailVerificationProof: Dispatch<
+    SetStateAction<EmailVerificationProof | null>
+  >;
+  resetPhoneVerification: () => void;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
 };
 
@@ -20,9 +22,8 @@ export function applySignupError({
   error,
   methods,
   setStep,
-  setVerifiedEmail,
-  setVerifiedPhoneNumber,
-  setPhoneVerificationId,
+  setEmailVerificationProof,
+  resetPhoneVerification,
   setSubmitError,
 }: ApplySignupErrorParams) {
   const moveToFieldError = (
@@ -44,15 +45,14 @@ export function applySignupError({
 
   switch (error.code) {
     case API_ERROR_CODE.DUPLICATE_EMAIL: {
-      setVerifiedEmail(null);
+      setEmailVerificationProof(null);
       moveToFieldError("account", "email", "이미 가입된 이메일입니다.");
 
       return;
     }
 
     case API_ERROR_CODE.DUPLICATE_PHONE_NUMBER: {
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+      resetPhoneVerification();
       moveToFieldError("basic", "phoneNumber", "이미 가입된 전화번호입니다.");
 
       return;
@@ -60,8 +60,7 @@ export function applySignupError({
 
     case API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED:
     case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN: {
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+      resetPhoneVerification();
       moveToFieldError(
         "basic",
         "phoneNumber",
@@ -73,9 +72,9 @@ export function applySignupError({
 
     case API_ERROR_CODE.PHONE_VERIFICATION_REQUIRED:
     case API_ERROR_CODE.PHONE_VERIFICATION_EXPIRED:
-    case API_ERROR_CODE.PHONE_VERIFICATION_NOT_FOUND: {
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+    case API_ERROR_CODE.PHONE_VERIFICATION_NOT_FOUND:
+    case API_ERROR_CODE.PHONE_VERIFICATION_PURPOSE_MISMATCH: {
+      resetPhoneVerification();
       moveToFieldError(
         "basic",
         "phoneNumber",
@@ -85,8 +84,10 @@ export function applySignupError({
       return;
     }
 
-    case API_ERROR_CODE.EMAIL_NOT_VERIFIED: {
-      setVerifiedEmail(null);
+    case API_ERROR_CODE.EMAIL_NOT_VERIFIED:
+    case API_ERROR_CODE.EMAIL_VERIFICATION_REQUIRED: {
+      setEmailVerificationProof(null);
+      methods.setValue("emailVerificationCode", "", { shouldDirty: true });
       moveToFieldError("account", "email", "이메일 인증을 다시 완료해 주세요.");
 
       return;
@@ -95,7 +96,7 @@ export function applySignupError({
     case API_ERROR_CODE.INVALID_VERIFICATION_CODE:
     case API_ERROR_CODE.EXPIRED_VERIFICATION_CODE:
     case API_ERROR_CODE.EMAIL_VERIFICATION_NOT_FOUND: {
-      setVerifiedEmail(null);
+      setEmailVerificationProof(null);
       moveToFieldError(
         "account",
         "emailVerificationCode",

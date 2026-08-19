@@ -52,10 +52,7 @@ export default function ConfirmDialog({
   const handleCancelClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (isPending) {
       event.preventDefault();
-      return;
     }
-
-    onCancel();
   };
 
   const handleConfirmClick = (event: MouseEvent<HTMLButtonElement>) => {

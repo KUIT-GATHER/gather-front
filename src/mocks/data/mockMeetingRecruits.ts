@@ -166,6 +166,15 @@ export const mockRecruitParticipantsByPostId = new Map<
     101,
     [
       {
+        participationId: 1010,
+        userId: 1,
+        nickname: "가더",
+        applicantType: "EXTERNAL",
+        participationStatus: "APPLIED",
+        attendanceStatus: "UNSET",
+        appliedAt: formatLocalDateTime(-1, "11:00:00"),
+      },
+      {
         participationId: 1011,
         userId: 102,
         nickname: "팀원 2",

@@ -98,7 +98,7 @@ export function NotificationScreen() {
     const nextSearchParams = new URLSearchParams(searchParams);
 
     nextSearchParams.set("category", nextCategory);
-    setSearchParams(nextSearchParams);
+    setSearchParams(nextSearchParams, { replace: true });
     setOpenNotificationId(null);
   };
 
@@ -145,7 +145,7 @@ export function NotificationScreen() {
         </PageContainer>
       </div>
 
-      <PageContainer size="narrow" className="min-h-dvh pb-8">
+      <PageContainer size="narrow" className="flex min-h-dvh flex-col pb-8">
         <NotificationTabs category={category} onChange={changeCategory} />
 
         {notifications.length > 0 ? (
@@ -166,16 +166,18 @@ export function NotificationScreen() {
           </div>
         ) : null}
 
-        <NotificationList
-          query={notificationsQuery}
-          openNotificationId={openNotificationId}
-          onOpenNotificationChange={setOpenNotificationId}
-          onNotificationClick={handleNotificationClick}
-          onDelete={handleDelete}
-          isReadAllPending={readAllMutation.isPending}
-          readPendingNotificationId={readPendingNotificationId}
-          deletePendingNotificationId={deletePendingNotificationId}
-        />
+        <div className="flex flex-1 flex-col">
+          <NotificationList
+            query={notificationsQuery}
+            openNotificationId={openNotificationId}
+            onOpenNotificationChange={setOpenNotificationId}
+            onNotificationClick={handleNotificationClick}
+            onDelete={handleDelete}
+            isReadAllPending={readAllMutation.isPending}
+            readPendingNotificationId={readPendingNotificationId}
+            deletePendingNotificationId={deletePendingNotificationId}
+          />
+        </div>
 
         <NotificationSettingsSheet
           open={isSettingsOpen}

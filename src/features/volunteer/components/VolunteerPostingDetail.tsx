@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useNavigate } from "react-router";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
@@ -17,17 +18,38 @@ import LoadingState from "@/shared/ui/LoadingState";
 
 import { VolunteerPostingApplyBar } from "./detail/VolunteerPostingApplyBar";
 import { VolunteerPostingApplyConfirmSheet } from "./detail/VolunteerPostingApplyConfirmSheet";
+import { VolunteerPostingScheduleSheet } from "./detail/VolunteerPostingScheduleSheet";
 import { VolunteerPostingCompleteModal } from "./detail/VolunteerPostingCompleteModal";
 import { VolunteerPostingCompleteSuccessDialog } from "./detail/VolunteerPostingCompleteSuccessDialog";
-import { VolunteerPostingConditionCard } from "./detail/VolunteerPostingConditionCard";
 import { VolunteerPostingHeader } from "./detail/VolunteerPostingHeader";
 import { VolunteerPostingHero } from "./detail/VolunteerPostingHero";
-import { VolunteerPostingInfoCard } from "./detail/VolunteerPostingInfoCard";
 import { VolunteerPostingTeamSection } from "./detail/VolunteerPostingTeamSection";
 
 type VolunteerPostingDetailProps = {
   postingId: number;
 };
+
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+
+  if (!copied) {
+    throw new Error("Clipboard copy failed");
+  }
+}
 
 export function VolunteerPostingDetail({
   postingId,
@@ -168,11 +190,23 @@ export function VolunteerPostingDetail({
     );
   }
 
+  const handleShare = async () => {
+    try {
+      await copyTextToClipboard(window.location.href);
+      toast("링크를 복사했어요", { id: "clipboard-toast" });
+    } catch {
+      toast("복사에 실패했어요. 다시 시도해 주세요", {
+        id: "clipboard-toast",
+      });
+    }
+  };
+
   return (
     <article className="pb-[calc(env(safe-area-inset-bottom)+7.25rem)]">
       <VolunteerPostingHeader
         title={formatVolunteerPostingHeaderTitle(posting.title)}
         onBack={() => navigate(-1)}
+        onShare={handleShare}
         isBookmarked={posting.bookmarked}
         isBookmarkPending={isBookmarkPending}
         onBookmarkToggle={handleBookmarkToggle}
@@ -182,8 +216,6 @@ export function VolunteerPostingDetail({
 
       <div className="pt-1">
         <VolunteerPostingHero posting={posting} />
-        <VolunteerPostingInfoCard posting={posting} className="mt-4" />
-        <VolunteerPostingConditionCard posting={posting} className="mt-6" />
         <VolunteerPostingTeamSection
           postingId={posting.id}
           showCreateTeamButton={
@@ -215,6 +247,14 @@ export function VolunteerPostingDetail({
         posting={posting}
         {...applicationFlow.applyConfirmSheetProps}
       />
+
+      {applicationFlow.scheduleSheetProps.open ? (
+        <VolunteerPostingScheduleSheet
+          key={posting.id}
+          posting={posting}
+          {...applicationFlow.scheduleSheetProps}
+        />
+      ) : null}
 
       <VolunteerPostingCompleteModal {...completeFlow.completeModalProps} />
 

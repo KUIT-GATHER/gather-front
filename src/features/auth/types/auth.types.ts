@@ -2,7 +2,13 @@ import type { PostingCategory } from "@/features/category/types/postingCategory.
 
 export type PhoneVerificationStartRequest = {
   phoneNumber: string;
+  purpose: PhoneVerificationPurpose;
 };
+
+export type PhoneVerificationPurpose =
+  | "SIGNUP"
+  | "FIND_ACCOUNT"
+  | "RESET_PASSWORD";
 
 export type PhoneVerificationStartResponse = {
   verificationId: string;
@@ -21,6 +27,34 @@ export type PhoneVerificationConfirmResponse = {
   status: PhoneVerificationStatus;
 };
 
+export type AccountRecoveryEmailRequest = {
+  phoneVerificationId: string;
+};
+
+export type AccountRecoveryEmailResponse =
+  | {
+      loginType: "EMAIL";
+      email: string;
+    }
+  | {
+      loginType: "KAKAO";
+      email: null;
+    };
+
+export type PasswordResetPermissionRequest = {
+  phoneVerificationId: string;
+};
+
+export type PasswordResetPermissionResponse = {
+  passwordResetToken: string;
+};
+
+export type PasswordResetRequest = {
+  passwordResetToken: string;
+  password: string;
+  passwordConfirm: string;
+};
+
 export type SendEmailVerificationRequest = {
   email: string;
 };
@@ -36,10 +70,16 @@ export type ConfirmEmailVerificationRequest = {
   code: string;
 };
 
+export type EmailVerificationProof = {
+  email: string;
+  emailVerificationId: string;
+};
+
 export type ConfirmEmailVerificationResponse = {
   email: string;
   verified: boolean;
   verifiedAt: string;
+  emailVerificationId: string;
 };
 
 export type EmailSignupRequest = {
@@ -56,6 +96,7 @@ export type EmailSignupRequest = {
   privacyPolicyAgreed: boolean;
   marketingAgreed: boolean;
   email: string;
+  emailVerificationId: string;
   password: string;
   passwordConfirm: string;
 };
@@ -93,6 +134,18 @@ export type TokenResponse = {
   accessToken: string;
   tokenType: "Bearer";
 };
+
+export type SessionRestoreResponse =
+  | {
+      authenticated: true;
+      accessToken: string;
+      tokenType: "Bearer";
+    }
+  | {
+      authenticated: false;
+      accessToken: null;
+      tokenType: null;
+    };
 
 export type WithdrawAccountResponse = {
   status: "COMPLETED" | "ACCEPTED";

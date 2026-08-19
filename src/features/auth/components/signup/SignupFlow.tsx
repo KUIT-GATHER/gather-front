@@ -16,17 +16,14 @@ export function SignupFlow() {
     step,
     detailType,
     showExitDialog,
-    verifiedPhoneNumber,
-    phoneVerificationId,
-    verifiedEmail,
+    phoneVerification,
+    emailVerificationProof,
     profileImageFile,
     isSignupPending,
     submitError,
     setDetailType,
     setShowExitDialog,
-    setVerifiedPhoneNumber,
-    setPhoneVerificationId,
-    setVerifiedEmail,
+    setEmailVerificationProof,
     setProfileImageFile,
     clearSubmitError,
     handleBack,
@@ -43,18 +40,13 @@ export function SignupFlow() {
       <form noValidate onSubmit={handleFormSubmit}>
         <SignupShell step={step} flow="email" onBack={handleBack}>
           {step === "basic" ? (
-            <BasicInfoStep
-              verifiedPhoneNumber={verifiedPhoneNumber}
-              phoneVerificationId={phoneVerificationId}
-              onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
-              onPhoneVerificationIdChange={setPhoneVerificationId}
-            />
+            <BasicInfoStep phoneVerification={phoneVerification} />
           ) : null}
 
           {step === "account" ? (
             <AccountInfoStep
-              verifiedEmail={verifiedEmail}
-              onVerifiedEmailChange={setVerifiedEmail}
+              emailVerificationProof={emailVerificationProof}
+              onEmailVerificationProofChange={setEmailVerificationProof}
             />
           ) : null}
 

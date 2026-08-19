@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router";
 
 import { AuthLogo } from "@/features/auth/components/login/AuthLogo";
 import { EmailLoginForm } from "@/features/auth/components/login/EmailLoginForm";
+import { getSafePostLoginReturnPath } from "@/features/auth/lib/loginRedirect";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
 
@@ -24,12 +25,7 @@ export function EmailLoginScreen() {
 
   const state = location.state as LoginLocationState | null;
 
-  const redirectTo =
-    typeof state?.from === "string" &&
-    state.from.startsWith("/") &&
-    !state.from.startsWith("//")
-      ? state.from
-      : "/home";
+  const redirectTo = getSafePostLoginReturnPath(state?.from) ?? "/home";
 
   const stateEmail = state?.email;
 
@@ -60,6 +56,7 @@ export function EmailLoginScreen() {
             navigate(redirectTo, { replace: true });
           }}
           onSignupClick={() => navigate("/signup")}
+          onRecoveryClick={() => navigate("/account-recovery")}
         />
       </div>
     </PageContainer>

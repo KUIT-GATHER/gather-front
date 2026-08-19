@@ -49,28 +49,31 @@ export function TeamSearchResults({
 
   const isInitialLoading = query.isLoading && meetings.length === 0;
   const isInitialError = query.isError && meetings.length === 0;
+  const initialState = isInitialLoading ? (
+    <LoadingState label="모임을 불러오는 중" />
+  ) : isInitialError ? (
+    <ErrorState
+      title="모임을 불러오지 못했어요"
+      description="잠시 후 다시 시도해 주세요."
+      primaryAction={{
+        label: "다시 시도",
+        onClick: () => void query.refetch(),
+      }}
+    />
+  ) : query.isSuccess && meetings.length === 0 ? (
+    <EmptyState
+      title="검색 결과가 없어요"
+      description="다른 검색어로 다시 찾아보세요."
+    />
+  ) : null;
 
   return (
     <>
       {renderMeta?.(totalElements)}
-      {isInitialLoading ? (
-        <LoadingState label="모임을 불러오는 중" className="min-h-55" />
-      ) : null}
-      {isInitialError ? (
-        <ErrorState
-          title="모임을 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
-          primaryAction={{
-            label: "다시 시도",
-            onClick: () => void query.refetch(),
-          }}
-        />
-      ) : null}
-      {query.isSuccess && meetings.length === 0 ? (
-        <EmptyState
-          title="검색 결과가 없어요"
-          description="다른 검색어로 다시 찾아보세요."
-        />
+      {initialState ? (
+        <div className="flex min-h-55 flex-1 flex-col justify-center">
+          {initialState}
+        </div>
       ) : null}
       {meetings.length > 0 ? (
         <>

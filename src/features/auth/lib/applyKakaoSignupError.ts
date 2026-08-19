@@ -10,8 +10,7 @@ type ApplyKakaoSignupErrorParams = {
   error: unknown;
   methods: UseFormReturn<KakaoSignupFormValues>;
   setStep: Dispatch<SetStateAction<KakaoSignupStep>>;
-  setVerifiedPhoneNumber: Dispatch<SetStateAction<string | null>>;
-  setPhoneVerificationId: Dispatch<SetStateAction<string | null>>;
+  resetPhoneVerification: () => void;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
   onDuplicatePhoneNumber: () => void;
 };
@@ -20,8 +19,7 @@ export function applyKakaoSignupError({
   error,
   methods,
   setStep,
-  setVerifiedPhoneNumber,
-  setPhoneVerificationId,
+  resetPhoneVerification,
   setSubmitError,
   onDuplicatePhoneNumber,
 }: ApplyKakaoSignupErrorParams) {
@@ -49,16 +47,14 @@ export function applyKakaoSignupError({
       return "restart" as const;
 
     case API_ERROR_CODE.DUPLICATE_PHONE_NUMBER:
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+      resetPhoneVerification();
       moveToFieldError("basic", "phoneNumber", "이미 가입된 전화번호입니다.");
       onDuplicatePhoneNumber();
       return "keep" as const;
 
     case API_ERROR_CODE.ACCOUNT_REJOIN_BLOCKED:
     case API_ERROR_CODE.WITHDRAWN_ACCOUNT_COOLDOWN:
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+      resetPhoneVerification();
       moveToFieldError(
         "basic",
         "phoneNumber",
@@ -69,8 +65,8 @@ export function applyKakaoSignupError({
     case API_ERROR_CODE.PHONE_VERIFICATION_REQUIRED:
     case API_ERROR_CODE.PHONE_VERIFICATION_EXPIRED:
     case API_ERROR_CODE.PHONE_VERIFICATION_NOT_FOUND:
-      setVerifiedPhoneNumber(null);
-      setPhoneVerificationId(null);
+    case API_ERROR_CODE.PHONE_VERIFICATION_PURPOSE_MISMATCH:
+      resetPhoneVerification();
       moveToFieldError(
         "basic",
         "phoneNumber",
