@@ -273,10 +273,7 @@ Worker 수준에서도 기존의 전역 `"bypass"` 설정을 제거했습니다.
 Gather Internal API에 대해서만 Error Strategy를 적용합니다.
 
 ```ts
-export const handleUnhandledRequest = (
-  request,
-  print,
-) => {
+export const handleUnhandledRequest = (request, print) => {
   if (isGatherApiRequestUrl(new URL(request.url))) {
     print.error();
   }
@@ -367,14 +364,14 @@ External Service
 Network Boundary가 다시 느슨해지는 것을 막기 위해
 API Scope 자체를 테스트했습니다.
 
-| Scenario | Expected |
-| --- | --- |
-| API Base URL + `/api/*` | Gather API |
-| 같은 Origin의 `/api` 이외 Path | Gather API 아님 |
-| Kakao 등 다른 Origin | Gather API 아님 |
-| Unhandled Gather API | Error Strategy |
-| External Request | Bypass |
-| 등록되지 않은 Gather API | 501 `MSW_HANDLER_NOT_FOUND` |
+| Scenario                       | Expected                    |
+| ------------------------------ | --------------------------- |
+| API Base URL + `/api/*`        | Gather API                  |
+| 같은 Origin의 `/api` 이외 Path | Gather API 아님             |
+| Kakao 등 다른 Origin           | Gather API 아님             |
+| Unhandled Gather API           | Error Strategy              |
+| External Request               | Bypass                      |
+| 등록되지 않은 Gather API       | 501 `MSW_HANDLER_NOT_FOUND` |
 
 실제 테스트에서는 등록되지 않은 API 요청을 발생시켜:
 
