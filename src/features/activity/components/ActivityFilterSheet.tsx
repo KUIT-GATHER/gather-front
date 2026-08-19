@@ -276,10 +276,9 @@ export function ActivityFilterSheet({
             : undefined,
       )}
       contentClassName={cn(
-        view === "main" && "overflow-hidden py-0",
+        view === "main" && "py-0",
         view === "region" && "px-0 py-0",
-        view === "date" &&
-          "overflow-hidden pt-[68px] pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        view === "date" && "pt-[68px] pb-0",
       )}
     >
       {view === "main" ? (
@@ -354,7 +353,7 @@ export function ActivityFilterSheet({
       ) : null}
 
       {view === "date" ? (
-        <div className="h-[348px] overflow-hidden rounded-[20px] border border-button px-3 py-4">
+        <div className="min-h-[348px] overflow-hidden rounded-[20px] border border-button px-3 py-4">
           <DateRangeCalendar
             selected={dateSelection}
             defaultMonth={dateSelection?.from}

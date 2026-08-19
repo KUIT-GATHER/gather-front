@@ -21,11 +21,25 @@ function WheelColumn<T extends string | number>({
   format = String,
 }: WheelColumnProps<T>) {
   const ref = useRef<HTMLDivElement>(null);
+  const scrollEndTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const selectedIndex = Math.max(0, options.indexOf(value));
 
   useEffect(() => {
-    ref.current?.scrollTo({ top: selectedIndex * ITEM_HEIGHT });
+    const element = ref.current;
+    if (!element) return;
+
+    const targetTop = selectedIndex * ITEM_HEIGHT;
+    if (Math.abs(element.scrollTop - targetTop) <= ITEM_HEIGHT / 2) return;
+
+    element.scrollTo({ top: targetTop });
   }, [selectedIndex]);
+
+  useEffect(
+    () => () => {
+      clearTimeout(scrollEndTimer.current);
+    },
+    [],
+  );
 
   return (
     <div className="relative min-w-0 flex-1">
@@ -36,15 +50,16 @@ function WheelColumn<T extends string | number>({
         aria-label={label}
         className="h-60 snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={(event) => {
-          const index = Math.max(
-            0,
-            Math.min(
-              options.length - 1,
-              Math.round(event.currentTarget.scrollTop / ITEM_HEIGHT),
-            ),
-          );
-          const next = options[index];
-          if (next !== undefined && next !== value) onChange(next);
+          const scrollTop = event.currentTarget.scrollTop;
+          clearTimeout(scrollEndTimer.current);
+          scrollEndTimer.current = setTimeout(() => {
+            const index = Math.max(
+              0,
+              Math.min(options.length - 1, Math.round(scrollTop / ITEM_HEIGHT)),
+            );
+            const next = options[index];
+            if (next !== undefined && next !== value) onChange(next);
+          }, 100);
         }}
       >
         <div style={{ height: WHEEL_PADDING }} aria-hidden="true" />
