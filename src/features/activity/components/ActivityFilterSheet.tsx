@@ -276,7 +276,7 @@ export function ActivityFilterSheet({
             : undefined,
       )}
       contentClassName={cn(
-        view === "main" && "overflow-hidden py-0",
+        view === "main" && "py-0",
         view === "region" && "px-0 py-0",
         view === "date" &&
           "overflow-hidden pt-[68px] pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
