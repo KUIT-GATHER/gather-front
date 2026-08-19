@@ -59,7 +59,7 @@ export function SharedMeetingInfoCard({
     {
       icon: "participants",
       label: "현재 인원",
-      value: `${home.currentMemberCount}/${home.maxMember}명`,
+      value: `${home.currentMemberCount}명/${home.maxMember}명`,
     },
     {
       icon: "time",
