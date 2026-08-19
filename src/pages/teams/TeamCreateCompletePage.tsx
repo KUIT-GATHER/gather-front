@@ -61,7 +61,7 @@ export function TeamCreateCompletePage() {
       <Button
         fullWidth
         className="h-13 active:bg-icon"
-        onClick={() => navigate(`/teams/${meetingId}`, { replace: true })}
+        onClick={() => navigate(`/teams/${meetingId}/posts`, { replace: true })}
       >
         내 모임 보러 가기
       </Button>

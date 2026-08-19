@@ -12,7 +12,7 @@ import { API_ERROR_CODE } from "@/shared/constants/apiErrorCode";
 import { getGatherApiUrl } from "@/mocks/apiScope";
 import type {
   PostingListItem,
-  PostingListPage,
+  PostingListCursorPage,
 } from "@/features/volunteer/types/volunteer.types";
 import { createQueryClient } from "@/shared/query/queryClient";
 
@@ -74,22 +74,26 @@ const loadedPostings: PostingListItem[] = [
   },
 ];
 
-function createPostingPage(content: PostingListItem[]): PostingListPage {
+function createPostingPage(
+  content: PostingListItem[],
+  nextCursor: string | null = null,
+  hasNext = false,
+): PostingListCursorPage {
   return {
     content,
-    totalElements: content.length,
-    totalPages: content.length > 0 ? 1 : 0,
-    page: 0,
-    size: 20,
+    nextCursor,
+    hasNext,
   };
 }
 
 function createSuccessResponse(
   content: PostingListItem[],
-): ApiSuccessResponse<PostingListPage> {
+  nextCursor: string | null = null,
+  hasNext = false,
+): ApiSuccessResponse<PostingListCursorPage> {
   return {
     success: true,
-    data: createPostingPage(content),
+    data: createPostingPage(content, nextCursor, hasNext),
     error: null,
   };
 }
@@ -178,6 +182,22 @@ export const LoadError = meta.story({
       http.get(postingsEndpoint, () =>
         HttpResponse.json(loadErrorResponse, { status: 400 }),
       ),
+    );
+  },
+});
+
+export const LoadedWithMore = meta.story({
+  beforeEach({ msw }) {
+    msw.use(
+      http.get(postingsEndpoint, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get("cursor");
+
+        return HttpResponse.json(
+          cursor
+            ? createSuccessResponse([], null, false)
+            : createSuccessResponse(loadedPostings, "cursor-A", true),
+        );
+      }),
     );
   },
 });

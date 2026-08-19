@@ -82,7 +82,7 @@ export function HomeScreen() {
     <PageContainer size="narrow">
       <header className="flex h-[calc(70px+env(safe-area-inset-top))] items-center justify-between pt-[env(safe-area-inset-top)]">
         <img src={gatherIcon} alt="Gather" className="h-14 w-auto" />
-        <div className="mr-[11px] flex items-center gap-5">
+        <div className="flex items-center gap-5">
           <div className="flex size-[27px] items-center justify-center">
             <IconButton
               label="알림 확인"
@@ -120,7 +120,7 @@ export function HomeScreen() {
             />
           </div>
 
-          <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
               isLoading={isPostingsLoading}
               isError={isPostingsInitialError}
@@ -135,11 +135,12 @@ export function HomeScreen() {
                 void postingsQuery.refetch();
               }}
             />
-            {postings.map((posting) => (
+            {postings.map((posting, index) => (
               <VolunteerPostingCard
                 key={posting.id}
                 variant="compact"
                 posting={posting}
+                imageLoading={index < 3 ? "eager" : "lazy"}
                 onClick={() => navigate(`/volunteers/${posting.id}`)}
               />
             ))}
@@ -160,7 +161,7 @@ export function HomeScreen() {
             />
           </div>
 
-          <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
               isLoading={isMeetingsLoading}
               isError={isMeetingsInitialError}
@@ -175,11 +176,12 @@ export function HomeScreen() {
                 void meetingsQuery.refetch();
               }}
             />
-            {meetings.map((meeting) => (
+            {meetings.map((meeting, index) => (
               <TeamCard
                 key={meeting.meetingId}
                 variant="compact"
                 team={meeting}
+                imageLoading={index < 2 ? "eager" : "lazy"}
                 onClick={() => navigate(`/teams/${meeting.meetingId}`)}
               />
             ))}

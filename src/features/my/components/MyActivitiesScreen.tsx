@@ -239,13 +239,15 @@ export function MyActivitiesScreen() {
                   className="size-12 bg-[#fcecc8]"
                   iconClassName="size-6"
                 />
-                <span className="flex-1 text-body-15-semibold">
-                  지금까지 모은 뱃지를 확인해보세요!
-                </span>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-7 shrink-0 text-text-gray-400"
-                />
+                <div className="flex min-w-0 flex-1 items-center">
+                  <span className="flex-1 text-body-15-semibold leading-7">
+                    지금까지 모은 뱃지를 확인해보세요!
+                  </span>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-7 shrink-0 text-text-gray-400"
+                  />
+                </div>
               </button>
             </section>
 
@@ -301,8 +303,8 @@ export function MyActivitiesScreen() {
         ) : null}
 
         <section className="mt-9" aria-label="완료한 활동 목록">
-          <div className="-mx-5.5 overflow-x-auto px-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-max gap-2">
+          <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max gap-2 pr-5.5">
               <button
                 type="button"
                 onClick={() => setSelectedCategory(null)}

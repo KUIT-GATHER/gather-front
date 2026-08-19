@@ -516,7 +516,7 @@ export function TeamCreateScreen() {
           <button
             type="button"
             disabled={isPostingBased || isFormLocked}
-            className="relative flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 text-sm font-medium text-text focus:border-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:opacity-100"
+            className="relative flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 py-2 text-sm font-medium text-text focus:border-button focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40 disabled:opacity-100"
             onClick={() => setIsRegionSheetOpen(true)}
           >
             <img
@@ -525,16 +525,18 @@ export function TeamCreateScreen() {
               aria-hidden="true"
               className="h-4 w-3"
             />
-            {isPostingBased
-              ? postingQuery.data?.actPlace ||
-                postingQuery.data?.regionName ||
-                "공고 장소 정보가 없어요"
-              : selectedRegion
-                ? getFullRegionSelectionLabel(
-                    selectedRegion,
-                    selectedRegionParent,
-                  )
-                : "활동 지역을 선택해 주세요"}
+            <span className="min-w-0 break-keep text-center leading-5">
+              {isPostingBased
+                ? postingQuery.data?.actPlace ||
+                  postingQuery.data?.regionName ||
+                  "공고 장소 정보가 없어요"
+                : selectedRegion
+                  ? getFullRegionSelectionLabel(
+                      selectedRegion,
+                      selectedRegionParent,
+                    )
+                  : "활동 지역을 선택해 주세요"}
+            </span>
           </button>
         </FormField>{" "}
         <FormField
@@ -596,6 +598,7 @@ export function TeamCreateScreen() {
           error={errors.categories}
         >
           <CategoryChipGroup
+            className="mx-0 w-full min-w-0 px-0"
             value={resolvedCategories}
             maxSelected={3}
             disabled={isFormLocked}
@@ -611,6 +614,7 @@ export function TeamCreateScreen() {
           labelClassName="mb-2 font-medium"
           htmlFor="meeting-deadline"
           error={errors.deadline}
+          required
         >
           <MeetingDateTimeField
             id="meeting-deadline"

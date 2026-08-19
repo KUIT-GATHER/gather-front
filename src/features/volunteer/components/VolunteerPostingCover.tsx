@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ImgHTMLAttributes } from "react";
 
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { getVolunteerPostingImage } from "@/features/volunteer/lib/getVolunteerPostingImage";
@@ -10,6 +10,7 @@ type VolunteerPostingCoverProps = {
   postingId?: number | null;
   alt?: string;
   className?: string;
+  loading?: ImgHTMLAttributes<HTMLImageElement>["loading"];
 };
 
 export function VolunteerPostingCover({
@@ -18,6 +19,7 @@ export function VolunteerPostingCover({
   postingId,
   alt = "",
   className,
+  loading,
 }: VolunteerPostingCoverProps) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const fallbackSrc = getVolunteerPostingImage(category, postingId);
@@ -28,6 +30,7 @@ export function VolunteerPostingCover({
       <img
         src={shouldShowRemote && imageUrl ? imageUrl : fallbackSrc}
         alt={alt}
+        loading={loading}
         className="size-full object-cover"
         onError={() => {
           if (shouldShowRemote && imageUrl) {

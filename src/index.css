@@ -67,6 +67,7 @@
 
 @layer base {
   html {
+    scrollbar-width: none;
     font-family:
       Pretendard,
       system-ui,
@@ -76,9 +77,17 @@
       sans-serif;
   }
 
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
   body {
     min-height: 100dvh;
     background: var(--color-bg);
     color: var(--color-text);
+  }
+
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
   }
 }

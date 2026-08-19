@@ -1780,7 +1780,10 @@ export const teamHandlers = [
           status: team.status,
           basedOnPosting: team.volunteerPostingId !== null,
           linkedPostingId: team.volunteerPostingId,
-          linkedPostingTitle: null,
+          linkedPostingTitle:
+            team.meetingId === 1
+              ? "[QA] 동대문장애인가족지원센터 발달장애인 대상 정리수납 프로그램 진행보조 및 교육실 환경 정비 자원봉사자를 모집합니다"
+              : null,
           participationCondition: team.participationCondition,
           members,
           upcomingActivity:

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 
 import { useInfiniteVolunteerPostingsQuery } from "@/features/volunteer/hooks/useInfiniteVolunteerPostingsQuery";
 import type { VolunteerPostingInfiniteParams } from "@/features/volunteer/types/volunteer.types";
@@ -15,7 +15,6 @@ type VolunteerPostingResultsProps = {
   emptyTitle: string;
   emptyDescription: string;
   onSelect: (posting: PostingListItem) => void;
-  renderMeta?: (totalElements: number) => ReactNode;
 };
 
 export function VolunteerPostingResults({
@@ -23,12 +22,10 @@ export function VolunteerPostingResults({
   emptyTitle,
   emptyDescription,
   onSelect,
-  renderMeta,
 }: VolunteerPostingResultsProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const query = useInfiniteVolunteerPostingsQuery(params);
   const postings = query.data?.pages.flatMap((page) => page.content) ?? [];
-  const totalElements = query.data?.pages[0]?.totalElements ?? 0;
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -71,7 +68,6 @@ export function VolunteerPostingResults({
 
   return (
     <>
-      {renderMeta?.(totalElements)}
       {initialState ? (
         <div className="flex min-h-55 flex-1 flex-col justify-center">
           {initialState}

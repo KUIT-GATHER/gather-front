@@ -29,7 +29,12 @@ function getParticipantCount(posting: VolunteerPosting) {
     return null;
   }
 
-  return `${posting.applicantCount ?? "-"}/${posting.recruitCount ?? "-"}명`;
+  const applicantCount =
+    posting.applicantCount === null ? "-" : `${posting.applicantCount}명`;
+  const recruitCount =
+    posting.recruitCount === null ? "-" : `${posting.recruitCount}명`;
+
+  return `${applicantCount}/${recruitCount}`;
 }
 
 function isInfoRow<T>(row: T | null): row is T {
