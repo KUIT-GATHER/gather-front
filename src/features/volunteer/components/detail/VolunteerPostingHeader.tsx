@@ -1,11 +1,13 @@
 import ArrowIcon from "@/assets/icons/Arrow.svg";
 import FilledHeartIcon from "@/assets/icons/Filledheart.svg";
+import LinkCopyIcon from "@/assets/icons/Linkcopy.svg";
 import UnfilledHeartIcon from "@/assets/icons/Unfilledheart.svg";
 import { cn } from "@/shared/lib/cn";
 
 type VolunteerPostingHeaderProps = {
   title?: string;
   onBack: () => void;
+  onShare?: () => void;
   isBookmarked?: boolean;
   isBookmarkPending?: boolean;
   onBookmarkToggle?: () => void;
@@ -16,6 +18,7 @@ type VolunteerPostingHeaderProps = {
 export function VolunteerPostingHeader({
   title = "봉사 공고",
   onBack,
+  onShare,
   isBookmarked = false,
   isBookmarkPending = false,
   onBookmarkToggle,
@@ -48,6 +51,22 @@ export function VolunteerPostingHeader({
         <h1 className="min-w-0 flex-1 truncate text-[20px] leading-6 font-semibold text-text">
           {title}
         </h1>
+
+        {onShare ? (
+          <button
+            type="button"
+            aria-label="봉사 공고 공유하기"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-button/40"
+            onClick={onShare}
+          >
+            <img
+              src={LinkCopyIcon}
+              alt=""
+              className="size-6"
+              aria-hidden="true"
+            />
+          </button>
+        ) : null}
 
         {onBookmarkToggle ? (
           <button

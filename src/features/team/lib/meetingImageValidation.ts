@@ -6,7 +6,7 @@ export const MEETING_IMAGE_MIME_TYPES = [
   "image/webp",
 ] as const;
 
-export const MAX_MEETING_COVER_IMAGE_COUNT = 1;
+export const MAX_MEETING_COVER_IMAGE_COUNT = 3;
 export const MAX_MEETING_POST_IMAGE_COUNT = 3;
 export const MAX_MEETING_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 

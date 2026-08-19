@@ -3,6 +3,7 @@ import { FormProvider } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router";
 
 import { useKakaoSignupFlow } from "@/features/auth/hooks/useKakaoSignupFlow";
+import { getSafePostLoginReturnPath } from "@/features/auth/lib/loginRedirect";
 import { useKakaoSignupStore } from "@/features/auth/store/kakaoSignup.store";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import LoadingState from "@/shared/ui/LoadingState";
@@ -12,14 +13,6 @@ import { SignupTermsDetail } from "./SignupTermsDetail";
 import { BasicInfoStep } from "./steps/BasicInfoStep";
 import { ProfileStep } from "./steps/ProfileStep";
 import { TermsStep } from "./steps/TermsStep";
-
-function getReturnPath(value: unknown) {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-    ? value
-    : null;
-}
 
 export function KakaoSignupFlow() {
   const navigate = useNavigate();
@@ -78,16 +71,13 @@ function KakaoSignupFlowContent({
     detailType,
     showExitDialog,
     showDuplicatePhoneDialog,
-    verifiedPhoneNumber,
-    phoneVerificationId,
+    phoneVerification,
     profileImageFile,
     isSignupPending,
     submitError,
     setDetailType,
     setShowExitDialog,
     setShowDuplicatePhoneDialog,
-    setVerifiedPhoneNumber,
-    setPhoneVerificationId,
     setProfileImageFile,
     clearSubmitError,
     handleBack,
@@ -97,7 +87,7 @@ function KakaoSignupFlowContent({
   } = useKakaoSignupFlow({
     signupToken,
     initialNickname,
-    returnPath: getReturnPath(
+    returnPath: getSafePostLoginReturnPath(
       (location.state as { from?: unknown } | null)?.from,
     ),
   });
@@ -112,13 +102,7 @@ function KakaoSignupFlowContent({
         <form noValidate onSubmit={handleFormSubmit}>
           <SignupShell step={step} flow="kakao" onBack={handleBack}>
             {step === "basic" ? (
-              <BasicInfoStep
-                verifiedPhoneNumber={verifiedPhoneNumber}
-                phoneVerificationId={phoneVerificationId}
-                onVerifiedPhoneNumberChange={setVerifiedPhoneNumber}
-                onPhoneVerificationIdChange={setPhoneVerificationId}
-                onDuplicatePhoneNumber={() => setShowDuplicatePhoneDialog(true)}
-              />
+              <BasicInfoStep phoneVerification={phoneVerification} />
             ) : null}
 
             {step === "profile" ? (

@@ -15,26 +15,29 @@ import {
 } from "./volunteer.api";
 
 import type {
+  VolunteerPostingBaseParams,
+  VolunteerPostingCursorListParams,
   VolunteerPostingInfiniteParams,
-  VolunteerPostingListParams,
   VolunteerPostingMeetingListParams,
   VolunteerPostingMapParams,
+  VolunteerPostingOffsetListParams,
 } from "../types/volunteer.types";
 
 type RecommendationScope = "guest" | "member";
 type ViewerScope = RecommendationScope;
 
-function withPage(
+function withCursor(
+  params: VolunteerPostingInfiniteParams,
+  cursor: string | null,
+): VolunteerPostingCursorListParams {
+  return cursor === null ? { ...params } : { ...params, cursor };
+}
+
+function withOffsetPage(
   params: VolunteerPostingInfiniteParams,
   page: number,
-): VolunteerPostingListParams {
-  const { regionId, ...baseParams } = params;
-
-  if (regionId !== undefined) {
-    return { ...baseParams, page, regionId };
-  }
-
-  return { ...baseParams, page };
+): VolunteerPostingOffsetListParams {
+  return { ...params, page };
 }
 
 export const volunteerPostingKeys = {
@@ -42,7 +45,7 @@ export const volunteerPostingKeys = {
   lists: () => [...volunteerPostingKeys.all, "list"] as const,
   maps: () => [...volunteerPostingKeys.all, "map"] as const,
   bookmarkedLists: () => [...volunteerPostingKeys.all, "bookmarked"] as const,
-  list: (params: VolunteerPostingListParams = {}) =>
+  list: (params: VolunteerPostingBaseParams = {}) =>
     [...volunteerPostingKeys.lists(), params] as const,
   recommended: (scope: RecommendationScope) =>
     [...volunteerPostingKeys.all, "recommended", scope] as const,
@@ -81,7 +84,7 @@ export const volunteerPostingKeys = {
 };
 
 export const volunteerPostingQueries = {
-  list: (params: VolunteerPostingListParams = {}) =>
+  list: (params: VolunteerPostingBaseParams = {}) =>
     queryOptions({
       queryKey: volunteerPostingKeys.list(params),
       queryFn: () => getVolunteerPostings(params),
@@ -109,14 +112,13 @@ export const volunteerPostingQueries = {
   infiniteList: (params: VolunteerPostingInfiniteParams = {}) =>
     infiniteQueryOptions({
       queryKey: volunteerPostingKeys.infiniteList(params),
-      initialPageParam: 0,
+      initialPageParam: null as string | null,
       queryFn: ({ pageParam }) =>
-        getVolunteerPostings(withPage(params, pageParam)),
-      getNextPageParam: (lastPage) => {
-        const nextPage = lastPage.page + 1;
-
-        return nextPage < lastPage.totalPages ? nextPage : undefined;
-      },
+        getVolunteerPostings(withCursor(params, pageParam)),
+      getNextPageParam: (lastPage) =>
+        lastPage.hasNext && lastPage.nextCursor
+          ? lastPage.nextCursor
+          : undefined,
     }),
 
   infiniteBookmarks: (params: VolunteerPostingInfiniteParams = {}) =>
@@ -124,7 +126,7 @@ export const volunteerPostingQueries = {
       queryKey: volunteerPostingKeys.infiniteBookmarks(params),
       initialPageParam: 0,
       queryFn: ({ pageParam }) =>
-        getBookmarkedVolunteerPostings(withPage(params, pageParam)),
+        getBookmarkedVolunteerPostings(withOffsetPage(params, pageParam)),
       getNextPageParam: (lastPage) => {
         const nextPage = lastPage.page + 1;
 

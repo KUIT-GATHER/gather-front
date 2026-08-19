@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Settings } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 
+import settingIcon from "@/features/my/assets/setting.svg";
 import { notificationKeys } from "@/features/notification/api/notification.queries";
 import { NotificationList } from "@/features/notification/components/NotificationList";
 import { NotificationSettingsSheet } from "@/features/notification/components/NotificationSettingsSheet";
@@ -20,7 +20,6 @@ import type {
   NotificationCategory,
   NotificationUnreadCount,
 } from "@/features/notification/types/notification.types";
-import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
 
@@ -98,7 +97,7 @@ export function NotificationScreen() {
     const nextSearchParams = new URLSearchParams(searchParams);
 
     nextSearchParams.set("category", nextCategory);
-    setSearchParams(nextSearchParams);
+    setSearchParams(nextSearchParams, { replace: true });
     setOpenNotificationId(null);
   };
 
@@ -134,18 +133,20 @@ export function NotificationScreen() {
             onBack={() => navigate(-1)}
             className="[&_h1]:ml-2.5"
             rightAction={
-              <IconButton
-                label="알림 설정 열기"
-                icon={<Settings />}
-                className="-mr-3"
+              <button
+                type="button"
+                aria-label="알림 설정 열기"
+                className="p-0.5"
                 onClick={() => setIsSettingsOpen(true)}
-              />
+              >
+                <img src={settingIcon} alt="" className="size-6" />
+              </button>
             }
           />
         </PageContainer>
       </div>
 
-      <PageContainer size="narrow" className="min-h-dvh pb-8">
+      <PageContainer size="narrow" className="flex min-h-dvh flex-col pb-8">
         <NotificationTabs category={category} onChange={changeCategory} />
 
         {notifications.length > 0 ? (
@@ -166,16 +167,18 @@ export function NotificationScreen() {
           </div>
         ) : null}
 
-        <NotificationList
-          query={notificationsQuery}
-          openNotificationId={openNotificationId}
-          onOpenNotificationChange={setOpenNotificationId}
-          onNotificationClick={handleNotificationClick}
-          onDelete={handleDelete}
-          isReadAllPending={readAllMutation.isPending}
-          readPendingNotificationId={readPendingNotificationId}
-          deletePendingNotificationId={deletePendingNotificationId}
-        />
+        <div className="flex flex-1 flex-col">
+          <NotificationList
+            query={notificationsQuery}
+            openNotificationId={openNotificationId}
+            onOpenNotificationChange={setOpenNotificationId}
+            onNotificationClick={handleNotificationClick}
+            onDelete={handleDelete}
+            isReadAllPending={readAllMutation.isPending}
+            readPendingNotificationId={readPendingNotificationId}
+            deletePendingNotificationId={deletePendingNotificationId}
+          />
+        </div>
 
         <NotificationSettingsSheet
           open={isSettingsOpen}

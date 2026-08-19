@@ -99,8 +99,10 @@ export type PostingListItem =
       meetingId: number;
     });
 
-export type PostingListPage = Omit<VolunteerPostingPage, "content"> & {
+export type PostingListCursorPage = {
   content: PostingListItem[];
+  nextCursor: string | null;
+  hasNext: boolean;
 };
 
 export type VolunteerPostingPage = {
@@ -167,8 +169,7 @@ export type VolunteerPostingParticipationApplyRequest = {
   participationEndDate: string;
 };
 
-type VolunteerPostingBaseParams = {
-  page?: number;
+export type VolunteerPostingBaseParams = {
   size?: number;
   sort?: string[];
   status?: VolunteerPostingStatus;
@@ -176,18 +177,18 @@ type VolunteerPostingBaseParams = {
   activityEndDate?: string;
   keyword?: string;
   category?: PostingCategory;
-};
-
-export type VolunteerPostingListParams = VolunteerPostingBaseParams & {
   regionId?: number;
 };
 
-export type VolunteerPostingInfiniteParams = Omit<
-  VolunteerPostingBaseParams,
-  "page"
-> & {
-  regionId?: number;
+export type VolunteerPostingCursorListParams = VolunteerPostingBaseParams & {
+  cursor?: string;
 };
+
+export type VolunteerPostingOffsetListParams = VolunteerPostingBaseParams & {
+  page?: number;
+};
+
+export type VolunteerPostingInfiniteParams = VolunteerPostingBaseParams;
 
 export type VolunteerPostingMapBounds = {
   swLat: number;

@@ -6,6 +6,7 @@ export type MockUser = {
   birthDate: string;
   gender: "MALE" | "FEMALE";
   phoneNumber: string;
+  loginType: "EMAIL" | "KAKAO";
   email: string;
   password: string;
   nickname: string;
@@ -33,6 +34,7 @@ const defaultMockUsers: MockUser[] = [
     birthDate: "2000-01-01",
     gender: "MALE",
     phoneNumber: "01012345678",
+    loginType: "EMAIL",
     email: "test@example.com",
     password: "test1234",
     nickname: "가더",
@@ -46,12 +48,27 @@ const defaultMockUsers: MockUser[] = [
     birthDate: "2002-05-20",
     gender: "FEMALE",
     phoneNumber: "01050505050",
+    loginType: "EMAIL",
     email: "outsider@example.com",
     password: "test1234",
     nickname: "외부지원자",
     introduction: "외부 공개 봉사공고 신청 흐름을 확인하는 QA 계정입니다.",
     activityRegionId: 202,
     interestCategories: ["WELFARE", "ENVIRONMENT"],
+  },
+  {
+    id: 90,
+    name: "카카오테스트",
+    birthDate: "2001-09-09",
+    gender: "FEMALE",
+    phoneNumber: "01090909090",
+    loginType: "KAKAO",
+    email: "mock-kakao-test@example.com",
+    password: "",
+    nickname: "카카오테스트",
+    introduction: "카카오 recovery 테스트용 계정입니다.",
+    activityRegionId: 201,
+    interestCategories: ["COMMUNITY"],
   },
 ];
 
@@ -69,6 +86,7 @@ function isMockUser(value: unknown): value is MockUser {
     typeof user.birthDate === "string" &&
     (user.gender === "MALE" || user.gender === "FEMALE") &&
     typeof user.phoneNumber === "string" &&
+    (user.loginType === "EMAIL" || user.loginType === "KAKAO") &&
     typeof user.email === "string" &&
     typeof user.password === "string" &&
     typeof user.nickname === "string" &&

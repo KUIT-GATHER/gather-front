@@ -34,8 +34,8 @@ export function MeetingDateTimePickerSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      className="h-[881px] max-h-none origin-bottom scale-[min(1,calc(100dvh/881px))] rounded-t-[40px] bg-bg"
-      contentClassName="overflow-hidden px-5.5 pt-3.5 pb-0"
+      className="max-h-[min(90dvh,55rem)] rounded-t-[40px] bg-bg"
+      contentClassName="px-5.5 pt-3.5 pb-0"
       footerClassName="pt-[7px] pb-[37px]"
       leadingAction={
         <button

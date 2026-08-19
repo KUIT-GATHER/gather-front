@@ -124,8 +124,26 @@ export function MyBookmarksScreen() {
     }
   };
 
+  const activeIsEmpty =
+    selectedTab === "postings" ? postings.length === 0 : meetings.length === 0;
+  const initialState = activeIsPending ? (
+    <LoadingState label="찜한 활동을 불러오는 중" />
+  ) : activeIsInitialError ? (
+    <ErrorState
+      title="찜한 활동을 불러오지 못했어요"
+      description="잠시 후 다시 확인해 주세요."
+      primaryAction={{ label: "다시 시도", onClick: retryActiveQuery }}
+    />
+  ) : activeIsEmpty ? (
+    selectedTab === "postings" ? (
+      <EmptyState title="찜한 봉사 공고가 없어요" />
+    ) : (
+      <EmptyState title="찜한 모임이 없어요" />
+    )
+  ) : null;
+
   return (
-    <div className="mx-auto min-h-dvh max-w-app bg-bg">
+    <div className="mx-auto flex min-h-dvh max-w-app flex-col bg-bg">
       <div className="px-5.5">
         <PageHeader
           title="찜한 활동"
@@ -163,7 +181,9 @@ export function MyBookmarksScreen() {
               key={tab.value}
               type="button"
               aria-current={selected ? "page" : undefined}
-              onClick={() => setSearchParams({ tab: tab.value })}
+              onClick={() =>
+                setSearchParams({ tab: tab.value }, { replace: true })
+              }
               className={[
                 "h-12 border-b text-base",
                 selected
@@ -176,59 +196,51 @@ export function MyBookmarksScreen() {
           );
         })}
       </nav>
-      <main className="space-y-3 px-5.5 py-5">
-        {activeIsPending ? (
-          <LoadingState label="찜한 활동을 불러오는 중" className="min-h-55" />
-        ) : activeIsInitialError ? (
-          <ErrorState
-            title="찜한 활동을 불러오지 못했어요"
-            description="잠시 후 다시 확인해 주세요."
-            primaryAction={{ label: "다시 시도", onClick: retryActiveQuery }}
-          />
-        ) : selectedTab === "postings" ? (
-          postings.length > 0 ? (
-            postings.map((posting) => (
-              <VolunteerPostingCard
-                key={posting.id}
-                posting={posting}
-                onClick={() => navigate(`/volunteers/${posting.id}`)}
-              />
-            ))
-          ) : (
-            <EmptyState title="찜한 봉사 공고가 없어요" />
-          )
-        ) : meetings.length > 0 ? (
-          meetings.map((meeting) => (
-            <TeamCard
-              key={meeting.meetingId}
-              team={meeting}
-              onClick={() => navigate(`/teams/${meeting.meetingId}`)}
-            />
-          ))
+      <main className="flex flex-1 flex-col space-y-3 px-5.5 py-5">
+        {initialState ? (
+          <div className="flex min-h-55 flex-1 flex-col justify-center">
+            {initialState}
+          </div>
         ) : (
-          <EmptyState title="찜한 모임이 없어요" />
-        )}
-
-        {!activeIsPending && !activeIsInitialError ? (
           <>
-            {activeIsFetchingNextPage ? (
-              <LoadingState
-                label="다음 활동을 불러오는 중"
-                className="min-h-20"
-              />
+            {selectedTab === "postings"
+              ? postings.map((posting) => (
+                  <VolunteerPostingCard
+                    key={posting.id}
+                    posting={posting}
+                    onClick={() => navigate(`/volunteers/${posting.id}`)}
+                  />
+                ))
+              : meetings.map((meeting) => (
+                  <TeamCard
+                    key={meeting.meetingId}
+                    team={meeting}
+                    onClick={() => navigate(`/teams/${meeting.meetingId}`)}
+                  />
+                ))}
+
+            {!activeIsPending && !activeIsInitialError ? (
+              <>
+                {activeIsFetchingNextPage ? (
+                  <LoadingState
+                    label="다음 활동을 불러오는 중"
+                    className="min-h-20"
+                  />
+                ) : null}
+                {activeIsFetchNextPageError ? (
+                  <button
+                    type="button"
+                    onClick={retryNextPage}
+                    className="w-full py-4 text-center text-body-14 text-text-gray-400"
+                  >
+                    추가 활동을 불러오지 못했어요. 다시 시도
+                  </button>
+                ) : null}
+                <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
+              </>
             ) : null}
-            {activeIsFetchNextPageError ? (
-              <button
-                type="button"
-                onClick={retryNextPage}
-                className="w-full py-4 text-center text-body-14 text-text-gray-400"
-              >
-                추가 활동을 불러오지 못했어요. 다시 시도
-              </button>
-            ) : null}
-            <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
           </>
-        ) : null}
+        )}
       </main>
       {isFilterOpen && selectedTab === "postings" ? (
         <VolunteerPostingFilterSheet
@@ -239,6 +251,7 @@ export function MyBookmarksScreen() {
           onApply={(nextFilter) =>
             setSearchParams(
               updateVolunteerPostingSearchParams(searchParams, nextFilter),
+              { replace: true },
             )
           }
         />
@@ -252,6 +265,7 @@ export function MyBookmarksScreen() {
           onApply={(nextFilter) =>
             setSearchParams(
               updateTeamListSearchParams(searchParams, nextFilter),
+              { replace: true },
             )
           }
         />

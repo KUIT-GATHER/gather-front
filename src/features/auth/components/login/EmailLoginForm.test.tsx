@@ -10,10 +10,12 @@ import { renderWithProviders } from "@/test/renderWithProviders";
 function renderEmailLoginForm() {
   const onLoginSuccess = vi.fn();
   const onSignupClick = vi.fn();
+  const onRecoveryClick = vi.fn();
   const renderResult = renderWithProviders(
     <EmailLoginForm
       onLoginSuccess={onLoginSuccess}
       onSignupClick={onSignupClick}
+      onRecoveryClick={onRecoveryClick}
     />,
   );
 
@@ -21,6 +23,7 @@ function renderEmailLoginForm() {
     ...renderResult,
     onLoginSuccess,
     onSignupClick,
+    onRecoveryClick,
   };
 }
 
@@ -68,6 +71,16 @@ describe("EmailLoginForm", () => {
     await user.click(screen.getByRole("button", { name: "회원가입" }));
 
     expect(onSignupClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("아이디/비밀번호 찾기 버튼을 누르면 onRecoveryClick을 호출한다", async () => {
+    const { onRecoveryClick, user } = renderEmailLoginForm();
+
+    await user.click(
+      screen.getByRole("button", { name: "아이디/비밀번호 찾기" }),
+    );
+
+    expect(onRecoveryClick).toHaveBeenCalledTimes(1);
   });
 
   it("INVALID_LOGIN 응답을 사용자용 오류 문구로 표시한다", async () => {

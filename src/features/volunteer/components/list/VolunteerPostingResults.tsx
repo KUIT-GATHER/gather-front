@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 
 import { useInfiniteVolunteerPostingsQuery } from "@/features/volunteer/hooks/useInfiniteVolunteerPostingsQuery";
 import type { VolunteerPostingInfiniteParams } from "@/features/volunteer/types/volunteer.types";
@@ -15,7 +15,6 @@ type VolunteerPostingResultsProps = {
   emptyTitle: string;
   emptyDescription: string;
   onSelect: (posting: PostingListItem) => void;
-  renderMeta?: (totalElements: number) => ReactNode;
 };
 
 export function VolunteerPostingResults({
@@ -23,12 +22,10 @@ export function VolunteerPostingResults({
   emptyTitle,
   emptyDescription,
   onSelect,
-  renderMeta,
 }: VolunteerPostingResultsProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const query = useInfiniteVolunteerPostingsQuery(params);
   const postings = query.data?.pages.flatMap((page) => page.content) ?? [];
-  const totalElements = query.data?.pages[0]?.totalElements ?? 0;
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -54,25 +51,27 @@ export function VolunteerPostingResults({
 
   const isInitialLoading = query.isLoading && postings.length === 0;
   const isInitialError = query.isError && postings.length === 0;
+  const initialState = isInitialLoading ? (
+    <LoadingState label="봉사 공고를 불러오는 중" />
+  ) : isInitialError ? (
+    <ErrorState
+      title="봉사 공고를 불러오지 못했어요"
+      description="잠시 후 다시 시도해 주세요."
+      primaryAction={{
+        label: "다시 시도",
+        onClick: () => void query.refetch(),
+      }}
+    />
+  ) : query.isSuccess && postings.length === 0 ? (
+    <EmptyState title={emptyTitle} description={emptyDescription} />
+  ) : null;
 
   return (
     <>
-      {renderMeta?.(totalElements)}
-      {isInitialLoading ? (
-        <LoadingState label="봉사 공고를 불러오는 중" className="min-h-55" />
-      ) : null}
-      {isInitialError ? (
-        <ErrorState
-          title="봉사 공고를 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
-          primaryAction={{
-            label: "다시 시도",
-            onClick: () => void query.refetch(),
-          }}
-        />
-      ) : null}
-      {query.isSuccess && postings.length === 0 ? (
-        <EmptyState title={emptyTitle} description={emptyDescription} />
+      {initialState ? (
+        <div className="flex min-h-55 flex-1 flex-col justify-center">
+          {initialState}
+        </div>
       ) : null}
       {postings.length > 0 ? (
         <>

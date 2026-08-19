@@ -83,7 +83,7 @@ export default function BottomSheet({
           </Dialog.Description>
           <div
             className={cn(
-              "min-h-0 flex-1 overflow-y-auto px-5.5 py-3",
+              "min-h-0 flex-1 overflow-y-auto px-5.5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
               contentClassName,
             )}
           >

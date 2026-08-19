@@ -1,6 +1,7 @@
 import { CategoryBadge } from "@/features/category/components/CategoryBadge";
 import type { PostingCategory } from "@/features/category/types/postingCategory.types";
 import { cn } from "@/shared/lib/cn";
+import type { ReactNode } from "react";
 
 type VolunteerOpportunityHeroProps = {
   title: string;
@@ -8,6 +9,7 @@ type VolunteerOpportunityHeroProps = {
   imageSrc: string;
   imageAlt?: string;
   categories: readonly PostingCategory[];
+  beforeContent?: ReactNode;
 };
 
 export function VolunteerOpportunityHero({
@@ -16,6 +18,7 @@ export function VolunteerOpportunityHero({
   imageSrc,
   imageAlt = "",
   categories,
+  beforeContent,
 }: VolunteerOpportunityHeroProps) {
   return (
     <section>
@@ -36,6 +39,7 @@ export function VolunteerOpportunityHero({
       <h2 className="mt-4 max-w-[306px] break-keep whitespace-pre-line text-[20px] leading-6 font-semibold text-text">
         {title}
       </h2>
+      {beforeContent}
       <p
         className={cn(
           "mt-3 whitespace-pre-line text-[15px] leading-7 font-medium text-text",

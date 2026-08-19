@@ -128,21 +128,26 @@ export function SharedMeetingBoard({
 
       <div className={cn(!hasTypeFilter && notice ? "mt-4" : "")}>
         {isInitialLoading ? (
-          <LoadingState label="게시글을 불러오는 중" className="min-h-65" />
+          <div className="flex min-h-65 flex-1 flex-col justify-center">
+            <LoadingState label="게시글을 불러오는 중" />
+          </div>
         ) : null}
 
         {isInitialError ? (
-          <ErrorState
-            title="게시글을 불러오지 못했어요"
-            description="잠시 후 다시 확인해 주세요."
-            className="min-h-65 justify-center"
-          />
+          <div className="flex min-h-65 flex-1 flex-col justify-center">
+            <ErrorState
+              title="게시글을 불러오지 못했어요"
+              description="잠시 후 다시 확인해 주세요."
+            />
+          </div>
         ) : null}
 
         {postsQuery.isSuccess && posts.length === 0 ? (
-          <p className="flex min-h-75 items-center justify-center text-center text-[18px] leading-5 font-medium text-text-gray-400">
-            {resolvedEmptyMessage}
-          </p>
+          <div className="flex min-h-65 flex-1 flex-col justify-center">
+            <p className="text-center text-[18px] leading-5 font-medium text-text-gray-400">
+              {resolvedEmptyMessage}
+            </p>
+          </div>
         ) : null}
 
         {posts.length > 0 ? (

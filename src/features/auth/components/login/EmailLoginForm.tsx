@@ -19,6 +19,7 @@ type EmailLoginFormProps = {
   className?: string;
   onLoginSuccess: () => void;
   onSignupClick: () => void;
+  onRecoveryClick: () => void;
   defaultEmail?: string;
 };
 
@@ -54,6 +55,7 @@ export function EmailLoginForm({
   className,
   onLoginSuccess,
   onSignupClick,
+  onRecoveryClick,
   defaultEmail = "",
 }: EmailLoginFormProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -151,8 +153,9 @@ export function EmailLoginForm({
         <button
           type="button"
           className="ml-auto block text-xs leading-5.5 text-text-gray-100"
+          onClick={onRecoveryClick}
         >
-          비밀번호 찾기
+          아이디/비밀번호 찾기
         </button>
       </div>
 

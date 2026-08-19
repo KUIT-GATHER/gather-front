@@ -56,30 +56,38 @@ export function VolunteerPostingScheduleSheet({
     selectablePeriod && selectedStartDate && selectedEndDate,
   );
 
-  const handleDateSelect = (range: DateRange | undefined) => {
-    if (!range?.from) {
+  const handleDateSelect = (
+    range: DateRange | undefined,
+    clickedDate?: Date,
+  ) => {
+    if (selectionMode === "range") {
+      if (
+        !selectablePeriod ||
+        !range?.from ||
+        !isDateWithinVolunteerPostingPeriod(range.from, selectablePeriod) ||
+        (range.to &&
+          !isDateWithinVolunteerPostingPeriod(range.to, selectablePeriod))
+      ) {
+        return;
+      }
+
+      setSelectedStartDate(range.from);
+      setSelectedEndDate(range.to);
       return;
     }
 
-    const date =
-      selectionMode === "single" ||
-      !selectedStartDate ||
-      selectedEndDate ||
-      range.from < selectedStartDate
-        ? range.from
-        : (range.to ?? range.from);
-
     if (
+      !clickedDate ||
       !selectablePeriod ||
-      !isDateWithinVolunteerPostingPeriod(date, selectablePeriod)
+      !isDateWithinVolunteerPostingPeriod(clickedDate, selectablePeriod)
     ) {
       return;
     }
 
     const nextSelection = selectVolunteerScheduleDate(
-      selectionMode,
+      "single",
       { startDate: selectedStartDate, endDate: selectedEndDate },
-      date,
+      clickedDate,
     );
 
     setSelectedStartDate(nextSelection.startDate);
@@ -145,6 +153,7 @@ export function VolunteerPostingScheduleSheet({
                 { before: selectablePeriod.startDate },
                 { after: selectablePeriod.endDate },
               ]}
+              min={selectionMode === "range" ? 1 : 0}
               onSelect={handleDateSelect}
             />
           </div>

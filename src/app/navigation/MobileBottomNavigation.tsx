@@ -43,6 +43,7 @@ export function MobileBottomNavigation() {
         {navItems.map((item) => (
           <NavLink
             key={item.to}
+            replace
             to={item.to}
             className={({ isActive }) =>
               cn(
