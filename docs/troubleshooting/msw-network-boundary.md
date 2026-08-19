@@ -322,43 +322,6 @@ SMS App Transition 자체도 생략합니다.
 
 ---
 
-## 왜 모든 요청에 `onUnhandledRequest: "error"`를 적용하지 않았는가
-
-가장 단순한 해결은 모든 등록되지 않은 요청을
-무조건 Error로 만드는 것입니다.
-
-하지만 Gather 프론트엔드는
-자체 Backend API 외에도 외부 Service와 통신합니다.
-
-예를 들면:
-
-```text
-Gather Backend
-Kakao API
-External Storage
-기타 Third-party Service
-```
-
-외부 Service 요청까지 모두 MSW Handler로 Mock해야 한다면
-Mock Layer가 불필요하게 애플리케이션 외부 Dependency에 결합될 수 있습니다.
-
-따라서 다음 원칙을 사용했습니다.
-
-```text
-Gather Backend API
-→ MSW가 책임
-→ Handler 누락 시 즉시 실패
-
-External Service
-→ MSW 책임 범위 밖
-→ 실제 Network 허용
-```
-
-즉 단순한 Global Error 설정이 아니라
-요청의 **소유권과 책임 범위**를 기준으로 정책을 나눴습니다.
-
----
-
 ## 검증
 
 Network Boundary가 다시 느슨해지는 것을 막기 위해
@@ -436,29 +399,6 @@ MSW Handler를 누락하더라도:
 을 만들 수 있게 되었습니다.
 
 이는 개발 및 테스트 환경의 재현성과 독립성을 높이는 방향의 수정이었습니다.
-
----
-
-## 주의
-
-이번 Fail-closed 정책은
-Production Application의 Security Boundary가 아닙니다.
-
-MSW는 개발 및 테스트 환경에서 사용하는 Mock Layer이므로,
-Service Worker 자체가 활성화되지 않은 상황에서는
-MSW Handler가 요청을 가로챌 수 없습니다.
-
-따라서 이번 문제에서는
-Network Boundary 설정만으로 끝내지 않고,
-문제를 유발하던 MSW 환경의 SMS App Transition 자체도 함께 제거했습니다.
-
-즉 다음 두 가지를 함께 적용했습니다.
-
-```text
-SMS App Transition 제거
-+
-Internal API Fail-closed
-```
 
 ---
 

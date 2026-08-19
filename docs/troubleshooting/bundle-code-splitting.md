@@ -391,61 +391,9 @@ E2E Test
 현재 Main Chunk는 약 `660 kB`로
 Vite의 기본 `500 kB` Warning 기준을 여전히 초과합니다.
 
-따라서 다음과 같이 표현하지 않습니다.
-
-```text
-"500 kB Warning을 완전히 해결했다."
-```
-
-정확한 결과는 다음과 같습니다.
-
-```text
-"초기 Main JavaScript Chunk를 약 54.7% 줄였지만
-Core Bundle에는 추가 최적화 여지가 남아 있다."
-```
-
-또한 Warning을 숨기기 위해
-`chunkSizeWarningLimit`을 임의로 증가시키지 않았습니다.
-
-현재 `vite.config.ts`에서도
-단순히 Warning Threshold를 높이거나
-근거 없이 `manualChunks`를 추가하는 방식은 사용하지 않았습니다.
-
 추가 최적화가 필요하다면 다음 단계에서는
 Main Chunk 내부 Dependency를 분석해
 공통 Vendor 또는 초기 Route Dependency를 추가로 분리할 수 있습니다.
-
----
-
-## 별도의 Asset 최적화 과제
-
-Build Output에는 JavaScript 외에도
-상대적으로 큰 WebP Image Asset이 존재합니다.
-
-예를 들면:
-
-```text
-508.80 kB
-716.97 kB
-1,065.32 kB
-```
-
-수준의 이미지가 존재합니다.
-
-이는 JavaScript Chunk 문제와는 별개의 성능 영역입니다.
-
-따라서 이번 Troubleshooting에서는
-Image Asset 크기와 JavaScript Bundle 크기를 하나의 수치로 섞지 않았습니다.
-
-향후 필요하다면 다음 항목을 별도 최적화 과제로 다룰 수 있습니다.
-
-```text
-Image Resize
-Responsive Image
-Compression
-Lazy Loading
-Asset Selection
-```
 
 ---
 
