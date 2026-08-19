@@ -15,12 +15,14 @@ type VolunteerPostingCardProps = {
   posting: VolunteerPostingListItem | PostingListItem;
   onClick: () => void;
   variant?: "list" | "compact";
+  imageLoading?: "eager" | "lazy";
 };
 
 export function VolunteerPostingCard({
   posting,
   onClick,
   variant = "list",
+  imageLoading,
 }: VolunteerPostingCardProps) {
   const isUnifiedItem = "sourceType" in posting;
   const categories = isUnifiedItem ? posting.categories : [posting.category];
@@ -54,6 +56,7 @@ export function VolunteerPostingCard({
           imageUrl={thumbnailUrl}
           category={categories[0]}
           postingId={posting.id}
+          loading={imageLoading}
           className="aspect-square w-34 rounded-xl border border-stroke"
         />
         <h3 className="mt-2 truncate text-body-15-semibold text-text">
@@ -75,6 +78,7 @@ export function VolunteerPostingCard({
           imageUrl={thumbnailUrl}
           category={categories[0]}
           postingId={posting.id}
+          loading={imageLoading}
           className="h-[106px] w-[91px] shrink-0 rounded-[10px]"
         />
       }

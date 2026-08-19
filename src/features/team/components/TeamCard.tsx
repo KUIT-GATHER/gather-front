@@ -18,6 +18,7 @@ type TeamCardProps = {
   onSettingsClick?: () => void;
   variant?: "list" | "compact" | "my";
   viewerRole?: MeetingMemberRole;
+  imageLoading?: "eager" | "lazy";
 };
 
 export function TeamCard({
@@ -26,6 +27,7 @@ export function TeamCard({
   onSettingsClick,
   variant = "list",
   viewerRole,
+  imageLoading,
 }: TeamCardProps) {
   const deadlineDate = formatMeetingActivityDate(team.deadline);
   const deadline = getMeetingDDay(team.deadline);
@@ -40,6 +42,7 @@ export function TeamCard({
       >
         <MeetingCover
           imageUrl={team.thumbnailUrl}
+          loading={imageLoading}
           className="h-[202px] w-[167px] rounded-[10px]"
         />
         <div className="mt-2.5">
@@ -71,6 +74,7 @@ export function TeamCard({
         >
           <MeetingCover
             imageUrl={team.thumbnailUrl}
+            loading={imageLoading}
             className="h-[136px] w-full rounded-[10px]"
           />
 
@@ -126,6 +130,7 @@ export function TeamCard({
       image={
         <MeetingCover
           imageUrl={team.thumbnailUrl}
+          loading={imageLoading}
           className="h-[106px] w-[91px] shrink-0 rounded-[10px]"
         />
       }
