@@ -7,6 +7,14 @@ import { renderWithProviders } from "@/test/renderWithProviders";
 import { VolunteerPostingCover } from "./VolunteerPostingCover";
 
 describe("VolunteerPostingCover", () => {
+  it("loading prop을 img에 전달한다", () => {
+    const { container } = renderWithProviders(
+      <VolunteerPostingCover loading="lazy" />,
+    );
+
+    expect(container.querySelector("img")).toHaveAttribute("loading", "lazy");
+  });
+
   it("remote 이미지 로드에 실패하면 카테고리 fallback 이미지로 전환한다", () => {
     const remoteUrl = "https://cdn.example.com/volunteer-thumbnail.webp";
     const { container } = renderWithProviders(

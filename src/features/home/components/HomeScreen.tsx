@@ -135,11 +135,12 @@ export function HomeScreen() {
                 void postingsQuery.refetch();
               }}
             />
-            {postings.map((posting) => (
+            {postings.map((posting, index) => (
               <VolunteerPostingCard
                 key={posting.id}
                 variant="compact"
                 posting={posting}
+                imageLoading={index < 3 ? "eager" : "lazy"}
                 onClick={() => navigate(`/volunteers/${posting.id}`)}
               />
             ))}
@@ -175,11 +176,12 @@ export function HomeScreen() {
                 void meetingsQuery.refetch();
               }}
             />
-            {meetings.map((meeting) => (
+            {meetings.map((meeting, index) => (
               <TeamCard
                 key={meeting.meetingId}
                 variant="compact"
                 team={meeting}
+                imageLoading={index < 2 ? "eager" : "lazy"}
                 onClick={() => navigate(`/teams/${meeting.meetingId}`)}
               />
             ))}
