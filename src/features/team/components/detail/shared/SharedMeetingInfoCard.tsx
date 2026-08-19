@@ -26,12 +26,12 @@ function isInfoRow(row: InfoRow | null): row is InfoRow {
 
 function DetailRow({ icon, label, value }: InfoRow) {
   return (
-    <div className="grid grid-cols-[1.5rem_auto_1fr] items-center gap-x-3">
+    <div className="contents">
       <InfoIcon name={icon} />
       <dt className="whitespace-nowrap text-[15px] leading-[normal] font-normal text-text-gray-400">
         {label}
       </dt>
-      <dd className="text-right text-[15px] leading-[normal] font-normal text-text">
+      <dd className="min-w-0 break-keep whitespace-normal text-right text-[15px] leading-[normal] font-normal text-text">
         {value}
       </dd>
     </div>
@@ -84,7 +84,7 @@ export function SharedMeetingInfoCard({
 
   return (
     <section className="rounded-xl border border-stroke bg-white px-3 py-4">
-      <dl className="flex flex-col gap-2">
+      <dl className="grid grid-cols-[1.5rem_max-content_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
         {rows.map((row) => (
           <DetailRow key={row.label} {...row} />
         ))}
