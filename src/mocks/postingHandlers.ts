@@ -428,6 +428,61 @@ function getOptionalNumberParam(url: URL, key: string) {
   return Number.isFinite(parsedValue) ? parsedValue : undefined;
 }
 
+type MockPostingCursor = {
+  index: number;
+  signature: string;
+};
+
+function getMockPostingCursorSignature(url: URL, size: number) {
+  return JSON.stringify({
+    size,
+    sort: url.searchParams.getAll("sort"),
+    status: url.searchParams.get("status"),
+    keyword: url.searchParams.get("keyword"),
+    regionId: url.searchParams.get("regionId"),
+    activityStartDate: url.searchParams.get("activityStartDate"),
+    activityEndDate: url.searchParams.get("activityEndDate"),
+    category: url.searchParams.get("category"),
+  });
+}
+
+function createMockPostingCursor(index: number, signature: string) {
+  const payload = JSON.stringify({ index, signature });
+
+  return `mock-cursor:${btoa(encodeURIComponent(payload))}`;
+}
+
+function parseMockPostingCursor(value: string): MockPostingCursor | null {
+  if (!value.startsWith("mock-cursor:")) {
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(
+      decodeURIComponent(atob(value.slice("mock-cursor:".length))),
+    );
+
+    if (typeof parsed !== "object" || parsed === null) {
+      return null;
+    }
+
+    const cursor = parsed as Partial<MockPostingCursor>;
+
+    if (
+      typeof cursor.index !== "number" ||
+      !Number.isSafeInteger(cursor.index) ||
+      cursor.index < 0 ||
+      typeof cursor.signature !== "string"
+    ) {
+      return null;
+    }
+
+    return { index: cursor.index, signature: cursor.signature };
+  } catch {
+    return null;
+  }
+}
+
 function getRegionIdsIncludingChildren(regionIds: Iterable<number>) {
   const includedRegionIds = new Set(regionIds);
   const pendingParentIds = [...includedRegionIds];
@@ -669,8 +724,15 @@ export const postingHandlers = [
   http.get(getGatherApiUrl("/api/v1/postings"), ({ request }) => {
     const url = new URL(request.url);
 
-    const page = Number(url.searchParams.get("page") ?? 0);
-    const size = Number(url.searchParams.get("size") ?? 20);
+    const requestedSize = Number(url.searchParams.get("size") ?? 20);
+    const size =
+      Number.isFinite(requestedSize) && requestedSize > 0
+        ? Math.min(requestedSize, 100)
+        : 20;
+    const rawCursor = url.searchParams.get("cursor");
+    const hasCursor = url.searchParams.has("cursor");
+    const cursorSignature = getMockPostingCursorSignature(url, size);
+    const cursor = rawCursor ? parseMockPostingCursor(rawCursor) : null;
     const keyword = url.searchParams.get("keyword")?.trim();
     const regionId = getOptionalNumberParam(url, "regionId");
     const status = url.searchParams.get("status");
@@ -678,6 +740,25 @@ export const postingHandlers = [
     const activityEndDate = url.searchParams.get("activityEndDate");
     const category = url.searchParams.get("category");
     const sorts = parseSorts(url);
+
+    if (
+      url.searchParams.has("page") ||
+      (hasCursor && !rawCursor) ||
+      (rawCursor !== null && !cursor) ||
+      (cursor !== null && cursor.signature !== cursorSignature)
+    ) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "요청 값이 올바르지 않습니다.",
+          },
+        },
+        { status: 400 },
+      );
+    }
 
     let items = mockPostings;
 
@@ -796,17 +877,19 @@ export const postingHandlers = [
       sorts,
       status === null,
     );
-    const startIndex = page * size;
+    const startIndex = cursor?.index ?? 0;
     const content = unifiedItems.slice(startIndex, startIndex + size);
+    const nextIndex = startIndex + content.length;
+    const hasNext = nextIndex < unifiedItems.length;
 
     return HttpResponse.json({
       success: true,
       data: {
         content,
-        totalElements: unifiedItems.length,
-        totalPages: Math.ceil(unifiedItems.length / size),
-        page,
-        size,
+        nextCursor: hasNext
+          ? createMockPostingCursor(nextIndex, cursorSignature)
+          : null,
+        hasNext,
       },
       error: null,
     });

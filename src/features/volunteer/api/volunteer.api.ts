@@ -3,16 +3,18 @@ import { fetchClient } from "@/shared/api/fetchClient";
 import type {
   VolunteerPosting,
   VolunteerPostingBookmarkResponse,
+  VolunteerPostingBaseParams,
+  VolunteerPostingCursorListParams,
   VolunteerPostingListItem,
-  VolunteerPostingListParams,
   VolunteerPostingMeetingListParams,
   VolunteerPostingMeetingPage,
+  VolunteerPostingOffsetListParams,
   VolunteerPostingPage,
   VolunteerPostingParticipationResponse,
   VolunteerPostingParticipationApplyRequest,
   VolunteerPostingMapParams,
   VolunteerPostingMapItem,
-  PostingListPage,
+  PostingListCursorPage,
 } from "@/features/volunteer/types/volunteer.types";
 
 const publicOptions = {
@@ -55,17 +57,11 @@ function appendQueryParam(
   }
 }
 
-function buildPostingQuery(
-  params: VolunteerPostingListParams,
+function appendPostingFilters(
+  searchParams: URLSearchParams,
+  params: VolunteerPostingBaseParams,
   dateParamNames: { start: string; end: string },
 ) {
-  const searchParams = new URLSearchParams();
-  const page = params.page ?? 0;
-  const size = params.size ?? 20;
-
-  setQueryParam(searchParams, "page", page);
-  setQueryParam(searchParams, "size", size);
-
   params.sort?.forEach((sort) => {
     appendQueryParam(searchParams, "sort", sort);
   });
@@ -76,27 +72,40 @@ function buildPostingQuery(
   setQueryParam(searchParams, dateParamNames.end, params.activityEndDate);
   setQueryParam(searchParams, "keyword", params.keyword);
   setQueryParam(searchParams, "category", params.category);
+}
+
+function buildPostingListQuery(params: VolunteerPostingCursorListParams = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (params.cursor !== undefined && params.cursor !== "") {
+    searchParams.set("cursor", params.cursor);
+  }
+
+  setQueryParam(searchParams, "size", params.size ?? 20);
+  appendPostingFilters(searchParams, params, {
+    start: "activityStartDate",
+    end: "activityEndDate",
+  });
 
   return searchParams.toString();
 }
 
-function buildPostingListQuery(params: VolunteerPostingListParams = {}) {
-  return buildPostingQuery(params, {
-    start: "activityStartDate",
-    end: "activityEndDate",
-  });
-}
-
 function buildBookmarkedPostingListQuery(
-  params: VolunteerPostingListParams = {},
+  params: VolunteerPostingOffsetListParams = {},
 ) {
-  return buildPostingQuery(params, {
+  const searchParams = new URLSearchParams();
+
+  setQueryParam(searchParams, "page", params.page ?? 0);
+  setQueryParam(searchParams, "size", params.size ?? 20);
+  appendPostingFilters(searchParams, params, {
     start: "noticeStartDate",
     end: "noticeEndDate",
   });
+
+  return searchParams.toString();
 }
 
-function buildPostingListEndpoint(params?: VolunteerPostingListParams) {
+function buildPostingListEndpoint(params?: VolunteerPostingCursorListParams) {
   const query = buildPostingListQuery(params);
 
   return query ? `${POSTING_ENDPOINT}?${query}` : POSTING_ENDPOINT;
@@ -144,8 +153,10 @@ function buildPostingMeetingsEndpoint(
   return query ? `${endpoint}?${query}` : endpoint;
 }
 
-export function getVolunteerPostings(params?: VolunteerPostingListParams) {
-  return fetchClient<PostingListPage>(
+export function getVolunteerPostings(
+  params?: VolunteerPostingCursorListParams,
+) {
+  return fetchClient<PostingListCursorPage>(
     buildPostingListEndpoint(params),
     publicOptions,
   );
@@ -159,7 +170,7 @@ export function getVolunteerPostingMap(params: VolunteerPostingMapParams) {
 }
 
 export function getBookmarkedVolunteerPostings(
-  params: VolunteerPostingListParams = {},
+  params: VolunteerPostingOffsetListParams = {},
 ) {
   const query = buildBookmarkedPostingListQuery(params);
 
