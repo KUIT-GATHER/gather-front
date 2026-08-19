@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Settings } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 
+import settingIcon from "@/features/my/assets/setting.svg";
 import { notificationKeys } from "@/features/notification/api/notification.queries";
 import { NotificationList } from "@/features/notification/components/NotificationList";
 import { NotificationSettingsSheet } from "@/features/notification/components/NotificationSettingsSheet";
@@ -20,7 +20,6 @@ import type {
   NotificationCategory,
   NotificationUnreadCount,
 } from "@/features/notification/types/notification.types";
-import IconButton from "@/shared/ui/IconButton";
 import PageContainer from "@/shared/ui/PageContainer";
 import PageHeader from "@/shared/ui/PageHeader";
 
@@ -134,12 +133,14 @@ export function NotificationScreen() {
             onBack={() => navigate(-1)}
             className="[&_h1]:ml-2.5"
             rightAction={
-              <IconButton
-                label="알림 설정 열기"
-                icon={<Settings />}
-                className="mr-0.5"
+              <button
+                type="button"
+                aria-label="알림 설정 열기"
+                className="p-0.5"
                 onClick={() => setIsSettingsOpen(true)}
-              />
+              >
+                <img src={settingIcon} alt="" className="size-6" />
+              </button>
             }
           />
         </PageContainer>
