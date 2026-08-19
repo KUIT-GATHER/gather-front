@@ -137,7 +137,7 @@ export function NotificationScreen() {
               <IconButton
                 label="알림 설정 열기"
                 icon={<Settings />}
-                className="-mr-3"
+                className="mr-0.5"
                 onClick={() => setIsSettingsOpen(true)}
               />
             }

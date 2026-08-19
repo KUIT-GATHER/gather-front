@@ -17,7 +17,7 @@ import {
 import { getPostingListItemPath } from "@/features/volunteer/lib/postingListRouting";
 import greenPuzzle from "@/assets/icons/greenPuzzle.svg";
 import arrowBackIcon from "@/shared/assets/icons/search/arrow-back.svg";
-import searchIcon from "@/shared/assets/icons/search/search.svg";
+import searchIcon from "@/assets/icons/Search.svg";
 import { cn } from "@/shared/lib/cn";
 import IconButton from "@/shared/ui/IconButton";
 import Input from "@/shared/ui/Input";
@@ -106,12 +106,9 @@ function VolunteerPostingSearchForm({
         />
         <IconButton
           label="검색"
-          icon={
-            <span className="flex size-11 items-center justify-center">
-              <img src={searchIcon} alt="" className="size-11" />
-            </span>
-          }
+          icon={<img src={searchIcon} alt="" />}
           size={variant === "initial" ? "medium" : "small"}
+          className="[&>span>img]:size-[27px]"
           type="submit"
         />
         {error ? (

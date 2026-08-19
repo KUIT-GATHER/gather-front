@@ -87,7 +87,7 @@ describe("TeamCreateScreen integration", () => {
     );
     await user.click(screen.getByRole("button", { name: "적용하기" }));
     await user.click(screen.getByRole("button", { name: "환경 카테고리" }));
-    await user.click(screen.getByRole("button", { name: "신청 마감일" }));
+    await user.click(screen.getByRole("button", { name: /신청 마감일/ }));
     await user.click(screen.getByRole("button", { name: "적용하기" }));
     await user.click(screen.getByRole("button", { name: "모임 만들기 완료" }));
 

@@ -83,19 +83,30 @@ export function formatMeetingTimeRange(
   startTime: string | null,
   endTime: string | null,
 ) {
-  if (!startTime && !endTime) {
+  const normalizedStartTime = startTime?.includes(":")
+    ? startTime
+    : startTime
+      ? `${startTime.padStart(2, "0")}:00`
+      : null;
+  const normalizedEndTime = endTime?.includes(":")
+    ? endTime
+    : endTime
+      ? `${endTime.padStart(2, "0")}:00`
+      : null;
+
+  if (!normalizedStartTime && !normalizedEndTime) {
     return null;
   }
 
-  if (!startTime) {
-    return endTime;
+  if (!normalizedStartTime) {
+    return normalizedEndTime;
   }
 
-  if (!endTime) {
-    return startTime;
+  if (!normalizedEndTime) {
+    return normalizedStartTime;
   }
 
-  return `${startTime} - ${endTime}`;
+  return `${normalizedStartTime} - ${normalizedEndTime}`;
 }
 
 export function getMeetingDDay(value: string) {

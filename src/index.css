@@ -67,6 +67,7 @@
 
 @layer base {
   html {
+    scrollbar-gutter: stable;
     font-family:
       Pretendard,
       system-ui,
@@ -80,5 +81,9 @@
     min-height: 100dvh;
     background: var(--color-bg);
     color: var(--color-text);
+  }
+
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
   }
 }
