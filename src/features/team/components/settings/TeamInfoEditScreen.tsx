@@ -358,7 +358,7 @@ export function TeamInfoEditScreen({
           <button
             type="button"
             disabled={basedOnPosting}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white disabled:opacity-100"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-stroke bg-white px-4 py-2 disabled:opacity-100"
             onClick={() => setRegionOpen(true)}
           >
             <img
@@ -367,9 +367,11 @@ export function TeamInfoEditScreen({
               aria-hidden="true"
               className="h-4 w-3"
             />
-            {selectedRegion
-              ? getFullRegionSelectionLabel(selectedRegion, selectedParent)
-              : home.regionName}
+            <span className="min-w-0 break-keep text-center leading-5">
+              {selectedRegion
+                ? getFullRegionSelectionLabel(selectedRegion, selectedParent)
+                : home.regionName}
+            </span>
           </button>
         </FormField>
         <FormField
