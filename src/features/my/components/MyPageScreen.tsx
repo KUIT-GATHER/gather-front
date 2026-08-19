@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router";
 
 import { ActivityCalendarSection } from "@/features/my/components/ActivityCalendarSection";
 
-import bookmarkIcon from "@/features/my/assets/bookmark.svg";
+import bookmarkIcon from "@/assets/icons/Filledheart.svg";
 import profileImage from "@/assets/icons/Profile.svg";
 import profileEditIcon from "@/features/my/assets/profileedit.svg";
 import settingIcon from "@/features/my/assets/setting.svg";
@@ -67,7 +67,7 @@ export function MyPageScreen() {
             className="p-0.5"
             onClick={() => navigate("/my/bookmarks")}
           >
-            <img src={bookmarkIcon} alt="" className="h-[18px] w-3.5" />
+            <img src={bookmarkIcon} alt="" className="h-[18px] w-5" />
           </button>
           <button
             type="button"

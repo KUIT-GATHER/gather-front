@@ -26,13 +26,13 @@ export function VolunteerOpportunityTeamCard({
     >
       <div
         className={cn(
-          "flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
+          "flex size-12 shrink-0 items-center justify-center rounded-xl text-center text-sm leading-5 font-semibold whitespace-pre-line",
           category === "ENVIRONMENT"
             ? "bg-[#F1FFFD] text-[#82D3CA]"
             : POSTING_CATEGORY_TILE_STYLE[category],
         )}
       >
-        {POSTING_CATEGORY_LABEL[category]}
+        {POSTING_CATEGORY_LABEL[category].replace(" ", "\n")}
       </div>
 
       <div className="min-w-0 flex-1">

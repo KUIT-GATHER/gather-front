@@ -91,6 +91,8 @@ const baseMockPostings = postings.data.map((posting) => {
     return {
       ...posting,
       ...externalApplication,
+      actPlace:
+        "[QA] 서울특별시 동대문구 천호대로 145 동대문장애인가족지원센터 교육실 및 프로그램 활동실 4층 대강당",
       actStartDate: formatMockDate(1),
       actEndDate: formatMockDate(30),
       noticeStartDate: formatMockDate(-14),
@@ -134,7 +136,7 @@ const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
     status: "RECRUITING",
     recruitOrg: `테스트 모집기관 ${id}`,
     actStartDate: formatMockDate(recruitmentDeadlineOffset + 2),
-    actEndDate: formatMockDate(recruitmentDeadlineOffset + 2),
+    actEndDate: formatMockDate(recruitmentDeadlineOffset + 9),
     noticeStartDate: formatMockDate(-7),
     noticeEndDate: formatMockDate(recruitmentDeadlineOffset),
     recruitCount: 10 + (index % 5),

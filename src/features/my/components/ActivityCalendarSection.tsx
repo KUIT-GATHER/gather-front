@@ -280,7 +280,7 @@ export function ActivityCalendarSection() {
         </button>
       </div>
 
-      <div className="-mx-5.5 mt-4 overflow-x-auto px-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mt-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex w-max gap-3">
           {days.map((item) => {
             const isSelected = item.day === selectedDay;

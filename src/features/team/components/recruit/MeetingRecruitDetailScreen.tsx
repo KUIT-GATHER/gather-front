@@ -84,7 +84,7 @@ function getMeetingRecruitInfoRows({
       id: "participants",
       icon: "participants",
       label: "참여 인원",
-      value: `${appliedCount}/${maxParticipants}명`,
+      value: `${appliedCount}명/${maxParticipants}명`,
     },
     {
       id: "deadline",

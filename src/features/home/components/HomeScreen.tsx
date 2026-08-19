@@ -120,7 +120,7 @@ export function HomeScreen() {
             />
           </div>
 
-          <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
               isLoading={isPostingsLoading}
               isError={isPostingsInitialError}
@@ -160,7 +160,7 @@ export function HomeScreen() {
             />
           </div>
 
-          <div className="-mr-5.5 flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pr-5.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <HomeSectionState
               isLoading={isMeetingsLoading}
               isError={isMeetingsInitialError}

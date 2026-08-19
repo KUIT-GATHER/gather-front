@@ -74,33 +74,35 @@ export function VolunteerPostingListScreen() {
         }
       />
 
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <h2 className="text-[18px] font-semibold leading-[28px] tracking-[0px] text-text">
-          이번 주, 내 주변에선 뭐하지? 👀
-        </h2>
-        <Select
-          ariaLabel="봉사 공고 정렬"
-          value={sort}
-          onChange={(value) => {
-            if (!isVolunteerPostingListSort(value)) return;
-            setSearchParams(
-              updateVolunteerPostingSearchParams(searchParams, filter, {
-                sort: value,
-              }),
-              { replace: true },
-            );
-            window.scrollTo({ top: 0, behavior: "auto" });
-          }}
-          options={volunteerPostingListSortOptions}
-        />
-      </div>
-      <div className="mt-3 flex flex-1 flex-col">
-        <VolunteerPostingResults
-          params={queryParams}
-          emptyTitle="조건에 맞는 봉사 공고가 없어요"
-          emptyDescription="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
-          onSelect={(posting) => navigate(getPostingListItemPath(posting))}
-        />
+      <div className="flex flex-1 flex-col pt-6">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-[18px] font-semibold leading-7">
+            이번 주, 내 주변에선 뭐하지? 👀
+          </h2>
+          <Select
+            ariaLabel="봉사 공고 정렬"
+            value={sort}
+            onChange={(value) => {
+              if (!isVolunteerPostingListSort(value)) return;
+              setSearchParams(
+                updateVolunteerPostingSearchParams(searchParams, filter, {
+                  sort: value,
+                }),
+                { replace: true },
+              );
+              window.scrollTo({ top: 0, behavior: "auto" });
+            }}
+            options={volunteerPostingListSortOptions}
+          />
+        </div>
+        <div className="mt-3 flex flex-1 flex-col">
+          <VolunteerPostingResults
+            params={queryParams}
+            emptyTitle="조건에 맞는 봉사 공고가 없어요"
+            emptyDescription="검색어나 필터 조건을 바꿔 다시 확인해 주세요."
+            onSelect={(posting) => navigate(getPostingListItemPath(posting))}
+          />
+        </div>
       </div>
 
       {sheetMode === "filter" ? (
