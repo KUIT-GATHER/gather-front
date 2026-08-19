@@ -67,7 +67,7 @@
 
 @layer base {
   html {
-    scrollbar-gutter: stable;
+    scrollbar-width: none;
     font-family:
       Pretendard,
       system-ui,
@@ -75,6 +75,10 @@
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
   }
 
   body {
