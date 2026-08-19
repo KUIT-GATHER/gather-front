@@ -134,7 +134,7 @@ const additionalMockPostings = Array.from({ length: 25 }, (_, index) => {
     status: "RECRUITING",
     recruitOrg: `테스트 모집기관 ${id}`,
     actStartDate: formatMockDate(recruitmentDeadlineOffset + 2),
-    actEndDate: formatMockDate(recruitmentDeadlineOffset + 2),
+    actEndDate: formatMockDate(recruitmentDeadlineOffset + 9),
     noticeStartDate: formatMockDate(-7),
     noticeEndDate: formatMockDate(recruitmentDeadlineOffset),
     recruitCount: 10 + (index % 5),

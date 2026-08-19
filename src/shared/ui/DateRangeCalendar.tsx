@@ -14,7 +14,8 @@ type DateRangeCalendarProps = {
   startMonth?: Date;
   endMonth?: Date;
   disabled?: Matcher | Matcher[];
-  onSelect: (range: DateRange | undefined) => void;
+  min?: number;
+  onSelect: (range: DateRange | undefined, clickedDate?: Date) => void;
   className?: string;
 };
 
@@ -37,9 +38,13 @@ export default function DateRangeCalendar({
   startMonth,
   endMonth,
   disabled,
+  min,
   onSelect,
   className,
 }: DateRangeCalendarProps) {
+  const pendingDate =
+    selected?.from && !selected.to ? selected.from : undefined;
+
   return (
     <DayPicker
       mode="range"
@@ -49,6 +54,11 @@ export default function DateRangeCalendar({
       startMonth={startMonth}
       endMonth={endMonth}
       disabled={disabled}
+      min={min}
+      modifiers={pendingDate ? { pending: pendingDate } : undefined}
+      modifiersClassNames={{
+        pending: "rdp-range_start rdp-range_end",
+      }}
       onSelect={onSelect}
       navLayout="around"
       numberOfMonths={1}
