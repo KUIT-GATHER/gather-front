@@ -17,24 +17,26 @@ export function useMeetingHomeQuery(
     enabled: options.enabled,
   });
 
+  const { data, refetch } = query;
+
   useEffect(() => {
-    if (!query.data?.deadline || query.data.status !== "RECRUITING") {
+    if (!data?.deadline || data.status !== "RECRUITING") {
       return;
     }
 
-    const delay = new Date(query.data.deadline).getTime() - Date.now();
+    const delay = new Date(`${data.deadline}Z`).getTime() - Date.now();
 
     if (delay <= 0) {
-      void query.refetch();
+      void refetch();
       return;
     }
 
     const timer = window.setTimeout(() => {
-      void query.refetch();
+      void refetch();
     }, delay + 100);
 
     return () => window.clearTimeout(timer);
-  }, [query.data?.deadline, query.data?.status, query.refetch]);
+  }, [data?.deadline, data?.status, refetch]);
 
   return query;
 }
