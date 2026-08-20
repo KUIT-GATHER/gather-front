@@ -123,3 +123,21 @@ export function combineLocalDateAndTime(
     ? `${normalizedDate}T${normalizedTime}:00`
     : undefined;
 }
+
+export function formatLocalDateTimeAsUtcForApi(date: Date) {
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  return date.toISOString().slice(0, 19);
+}
+
+export function formatUtcApiDateTimeForInput(value: string) {
+  const date = new Date(`${value}Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  return formatLocalDateTimeForInput(date);
+}

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, Crown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import crownIcon from "@/features/team/assets/member/crown.svg";
 import { useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 
@@ -59,7 +60,7 @@ export function TeamMemberManagementScreen() {
                 key={member.userId}
                 className="overflow-hidden rounded-xl border border-stroke bg-white"
               >
-                <div className="flex min-h-16 items-center gap-3 px-4">
+                <div className="flex min-h-18 items-center gap-3 px-4">
                   <button
                     type="button"
                     aria-expanded={expanded}
@@ -86,7 +87,11 @@ export function TeamMemberManagementScreen() {
                     </span>
                   </button>
                   {leader ? (
-                    <Crown aria-label="팀장" className="size-5 text-icon" />
+                    <img
+                      src={crownIcon}
+                      alt="팀장"
+                      className="w-[26.67px] h-6 mr-2"
+                    />
                   ) : (
                     <Button
                       variant="dangerOutline"

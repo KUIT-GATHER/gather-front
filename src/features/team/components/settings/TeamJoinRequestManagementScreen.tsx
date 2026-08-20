@@ -19,6 +19,7 @@ import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import LoadingState from "@/shared/ui/LoadingState";
 import PageHeader from "@/shared/ui/PageHeader";
+import { ApiError } from "@/shared/api/apiError";
 
 type Filter = "ALL" | MeetingJoinRequestStatus;
 const filters: Array<{ value: Filter; label: string }> = [
@@ -38,6 +39,10 @@ export function TeamJoinRequestManagementScreen() {
   const { home, isHost } = useTeamDetailContext();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [decisionError, setDecisionError] = useState<{
+    joinRequestId: number;
+    message: string;
+  } | null>(null);
   const requestsQuery = useMeetingJoinRequestsQuery(home.meetingId, {
     enabled: isHost,
   });
@@ -198,23 +203,36 @@ export function TeamJoinRequestManagementScreen() {
                         onClick={() =>
                           rejectMutation.mutate(request.joinRequestId)
                         }
-                        className="text-[15px] font-semibold"
+                        className="h-[42px] w-[156px] text-[14px] font-semibold hover:bg-[#00C77B]/44 active:bg-[#00C77B]/44"
                       >
                         반려
                       </Button>
                       <Button
                         size="medium"
                         disabled={decisionPending}
-                        onClick={() =>
-                          approveMutation.mutate(request.joinRequestId)
-                        }
-                        className="text-[15px] font-semibold"
+                        onClick={() => {
+                          setDecisionError(null);
+
+                          approveMutation.mutate(request.joinRequestId, {
+                            onError: (error) => {
+                              setDecisionError({
+                                joinRequestId: request.joinRequestId,
+                                message:
+                                  error instanceof ApiError &&
+                                  error.code === "MEETING_CLOSED"
+                                    ? "모집이 마감되어 가입 신청을 승인할 수 없어요."
+                                    : "가입 신청을 승인하지 못했어요.",
+                              });
+                            },
+                          });
+                        }}
+                        className="h-[42px] w-[156px] text-[14px] font-semibold hover:bg-[#2E6136] active:bg-[#2E6136]"
                       >
                         승인
                       </Button>
                     </div>
                   ) : request.status === "REJECTED" ? (
-                    <div className="p-3">
+                    <div className="px-3 pb-3">
                       <Button
                         variant="primaryOutline"
                         size="medium"
@@ -223,10 +241,19 @@ export function TeamJoinRequestManagementScreen() {
                         onClick={() =>
                           restoreMutation.mutate(request.joinRequestId)
                         }
+                        className="h-[42px] w-[328px] text-[14px] font-semibold hover:bg-[#00C77B]/44 active:bg-[#00C77B]/44"
                       >
                         대기로 되돌리기
                       </Button>
                     </div>
+                  ) : null}
+                  {decisionError?.joinRequestId === request.joinRequestId ? (
+                    <p
+                      role="alert"
+                      className="px-3 pb-3 text-center text-[12px] text-point-red"
+                    >
+                      {decisionError.message}
+                    </p>
                   ) : null}
                 </li>
               );

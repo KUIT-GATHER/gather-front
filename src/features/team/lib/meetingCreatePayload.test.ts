@@ -18,9 +18,9 @@ describe("buildMeetingCreateDateTimePayload", () => {
         deadline: new Date(2026, 7, 20, 23, 59),
       }),
     ).toEqual({
-      deadline: "2026-08-20T23:59:00",
-      activityStartAt: "2026-08-21T19:00:00",
-      activityEndAt: "2026-11-06T21:00:00",
+      deadline: new Date(2026, 7, 20, 23, 59).toISOString().slice(0, 19),
+      activityStartAt: new Date(2026, 7, 21, 19, 0).toISOString().slice(0, 19),
+      activityEndAt: new Date(2026, 10, 6, 21, 0).toISOString().slice(0, 19),
     });
   });
 

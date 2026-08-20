@@ -1,7 +1,8 @@
 import type { MeetingCreateRequest } from "@/features/team/types/team.types";
 import {
   combineLocalDateAndTime,
-  formatLocalDateTimeForApi,
+  formatLocalDateTimeAsUtcForApi,
+  parseLocalDateTimeInput,
 } from "@/shared/lib/localDateTime";
 
 type MeetingCreateDateTimePayload = Pick<
@@ -28,7 +29,7 @@ export function buildMeetingCreateDateTimePayload({
 }: BuildMeetingCreateDateTimePayloadInput):
   | MeetingCreateDateTimePayload
   | undefined {
-  const formattedDeadline = formatLocalDateTimeForApi(deadline);
+  const formattedDeadline = formatLocalDateTimeAsUtcForApi(deadline);
 
   if (!formattedDeadline) {
     return undefined;
@@ -42,14 +43,35 @@ export function buildMeetingCreateDateTimePayload({
     };
   }
 
-  const activityStartAt = combineLocalDateAndTime(
+  const activityStartLocal = combineLocalDateAndTime(
     activityStartDate,
     activityStartTime,
   );
-  const activityEndAt = combineLocalDateAndTime(
+
+  const activityEndLocal = combineLocalDateAndTime(
     activityEndDate,
     activityEndTime,
   );
+
+  if (!activityStartLocal || !activityEndLocal) {
+    return undefined;
+  }
+
+  const activityStartDateTime = parseLocalDateTimeInput(
+    activityStartLocal.slice(0, 16),
+  );
+
+  const activityEndDateTime = parseLocalDateTimeInput(
+    activityEndLocal.slice(0, 16),
+  );
+
+  if (!activityStartDateTime || !activityEndDateTime) {
+    return undefined;
+  }
+
+  const activityStartAt = formatLocalDateTimeAsUtcForApi(activityStartDateTime);
+
+  const activityEndAt = formatLocalDateTimeAsUtcForApi(activityEndDateTime);
 
   if (
     !activityStartAt ||

@@ -68,6 +68,7 @@
 @layer base {
   html {
     scrollbar-width: none;
+
     font-family:
       Pretendard,
       system-ui,

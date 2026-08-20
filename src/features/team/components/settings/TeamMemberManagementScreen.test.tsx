@@ -123,6 +123,6 @@ describe("TeamMemberManagementScreen permissions", () => {
     expect(
       screen.getByRole("button", { name: "내보내기" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("팀장")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "팀장" })).toBeInTheDocument();
   });
 });
