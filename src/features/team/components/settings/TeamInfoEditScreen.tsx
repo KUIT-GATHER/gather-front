@@ -42,6 +42,11 @@ import PageHeader from "@/shared/ui/PageHeader";
 import Switch from "@/shared/ui/Switch";
 import Textarea from "@/shared/ui/Textarea";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
+import {
+  formatLocalDateTimeAsUtcForApi,
+  parseLocalDateTimeInput,
+  formatUtcApiDateTimeForInput,
+} from "@/shared/lib/localDateTime";
 
 export function TeamInfoEditScreen({
   home,
@@ -74,6 +79,8 @@ export function TeamInfoEditScreen({
     control,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<MeetingUpdateFormValues>({
     resolver: zodResolver(meetingUpdateSchema),
@@ -81,7 +88,7 @@ export function TeamInfoEditScreen({
       name: detail.name,
       description: detail.description ?? "",
       maxMember: detail.maxMember,
-      deadline: detail.deadline.slice(0, 16),
+      deadline: formatUtcApiDateTimeForInput(detail.deadline) ?? "",
       categories: detail.categories,
       participationCondition: detail.participationCondition ?? "",
       regionId: detail.regionId,
@@ -188,6 +195,21 @@ export function TeamInfoEditScreen({
       return;
     }
     setSubmitError(null);
+
+    const deadlineDate = parseLocalDateTimeInput(formValues.deadline);
+
+    if (!deadlineDate) {
+      setSubmitError("신청 마감일을 다시 선택해 주세요.");
+      return;
+    }
+
+    const deadlineForApi = formatLocalDateTimeAsUtcForApi(deadlineDate);
+
+    if (!deadlineForApi) {
+      setSubmitError("신청 마감일을 다시 선택해 주세요.");
+      return;
+    }
+
     const payload = buildMeetingUpdatePayload(
       basedOnPosting
         ? {
@@ -195,7 +217,7 @@ export function TeamInfoEditScreen({
             name: formValues.name.trim(),
             description: formValues.description.trim() || null,
             maxMember: formValues.maxMember,
-            deadline: `${formValues.deadline}:00`,
+            deadline: deadlineForApi,
             participationCondition:
               formValues.participationCondition.trim() || null,
             timeRecognized: formValues.timeRecognized,
@@ -205,7 +227,7 @@ export function TeamInfoEditScreen({
             name: formValues.name.trim(),
             description: formValues.description.trim() || null,
             maxMember: formValues.maxMember,
-            deadline: `${formValues.deadline}:00`,
+            deadline: deadlineForApi,
             participationCondition:
               formValues.participationCondition.trim() || null,
             categories: formValues.categories,
@@ -459,7 +481,21 @@ export function TeamInfoEditScreen({
                 value={field.value}
                 valueClassName="text-text"
                 invalid={Boolean(errors.deadline)}
-                onChange={field.onChange}
+                onChange={(nextValue) => {
+                  field.onChange(nextValue);
+
+                  const date = parseLocalDateTimeInput(nextValue);
+
+                  if (date && date.getTime() <= Date.now()) {
+                    setError("deadline", {
+                      type: "manual",
+                      message: "신청 마감일은 현재 시간 이후로 설정해 주세요.",
+                    });
+                    return;
+                  }
+
+                  clearErrors("deadline");
+                }}
               />
             )}
           />
